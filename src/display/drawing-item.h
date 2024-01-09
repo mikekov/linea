@@ -147,6 +147,10 @@ public:
     virtual void setStyle(SPStyle const *style, SPStyle const *context_style = nullptr);
     virtual void setChildrenStyle(SPStyle const *context_style);
     void setOpacity(float opacity);
+    void setOpacityOverride(std::optional<double> opacity);
+
+    inline double getOpacity() const { return _opacity_override ? *_opacity_override : _opacity; }
+    inline bool hasOpacity() const { return getOpacity() < 0.995; }
     void setAntialiasing(Antialiasing antialias);
     void setIsolation(bool isolation); // CSS Compositing and Blending
     void setBlendMode(SPBlendMode blend_mode);
@@ -224,6 +228,7 @@ protected:
     SPStyle const *_context_style; // Used for 'context-fill', 'context-stroke'
 
     float _opacity;
+    std::optional<double> _opacity_override;
     std::unique_ptr<Geom::Affine> _transform; ///< Incremental transform from parent to this item's coords
     Geom::Affine _ctm; ///< Total transform from item coords to display coords
     Geom::OptIntRect _bbox; ///< Bounding box in display (pixel) coords including stroke

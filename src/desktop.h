@@ -101,7 +101,7 @@ namespace Display {
 class SnapIndicator;
 class TemporaryItem;
 class TemporaryItemList;
-class TranslucencyGroup;
+class TranslucencyGroups;
 }
 
 namespace UI {
@@ -270,6 +270,8 @@ public:
     // Temporary item management (stubs)
     Inkscape::Display::TemporaryItem* add_temporary_canvasitem(Inkscape::CanvasItem* item, int lifetime_msecs, bool move_to_bottom = true);
     void remove_temporary_canvasitem(Inkscape::Display::TemporaryItem* tempitem);
+
+    Inkscape::Display::TranslucencyGroups &getTranslucencyGroups() const { return *_translucency_groups; }
 
     // Layer management
     Inkscape::LayerManager& layerManager() const;
@@ -581,7 +583,7 @@ private:
     // Layer manager (lazy init)
     mutable std::unique_ptr<Inkscape::LayerManager> _layerManager;
 
-    std::unique_ptr<Inkscape::Display::TranslucencyGroup> _translucency_group;
+    std::unique_ptr<Inkscape::Display::TranslucencyGroups> _translucency_groups;
     std::unique_ptr<Inkscape::Display::SnapIndicator> _snapindicator;
     std::unique_ptr<Inkscape::Display::TemporaryItemList> _temporary_item_list;
 
@@ -616,12 +618,15 @@ private:
     // Selection boxes visibility
     bool _hide_selection_boxes = false;
 
+    unsigned _translucency_key;
+
     Linea::UI::SPDesktopWidget* _widget = nullptr;
 
     // An id attribute is not allowed to be the empty string.
     Glib::ustring _reconstruction_old_layer_id;
 
     sigc::scoped_connection _y_axis_flipped;
+    sigc::scoped_connection _layer_changed_connection;
 
     void reconstruction_start();
     void reconstruction_finish();
@@ -634,6 +639,8 @@ private:
     SPItem *find_group_at_point(SPGroup *group, Geom::Point const &p) const;
 
     // Find items by geometry --------------------
+    void updateTranslucencyGroups();
+
     mutable std::map<unsigned long, std::deque<SPItem*>> _node_cache; // Used to speed up search.
 
     sigc::signal<void (StyleChangeArgs&)> _signal_style_changed;

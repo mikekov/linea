@@ -114,8 +114,10 @@ SPDesktop::SPDesktop(SPNamedView* namedview)
     _canvas_catchall->connect_event(sigc::bind(&sp_desktop_root_handler, this));
 
     _temporary_item_list = std::make_unique<Inkscape::Display::TemporaryItemList>();
-    _translucency_group = std::make_unique<Inkscape::Display::TranslucencyGroup>(dkey);
+    _translucency_groups = std::make_unique<Inkscape::Display::TranslucencyGroups>(dkey);
     _snapindicator = std::make_unique<Inkscape::Display::SnapIndicator>(this);
+
+    _translucency_key = _translucency_groups->createGroupKey();
 
     _selection_changed_connection = _selection->connectChanged([this](auto selection) {
         _selection_changed_connection.block();
@@ -284,6 +286,10 @@ void SPDesktop::setupCanvasDrawing() {
     _canvasDrawing = new CanvasItemDrawing(drawingGroup);
 
     _canvas->set_drawing(_canvasDrawing->get_drawing());
+
+    _layer_changed_connection = _layerManager->connectCurrentLayerChanged([this](SPGroup *group) {
+        updateTranslucencyGroups();
+    });
 
     // Connect drawing events to desktop handler to match GTK behavior
     _canvasDrawing->connect_drawing_event(sigc::mem_fun(*this, &SPDesktop::drawingHandler));
@@ -1596,6 +1602,30 @@ Inkscape::CanvasItemGroup* SPDesktop::getCanvasPagesBg() const {
 
 Inkscape::CanvasItemGroup* SPDesktop::getCanvasPagesFg() const {
     return _canvas ? _canvas->getCanvasPagesFg() : nullptr;
+}
+
+/**
+ * Set or unset the translucency group if needed.
+ */
+void SPDesktop::updateTranslucencyGroups()
+{
+    auto const prefs = Inkscape::Preferences::get();
+
+    SPGroup *group = _layerManager->currentLayer();
+    switch(prefs->getInt("/options/translucency_groups/value", 1)) {
+        case 0: // Off mode
+            group = nullptr;
+            break;
+        case 1: // Group mode, only groups
+            if (group->isLayer()) {
+                group = nullptr;
+            }
+            break;
+        case 2: // Layer mode, any layer
+            break;
+    }
+    // The selected group is solid, everything else is translucent
+    _translucency_groups->setSolidItem(_translucency_key, group);
 }
 
 // } // namespace QtUI

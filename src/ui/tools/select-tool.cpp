@@ -382,7 +382,7 @@ void SelectTool::sp_select_context_cycle_through_items(Selection *selection, Scr
 
     if (cycling_cur_item) {
         arenaitem = cycling_cur_item->get_arenaitem(_desktop->dkey);
-        arenaitem->setOpacity(0.3);
+        arenaitem->setOpacityOverride(0.3);
     }
 
     cycling_cur_item = *next;
@@ -390,7 +390,7 @@ void SelectTool::sp_select_context_cycle_through_items(Selection *selection, Scr
     g_assert(cycling_cur_item != nullptr);
 
     arenaitem = cycling_cur_item->get_arenaitem(_desktop->dkey);
-    arenaitem->setOpacity(1.0);
+    arenaitem->setOpacityOverride(1.0);
 
     if (mod_select_add_to->active(scroll_event.modifiers)) {
         selection->add(cycling_cur_item);
@@ -403,7 +403,7 @@ void SelectTool::sp_select_context_reset_opacities() {
     for (auto item : cycling_items_cmp) {
         if (item) {
             Inkscape::DrawingItem *arenaitem = item->get_arenaitem(_desktop->dkey);
-            arenaitem->setOpacity(item->style->opacity.as_double());
+            arenaitem->setOpacityOverride({});
         } else {
             g_assert_not_reached();
         }
@@ -837,7 +837,7 @@ bool SelectTool::root_handler(CanvasEvent const &event)
                 for(auto cycling_item : cycling_items) {
                     if (cycling_item) {
                         Inkscape::DrawingItem *arenaitem = cycling_item->get_arenaitem(_desktop->dkey);
-                        arenaitem->setOpacity(0.3);
+                        arenaitem->setOpacityOverride(0.3);
                     }
                 }
             }
