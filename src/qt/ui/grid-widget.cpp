@@ -482,6 +482,16 @@ void GridWidget::update() {
         setSpinValue(_ui->gapY, gap.y());
         setSpinValue(_ui->marginX, margin.x());
         setSpinValue(_ui->marginY, margin.y());
+
+        // Set limits based on other values
+        auto to_display = [this](double v_px) {
+            auto current_unit = _tracker->getActiveUnit();
+            return current_unit ? Quantity::convert(v_px, "px", current_unit) : v_px;
+        };
+        _ui->gapX->setRange(to_display(-spacing.x()/2.0), 10000000);
+        _ui->gapY->setRange(to_display(-spacing.y()/2.0), 10000000);
+        _ui->marginX->setRange(to_display(-spacing.x()/2.0), to_display(gap.x()/2.0));
+        _ui->marginY->setRange(to_display(-spacing.y()/2.0), to_display(gap.y()/2.0));
     }
 
     // Color button — update swatch
