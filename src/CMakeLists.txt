@@ -285,11 +285,6 @@ endif()
 set_target_properties(linea_base PROPERTIES SOVERSION "${INKSCAPE_VERSION_MAJOR}.${INKSCAPE_VERSION_MINOR}.${INKSCAPE_VERSION_PATCH}.0")
 set_target_properties(linea_base PROPERTIES INSTALL_RPATH "${LIBINKSCAPE_INSTALL_RPATH}")
 
-if(WITH_CAPYPDF)
-  if(TARGET capypdf)
-    add_dependencies(linea_base capypdf)
-  endif()
-endif()
 
 # Link the linea_base library against all external dependencies
 target_link_libraries(linea_base
