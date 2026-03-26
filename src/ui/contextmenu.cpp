@@ -31,6 +31,7 @@
 #include <string_view>
 #include "ui/widget/custom-menu.h"
 
+#include "desktop.h"
 #include "document-undo.h"
 #include "linea-window.h"
 #include "layer-manager.h"

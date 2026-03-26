@@ -407,7 +407,7 @@ public:
     SPItem* itemAtPoint(const Geom::Point& point, bool intoGroups = false) const;
     SPItem* getItemAtPoint(Geom::Point const& p, bool into_groups, SPItem* upto = nullptr) const;
     SPItem* getGroupAtPoint(Geom::Point const& p) const;
-    std::vector<SPItem*> getItemsAtPoints(std::vector<Geom::Point> points, bool all_layers = true, bool topmost_only = true, size_t limit = 0, bool active_only = true) const;
+    std::vector<SPItem*> getItemsAtPoints(std::vector<Geom::Point> points, bool all_layers = true, bool topmost_only = true, size_t limit = 0, bool active_only = true, double distance = 0.25) const;
     DrawingItem* drawingItemAtPoint(const Geom::Point& point) const;
 
     // Canvas event handling for tools (matches SPDesktop::drawing_handler)
@@ -629,7 +629,7 @@ private:
 
     std::deque<SPItem*> const &get_flat_item_list(bool into_groups, bool active_only) const;
     SPItem *_getItemFromListAtPointBottom(SPGroup *group, std::vector<SPItem*> const &list, Geom::Point const &p) const;
-    std::vector<SPItem*> find_items_at_point(std::deque<SPItem*> const &nodes, Geom::Point const &p, int items_count = 0, SPItem *upto = nullptr) const;
+    std::vector<SPItem*> find_items_at_point(std::deque<SPItem*> const &nodes, Geom::Point const &p, int items_count = 0, SPItem *upto = nullptr, std::optional<double> distance = {}) const;
     SPItem *find_item_at_point(std::deque<SPItem*> const &nodes, Geom::Point const &p, SPItem *upto = nullptr) const;
     SPItem *find_group_at_point(SPGroup *group, Geom::Point const &p) const;
 
