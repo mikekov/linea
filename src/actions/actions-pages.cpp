@@ -38,8 +38,19 @@ void page_delete(SPDesktop* desktop) {
     Inkscape::DocumentUndo::done(document, RC_("Undo", "Delete Page"), INKSCAPE_ICON("tool-pages"));
 }
 
+void page_duplicate(SPDesktop* desktop) {
+    auto document = desktop->getDocument();
+    document->getPageManager().selectPage(document->getPageManager().duplicatePage());
+    Inkscape::DocumentUndo::done(document, RC_("Undo", "Duplicate Page"), INKSCAPE_ICON("tool-pages"));
+}
+
 void page_new_and_center(SPDesktop* desktop) {
     page_new(desktop);
+    desktop->getDocument()->getPageManager().centerToSelectedPage(desktop);
+}
+
+void page_duplicate_and_center(SPDesktop* desktop) {
+    page_duplicate(desktop);
     desktop->getDocument()->getPageManager().centerToSelectedPage(desktop);
 }
 
@@ -84,6 +95,7 @@ const Glib::ustring SECTION = NC_("Action Section", "Page");
 static auto page_action_defs = std::to_array<ActionSpec<SPDesktop>>({
     // clang-format off
     {"page-new",           N_("New Page"),              SECTION, N_("Create a new page and center view on it"),                  "pages-add",            page_new_and_center},
+    {"page-duplicate",     N_("Duplicate Page"),        SECTION, N_("Duplicate the selected page and center view on the duplicate"), "pages-duplicate",     page_duplicate_and_center},
     {"page-delete",        N_("Delete Page"),           SECTION, N_("Delete the selected page and center view on next page"),    "pages-remove",         page_delete_and_center},
     {"page-move-backward", N_("Move Before Previous"),  SECTION, N_("Move page backwards in the page order"),                  "pages-order-backwards", page_backward},
     {"page-move-forward",  N_("Move After Next"),       SECTION, N_("Move page forwards in the page order"),                   "pages-order-forwards",  page_forward},
