@@ -1921,47 +1921,9 @@ Glib::ustring ClipboardManagerImpl::_getBestTarget(SPDesktop *desktop)
  */
 void ClipboardManagerImpl::_setClipboardTargets()
 {
-#ifdef _WIN32
-    // If the "image/x-emf" target handled by the emf extension would be
-    // presented as a CF_ENHMETAFILE automatically (just like an "image/bmp"
-    // is presented as a CF_BITMAP) this code would not be needed.. ???
-    // Or maybe there is some other way to achieve the same?
-
-    // Note: Metafile is the only format that is rendered and stored in clipboard
-    // on Copy, all other formats are rendered only when needed by a Paste command.
-
-    // FIXME: This should at least be rewritten to use "delayed rendering".
-    //        If possible make it delayed rendering by using Qt API only.
-
-    if (OpenClipboard(NULL)) {
-        if (_clipboardSPDoc) {
-            const Glib::ustring target = "image/x-emf";
-
-            Inkscape::Extension::DB::OutputList outlist;
-            Inkscape::Extension::db.get_output_list(outlist);
-            Inkscape::Extension::DB::OutputList::const_iterator out = outlist.begin();
-            for ( ; out != outlist.end() && target != (*out)->get_mimetype() ; ++out) {
-            }
-            if ( out != outlist.end() ) {
-                // FIXME: Temporary hack until we add support for memory output.
-                // Save to a temporary file, read it back and then set the clipboard contents
-                auto const filename = get_tmp_filename("inkscape-clipboard-export.emf");
-
-                try {
-                    (*out)->save(_clipboardSPDoc.get(), filename.c_str());
-                    HENHMETAFILE hemf = GetEnhMetaFileA(filename.c_str());
-                    if (hemf) {
-                        SetClipboardData(CF_ENHMETAFILE, hemf);
-                        DeleteEnhMetaFile(hemf);
-                    }
-                } catch (...) {
-                }
-                unlink(filename.c_str()); // delete the temporary file
-            }
-        }
-        CloseClipboard();
-    }
-#endif
+    // TODO: register support for the CF_ENHMETAFILE file format. We accept it, but don't write it
+    //  out right now, due to a regression it was causing with GTK4. See this link for details:
+    //  https://gitlab.com/inkscape/inkscape/-/work_items/6097
 
     // Build the list of MIME types we can provide, mirroring the old serializer registration.
     Extension::DB::OutputList outlist;
