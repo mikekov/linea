@@ -35,6 +35,7 @@ public:
     void setScale(double sx, double sy);
     void setOrigin(Geom::Point const &o);
     void setClipbox(Geom::Rect const &box);
+    void setExtend(cairo_extend_t extend);
     Geom::Rect bounds() const;
 
 protected:
@@ -52,6 +53,7 @@ protected:
     Geom::Rect _clipbox; ///< for preserveAspectRatio
     Geom::Point _origin;
     Geom::Scale _scale;
+    cairo_extend_t _extend;
 };
 
 } // namespace Inkscape
