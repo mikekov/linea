@@ -2,7 +2,11 @@
 #include "tool-data.h"
 
 #include <glibmm/i18n.h>
+#include <glibmm/ustring.h>
 // #include "ui/dialog/inkscape-preferences.h"
+#include "ui/modifiers.h"
+
+namespace Modifiers = Inkscape::Modifiers;
 
 enum {
     PREFS_PAGE_TOOLS,
@@ -113,7 +117,8 @@ const std::map<std::string, std::string>& get_tool_msg() {
         {"Marker",       _("<b>Click</b> a shape to start editing its markers. <b>Drag controls</b> to change orientation, scale, and position.")                                                                                 },
         {"Pencil",       _("<b>Drag</b> to create a freehand line. <b>Shift</b> appends to selected path, <b>Alt</b> activates sketch mode.")                                                                                     },
         {"Pen",          _("<b>Click</b> or <b>click and drag</b> to start a path; with <b>Shift</b> to append to selected path. <b>Ctrl+click</b> to create single dots (straight line modes only).")                            },
-        {"Calligraphic", _("<b>Drag</b> to draw a calligraphic stroke; with <b>Ctrl</b> to track a guide path. <b>Arrow keys</b> adjust width (left/right) and angle (up/down).")                                                 },
+        {"Calligraphic", Glib::ustring::compose(_("<b>Drag</b> to draw a calligraphic stroke; with <b>%1</b> to track a guide path. <b>Arrow keys</b> adjust width (left/right) and angle (up/down)."),
+                                                Modifiers::Modifier::get(Modifiers::Type::CALLI_HATCHING)->get_label())},
         {"Text",         _("<b>Click</b> to select or create text, <b>drag</b> to create flowed text; then type.")                                                                                                                },
         {"Gradient",     _("<b>Drag</b> or <b>double click</b> to create a gradient on selected objects, <b>drag handles</b> to adjust gradients.")                                                                               },
         {"Mesh",         _("<b>Drag</b> or <b>double click</b> to create a mesh on selected objects, <b>drag handles</b> to adjust meshes.")                                                                                      },

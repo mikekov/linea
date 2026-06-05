@@ -81,6 +81,9 @@ namespace Inkscape::UI::Tools {
 
 CalligraphicTool::CalligraphicTool(SPDesktop *desktop)
     : DynamicBase(desktop, "/tools/calligraphic", "calligraphy.svg")
+    , mod_calli_hatching(Modifiers::Modifier::get(Modifiers::Type::CALLI_HATCHING))
+    , mod_calli_subtract(Modifiers::Modifier::get(Modifiers::Type::CALLI_SUBTRACT))
+    , mod_calli_unionize(Modifiers::Modifier::get(Modifiers::Type::CALLI_UNIONIZE))
 {
     currentshape = make_canvasitem<CanvasItemBpath>(desktop->getCanvasSketch());
     currentshape->set_stroke(0x0);
@@ -415,7 +418,7 @@ bool CalligraphicTool::root_handler(CanvasEvent const &event)
             Geom::Point pointer;
             Geom::Affine motion_to_curve;
 
-            if (event.modifiers & INK_CONTROL_MASK) { // hatching - sense the item
+            if (mod_calli_hatching->active(event.modifiers)) { // hatching - sense the item
 
                 auto const selected = _desktop->getSelection()->singleItem();
                 if (selected && (is<SPShape>(selected) || is<SPText>(selected))) {
@@ -443,17 +446,21 @@ bool CalligraphicTool::root_handler(CanvasEvent const &event)
                         // unit-length vector
                         hatch_unit_vector = (pointer - nearest) / hatch_dist;
 
-                        message_context->set(Inkscape::NORMAL_MESSAGE, _("<b>Guide path selected</b>; start drawing along the guide with <b>Ctrl</b>"));
+                        message_context->setF(Inkscape::NORMAL_MESSAGE,
+                                              _("<b>Guide path selected</b>; start drawing along the guide with <b>%s</b>"),
+                                              mod_calli_hatching->get_label().c_str());
                     }
                 } else {
-                    message_context->set(Inkscape::NORMAL_MESSAGE, _("<b>Select a guide path</b> to track with <b>Ctrl</b>"));
+                    message_context->setF(Inkscape::NORMAL_MESSAGE,
+                                          _("<b>Select a guide path</b> to track with <b>%s</b>"),
+                                          mod_calli_hatching->get_label().c_str());
                 }
             }
 
             if (is_drawing && (event.modifiers & INK_BUTTON1_MASK)) {
                 dragging = true;
 
-                if (event.modifiers & INK_CONTROL_MASK && hatch_item) { // hatching
+                if (mod_calli_hatching->active(event.modifiers) && hatch_item) { // hatching
 
                     constexpr auto HATCH_VECTOR_ELEMENTS = 12;
                     constexpr auto INERTIA_ELEMENTS = 24;
@@ -616,7 +623,7 @@ bool CalligraphicTool::root_handler(CanvasEvent const &event)
             Geom::PathVector path = Geom::Path(Geom::Circle(0,0,1)); // Unit circle centered at origin.
 
             // Draw the hatching circle if necessary
-            if (event.modifiers & INK_CONTROL_MASK) {
+            if (mod_calli_hatching->active(event.modifiers)) {
                 if (hatch_spacing == 0 && hatch_dist != 0) {
                     // Haven't set spacing yet: gray, center free, update radius live
 
@@ -683,7 +690,9 @@ bool CalligraphicTool::root_handler(CanvasEvent const &event)
             // Create object
             fit_and_split(true);
             if (accumulate()) {
-                set_to_accumulated(event.modifiers & INK_SHIFT_MASK, event.modifiers & INK_ALT_MASK); // performs document_done
+                // This will perform document_done
+                set_to_accumulated(mod_calli_unionize->active(event.modifiers),
+                                   mod_calli_subtract->active(event.modifiers));
             } else {
                 g_warning("Failed to create path: invalid data in dc->cal1 or dc->cal2");
             }
@@ -800,15 +809,10 @@ bool CalligraphicTool::root_handler(CanvasEvent const &event)
     },
 
     [&] (KeyReleaseEvent const &event) {
-        switch (get_latin_keyval(event)) {
-            case INK_KEY_Control_L:
-            case INK_KEY_Control_R:
-                message_context->clear();
-                hatch_spacing = 0;
-                hatch_spacing_step = 0;
-                break;
-            default:
-                break;
+        if (mod_calli_hatching->active(event.modifiers)) {
+            message_context->clear();
+            hatch_spacing = 0;
+            hatch_spacing_step = 0;
         }
     },
 

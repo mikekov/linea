@@ -450,18 +450,6 @@ bool EraserTool::root_handler(CanvasEvent const &event)
             ret = _handleKeypress(event);
         },
 
-        [&] (KeyReleaseEvent const &event) {
-            switch (get_latin_keyval(event)) {
-                case INK_KEY_Control_L:
-                case INK_KEY_Control_R:
-                    message_context->clear();
-                    break;
-
-                default:
-                    break;
-            }
-        },
-
         [&] (CanvasEvent const &event) {}
     );
 
@@ -474,9 +462,6 @@ bool EraserTool::_handleKeypress(KeyPressEvent const &key)
     bool ret = false;
     bool just_ctrl = (key.modifiers & INK_CONTROL_MASK)                      // Ctrl key is down
                      && !(key.modifiers & (INK_ALT_MASK | INK_SHIFT_MASK)); // but not Alt or Shift
-
-    bool just_alt = (key.modifiers & INK_ALT_MASK)                            // Alt is down
-                    && !(key.modifiers & (INK_CONTROL_MASK | INK_SHIFT_MASK)); // but not Ctrl or Shift
 
     switch (get_latin_keyval(key)) {
         case INK_KEY_Right:
