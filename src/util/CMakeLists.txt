@@ -9,6 +9,7 @@ target_sources(linea_base PRIVATE
     font-discovery.cpp
     font-tags.cpp
     funclog.cpp
+    join.cpp
     share.cpp
     object-renderer.cpp
     object-modified-tags.cpp
@@ -56,6 +57,7 @@ target_sources(linea_base PRIVATE
     forward-pointer-iterator.h
     funclog.h
     hybrid-pointer.h
+    join.h
     longest-common-suffix.h
     object-renderer.h
     object-modified-tags.h

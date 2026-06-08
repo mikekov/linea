@@ -39,7 +39,8 @@ enum Key : KeyMask {
 enum Triggers : Trigger {
     NO_CATEGORY, CANVAS, SELECT, MOVE, TRANSFORM,
     NODE_TOOL, BOOLEANS_TOOL, BOX3D_TOOL, CALLI_TOOL,
-    DROPPER_TOOL, FLOOD_TOOL,
+    DROPPER_TOOL, FLOOD_TOOL, SPIRAL_TOOL, STAR_TOOL,
+    TWEAK_TOOL,
     // Action taken to trigger this modifier, starts at
     // bit 6 so categories and triggers can be combined.
     CLICK = 32,
@@ -54,10 +55,16 @@ enum class Type {
     // {TOOL_NAME}_{ACTION_NAME}
 
     // Canvas tools (applies to any tool selection)
-    CANVAS_PAN_Y,         // Pan up and down {NOTHING+SCROLL}
+    CANVAS_PAN_DRAG,      // Pan freely {CTRL+SHIFT+DRAG}
     CANVAS_PAN_X,         // Pan left and right {SHIFT+SCROLL}
-    CANVAS_ZOOM,          // Zoom in and out {CTRL+SCROLL}
+    CANVAS_PAN_Y,         // Pan up and down {NOTHING+SCROLL}
     CANVAS_ROTATE,        // Rotate CW and CCW {CTRL+SHIFT+SCROLL}
+    CANVAS_ROTATE_DRAG,   // Rotate CW and CCW {CTRL+DRAG}
+    CANVAS_ROTATE_RESET,  // Reset angle while rotating {CTRL+SHIFT+DRAG}
+    CANVAS_ROTATE_SNAPPING, // Snap while rotating {SHIFT+DRAG}
+    CANVAS_ZOOM,          // Zoom in and out {CTRL+SCROLL}
+    CANVAS_ZOOM_INVERT,   // Invert the direction of zoom {CLICK+SHIFT}
+    CANVAS_ZOOM_RUBBERBAND, // Start a rubberband zoom drag {DRAG+SHIFT}
 
     // Select tool (minus transform)
     SELECT_ADD_TO,        // Add selection {SHIFT+CLICK}
@@ -68,6 +75,7 @@ enum class Type {
     SELECT_FORCE_DRAG,    // Drag objects even if the mouse isn't over them {ALT+DRAG+Selected}
     SELECT_CYCLE,         // Cycle through objects under cursor {ALT+SCROLL}
     SELECT_DUPLICATE,     // Duplicate selection when starting a drag {ALT+DRAG+Selected} unassigned by default
+    SELECT_REMOVE_SNAP,   // Remove snap target during a drag {SHIFT+ALT+DRAG+Selected}
 
     // Transform handles (applies to multiple tools)
     MOVE_CONFINE,         // Limit dragging to X OR Y only {DRAG+CTRL}
@@ -94,10 +102,28 @@ enum class Type {
     FLOOD_ITEM,           // Applies style to fill+stroke of target item {CLICK+CTRL}
     FLOOD_TOUCH_FILL,     // Flood only the first point of contact during drag {DRAG+ALT}
 
-    NODE_GROW_LINEAR,     // Scroll wheel selection of nodes
-    NODE_INVERT,          // Select nodes outside of the selection box
-    NODE_REMOVE_FROM,     // Remove selected nodes from selection
+    NODE_BSPLINE_HANDLES, // Create/move bspline handles {DRAG+SHIFT}
+    NODE_CONFINE_HANDLES, // When confining, use handles as limits {DRAG+ALT}
+    NODE_CYCLE_TYPE,      // Change node type {CLICK+CTRL}
+    NODE_DELETE,          // Delete node {CLICK+CTRL+ALT}
+    NODE_DELETE_SEGMENT,  // Delete segment {DOUBLECLICK+CTRL}
+    NODE_DRAG_HANDLE,     // Drag handle out of node {CLICK+SHIFT}
+    NODE_GROW_LINEAR,     // Scroll wheel selection of nodes {SCROLL+CTRL}
     NODE_GROW_SPATIAL,    // Scroll wheel selection of nodes
+    NODE_INSERT,          // Insert node into curve {CLICK+CTRL+ALT}
+    NODE_INVERT,          // Select nodes outside of the selection box {DRAG+CTRL}
+    NODE_LINK_HANDLES,    // Move both handles at once {DRAG+SHIFT}
+    NODE_PRESERVE_LENGTH, // Preserve handle length {DRAG+ALT}
+    NODE_REMOVE_FROM,     // Remove selected nodes from selection {DRAG+SHIFT+CTRL}
+    NODE_RETRACT_HANDLE,  // Remove handle {CLICK+ALT}
+    NODE_STRAIGHTEN_SEGMENT, // Straighten segment {DOUBLECLICK+ALT}
+
+    SPIRAL_SNAPPING,      // Snap while rotating {DRAG+CTRL}
+
+    STAR_SNAPPING,        // Snap while rotating {DRAG+CTRL}
+
+    TWEAK_INVERT,         // Reverse the direction of the tweak {CLICK+SHIFT}
+
     // TODO: Alignment omitted because it's UX is not completed
 };
 
@@ -105,10 +131,18 @@ enum class Type {
 std::string   generate_label(KeyMask mask, std::string sep = "+");
 unsigned long calculate_weight(KeyMask mask);
 
-// Generate a responsivle tooltip set
-void responsive_tooltip(MessageContext *message_context, KeyEvent const &event, int num_args, ...);
+// Generate a responsive tooltip set
+void responsive_tooltip(MessageContext *message_context, KeyEvent const &event, int num_types, ...);
+
+// Generate a responsive tooltip set, but with custom labels for actions.
+// NOTE: This is designed for a better UX (arc tool can say "makes circles or ellipses" rather than
+//  the generic "keep aspect ratio") but should not be used to force the same modifier action to be
+//  shared when it is conceptually a different action. Be willing to make new actions with their
+//  own labels and shortcut preference.
+void responsive_tooltip_with_labels(MessageContext *message_context, KeyEvent const &event, int num_types, ...);
 
 int add_keyval(int state, int keyval, bool release = false);
+bool keyval_is_a_modifier(int keyval);
 
 /**
  * A class to represent ways functionality is driven by shift modifiers

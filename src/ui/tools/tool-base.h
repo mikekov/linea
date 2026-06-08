@@ -19,6 +19,7 @@
 
 #include "desktop.h"
 #include "preferences.h"
+#include "ui/modifiers.h"
 #include "ui/widget/events/enums.h"
 #include "util/action-accel.h"
 
@@ -244,6 +245,14 @@ private:
     bool _dse_callback_in_process = false;
     Glib::ustring _last_active_tool;
     std::string _tool_name;
+
+    Modifiers::Modifier *mod_canvas_pan_drag;
+    Modifiers::Modifier *mod_canvas_rotate_drag;
+    Modifiers::Modifier *mod_canvas_rotate_reset;
+    Modifiers::Modifier *mod_canvas_rotate_snapping;
+    Modifiers::Modifier *mod_canvas_zoom_invert;
+    Modifiers::Modifier *mod_canvas_zoom_rubberband;
+    Modifiers::Modifier *mod_select_force_drag;
 };
 
 void sp_event_context_read(ToolBase *tool, char const *key);
