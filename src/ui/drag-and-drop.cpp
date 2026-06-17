@@ -59,6 +59,7 @@ bool ink_drop_files(SPDesktop* desktop, std::vector<std::string> const& paths, G
 
 using Inkscape::DocumentUndo;
 using namespace Inkscape::Util;
+namespace Colors = Inkscape::Colors;
 
 namespace {
 

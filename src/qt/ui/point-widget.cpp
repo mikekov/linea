@@ -124,8 +124,8 @@ void PointWidget::commitValue() {
     _updating = true;
     _object->setAttribute(attribute.toUtf8().constData(), value.toUtf8().constData());
     _updating = false;
-    DocumentUndo::maybeDone(_object->document, undoKey().toUtf8().constData(),
-                            Util::Internal::ContextString(undoLabel().toUtf8().constData()), "");
+    Inkscape::DocumentUndo::maybeDone(_object->document, undoKey().toUtf8().constData(),
+                                      Inkscape::Util::Internal::ContextString(undoLabel().toUtf8().constData()), "");
     updateUi();
 }
 

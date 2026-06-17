@@ -266,13 +266,13 @@ void MarkerComboBox::connectSignals() {
     });
     connect(_popupUi->orientAngle, &QPushButton::toggled, this, [this](bool checked) {
         if (!checked) return;
-        CSSOStringStream os;
+        Inkscape::CSSOStringStream os;
         os << _popupUi->angle->value();
         setOrientation(true, os.str().c_str());
     });
     connect(_popupUi->angle, &NumberEdit::valueChanged, this, [this](double angle) {
         if (_update.pending() || !_popupUi->angle->isEnabled()) return;
-        CSSOStringStream os;
+        Inkscape::CSSOStringStream os;
         os << angle;
         sp_marker_set_orient(getActiveDocumentMarker(), os.str().c_str());
     });

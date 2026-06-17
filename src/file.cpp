@@ -336,10 +336,10 @@ bool sp_file_save_dialog(LineaWindow& parentWindow, SPDocument *doc, Inkscape::E
     }
     std::string dirname = Glib::path_get_dirname(save_loc);
     // QT TODO: GTK file chooser not available in Qt port
-    auto file = choose_file_save( dialog_title, &parentWindow,
-                                  Inkscape::UI::Dialog::create_export_filters(true),
-                                  basename,
-                                  dirname);
+    auto file = Inkscape::choose_file_save( dialog_title, &parentWindow,
+                                            Inkscape::UI::Dialog::create_export_filters(true),
+                                            basename,
+                                            dirname);
     if (!file) {
         return false; // Cancelled
     }
@@ -722,7 +722,7 @@ SPObject *file_import(SPDocument *in_doc, std::string const &path, Inkscape::Ext
         place_to_insert = in_doc->getRoot();
     }
 
-    std::vector<XML::Node *> result;
+    std::vector<Inkscape::XML::Node *> result;
 
     doc->ensureUpToDate();
     auto const bbox = doc->getRoot()->desktopPreferredBounds().value_or(Geom::Rect());

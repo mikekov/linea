@@ -54,7 +54,7 @@ std::vector<double> parseDashPattern(const QString& input) {
 QString formatDashPattern(const std::vector<double>& pattern) {
     if (pattern.empty()) return QString();
 
-    CSSOStringStream ost;
+    Inkscape::CSSOStringStream ost;
     for (size_t i = 0; i < pattern.size(); ++i) {
         if (i > 0) ost << " ";
         ost << pattern[i];
@@ -66,7 +66,7 @@ QString formatDashPattern(const std::vector<double>& pattern) {
 std::vector<std::vector<double>> loadPredefinedPatterns() {
     std::vector<std::vector<double>> patterns;
 
-    auto prefs = Preferences::get();
+    auto prefs = Inkscape::Preferences::get();
     auto const dashPrefs = prefs->getAllDirs("/palette/dashes");
 
     SPStyle style;
