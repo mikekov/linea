@@ -490,6 +490,9 @@ std::unique_ptr<SPDocument> SPDocument::createDoc(
         sp_file_convert_dpi(document.get());
     }
 
+    // Prevent the updates from running multiples times and mark the changes as complete.
+    document->root->updateDocVersion();
+
     // Update document level action settings
     // -- none available so far --
 
