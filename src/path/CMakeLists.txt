@@ -2,6 +2,7 @@
 
 target_sources(linea_base PRIVATE
   path-boolop.cpp
+  path-curve.cpp
   path-object-set.cpp
   path-offset.cpp
   path-outline.cpp
@@ -15,6 +16,7 @@ target_sources(linea_base PRIVATE
   # -------
   # Headers
   path-boolop.h
+  path-curve.h
   path-offset.h
   path-outline.h
   path-simplify.h

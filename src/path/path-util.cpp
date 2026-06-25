@@ -15,7 +15,7 @@
 #include "path/path-boolop.h"
 #include "text-editing.h"
 #include "livarot/Path.h"
-#include "display/curve.h"
+#include "path/path-curve.h"
 
 #include "object/sp-flowtext.h"
 #include "object/sp-image.h"

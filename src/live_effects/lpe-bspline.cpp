@@ -10,7 +10,7 @@
 #include <QString>
 #include <QVBoxLayout>
 
-#include "display/curve.h"
+#include "path/path-curve.h"
 #include "live_effects/lpe-bspline.h"
 #include "object/sp-path.h"
 #include "preferences.h"

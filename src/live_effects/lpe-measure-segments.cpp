@@ -32,7 +32,7 @@
 #include "document-undo.h"
 #include "preferences.h"
 
-#include "display/curve.h"
+#include "path/path-curve.h"
 #include "helper/geom.h"
 #include "libnrtype/Layout-TNG.h"
 #include "live_effects/lpeobject.h"

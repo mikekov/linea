@@ -31,7 +31,7 @@
 
 #include "context-fns.h"
 #include "desktop-style.h"
-#include "display/curve.h"
+#include "path/path-curve.h"
 #include "extension/db.h" // extension database
 #include "extension/input.h"
 #include "extension/output.h"

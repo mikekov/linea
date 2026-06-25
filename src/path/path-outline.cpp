@@ -25,7 +25,7 @@
 #include "selection.h"
 #include "style.h"
 
-#include "display/curve.h"  // Should be moved to path directory
+#include "path/path-curve.h"  // Should be moved to path directory
 
 #include "helper/geom.h"    // pathv_to_linear_and_cubic()
 

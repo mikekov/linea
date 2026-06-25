@@ -11,7 +11,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "display/curve.h"
+#include "path/path-curve.h"
 #include "helper/geom.h"
 #include "object/sp-lpe-item.h"
 #include "path/path-util.h"

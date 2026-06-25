@@ -29,7 +29,7 @@
 #include "preferences.h"
 #include "selection.h"
 
-#include "display/curve.h"
+#include "path/path-curve.h"
 
 #include "livarot/Path.h"
 #include "livarot/Shape.h"
