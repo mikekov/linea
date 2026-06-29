@@ -344,6 +344,8 @@ void PdfImportDialog::setupCombos() {
 
 void PdfImportDialog::setupConnections() {
     QObject::connect(_ui->pageNumbers, &QLineEdit::textChanged, this, &PdfImportDialog::onPageNumberChanged);
+    QObject::connect(_ui->importType, &QTabWidget::currentChanged, this,
+                     [this](int) { validatePageSelection(); });
     QObject::connect(_ui->prevPage, &QPushButton::clicked, this, &PdfImportDialog::onPrevPage);
     QObject::connect(_ui->nextPage, &QPushButton::clicked, this, &PdfImportDialog::onNextPage);
     QObject::connect(_ui->meshSlider, &QSlider::valueChanged, this, &PdfImportDialog::onMeshSliderChanged);
@@ -368,6 +370,8 @@ void PdfImportDialog::setupConnections() {
 
 void PdfImportDialog::onPageNumberChanged() {
     _currentPages = _ui->pageNumbers->text().toStdString();
+    validatePageSelection();
+
     auto nums = Inkscape::parseIntRange(_currentPages, 1, _totalPages);
     if (!nums.empty()) {
         setPreviewPage(*nums.begin());
@@ -420,6 +424,19 @@ void PdfImportDialog::onConvertColorsToggled(bool checked) {
 
 void PdfImportDialog::onImportPagesToggled(bool checked) {
     if (_mod) _mod->set_param_bool("importPages", checked);
+}
+
+// Disable OK when the page selection on the internal-import tab is invalid,
+// rather than silently importing the first page.
+void PdfImportDialog::validatePageSelection() {
+    bool valid = !_ui->pageNumbers->isEnabled()
+        || !Inkscape::parseIntRange(_currentPages, 1, _totalPages).empty();
+
+    _ui->pageNumbers->setProperty("warning", !valid);
+    _ui->pageNumbers->style()->unpolish(_ui->pageNumbers);
+    _ui->pageNumbers->style()->polish(_ui->pageNumbers);
+    _ui->buttonBox->button(QDialogButtonBox::Ok)
+        ->setEnabled(valid || getImportMethod() != PdfImportType::PDF_IMPORT_INTERNAL);
 }
 
 // ---- font list ----

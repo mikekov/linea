@@ -698,11 +698,7 @@ std::unique_ptr<SPDocument> PdfInput::open(Input *mod, char const *uri, bool)
     }
     // Both poppler and poppler+cairo can get page num info from poppler.
     auto pages = parseIntRange(page_nums, 1, pdf_doc->getCatalog()->getNumPages());
-
-    if (pages.empty()) {
-        g_warning("No pages selected, getting first page only.");
-        pages.insert(1);
-    }
+    g_assert(!pages.empty());
 
     // Create Inkscape document from file
     std::unique_ptr<SPDocument> doc;

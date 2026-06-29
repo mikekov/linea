@@ -111,6 +111,7 @@ Application &Application::instance()
 
 Application::Application(bool use_gui) :
     _use_gui(use_gui)
+    , _pages("all")
 {
     using namespace Inkscape::IO::Resource;
     /* fixme: load application defaults */

@@ -116,6 +116,7 @@ private:
     void setFonts(const FontList& fonts);
     void setPreviewPage(int page);
     void renderPreview();
+    void validatePageSelection();
 
     std::unique_ptr<Ui::PdfImportDialog> _ui;
 
