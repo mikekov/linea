@@ -17,7 +17,7 @@ namespace Inkscape::Util {
 int get_default_numeric_precision()
 {
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
-    return prefs->getInt("/options/svgoutput/numericprecision", 8);
+    return prefs->getInt("/options/svgoutput/numericprecision", 10);
 }
 
 int get_opacity_default_precision() {
