@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>NotificationBar</class>
+  <widget class="QWidget" name="NotificationBar">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>400</width>
+        <height>60</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string/>
+    </property>
+    <layout class="QVBoxLayout" name="outerLayout">
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <item>
+        <widget class="QWidget" name="containerWidget" native="true">
+          <layout class="QGridLayout" name="gridLayout">
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>5</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <property name="horizontalSpacing">
+              <number>4</number>
+            </property>
+            <property name="verticalSpacing">
+              <number>0</number>
+            </property>
+
+            <item row="0" column="0" rowspan="2">
+              <widget class="Linea::UI::IconWidget" name="iconLabel">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                  </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                  <size>
+                    <width>32</width>
+                    <height>40</height>
+                  </size>
+                </property>
+                <property name="maximumSize">
+                  <size>
+                    <width>32</width>
+                    <height>16777215</height>
+                  </size>
+                </property>
+              </widget>
+            </item>
+
+            <item row="0" column="1">
+              <widget class="QLabel" name="titleLabel">
+                <property name="textFormat">
+                  <enum>Qt::RichText</enum>
+                </property>
+                <property name="text">
+                  <string/>
+                </property>
+                <property name="alignment">
+                  <set>Qt::AlignHCenter|Qt::AlignBottom</set>
+                </property>
+              </widget>
+            </item>
+
+            <item row="1" column="1">
+              <widget class="QLabel" name="messageLabel">
+                <property name="textFormat">
+                  <enum>Qt::RichText</enum>
+                </property>
+                <property name="text">
+                  <string/>
+                </property>
+                <property name="alignment">
+                  <set>Qt::AlignHCenter|Qt::AlignTop</set>
+                </property>
+                <property name="wordWrap">
+                  <bool>false</bool>
+                </property>
+              </widget>
+            </item>
+
+            <item row="0" column="2" rowspan="2">
+              <widget class="QToolButton" name="closeButton">
+                <property name="autoRaise">
+                  <bool>false</bool>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/close</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::IconWidget</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/icon-widget.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

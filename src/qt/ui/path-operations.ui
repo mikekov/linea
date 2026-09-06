@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PathOperations</class>
+  <widget class="QWidget" name="PathOperations">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>300</width>
+        <height>60</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <!-- Row 0: Title label + button -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="titleLabel">
+          <property name="text">
+            <string>Path Operations</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QPushButton" name="dummy">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <property name="text">
+            <string/>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/list-add</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Boolean operations (6 buttons) -->
+      <item row="1" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="booleanLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="unionButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Union</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-union</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-union</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="differenceButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Difference</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-difference</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-difference</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="intersectionButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Intersection</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-intersection</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-intersection</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="exclusionButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Exclusion</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-exclusion</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-exclusion</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="divisionButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Division</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-division</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-division</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="cutButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Cut Path</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-cut</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-cut</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <!-- Row 2: Combine/break operations (5 buttons) -->
+      <item row="2" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="combineLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <property name="topMargin">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="combineButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Combine</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-combine</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-combine</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="breakApartButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Break Apart</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-break-apart</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-break-apart</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="splitButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Split Path</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-split</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-split</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="fractureButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Fracture</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-fracture</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-fracture</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="flattenButton">
+              <property name="text">
+                <string/>
+              </property>
+              <property name="toolTip">
+                <string>Flatten</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-flatten</normaloff>
+                </iconset>
+              </property>
+              <property name="actionName" stdset="0">
+                <string>path-flatten</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

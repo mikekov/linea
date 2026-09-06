@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#ifndef INKSCAPE_UTIL_FONT_DISCOVERY_H
+#define INKSCAPE_UTIL_FONT_DISCOVERY_H
+
+#include <functional>
+#include <glibmm/ustring.h>
+#include <memory>
+#include <sigc++/signal.h>
+#include <vector>
+#include <pangomm.h>
+#include "async/operation-stream.h"
+#include <sigc++/scoped_connection.h>
+#include "libnrtype/font-factory.h"
+#include "statics.h"
+
+namespace Inkscape {
+
+struct FontInfo {
+    Glib::RefPtr<Pango::FontFamily> ff;
+    Glib::RefPtr<Pango::FontFace> face;
+    Glib::ustring variations;   // pango-style font variations (if any)
+    double weight = 0;           // proxy for font weight - how black it is
+    double width = 0;            // proxy for font width - how compressed/extended it is
+    unsigned short family_kind = 0; // OS/2 family class
+    bool monospaced = false;    // fixed-width font
+    bool oblique = false;       // italic or oblique font
+    bool variable_font = false; // this is variable font
+    bool synthetic = false;     // this is an alias, like "Sans" or "Monospace"
+
+    bool operator == (const FontInfo&) const = default;
+};
+
+enum class FontOrder {
+    _First = 0,
+    ByName = 0,
+    ByWeight,
+    ByWidth,
+    ByFamily,
+    _Last = ByFamily
+};
+
+class FontDiscovery : public Util::EnableSingleton<FontDiscovery, Util::Depends<FontFactory>>
+{
+public:
+    using FontsPayload = std::shared_ptr<const std::vector<std::vector<FontInfo>>>;
+    using MessageType = Async::Msg::Message<FontsPayload, double, Glib::ustring, std::vector<FontInfo>>;
+
+    sigc::scoped_connection connect_to_fonts(std::function<void (const MessageType&)> fn);
+
+    // Synchronous access to the cached font families; null until the async
+    // load kicked off by connect_to_fonts() has completed. Callers must keep
+    // the returned shared_ptr alive while holding pointers into it.
+    FontsPayload fonts() const { return _fonts; }
+
+protected:
+    FontDiscovery();
+
+private:
+    FontsPayload _fonts;
+    sigc::scoped_connection _connection;
+    Inkscape::Async::OperationStream<FontsPayload, double, Glib::ustring, std::vector<FontInfo>> _loading;
+    sigc::signal<void (const MessageType&)>_events;
+};
+
+// Use font factory and cached font details to return a list of all fonts available to Inkscape
+std::vector<FontInfo> get_all_fonts();
+
+// change order
+void sort_fonts(std::vector<FontInfo>& fonts, FontOrder order, bool sans_first);
+
+// sort font families
+void sort_font_families(std::vector<std::vector<FontInfo>>& fonts, bool sans_first);
+
+// find a family by name (case-insensitive); nullptr if not present
+const std::vector<FontInfo>* find_font_family(const std::vector<std::vector<FontInfo>>& fonts, const Glib::ustring& family_name);
+
+// find the face whose style name (as produced by get_face_style) matches; nullptr if absent
+const FontInfo* find_font_face(const std::vector<FontInfo>& family, const Glib::ustring& style_name);
+
+// find the face closest to the weight/style/stretch of `target`;
+// never null for a non-empty family (falls back to the regular face)
+const FontInfo* find_closest_face(const std::vector<FontInfo>& family, const Pango::FontDescription& target);
+
+// get regular font from the family
+const FontInfo& get_family_font(const std::vector<FontInfo>& family);
+FontInfo& get_family_font(std::vector<FontInfo>& family);
+int get_family_font_index(const std::vector<FontInfo>& family);
+
+Pango::FontDescription get_font_description(const Glib::RefPtr<Pango::FontFamily>& ff, const Glib::RefPtr<Pango::FontFace>& face);
+
+Glib::ustring get_fontspec(const Glib::ustring& family, const Glib::ustring& face);
+Glib::ustring get_fontspec(const Glib::ustring& family, const Glib::ustring& face, const Glib::ustring& variations);
+
+Glib::ustring get_face_style(const Pango::FontDescription& desc);
+
+Glib::ustring get_fontspec_without_variants(const Glib::ustring& fontspec);
+
+Glib::ustring get_inkscape_fontspec(
+    const Glib::RefPtr<Pango::FontFamily>& ff,
+    const Glib::RefPtr<Pango::FontFace>& face,
+    const Glib::ustring& variations);
+
+// combine font style, weight, stretch and other traits to come up with a value
+// that can be used to order font faces within the same family
+int get_font_style_order(const Pango::FontDescription& desc);
+
+Glib::ustring get_full_font_name(Glib::RefPtr<Pango::FontFamily> ff, Glib::RefPtr<Pango::FontFace> face);
+
+} // namespace Inkscape
+
+#endif // INKSCAPE_UTIL_FONT_DISCOVERY_H

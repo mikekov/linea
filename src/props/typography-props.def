@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// Property table: typography (text/font) properties.
+// See element-props.def for the row grammar.
+//
+// Readers and appliers operate on individual text leaves (SPText, SPTSpan,
+// SPFlowpara, ...). The SelectionStateModel's text scope and the Editor's
+// item scope redirect these to the active spans when the text tool has a
+// subselection; otherwise whole text objects are visited. Readers return
+// nullopt for non-textual items, so merge_item is safe to call on any
+// selection.
+//
+// no include guard: intentionally re-includable
+
+// --- font size & spacing (numeric) --------------------------------------
+LINEA_PROP(UnitValue, font_size,
+           (read_font_size),
+           (apply_font_size),
+           "font-change", RC_("Undo", "Set font size"))
+
+// Line-height carries value + unit as one property (e.g. {1.5, EM}).
+// Relative units (em, ex, %) are preserved in the SVG; absolute units
+// are converted to px by the applier.
+LINEA_PROP(UnitValue, line_height,
+           (read_line_height),
+           (apply_line_height),
+           "line-height", RC_("Undo", "Set line height"))
+
+LINEA_PROP(double, letter_spacing,
+           (read_letter_spacing),
+           (apply_letter_spacing),
+           "letter-spacing", RC_("Undo", "Set letter spacing"))
+
+LINEA_PROP(double, word_spacing,
+           (read_word_spacing),
+           (apply_word_spacing),
+           "word-spacing", RC_("Undo", "Set word spacing"))
+
+// --- font identity -------------------------------------------------------
+// font_family and font_style share an undo key so consecutive family/face
+// changes from the font combo coalesce into one undo step.
+LINEA_PROP(Glib::ustring, font_family,
+           (read_font_family),
+           (apply_font_family),
+           "font-change", RC_("Undo", "Set font"))
+
+LINEA_PROP(Glib::ustring, font_style,
+           (read_font_style),
+           (apply_font_style),
+           "font-change", RC_("Undo", "Set font"))
+
+// Font variation axes: the value carries the full axis set (defaults
+// included) so the applier can rebuild the fontspec. Shares the font
+// undo key so axis drags coalesce with face changes.
+LINEA_PROP(SPIFontVariationSettings, font_variation,
+           (read_font_variation),
+           (apply_font_variation),
+           "font-change", RC_("Undo", "Set font"))
+
+// --- text layout (enums) -------------------------------------------------
+LINEA_PROP(int, text_align,
+           (read_text_align),
+           (apply_text_align),
+           "text-align", RC_("Undo", "Set text alignment"))
+
+LINEA_PROP(int, writing_mode,
+           (read_writing_mode),
+           (apply_writing_mode),
+           "writing-mode", RC_("Undo", "Set writing mode"))
+
+LINEA_PROP(int, direction,
+           (read_direction),
+           (apply_direction),
+           "text-direction", RC_("Undo", "Set text direction"))
+
+LINEA_PROP(int, text_orientation,
+           (read_text_orientation),
+           (apply_text_orientation),
+           "text-orientation", RC_("Undo", "Set text orientation"))
+
+// --- baseline shift (superscript / subscript) ---------------------------
+LINEA_PROP(bool, superscript,
+           (read_superscript),
+           (apply_superscript),
+           "baseline-shift", RC_("Undo", "Set superscript or subscript"))
+
+LINEA_PROP(bool, subscript,
+           (read_subscript),
+           (apply_subscript),
+           "baseline-shift", RC_("Undo", "Set superscript or subscript"))
+
+// --- text decoration lines -----------------------------------------------
+// All decoration rows share one undo key so toggling multiple decoration
+// buttons in quick succession coalesces into one undo step.
+LINEA_PROP(bool, underline,
+           (read_underline),
+           (apply_underline),
+           "text-decoration", RC_("Undo", "Set text decoration"))
+
+LINEA_PROP(bool, overline,
+           (read_overline),
+           (apply_overline),
+           "text-decoration", RC_("Undo", "Set text decoration"))
+
+LINEA_PROP(bool, strikethrough,
+           (read_strikethrough),
+           (apply_strikethrough),
+           "text-decoration", RC_("Undo", "Set text decoration"))
+
+LINEA_PROP(bool, decoration_spelling_error,
+           (read_decoration_spelling_error),
+           (apply_decoration_spelling_error),
+           "text-decoration", RC_("Undo", "Set text decoration"))
+
+// --- decoration style / color / thickness --------------------------------
+LINEA_PROP(int, decoration_style,
+           (read_decoration_style),
+           (apply_decoration_style),
+           "text-decoration", RC_("Undo", "Set text decoration"))
+
+LINEA_PROP(DecorationColor, decoration_color,
+           (read_decoration_color),
+           (apply_decoration_color),
+           "text-decoration", RC_("Undo", "Set text decoration"))
+
+LINEA_PROP(DecorationThicknessState, decoration_thickness,
+           (read_decoration_thickness),
+           (apply_decoration_thickness),
+           "text-decoration", RC_("Undo", "Set text decoration"))

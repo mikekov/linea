@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Authors: see git history
+ *
+ * Copyright (C) 2024-2025 Authors
+ * Released under GNU GPL v2+, read the file 'COPYING' for more information.
+ */
+#ifndef SEEN_COLORS_CMS_TRANSFORM_COLOR_H
+#define SEEN_COLORS_CMS_TRANSFORM_COLOR_H
+
+#include <memory>
+#include <vector>
+
+#include "transform.h"
+
+#include "colors/spaces/enum.h"
+
+namespace Inkscape::Colors::CMS {
+
+class Profile;
+class TransformColor : public Transform
+{
+public:
+    TransformColor(std::shared_ptr<Profile> const &from,
+                   std::shared_ptr<Profile> const &to, RenderingIntent intent);
+
+    bool do_transform(std::vector<double> &io) const;
+
+private:
+
+    int _channels_in;
+    int _channels_out;
+};
+
+class GamutChecker : public Transform
+{
+public:
+    GamutChecker(std::shared_ptr<Profile> const &from,
+                 std::shared_ptr<Profile> const &to);
+    bool check_gamut(std::vector<double> const &input) const;
+};
+
+} // namespace Inkscape::Colors::CMS
+
+#endif // SEEN_COLORS_CMS_TRANSFORM_COLOR_H

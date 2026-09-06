@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="8" height="16" viewBox="0 0 8 16" fill="none" version="1.1" id="svg1" sodipodi:docname="node-collapsed-symbolic.svg" preserveAspectRatio="meet" inkscape:version="1.4.2 (ebf0e940, 2025-05-08)" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <defs id="defs1" />
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.25" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:zoom="43.5625" inkscape:cx="4.0057389" inkscape:cy="8" inkscape:window-width="944" inkscape:window-height="777" inkscape:window-x="457" inkscape:window-y="99" inkscape:window-maximized="0" inkscape:current-layer="svg1" showgrid="true">
+    <inkscape:grid id="grid1" units="px" originx="0" originy="0" spacingx="1" spacingy="1" empcolor="#0099e5" empopacity="0.30196078" color="#0099e5" opacity="0.14901961" empspacing="5" enabled="true" visible="true" />
+  </sodipodi:namedview>
+  <g id="pan-end" transform="translate(-4)">
+    <g id=". chevron-small-right">
+      <path id="Union" d="m 9.92407,8.4248 -3.5,3.499 L 5.99927,11.5 5.57544,11.0762 8.65259,8 5.57544,4.92383 5.99927,4.5 l 0.4248,-0.42383 3.5,3.5 L 10.3489,8 Z" fill="#000000" />
+    </g>
+  </g>
+</svg>

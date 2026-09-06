@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SizeWidget</class>
+ <widget class="QWidget" name="SizeWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>200</width>
+    <height>150</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Size Widget</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="positionLabel">
+     <property name="text">
+      <string>Position</string>
+     </property>
+     <property name="smallLabel" stdset="0">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="Linea::UI::NumberEdit" name="xEdit">
+     <property name="label">
+      <string>X</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="Linea::UI::NumberEdit" name="yEdit">
+     <property name="label">
+      <string>Y</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QLabel" name="dimensionsLabel">
+     <property name="text">
+      <string>Dimensions</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="Linea::UI::NumberEdit" name="widthEdit">
+     <property name="label">
+      <string>W</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="Linea::UI::NumberEdit" name="heightEdit">
+     <property name="label">
+      <string>H</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QPushButton" name="transform">
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icons/object-transform</normaloff>
+      </iconset>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Linea::UI::NumberEdit</class>
+   <extends>QWidget</extends>
+   <header>number-edit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

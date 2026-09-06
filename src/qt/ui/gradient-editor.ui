@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>GradientEditor</class>
+  <widget class="QWidget" name="GradientEditor">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>400</width>
+        <height>300</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Gradient Editor</string>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <item>
+        <layout class="QGridLayout" name="gridLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <property name="horizontalSpacing">
+            <number>4</number>
+          </property>
+          <property name="verticalSpacing">
+            <number>4</number>
+          </property>
+          <!-- Row 0: Library button, type buttons, repeat mode -->
+          <item row="0" column="0">
+            <widget class="QPushButton" name="libraryButton">
+              <property name="toolTip">
+                <string>Gradient library</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/gradient-library</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item row="0" column="1">
+            <spacer name="horizontalSpacer1">
+              <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::MinimumExpanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>20</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+          <item row="0" column="2">
+            <widget class="QPushButton" name="linearButton">
+              <property name="toolTip">
+                <string>Linear gradient</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/paint-gradient-linear</normaloff>
+                </iconset>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="checked">
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+          <item row="0" column="3">
+            <widget class="QPushButton" name="radialButton">
+              <property name="toolTip">
+                <string>Radial gradient</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/paint-gradient-radial</normaloff>
+                </iconset>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+          <item row="0" column="4">
+            <spacer name="horizontalSpacer2">
+              <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::MinimumExpanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>20</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+          <item row="0" column="5">
+            <widget class="QPushButton" name="repeatModeButton">
+              <property name="toolTip">
+                <string>Repeat mode</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/gradient-spread-reflect</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 1: Offset + reverse button, turn + angle -->
+          <item row="1" column="0" colspan="2">
+            <widget class="Linea::UI::NumberEdit" name="offsetSpin" native="true">
+              <property name="suffix">
+                <string>%</string>
+              </property>
+              <property name="minimum">
+                <double>0.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>100.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>1</number>
+              </property>
+              <property name="singleStep">
+                <number>1</number>
+              </property>
+              <property name="value">
+                <double>0.000000000000000</double>
+              </property>
+              <property name="toolTip">
+                <string>Offset of selected stop</string>
+              </property>
+            </widget>
+          </item>
+          <item row="1" column="2">
+            <widget class="QPushButton" name="reverseButton">
+              <property name="toolTip">
+                <string>Reverse the direction of the gradient</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-flip-horizontal</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item row="1" column="3">
+            <widget class="QPushButton" name="turnButton">
+              <property name="toolTip">
+                <string>Rotate gradient 90 degrees</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-rotate-right</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item row="1" column="4" colspan="2">
+            <widget class="Linea::UI::NumberEdit" name="angleSpin" native="true">
+              <property name="suffix">
+                <string>°</string>
+              </property>
+              <property name="minimum">
+                <double>-180.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>180.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>1</number>
+              </property>
+              <property name="singleStep">
+                <number>1</number>
+              </property>
+              <property name="value">
+                <double>0.000000000000000</double>
+              </property>
+              <property name="toolTip">
+                <string>Adjust the angle of the gradient</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 2: Gradient widget placeholder -->
+          <item row="2" column="0" colspan="6">
+            <widget class="QWidget" name="gradientWidgetPlaceholder" native="true">
+              <property name="minimumSize">
+                <size>
+                  <width>0</width>
+                  <height>34</height>
+                </size>
+              </property>
+              <property name="maximumSize">
+                <size>
+                  <width>16777215</width>
+                  <height>34</height>
+                </size>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <!-- Color picker placeholder -->
+      <item>
+        <widget class="QWidget" name="colorPickerPlaceholder" native="true">
+          <property name="minimumSize">
+            <size>
+              <width>0</width>
+              <height>180</height>
+            </size>
+          </property>
+        </widget>
+      </item>
+    </layout>
+    <!-- Gradient library popup -->
+    <widget class="QMenu" name="libraryMenu"/>
+    <!-- Repeat mode popup -->
+    <widget class="QMenu" name="repeatMenu">
+      <widget class="QWidgetAction" name="padAction">
+        <property name="text">
+          <string>None</string>
+        </property>
+        <property name="icon">
+          <iconset>
+            <normaloff>:/icons/gradient-spread-pad</normaloff>
+          </iconset>
+        </property>
+      </widget>
+      <widget class="QWidgetAction" name="repeatAction">
+        <property name="text">
+          <string>Direct</string>
+        </property>
+        <property name="icon">
+          <iconset>
+            <normaloff>:/icons/gradient-spread-repeat</normaloff>
+          </iconset>
+        </property>
+      </widget>
+      <widget class="QWidgetAction" name="reflectAction">
+        <property name="text">
+          <string>Reflected</string>
+        </property>
+        <property name="icon">
+          <iconset>
+            <normaloff>:/icons/gradient-spread-reflect</normaloff>
+          </iconset>
+        </property>
+      </widget>
+    </widget>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/number-edit.h</header>
+      <container>1</container>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

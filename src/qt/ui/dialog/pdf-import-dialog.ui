@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PdfImportDialog</class>
+  <widget class="QWidget" name="PdfImportDialog">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>520</width>
+        <height>620</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>PDF Import Settings</string>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="spacing">
+        <number>8</number>
+      </property>
+      <property name="leftMargin">
+        <number>8</number>
+      </property>
+      <property name="topMargin">
+        <number>8</number>
+      </property>
+      <property name="rightMargin">
+        <number>8</number>
+      </property>
+      <property name="bottomMargin">
+        <number>8</number>
+      </property>
+
+      <!-- ===== Notebook + preview side by side ===== -->
+      <item>
+        <layout class="QHBoxLayout" name="contentLayout" stretch="1,0">
+          <property name="spacing">
+            <number>8</number>
+          </property>
+
+          <!-- ===== Import type tab widget ===== -->
+          <item>
+            <widget class="QTabWidget" name="importType">
+              <property name="currentIndex">
+                <number>0</number>
+              </property>
+
+              <!-- ===== Tab 1: Internal import ===== -->
+              <widget class="QWidget" name="internalTab">
+                <attribute name="title">
+                  <string>Internal import</string>
+                </attribute>
+                <layout class="QGridLayout" name="internalGrid" columnstretch="0,1">
+                  <property name="leftMargin">
+                    <number>8</number>
+                  </property>
+                  <property name="topMargin">
+                    <number>8</number>
+                  </property>
+                  <property name="rightMargin">
+                    <number>8</number>
+                  </property>
+                  <property name="bottomMargin">
+                    <number>8</number>
+                  </property>
+                  <property name="spacing">
+                    <number>7</number>
+                  </property>
+
+                  <!-- Row 0: description (colspan 2) -->
+                  <item row="0" column="0" colspan="2">
+                    <widget class="QLabel" name="internalDescription">
+                      <property name="text">
+                        <string>&lt;i&gt;Import via internal library. Editable text is reconstructed. Pages, layers and margins are preserved, object fills and strokes are recombined and gradient meshes are converted to tiles.&lt;/i&gt;</string>
+                      </property>
+                      <property name="wordWrap">
+                        <bool>true</bool>
+                      </property>
+                      <property name="textFormat">
+                        <enum>Qt::RichText</enum>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 1: Pages label + entry -->
+                  <item row="1" column="0">
+                    <widget class="QLabel" name="pagesLabel">
+                      <property name="text">
+                        <string>Pages</string>
+                      </property>
+                      <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                      </property>
+                    </widget>
+                  </item>
+                  <item row="1" column="1">
+                    <widget class="QLineEdit" name="pageNumbers">
+                      <property name="toolTip">
+                        <string>Type in the page range you want to import using the format 1-4 or 1,2,3,4 or the keyword 'all' to specify all pages.</string>
+                      </property>
+                      <property name="text">
+                        <string>all</string>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 2: Clip to label + combo -->
+                  <item row="2" column="0">
+                    <widget class="QLabel" name="clipToLabel">
+                      <property name="text">
+                        <string>Clip to</string>
+                      </property>
+                      <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                      </property>
+                    </widget>
+                  </item>
+                  <item row="2" column="1">
+                    <widget class="QComboBox" name="clipTo"/>
+                  </item>
+
+                  <!-- Row 3: Group by label + combo -->
+                  <item row="3" column="0">
+                    <widget class="QLabel" name="groupByLabel">
+                      <property name="text">
+                        <string>Group by</string>
+                      </property>
+                      <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                      </property>
+                    </widget>
+                  </item>
+                  <item row="3" column="1">
+                    <widget class="QComboBox" name="groupBy"/>
+                  </item>
+
+                  <!-- Row 4: Fonts label + combo -->
+                  <item row="4" column="0">
+                    <widget class="QLabel" name="fontsLabel">
+                      <property name="text">
+                        <string>Fonts</string>
+                      </property>
+                      <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                      </property>
+                    </widget>
+                  </item>
+                  <item row="4" column="1">
+                    <widget class="QComboBox" name="fontRendering"/>
+                  </item>
+
+                  <!-- Row 5: Font list checkbox (colspan 2) -->
+                  <item row="5" column="0" colspan="2">
+                    <widget class="QCheckBox" name="fontListToggle">
+                      <property name="text">
+                        <string>List of all PDF Fonts</string>
+                      </property>
+                      <property name="checked">
+                        <bool>true</bool>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 6: Font list tree view (colspan 2) -->
+                  <item row="6" column="0" colspan="2">
+                    <widget class="QTreeView" name="fontList">
+                      <property name="rootIsDecorated">
+                        <bool>false</bool>
+                      </property>
+                      <property name="itemsExpandable">
+                        <bool>false</bool>
+                      </property>
+                      <property name="alternatingRowColors">
+                        <bool>true</bool>
+                      </property>
+                      <property name="selectionBehavior">
+                        <enum>QAbstractItemView::SelectRows</enum>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 7: Precision label (colspan 2) -->
+                  <item row="7" column="0" colspan="2">
+                    <widget class="QLabel" name="precisionLabel">
+                      <property name="text">
+                        <string>Precision of approximating gradient meshes</string>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 8: Mesh slider + label -->
+                  <item row="8" column="0">
+                    <widget class="QSlider" name="meshSlider">
+                      <property name="minimum">
+                        <number>1</number>
+                      </property>
+                      <property name="maximum">
+                        <number>246</number>
+                      </property>
+                      <property name="value">
+                        <number>1</number>
+                      </property>
+                      <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                      </property>
+                    </widget>
+                  </item>
+                  <item row="8" column="1">
+                    <widget class="QLabel" name="meshLabel">
+                      <property name="text">
+                        <string>rough</string>
+                      </property>
+                      <property name="alignment">
+                        <set>Qt::AlignCenter</set>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 9: Embed images checkbox -->
+                  <item row="9" column="0" colspan="2">
+                    <widget class="QCheckBox" name="embedImages">
+                      <property name="text">
+                        <string>Embed Images</string>
+                      </property>
+                      <property name="checked">
+                        <bool>true</bool>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 10: Convert colors checkbox -->
+                  <item row="10" column="0" colspan="2">
+                    <widget class="QCheckBox" name="convertColors">
+                      <property name="text">
+                        <string>Convert Colors to sRGB</string>
+                      </property>
+                      <property name="checked">
+                        <bool>true</bool>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 11: Import pages checkbox -->
+                  <item row="11" column="0" colspan="2">
+                    <widget class="QCheckBox" name="importPages">
+                      <property name="text">
+                        <string>Import Pages</string>
+                      </property>
+                      <property name="checked">
+                        <bool>true</bool>
+                      </property>
+                    </widget>
+                  </item>
+
+                  <!-- Row 12: Vertical stretch to keep content from shifting -->
+                  <item row="12" column="0" colspan="2">
+                    <spacer name="internalVStretch">
+                      <property name="orientation">
+                        <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                        <size>
+                          <width>1</width>
+                          <height>1</height>
+                        </size>
+                      </property>
+                    </spacer>
+                  </item>
+
+                </layout>
+              </widget>
+
+              <!-- ===== Tab 2: Cairo import ===== -->
+              <widget class="QWidget" name="cairoTab">
+                <attribute name="title">
+                  <string>Cairo import</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="cairoLayout">
+                  <property name="leftMargin">
+                    <number>8</number>
+                  </property>
+                  <property name="topMargin">
+                    <number>10</number>
+                  </property>
+                  <property name="rightMargin">
+                    <number>8</number>
+                  </property>
+                  <property name="bottomMargin">
+                    <number>10</number>
+                  </property>
+                  <item>
+                    <widget class="QLabel" name="cairoDescription">
+                      <property name="text">
+                        <string>&lt;i&gt;Import via external library. Text consists of groups containing cloned glyphs where each glyph is a path. Images are stored internally. Meshes cause entire document to be rendered as a raster image.&lt;/i&gt;</string>
+                      </property>
+                      <property name="wordWrap">
+                        <bool>true</bool>
+                      </property>
+                      <property name="textFormat">
+                        <enum>Qt::RichText</enum>
+                      </property>
+                      <property name="alignment">
+                        <set>Qt::AlignTop|Qt::AlignLeft</set>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <spacer name="cairoSpacer">
+                      <property name="orientation">
+                        <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                        <size>
+                          <width>1</width>
+                          <height>1</height>
+                        </size>
+                      </property>
+                    </spacer>
+                  </item>
+                </layout>
+              </widget>
+
+            </widget>
+          </item>
+
+          <!-- ===== Preview area (right of notebook) ===== -->
+          <item>
+            <widget class="QWidget" name="previewContainer">
+              <layout class="QVBoxLayout" name="previewLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+
+                <!-- Preview drawing area (promoted custom widget) -->
+                <item>
+                  <widget class="Linea::UI::PdfPreviewArea" name="previewArea"/>
+                </item>
+
+                <!-- Page navigation: prev / current / next -->
+                <item>
+                  <layout class="QHBoxLayout" name="navLayout">
+                    <item>
+                      <spacer name="navLeftSpacer">
+                        <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                          <size>
+                            <width>40</width>
+                            <height>20</height>
+                          </size>
+                        </property>
+                      </spacer>
+                    </item>
+                    <item>
+                      <widget class="QPushButton" name="prevPage">
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset theme="go-previous">
+                            <normaloff>.</normaloff>.
+                          </iconset>
+                        </property>
+                        <property name="toolTip">
+                          <string>Previous page</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QLabel" name="currentPage">
+                        <property name="text">
+                          <string>1 / 10</string>
+                        </property>
+                        <property name="alignment">
+                          <set>Qt::AlignCenter</set>
+                        </property>
+                        <property name="margin">
+                          <number>10</number>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QPushButton" name="nextPage">
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset theme="go-next">
+                            <normaloff>.</normaloff>.
+                          </iconset>
+                        </property>
+                        <property name="toolTip">
+                          <string>Next page</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <spacer name="navRightSpacer">
+                        <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                          <size>
+                            <width>40</width>
+                            <height>20</height>
+                          </size>
+                        </property>
+                      </spacer>
+                    </item>
+                  </layout>
+                </item>
+              </layout>
+            </widget>
+          </item>
+
+        </layout>
+      </item>
+
+      <!-- ===== OK / Cancel buttons ===== -->
+      <item>
+        <widget class="QDialogButtonBox" name="buttonBox">
+          <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="standardButtons">
+            <set>QDialogButtonBox::Ok|QDialogButtonBox::Cancel</set>
+          </property>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+
+  <!-- ===== Promoted custom widgets ===== -->
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::PdfPreviewArea</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/dialog/pdf-preview-area.h</header>
+    </customwidget>
+  </customwidgets>
+
+  <resources/>
+  <connections/>
+</ui>

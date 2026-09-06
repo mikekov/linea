@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PageProperties</class>
+  <widget class="QWidget" name="PageProperties">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>320</width>
+        <height>600</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Page Properties</string>
+    </property>
+    <!-- Root layout just holds the two grids; callers embed only one of them -->
+    <layout class="QVBoxLayout" name="rootLayout">
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+
+      <!--
+     LEFT GRID — document properties:
+       page size (template, W/H, units), portrait/landscape, resize,
+       Y axis, origin, scale, viewbox
+   -->
+      <item>
+        <widget class="QWidget" name="leftGrid">
+          <layout class="QGridLayout" name="leftGridLayout" columnstretch="1,1,0,0">
+            <property name="spacing">
+              <number>4</number>
+            </property>
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+
+            <item row="0" column="0" colspan="3">
+              <widget class="QLabel" name="ttl">
+                <property name="text">
+                  <string>Document</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-heading</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 1: Page Size label -->
+            <item row="1" column="0" colspan="3">
+              <widget class="QLabel" name="pageSizeLabel">
+                <property name="text">
+                  <string>Page format</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 2: template button + resize button -->
+            <item row="2" column="0" colspan="2">
+              <widget class="QPushButton" name="templateButton">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+                <property name="text">
+                  <string>Custom</string>
+                </property>
+              </widget>
+            </item>
+            <item row="2" column="2">
+              <widget class="QPushButton" name="pageResizeButton">
+                <property name="toolTip">
+                  <string>Resize page to content</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/pages-resize</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 3: Width / Height labels -->
+            <item row="3" column="0" colspan="3">
+              <widget class="QLabel" name="widthLabel">
+                <property name="text">
+                  <string>Dimensions</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 4: Width, Height NumberEdits + link button -->
+            <item row="4" column="0">
+              <widget class="Linea::UI::NumberEdit" name="pageWidth">
+                <property name="label">
+                  <string>W</string>
+                </property>
+              </widget>
+            </item>
+            <item row="4" column="1">
+              <widget class="Linea::UI::NumberEdit" name="pageHeight">
+                <property name="label">
+                  <string>H</string>
+                </property>
+              </widget>
+            </item>
+            <item row="4" column="2">
+              <widget class="QPushButton" name="linkWidthHeight">
+                <property name="toolTip">
+                  <string>Lock width/height ratio</string>
+                </property>
+                <property name="flat">
+                  <bool>true</bool>
+                </property>
+                <property name="text">
+                  <string/>
+                </property>
+                <property name="maximumWidth">
+                  <number>28</number>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/entries-unlinked</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 5: Page units label -->
+            <item row="5" column="0" colspan="3">
+              <widget class="QLabel" name="pageUnitsLabel">
+                <property name="text">
+                  <string>Document Units</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 6: Page units combo (replaced at runtime by UnitTracker combo) -->
+            <item row="6" column="0" colspan="1">
+              <widget class="QComboBox" name="pageUnitsCombo">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 7: Orientation label -->
+            <item row="7" column="0" colspan="3">
+              <widget class="QLabel" name="orientationLabel">
+                <property name="text">
+                  <string>Orientation</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 8: Portrait / Landscape + unsupported-size warning -->
+            <item row="8" column="0" colspan="3">
+              <layout class="QGridLayout" name="orientationLayout" columnstretch="0,0,1">
+                <property name="horizontalSpacing">
+                  <number>10</number>
+                </property>
+                <property name="leftMargin">
+                  <number>4</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item row="0" column="0">
+                  <widget class="QRadioButton" name="portraitButton">
+                    <property name="toolTip">
+                      <string>Portrait orientation</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/page-portrait</normaloff>
+                      </iconset>
+                    </property>
+                    <attribute name="buttonGroup">
+                      <string notr="true">orientationGroup</string>
+                    </attribute>
+                    <property name="checkable">
+                      <bool>true</bool>
+                    </property>
+                    <property name="checked">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+                <item row="0" column="1">
+                  <widget class="QRadioButton" name="landscapeButton">
+                    <property name="toolTip">
+                      <string>Landscape orientation</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/page-landscape</normaloff>
+                      </iconset>
+                    </property>
+                    <attribute name="buttonGroup">
+                      <string notr="true">orientationGroup</string>
+                    </attribute>
+                    <property name="checkable">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+                <item row="0" column="2">
+                  <spacer>
+                    <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                      <enum>QSizePolicy::Expanding</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                      <size>
+                        <width>0</width>
+                        <height>0</height>
+                      </size>
+                    </property>
+                  </spacer>
+                </item>
+              </layout>
+            </item>
+            <item row="9" column="0" colspan="3">
+              <widget class="QLabel" name="unsupportedSize">
+                <property name="text">
+                  <string>Unsupported size</string>
+                </property>
+                <property name="visible">
+                  <bool>false</bool>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Spacer between rows 9 and 10 -->
+            <item row="10" column="0" colspan="3">
+              <spacer>
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                  <size>
+                    <width>0</width>
+                    <height>10</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+
+            <!-- Row 11: Coordinate system label -->
+            <item row="11" column="0" colspan="3">
+              <widget class="QLabel" name="yAxisLabel">
+                <property name="text">
+                  <string>Coordinate system</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-heading</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 12: "Origin" sub-label (left) + Y axis up/down buttons (right) -->
+            <item row="12" column="0" colspan="2">
+              <widget class="QLabel" name="originLabel">
+                <property name="text">
+                  <string>Origin</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Rows 13: Radio buttons + checkbox in a subgrid -->
+            <item row="13" column="0" colspan="3">
+              <layout class="QGridLayout" name="yAxisLayout" columnstretch="0,0,1">
+                <property name="horizontalSpacing">
+                  <number>10</number>
+                </property>
+                <property name="verticalSpacing">
+                  <number>10</number>
+                </property>
+                <property name="leftMargin">
+                  <number>4</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item row="0" column="0">
+                  <widget class="QRadioButton" name="yAxisDownButton">
+                    <attribute name="buttonGroup">
+                      <string notr="true">yAxisGroup</string>
+                    </attribute>
+                    <property name="toolTip">
+                      <string>Coordinate system origin at the top of the page with Y axis pointing down.</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/y-axis-down</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item row="0" column="1">
+                  <widget class="QRadioButton" name="yAxisUpButton">
+                    <attribute name="buttonGroup">
+                      <string notr="true">yAxisGroup</string>
+                    </attribute>
+                    <property name="toolTip">
+                      <string>Coordinate system origin at the bottom of the page with Y axis pointing up.</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/y-axis-up</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item row="0" column="2">
+                  <spacer>
+                    <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                      <enum>QSizePolicy::Expanding</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                      <size>
+                        <width>0</width>
+                        <height>0</height>
+                      </size>
+                    </property>
+                  </spacer>
+                </item>
+                <item row="1" column="0" colspan="3">
+                  <widget class="QCheckBox" name="originPageCheck">
+                    <property name="text">
+                      <string>Follow current page</string>
+                    </property>
+                    <property name="toolTip">
+                      <string>Rulers and tools will display position information relative to the current page, instead of the position on the canvas.</string>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+
+            <!-- Row 15: Scale label -->
+            <item row="15" column="0" colspan="3">
+              <widget class="QLabel" name="scaleLabel">
+                <property name="text">
+                  <string>Scale</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 16: Scale value + link + non-uniform warning -->
+            <item row="16" column="0" colspan="2">
+              <widget class="Linea::UI::NumberEdit" name="scaleX">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+              </widget>
+            </item>
+            <item row="16" column="2">
+              <widget class="QPushButton" name="linkScaleContent">
+                <property name="toolTip">
+                  <string>Lock content to page scale</string>
+                </property>
+                <property name="checkable">
+                  <bool>true</bool>
+                </property>
+                <property name="flat">
+                  <bool>true</bool>
+                </property>
+                <property name="text">
+                  <string/>
+                </property>
+                <property name="maximumWidth">
+                  <number>28</number>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/scale-unlinked</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 17: Non-uniform scale warning -->
+            <item row="17" column="0" colspan="3">
+              <widget class="QLabel" name="nonuniformScale">
+                <property name="text">
+                  <string>Non-uniform scale</string>
+                </property>
+                <property name="visible">
+                  <bool>false</bool>
+                </property>
+                <property name="class" stdset="0">
+                  <string>info-text</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 18: Document units info -->
+            <item row="18" column="0" colspan="3">
+              <layout class="QHBoxLayout" name="docUnitsLayout">
+                <property name="spacing">
+                  <number>3</number>
+                </property>
+                <property name="leftMargin">
+                  <number>4</number>
+                </property>
+                <item>
+                  <widget class="QLabel" name="docUnitsLabel">
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>info-text</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="docUnitsSuffix">
+                    <property name="text">
+                      <string>per user unit</string>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>info-text</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <spacer>
+                    <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                    </property>
+                  </spacer>
+                </item>
+              </layout>
+            </item>
+
+            <!-- Row 19: Spacer -->
+            <item row="19" column="0" colspan="3">
+              <spacer>
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                  <size>
+                    <width>0</width>
+                    <height>10</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+
+            <!-- Row 20: Viewbox toggle header -->
+            <item row="20" column="0" colspan="3">
+              <layout class="QHBoxLayout" name="viewboxHeaderLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="viewboxToggle">
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/pan-down</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="text">
+                      <string>Viewbox </string>
+                    </property>
+                    <property name="checkable">
+                      <bool>true</bool>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="linkedViewboxScale">
+                    <property name="text">
+                      <string/>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <spacer>
+                    <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                    </property>
+                  </spacer>
+                </item>
+              </layout>
+            </item>
+
+            <!-- Row 21: Viewbox position labels -->
+            <item row="21" column="0" colspan="3">
+              <widget class="QLabel" name="viewboxPosLabel">
+                <property name="text">
+                  <string>Location</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <!-- Row 22: Viewbox position values -->
+            <item row="22" column="0">
+              <widget class="Linea::UI::NumberEdit" name="viewboxX">
+                <property name="label">
+                  <string>X</string>
+                </property>
+              </widget>
+            </item>
+            <item row="22" column="1">
+              <widget class="Linea::UI::NumberEdit" name="viewboxY">
+                <property name="label">
+                  <string>Y</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 23: Viewbox size labels -->
+            <item row="23" column="0" colspan="3">
+              <widget class="QLabel" name="viewboxSizeLabel">
+                <property name="text">
+                  <string>Dimensions</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 24: Viewbox size values -->
+            <item row="24" column="0">
+              <widget class="Linea::UI::NumberEdit" name="viewboxWidth">
+                <property name="label">
+                  <string>W</string>
+                </property>
+              </widget>
+            </item>
+            <item row="24" column="1">
+              <widget class="Linea::UI::NumberEdit" name="viewboxHeight">
+                <property name="label">
+                  <string>H</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Bottom stretch -->
+            <item row="30" column="0" colspan="3">
+              <spacer>
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+              </spacer>
+            </item>
+
+          </layout>
+        </widget>
+      </item>
+
+      <!--
+     RIGHT GRID — display properties:
+       page preview, colors (background/border/desk),
+       display units, rendering options (checkerboard, border, shadow,
+       border-on-top, antialias, clip-to-page, page-label-style)
+   -->
+      <item>
+        <widget class="QWidget" name="rightGrid">
+          <layout class="QGridLayout" name="rightGridLayout" columnstretch="1,1,0,0">
+            <property name="spacing">
+              <number>4</number>
+            </property>
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+
+            <item row="0" column="0" colspan="3">
+              <widget class="QLabel" name="displayLabel">
+                <property name="text">
+                  <string>Display</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-heading</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 1: Display units label -->
+            <item row="1" column="0" colspan="3">
+              <widget class="QLabel" name="displayUnitsLabel">
+                <property name="text">
+                  <string>Display Units</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 2: Display units combo (replaced at runtime by UnitTracker combo) -->
+            <item row="2" column="0" colspan="1">
+              <widget class="QComboBox" name="displayUnitsCombo">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+              </widget>
+            </item>
+
+            <item row="3" column="0" colspan="3">
+              <widget class="QLabel" name="colors">
+                <property name="text">
+                  <string>Colors</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-heading</string>
+                </property>
+              </widget>
+            </item>
+
+            <item row="4" column="0" colspan="3">
+              <widget class="QLabel" name="allPagesLabel">
+                <property name="text">
+                  <string>All Pages</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <item row="5" column="0">
+              <widget class="Linea::UI::ColorPicker" name="backgroundColorButton" native="true">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+              </widget>
+            </item>
+
+            <item row="5" column="1">
+              <widget class="Linea::UI::NumberEdit" name="pageColorOpacity">
+                <property name="minimum">
+                  <double>0.0</double>
+                </property>
+                <property name="maximum">
+                  <double>100.0</double>
+                </property>
+                <property name="decimals">
+                  <number>0</number>
+                </property>
+                <property name="suffix">
+                  <string>%</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 6: Color grid (labels row 0, pickers row 1, three columns) -->
+            <item row="6" column="0">
+              <widget class="QLabel" name="borderColorLabel">
+                <property name="text">
+                  <string>Border</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="6" column="1">
+              <widget class="QLabel" name="deskColorLabel">
+                <property name="text">
+                  <string>Desk</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <item row="7" column="0">
+              <widget class="Linea::UI::ColorPicker" name="borderColorButton" native="true">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+              </widget>
+            </item>
+            <item row="7" column="1">
+              <widget class="Linea::UI::ColorPicker" name="deskColorButton" native="true">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Row 8: Decorators label -->
+            <item row="8" column="0" colspan="3">
+              <widget class="QLabel" name="decoratorsLabel">
+                <property name="text">
+                  <string>Decorators</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Rows 9–11: Decorator checkboxes in a vertical box -->
+            <item row="9" column="0" colspan="3">
+              <layout class="QVBoxLayout" name="decoratorsLayout">
+                <property name="spacing">
+                  <number>10</number>
+                </property>
+                <property name="leftMargin">
+                  <number>4</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QCheckBox" name="borderButton">
+                    <property name="text">
+                      <string>Border</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/page-border</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="borderOnTopCheck">
+                    <property name="text">
+                      <string>Border on top</string>
+                    </property>
+                    <property name="styleSheet">
+                      <string>QCheckBox { margin-left: 20px; }</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="shadowButton">
+                    <property name="text">
+                      <string>Shadow</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/page-shadow</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="pageLabelStyleButton">
+                    <property name="text">
+                      <string>Page big labels</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/page-label</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+
+            <item row="10" column="0" colspan="3">
+              <spacer>
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                  <size>
+                    <width>0</width>
+                    <height>10</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+
+            <!-- Row 11: Rendering label -->
+            <item row="11" column="0" colspan="3">
+              <widget class="QLabel" name="renderingOptionsLabel">
+                <property name="text">
+                  <string>Rendering</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-heading</string>
+                </property>
+              </widget>
+            </item>
+
+            <!-- Rows 12–13: Rendering checkboxes in a vertical box -->
+            <item row="12" column="0" colspan="3">
+              <layout class="QVBoxLayout" name="renderingOptionsLayout">
+                <property name="spacing">
+                  <number>10</number>
+                </property>
+                <property name="leftMargin">
+                  <number>4</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QCheckBox" name="antialiasCheck">
+                    <property name="text">
+                      <string>Anti-alias</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="clipToPageCheck">
+                    <property name="text">
+                      <string>Clip to page</string>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+
+            <!-- Bottom stretch -->
+            <item row="20" column="0" colspan="3">
+              <spacer>
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+              </spacer>
+            </item>
+
+          </layout>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::ColorPicker</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/color-picker.h</header>
+    </customwidget>
+  </customwidgets>
+
+  <buttongroups>
+    <buttongroup name="orientationGroup"/>
+    <buttongroup name="yAxisGroup"/>
+  </buttongroups>
+
+  <resources/>
+  <connections/>
+</ui>

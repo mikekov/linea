@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>ColorPaletteOptions</class>
+  <widget class="QWidget" name="ColorPaletteOptions">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>240</width>
+        <height>300</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Color Palette Options</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0">
+        <widget class="QLabel" name="paletteLabel">
+          <property name="text">
+            <string>Palette</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="0">
+        <widget class="QListWidget" name="palettesList">
+          <property name="movement">
+            <enum>QListView::Static</enum>
+          </property>
+          <property name="uniformItemSizes">
+            <bool>false</bool>
+          </property>
+          <property name="class" stdset="0">
+            <string>separator-list</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0">
+        <widget class="QLabel" name="sizeLabel">
+          <property name="text">
+            <string>Tile Size</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="0">
+        <layout class="QHBoxLayout" name="sizeLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="Linea::UI::RadioToggle" name="sizeGroup">
+              <property name="buttonIcons" stdset="0">
+                <stringlist>
+                  <string>items-small</string>
+                  <string>items-medium</string>
+                  <string>items-large</string>
+                </stringlist>
+              </property>
+              <property name="buttonToolTips" stdset="0">
+                <stringlist>
+                  <string>Small tiles</string>
+                  <string>Medium tiles</string>
+                  <string>Large tiles</string>
+                </stringlist>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="sizeSpacer">
+              <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>0</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::RadioToggle</class>
+      <extends>QWidget</extends>
+      <header>radio-toggle.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

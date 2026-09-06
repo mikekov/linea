@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>StrokeOptions</class>
+  <widget class="QWidget" name="StrokeOptions">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>280</width>
+        <height>160</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="horizontalSpacing">
+        <number>4</number>
+      </property>
+      <property name="verticalSpacing">
+        <number>4</number>
+      </property>
+      <!-- Row 0: Join label -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="joinLabel">
+          <property name="text">
+            <string>Join</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Join controls -->
+      <item row="1" column="0">
+        <widget class="Linea::UI::RadioToggle" name="joinToggle">
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>stroke-join-bevel</string>
+              <string>stroke-join-round</string>
+              <string>stroke-join-miter</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Bevel join</string>
+              <string>Round join</string>
+              <string>Miter join</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="Linea::UI::NumberEdit" name="miterLimit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="decimals">
+            <number>3</number>
+          </property>
+          <property name="toolTip">
+            <string>Maximum length of the miter (in units of stroke width)</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 2: Cap label -->
+      <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="capLabel">
+          <property name="text">
+            <string>Cap</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 3: Cap controls -->
+      <item row="3" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="capToggle">
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>stroke-cap-butt</string>
+              <string>stroke-cap-round</string>
+              <string>stroke-cap-square</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Butt cap</string>
+              <string>Round cap</string>
+              <string>Square cap</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 4: Order label -->
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="orderLabel">
+          <property name="text">
+            <string>Order</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 5: Paint Order -->
+      <item row="5" column="0" colspan="2">
+        <widget class="Linea::UI::PaintOrderWidget" name="paintOrder">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::RadioToggle</class>
+      <extends>QWidget</extends>
+      <header>radio-toggle.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::PaintOrderWidget</class>
+      <extends>QWidget</extends>
+      <header>paint-order-widget.h</header>
+    </customwidget>
+  </customwidgets>
+</ui>

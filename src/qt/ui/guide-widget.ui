@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GuideWidget</class>
+ <widget class="QWidget" name="GuideWidget">
+  <layout class="QGridLayout" name="gridLayout" columnstretch="1,1">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <!-- Row 0: Label -->
+   <item row="0" column="0">
+    <widget class="QLabel" name="labelLabel">
+     <property name="text">
+      <string>Label</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>panel-label</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="colorLabel">
+     <property name="text">
+      <string>Color</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>panel-label</string>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Row 1: Label edit, color edit, lock btn -->
+   <item row="1" column="0">
+    <widget class="QLineEdit" name="labelEdit">
+     <property name="placeholderText">
+      <string>Enter label...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="Linea::UI::ColorPicker" name="colorButton">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <!-- Locked -->
+   <item row="1" column="2">
+    <widget class="QPushButton" name="lockedButton">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Row 4: Position -->
+   <item row="4" column="0" colspan="2">
+    <widget class="QLabel" name="positionLabel">
+     <property name="text">
+      <string>Position</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>panel-label</string>
+     </property>
+    </widget>
+   </item>
+   <!-- Row 5: X and Y number edits -->
+   <item row="5" column="0">
+    <widget class="Linea::UI::NumberEdit" name="xEdit">
+     <property name="label">
+      <string>X</string>
+     </property>
+     <property name="minimum">
+      <double>-1000000.000000</double>
+     </property>
+     <property name="maximum">
+      <double>1000000.000000</double>
+     </property>
+      </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="Linea::UI::NumberEdit" name="yEdit">
+     <property name="label">
+      <string>Y</string>
+     </property>
+     <property name="minimum">
+      <double>-1000000.000000</double>
+     </property>
+     <property name="maximum">
+      <double>1000000.000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QPushButton" name="deleteButton">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="toolTip">
+      <string>Delete this guide</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icons/minus</normaloff>
+      </iconset>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Row 6: Angle -->
+   <item row="6" column="0" colspan="2">
+    <widget class="QLabel" name="angleLabel">
+     <property name="text">
+      <string>Angle</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>panel-label</string>
+     </property>
+    </widget>
+   </item>
+   <!-- Row 7: Angle number edit -->
+   <item row="7" column="0" colspan="2">
+    <widget class="Linea::UI::NumberEdit" name="angleEdit">
+     <property name="suffix">
+      <string>°</string>
+     </property>
+     <property name="minimum">
+      <double>-360.000000</double>
+     </property>
+     <property name="maximum">
+      <double>360.000000</double>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+
+ <customwidgets>
+  <customwidget>
+   <class>Linea::UI::ColorPicker</class>
+   <extends>QPushButton</extends>
+   <header>color-picker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Linea::UI::NumberEdit</class>
+   <extends>QWidget</extends>
+   <header>number-edit.h</header>
+  </customwidget>
+ </customwidgets>
+
+ <resources/>
+ <connections/>
+</ui>

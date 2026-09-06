@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>ObjectTreeToolbar</class>
+  <widget class="QWidget" name="ObjectTreeToolbar">
+    <!-- <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>300</width>
+        <height>32</height>
+      </rect>
+    </property> -->
+    <property name="class" stdset="0">
+      <string>toolbar-buttons</string>
+    </property>
+    <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+      </sizepolicy>
+    </property>
+    <layout class="QHBoxLayout" name="mainLayout">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>2</number>
+      </property>
+      <item>
+        <widget class="Linea::UI::Toolbar" name="toolbar">
+        </widget>
+      </item>
+      <!-- <item>
+        <widget class="QToolButton" name="newLayerButton">
+          <property name="text">
+            <string/>
+          </property>
+          <property name="toolTip">
+            <string>Create new layer</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/layer-new</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item> -->
+      <!-- Layers-only toggle -->
+      <!-- <item>
+        <widget class="QToolButton" name="layersOnlyButton">
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="text">
+            <string>Layers</string>
+          </property>
+          <property name="toolTip">
+            <string>Show layers only</string>
+          </property>
+        </widget>
+      </item> -->
+      <!-- Move up -->
+      <!-- <item>
+        <widget class="QToolButton" name="moveUpButton">
+          <property name="text">
+            <string/>
+          </property>
+          <property name="toolTip">
+            <string>Move up</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/move-up</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item> -->
+      <!-- Move down -->
+      <!-- <item>
+        <widget class="QToolButton" name="moveDownButton">
+          <property name="text">
+            <string/>
+          </property>
+          <property name="toolTip">
+            <string>Move down</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/move-down</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item> -->
+
+      <item>
+        <spacer name="horizontalSpacer">
+          <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+            <size>
+              <width>0</width>
+              <height>0</height>
+            </size>
+          </property>
+        </spacer>
+      </item>
+
+      <item>
+        <widget class="Linea::UI::LayerSelector" name="layerSelector" native="true">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>1</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::Toolbar</class>
+      <extends>QWidget</extends>
+      <header>ui/widget/toolbar.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::LayerSelector</class>
+      <extends>QWidget</extends>
+      <header>layer-selector.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

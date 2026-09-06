@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>EraserWidget</class>
+  <widget class="QWidget" name="EraserWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>300</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Eraser Tool</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="eraserToolLabel">
+          <property name="text">
+            <string>Eraser Tool</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="modeLabel">
+          <property name="text">
+            <string>Mode</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="modeLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="deleteModeButton">
+              <property name="toolTip">
+                <string>Delete objects touched by eraser</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/draw-eraser-delete-objects</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="cutModeButton">
+              <property name="toolTip">
+                <string>Cut out from paths and shapes</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-difference</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="clipModeButton">
+              <property name="toolTip">
+                <string>Clip from objects</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-intersection</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item row="3" column="2">
+        <widget class="QPushButton" name="splitCheck">
+          <property name="toolTip">
+            <string>Break apart cut items</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/distribute-randomize</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="5" column="0" colspan="2">
+        <widget class="QLabel" name="widthLabel">
+          <property name="text">
+            <string>Width</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="widthSpin">
+          <property name="toolTip">
+            <string>The width of the eraser pen (relative to the visible canvas area)</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="2">
+        <widget class="QPushButton" name="pressureCheck">
+          <property name="toolTip">
+            <string>Use the pressure of the input device to alter the width of the pen</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/draw-use-pressure</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="8" column="0">
+        <widget class="QLabel" name="thinningLabel">
+          <property name="text">
+            <string>Thinning</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="8" column="1">
+        <widget class="QLabel" name="massLabel">
+          <property name="text">
+            <string>Mass</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="0">
+        <widget class="Linea::UI::NumberEdit" name="thinningSpin">
+          <property name="toolTip">
+            <string>How much velocity thins the stroke</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="1">
+        <widget class="Linea::UI::NumberEdit" name="massSpin">
+          <property name="toolTip">
+            <string>Increase to make the eraser slowed by inertia</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="11" column="0">
+        <widget class="QLabel" name="capRoundingLabel">
+          <property name="text">
+            <string>Caps</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="11" column="1">
+        <widget class="QLabel" name="tremorLabel">
+          <property name="text">
+            <string>Tremor</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="12" column="0">
+        <widget class="Linea::UI::NumberEdit" name="capRoundingSpin">
+          <property name="toolTip">
+            <string>Increase to make caps at the ends of strokes protrude more</string>
+          </property>
+        </widget>
+      </item>
+      <item row="12" column="1">
+        <widget class="Linea::UI::NumberEdit" name="tremorSpin">
+          <property name="toolTip">
+            <string>Increase to make strokes rugged and trembling</string>
+          </property>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

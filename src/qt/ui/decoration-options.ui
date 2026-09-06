@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>DecorationOptions</class>
+  <widget class="QWidget" name="DecorationOptions">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>180</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>4</number>
+      </property>
+      <property name="topMargin">
+        <number>4</number>
+      </property>
+      <property name="rightMargin">
+        <number>4</number>
+      </property>
+      <property name="bottomMargin">
+        <number>4</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+
+      <!-- Row 0: Line style label -->
+      <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="lineStyleLabel">
+          <property name="text">
+            <string>Line style</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 1: Line style buttons -->
+      <item row="1" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="lineStyleLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="lineSolid">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="flat">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Solid line</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-line-solid</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="lineDouble">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="flat">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Double line</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-line-double</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="lineDotted">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="flat">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Dotted line</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-line-dotted</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="lineDashed">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="flat">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Dashed line</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-line-dashed</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="lineWavy">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="flat">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Wavy line</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-line-wavy</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <!-- Row 2: Thickness label -->
+      <item row="2" column="0" colspan="3">
+        <widget class="QLabel" name="thicknessLabel">
+          <property name="text">
+            <string>Thickness</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 3: Thickness radio — Auto -->
+      <item row="3" column="0" colspan="3">
+        <widget class="QRadioButton" name="thicknessAuto">
+          <property name="text">
+            <string>Auto</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 4: Thickness radio — From font -->
+      <item row="4" column="0" colspan="3">
+        <widget class="QRadioButton" name="thicknessFont">
+          <property name="text">
+            <string>From font</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 5: Thickness radio — Custom + spin box -->
+      <item row="5" column="0">
+        <widget class="QRadioButton" name="thicknessCustom">
+          <property name="text">
+            <string>Custom</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="lineThickness">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 6: Color label -->
+      <item row="6" column="0" colspan="3">
+        <widget class="QLabel" name="colorLabel">
+          <property name="text">
+            <string>Color</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 7: Color radio — Default -->
+      <item row="7" column="0" colspan="3">
+        <widget class="QRadioButton" name="decorColorDefault">
+          <property name="text">
+            <string>Default</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 8: Color radio — Custom + color picker -->
+      <item row="8" column="0">
+        <widget class="QRadioButton" name="decorColorCustom">
+          <property name="text">
+            <string>Custom</string>
+          </property>
+        </widget>
+      </item>
+      <item row="8" column="1" colspan="2">
+        <widget class="Linea::UI::ColorPicker" name="decorationColor" native="true">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimumSize">
+            <size>
+              <width>20</width>
+              <height>20</height>
+            </size>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::ColorPicker</class>
+      <extends>QPushButton</extends>
+      <header>color-picker.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PaintSelector</class>
+  <widget class="QWidget" name="PaintSelector">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>304</width>
+        <height>340</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Paint Selector</string>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <!-- Header row: paint-type buttons | fill-rule button | plate-picker buttons | compact menu button -->
+      <item>
+        <layout class="QHBoxLayout" name="headerLayout">
+          <property name="spacing">
+            <number>0</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>1</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>5</number>
+          </property>
+          <!-- Paint-mode toggle buttons are added programmatically into typesLayout -->
+          <item>
+            <widget class="QWidget" name="typesWidget" native="true">
+              <layout class="QHBoxLayout" name="typesLayout">
+                <property name="spacing">
+                  <number>0</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+              </layout>
+            </widget>
+          </item>
+          <item>
+            <spacer name="headerSpacer">
+              <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>0</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+          <!-- Fill-rule toggle button -->
+          <item>
+            <widget class="QToolButton" name="fillRuleButton">
+              <property name="toolTip">
+                <string>Set path fill rule</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/fill-rule-even-odd</normaloff>
+                </iconset>
+              </property>
+              <!-- <property name="autoRaise">
+        <bool>true</bool>
+       </property> -->
+            </widget>
+          </item>
+          <item>
+            <spacer name="headerSpacer2">
+              <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>0</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+          <!-- Plate-picker buttons (normal mode) -->
+          <item>
+            <widget class="QWidget" name="pickersWidget" native="true">
+              <layout class="QHBoxLayout" name="pickersLayout">
+                <property name="spacing">
+                  <number>0</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QToolButton" name="rectButton">
+                    <property name="toolTip">
+                      <string>Show color map</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/color-picker-rect</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="checkable">
+                      <bool>true</bool>
+                    </property>
+                    <property name="autoRaise">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QToolButton" name="circleButton">
+                    <property name="toolTip">
+                      <string>Show color wheel</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/color-picker-circle</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="checkable">
+                      <bool>true</bool>
+                    </property>
+                    <property name="autoRaise">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QToolButton" name="inputButton">
+                    <property name="toolTip">
+                      <string>Show color sliders only</string>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/color-picker-input</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="checkable">
+                      <bool>true</bool>
+                    </property>
+                    <property name="autoRaise">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </widget>
+          </item>
+
+          <!-- Compact menu button (compact mode only, hidden by default) -->
+          <item>
+            <widget class="QToolButton" name="menuButton">
+              <property name="visible">
+                <bool>false</bool>
+              </property>
+              <property name="toolTip">
+                <string>Color Pickers</string>
+              </property>
+              <property name="popupMode">
+                <enum>QToolButton::InstantPopup</enum>
+              </property>
+              <property name="autoRaise">
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <!-- Separator -->
+      <!-- <item>
+    <widget class="QFrame" name="separator">
+     <property name="frameShape">
+      <enum>QFrame::Shape::HLine</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Sunken</enum>
+     </property>
+    </widget>
+   </item> -->
+      <!-- Stacked widget for editor pages -->
+      <item>
+        <widget class="Linea::UI::AdaptiveStack" name="stack">
+          <property name="minimumSize">
+            <size>
+              <width>0</width>
+              <height>120</height>
+            </size>
+          </property>
+          <!-- Placeholder page (index 0) -->
+          <widget class="QWidget" name="placeholderPage">
+            <layout class="QVBoxLayout" name="placeholderLayout">
+              <item>
+                <widget class="QLabel" name="placeholderLabel">
+                  <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="wordWrap">
+                    <bool>true</bool>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::AdaptiveStack</class>
+      <extends>QStackedWidget</extends>
+      <header>adaptive-stack.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

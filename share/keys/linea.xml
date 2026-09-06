@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<keys name="Linea default">
+
+<!--
+This file contains the default Linea keyboard shortcuts.
+
+========== Actions ==========
+
+- The "keys" attribute contains a comma separated list of shortcuts using
+  tokens: Cmd, Ctrl, Shift, Alt.
+  "Cmd" is a generic platform-sepcific command key.
+  On macOS, Cmd maps to real Command key; on other platforms, Cmd maps to Control key.
+  On macOS, Alt maps to Option key; on other platforms, Alt maps to Alt key.
+  Ctrl is always Control key and Shift is always Shift key.
+  The first entry will be listed in menus.
+
+- The "action" attribute contains the full action name.
+
+- NOTE: Cmd+Ctrl+key only makes sense on macOS, elsewhere it is a Ctrl+key.
+
+- NOTE 2: Alternative key sequences are separated by semicolon+space (; )
+  A colon (,) in a sequence means that the keys need to be pressed in succession (multi-key shortcuts).
+
+=========== Notes ===========
+
+This file is the default keymap for LineaDraw. User customizations are stored separately.
+
+-->
+
+<!-- Tool Shortcuts -->
+  <bind action="tool-select"                   keys="S; F1" />
+  <bind action="tool-node"                     keys="N; F2" />
+  <bind action="tool-shape-builder"            keys="X" />
+  <bind action="tool-rect"                     keys="R" />
+  <bind action="tool-ellipse"                  keys="O" />
+  <bind action="tool-star"                     keys="*" />
+  <bind action="tool-polygon"                  keys="A" />
+  <bind action="tool-spiral"                   keys="" />
+  <!-- <bind action="tool-marker"            keys="M" /> -->
+  <bind action="tool-pen"                      keys="P" />
+  <bind action="tool-pencil"                   keys="F" />
+  <bind action="tool-calligraphy"              keys="C" />
+  <bind action="tool-text"                     keys="T" />
+  <bind action="tool-gradient"                 keys="G" />
+  <bind action="tool-mesh"                     keys="Shift+M" />
+  <bind action="tool-dropper"                  keys="D" />
+  <bind action="tool-paintbucket"              keys="Shift+P" />
+  <bind action="tool-tweak"                    keys="Shift+T" />
+  <bind action="tool-spray"                    keys="Shift+S" />
+  <bind action="tool-eraser"                   keys="Shift+E" />
+  <bind action="tool-connector"                keys="Shift+C" />
+  <bind action="tool-lpe"                      keys="" />
+  <bind action="tool-zoom"                     keys="Z" />
+  <bind action="tool-measure"                  keys="" />
+  <bind action="tool-pages"                    keys="" />
+
+  <bind action="document-new"                  keys="Cmd+N" />
+  <bind action="document-open"                 keys="Cmd+O" />
+  <bind action="document-save"                 keys="Cmd+S" />
+  <bind action="document-save-as"              keys="Cmd+Shift+S" />
+  <bind action="document-save-copy"            keys="Cmd+Shift+Alt+S" />
+  <bind action="document-import"               keys="Cmd+I" />
+  <bind action="document-new-from-template-1"  keys="" />
+  <bind action="document-new-from-template-2"  keys="" />
+  <bind action="document-new-from-template-3"  keys="" />
+  <bind action="document-new-from-template-4"  keys="" />
+  <bind action="document-new-from-template-5"  keys="" />
+  <bind action="document-new-from-template-6"  keys="" />
+  <bind action="document-new-from-template-7"  keys="" />
+  <bind action="document-new-from-template-8"  keys="" />
+  <bind action="document-new-from-template-9"  keys="" />
+  <bind action="document-close"                keys="Cmd+W" />
+
+  <bind action="tab-next"                      keys="Ctrl+Tab" />
+  <bind action="tab-previous"                  keys="Ctrl+Shift+Tab" />
+
+  <bind action="copy"                          keys="Cmd+C" />
+  <bind action="cut"                           keys="Cmd+X" />
+  <bind action="paste"                         keys="Cmd+V" />
+  <bind action="delete"                        keys="Backspace; Delete" />
+  <bind action="duplicate"                     keys="Cmd+D" />
+  <bind action="clone"                         keys="Alt+D" />
+  <bind action="clone-unlink"                  keys="Alt+Shift+D" />
+  <bind action="select-original"               keys="Shift+D" />
+  <bind action="select-all"                    keys="Cmd+A" />
+  <bind action="select-same-object-type"       keys="Cmd+Shift+A" />
+  <!-- <bind action="select-none"            keys="esc" /> -->
+  <bind action="selection-group"               keys="Cmd+G" />
+  <bind action="selection-ungroup"             keys="Cmd+Shift+G" />
+
+  <bind action="selection-raise"               keys="PgUp" />
+  <bind action="selection-lower"               keys="PgDown" />
+  <bind action="selection-top"                 keys="Home" />
+  <bind action="selection-bottom"              keys="End" />
+  <bind action="selection-move-to-layer-above" keys="Shift+PgUp" />
+  <bind action="selection-move-to-layer-below" keys="Shift+PgDown" />
+  <bind action="layer-top"                     keys="" />
+  <bind action="layer-raise"                   keys="" />
+  <bind action="layer-lower"                   keys="" />
+  <bind action="layer-bottom"                  keys="" />
+  <bind action="layer-rename"                  keys="" />
+  <bind action="layer-duplicate"               keys="" />
+  <bind action="layer-delete"                  keys="" />
+  <bind action="layer-new"                     keys="" />
+  <bind action="layer-new-above"               keys="" />
+  <bind action="layer-new-below"               keys="" />
+  <bind action="layer-new-child"               keys="" />
+
+  <bind action="canvas-zoom-in"                keys="=" />
+  <bind action="canvas-zoom-out"               keys="-" />
+  <bind action="canvas-zoom-1-1"               keys="1" />
+  <bind action="canvas-zoom-2-1"               keys="2" />
+  <bind action="canvas-zoom-selection"         keys="3" />
+  <bind action="canvas-zoom-drawing"           keys="4" />
+  <bind action="canvas-zoom-page"              keys="5" />
+  <bind action="canvas-zoom-page-width"        keys="6" />
+  <bind action="canvas-pixel-preview-toggle"   keys="Alt+P" />
+  <bind action="canvas-display-mode-toggle"    keys="Alt+O" />
+  <bind action="canvas-rotate-cw"              keys="Cmd+Alt+]" />
+  <bind action="canvas-rotate-ccw"             keys="Cmd+Alt+[" />
+  <bind action="canvas-rotate-reset"           keys="Cmd+Alt+0" />
+
+  <bind action="view-fullscreen"               keys="Cmd+Ctrl+F" />
+  <bind action="view-rulers"                   keys="Alt+R" />
+  <bind action="view-color-palette"            keys="" />
+  <bind action="toggle-panel-docking"          keys="F12" />
+  <bind action="snap-global-toggle"            keys="%" />
+  <bind action="show-grids"                    keys="#" />
+  <bind action="show-all-guides"               keys="|" />
+
+  <bind action="object-flip-horizontal"        keys="H" />
+  <bind action="object-flip-vertical"          keys="V" />
+  <bind action="object-rotate-90-cw"           keys="Cmd+]" />
+  <bind action="object-rotate-90-ccw"          keys="Cmd+[" />
+  <bind action="object-set-clip"               keys="Cmd+M" />
+  <bind action="object-release-clip"           keys="Cmd+Shift+M" />
+  <bind action="transform-rotate-step-cw"      keys="]" />
+  <bind action="transform-rotate-step-ccw"     keys="[" />
+
+  <!-- Path -->
+  <bind action="object-to-path"                keys="Cmd+Shift+C" />
+  <bind action="object-stroke-to-path"         keys="Cmd+Alt+C" />
+  <bind action="path-union"                    keys="Cmd+Shift++; Cmd++" />
+  <bind action="path-difference"               keys="Cmd+-; Cmd+Shift+-; Cmd+_; Cmd+Shift+_" />
+  <bind action="path-intersection"             keys="Cmd+*; Cmd+Shift+*" />
+  <bind action="path-exclusion"                keys="Cmd+^; Cmd+Shift+^" />
+  <bind action="path-division"                 keys="Cmd+/; Cmd+Shift+/" />
+  <bind action="path-cut"                      keys="Cmd+Alt+/; Cmd+Alt+Shift+/" />
+  <bind action="path-combine"                  keys="Cmd+K" />
+  <bind action="path-break-apart"              keys="Cmd+Shift+K" />
+  <bind action="path-split"                    keys="Cmd+Shift+Alt+K" />
+  <bind action="path-fracture"                 keys="Shift+Alt+F" />
+  <bind action="path-flatten"                  keys="Shift+F" />
+  <bind action="path-inset"                    keys="Cmd+(; Cmd+Shift+(; Cmd+9; Cmd+Shift+9" />
+  <bind action="path-outset"                   keys="Cmd+); Cmd+Shift+); Cmd+0; Cmd+Shift+0" />
+  <bind action="path-inset-screen"             keys="Alt+(" />
+  <bind action="path-offset-screen"            keys="Alt+)" />
+  <bind action="path-offset-dynamic"           keys="Cmd+J" />
+  <bind action="path-offset-linked"            keys="Cmd+Alt+J" />
+  <bind action="path-simplify"                 keys="Cmd+L" />
+  <bind action="path-reverse" />
+  <bind action="paste-path-effect" />
+  <bind action="remove-path-effect" />
+
+  <bind action="undo"                          keys="Cmd+Z" />
+  <bind action="redo"                          keys="Cmd+Shift+Z" />
+
+  <!-- temporary -->
+  <bind action="open-settings"                 keys="Alt+S" />
+</keys>

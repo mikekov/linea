@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/**
+ * @brief Arrange tools base class
+ */
+/* Authors:
+ *    * Declara Denis
+ * Copyright (C) 2012 Authors
+ *
+ * Released under GNU GPL v2+, read the file 'COPYING' for more information.
+ */
+
+#ifndef INKSCAPE_UI_DIALOG_ARRANGE_TAB_H
+#define INKSCAPE_UI_DIALOG_ARRANGE_TAB_H
+
+#include <gtkmm/box.h>
+
+namespace Inkscape::UI::Dialog {
+
+/**
+ * This interface should be implemented by each arrange mode.
+ * The class is a Gtk::VBox and will be displayed as a tab in
+ * the dialog
+ */
+class ArrangeTab : public Gtk::Box
+{
+public:
+    ArrangeTab()
+        : Gtk::Box(Gtk::Orientation::VERTICAL)
+    {}
+
+	/**
+	 * Do the actual work! This method is invoked to actually arrange the
+	 * selection
+	 */
+	virtual void arrange() = 0;
+};
+
+} // namespace Inkscape::UI::Dialog
+
+#endif /* INKSCAPE_UI_DIALOG_ARRANGE_TAB_H */

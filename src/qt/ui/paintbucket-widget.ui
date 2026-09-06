@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PaintbucketWidget</class>
+  <widget class="QWidget" name="PaintbucketWidget">
+    <property name="windowTitle">
+      <string>Paint Bucket</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="paintbucketToolLabel">
+          <property name="text">
+            <string>Paint Bucket</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QPushButton" name="resetButton">
+          <property name="toolTip">
+            <string>Reset paint bucket parameters to defaults</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/reset-to-defaults</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="fillByLabel">
+          <property name="text">
+            <string>Fill by</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+        <widget class="Linea::UI::IconComboBox" name="channelCombo"/>
+      </item>
+
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="thresholdLabel">
+          <property name="text">
+            <string>Threshold</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="thresholdSpin">
+          <property name="toolTip">
+            <string>The maximum allowed difference between the clicked pixel and neighboring pixels to be counted in the fill</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="offsetLabel">
+          <property name="text">
+            <string>Grow/shrink by</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="offsetSpin">
+          <property name="toolTip">
+            <string>The amount to grow (positive) or shrink (negative) the created fill path</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="2">
+        <widget class="QPushButton" name="unitsButton">
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/units</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="9" column="0" colspan="2">
+        <widget class="QLabel" name="autoGapLabel">
+          <property name="text">
+            <string>Close gaps</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="10" column="0" colspan="2">
+        <widget class="Linea::UI::IconComboBox" name="autoGapCombo"/>
+      </item>
+
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::IconComboBox</class>
+      <extends>QPushButton</extends>
+      <header>icon-combobox.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

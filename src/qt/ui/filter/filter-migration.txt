@@ -1,0 +1,263 @@
+FilterEffectsDialog -> Qt FilterEditor migration checklist
+============================================================
+
+Status convention:
+  [ ] planned or in progress
+  [x] implemented and verified
+
+Rules:
+  - Every row must be checked before removing the GTK FilterEffectsDialog.
+  - Do not mark a row [x] until the implementation is built.
+  - New migration files belong under src/qt/ui/filter/.
+  - Preserve current undo labels, coalescing keys, preferences, selection semantics,
+    XML behavior, and document lifecycle behavior.
+
+1. Migration setup
+------------------
+[x] 1.1 Create the Qt FilterEditor QWidget class.
+[x] 1.2 Create filter-editor.ui with the complete editor layout.
+[x] 1.3 Register all filter migration sources and UI files in src/qt/CMakeLists.txt.
+[x] 1.4 Preserve the FilterEffects dialog identifier during the transition.
+[x] 1.5 Keep the GTK dialog working until all rows in this checklist are complete.
+
+2. FilterEditor layout and states
+---------------------------------
+[x] 2.1 Filter heading and selected-filter name.
+[x] 2.2 Apply-filter-to-selection toggle.
+[x] 2.3 Filter selector popup/button.
+[x] 2.4 New-filter action.
+[x] 2.5 General-filter-options action.
+[x] 2.6 Filter selector popup list.
+[x] 2.7 Filter list action row.
+[x] 2.8 Primitive graph pane.
+[x] 2.9 Primitive action row.
+[x] 2.10 Add-effect search control.
+[x] 2.11 Primitive parameter scroll area.
+[x] 2.12 Effect heading and effect information action.
+[x] 2.13 Duplicate-effect action.
+[x] 2.14 Remove-effect action.
+[x] 2.15 Show-all-input-sources toggle.
+[x] 2.16 No-document state.
+[x] 2.17 No-filters-in-document state.
+[x] 2.18 No-filter-selected state.
+[x] 2.19 No-primitive-selected state.
+[x] 2.20 Narrow/tall layout.
+[x] 2.21 Wide/short layout.
+[x] 2.22 Splitter position persistence.
+
+3. Filter resource and selection management
+-------------------------------------------
+[x] 3.1 Enumerate document filter resources.
+[x] 3.2 Display filter label, ID, or fallback name.
+[x] 3.3 Preserve the selected filter during resource refresh.
+[x] 3.4 Select the first filter when the previous filter disappears.
+[x] 3.5 Count selected objects using each filter.
+[x] 3.6 Select the sole filter used by the current selection.
+[x] 3.7 Represent mixed filter usage correctly.
+[x] 3.8 Apply a filter to every selected object.
+[x] 3.9 Remove a filter from every selected object.
+[x] 3.10 Validate filter applicability for each object.
+[x] 3.11 Update object display/style flags after filter changes.
+[x] 3.12 Create a new filter.
+[x] 3.13 Assign generated filter labels.
+[x] 3.14 Delete a filter.
+[x] 3.15 Remove all document references before filter deletion.
+[x] 3.16 Duplicate a filter including its XML children.
+[x] 3.17 Rename a filter.
+[x] 3.18 Select all objects using the selected filter.
+[x] 3.19 Filter list context menu.
+[x] 3.20 Disable filter actions when no filter is selected.
+
+4. Filter-level settings
+------------------------
+[x] 4.1 Automatic Region attribute.
+[x] 4.2 Filter region X attribute.
+[x] 4.3 Filter region Y attribute.
+[x] 4.4 Filter region width attribute.
+[x] 4.5 Filter region height attribute.
+[x] 4.6 Disable coordinates/dimensions while automatic region is enabled.
+[x] 4.7 Restore filter-level values from XML.
+[x] 4.8 Write filter-level values to XML.
+[x] 4.9 General-settings popup.
+[x] 4.10 No-filter-selected general-settings state.
+
+5. Primitive model and list
+---------------------------
+[x] 5.1 List primitives in XML/document order.
+[x] 5.2 Preserve selected primitive during refresh.
+[x] 5.3 Select the first primitive when needed.
+[x] 5.4 Add a primitive.
+[x] 5.5 Remove a primitive.
+[x] 5.6 Duplicate a primitive.
+[x] 5.7 Reorder primitives by drag and drop.
+[x] 5.8 Primitive context menu.
+[x] 5.9 Update selection when the primitive changes.
+[x] 5.10 Disable the primitive list without a selected filter.
+[x] 5.11 Primitive row labels.
+[x] 5.12 Primitive IDs where present.
+[x] 5.13 Primitive list sizing and scrolling.
+[x] 5.14 Preserve selected primitive after XML updates.
+
+6. Primitive input graph
+------------------------
+[x] 6.1 Draw standard SVG input-source columns.
+[x] 6.2 Draw the optional complete input-source set.
+[x] 6.3 Draw implicit previous-primitive connections.
+[x] 6.4 Draw explicit named-result connections.
+[x] 6.5 Draw feFilter input connections.
+[x] 6.6 Draw feBlend input and input2 connections.
+[x] 6.7 Draw feComposite input and input2 connections.
+[x] 6.8 Draw feDisplacementMap input and input2 connections.
+[x] 6.9 Draw feMergeNode inputs.
+[x] 6.10 Hit-test connection nodes.
+[x] 6.11 Start a connection drag.
+[x] 6.12 Render a live connection-drag preview.
+[x] 6.13 Connect to standard SVG inputs.
+[x] 6.14 Connect to another primitive result.
+[x] 6.15 Replace an existing connection.
+[x] 6.16 Remove an existing connection.
+[x] 6.17 Add a new feMergeNode during connection editing.
+[x] 6.18 Remove an feMergeNode during connection editing.
+[x] 6.19 Generate result names when required.
+[x] 6.20 Sanitize connections after primitive reordering.
+[x] 6.21 Autoscroll vertically while dragging.
+[x] 6.22 Autoscroll horizontally while dragging.
+[x] 6.23 Redraw the graph after document changes.
+
+7. Primitive attribute framework
+-------------------------------
+[x] 7.0 Enum controls use canonical filter enum converters; no Qt-local enum value lists.
+[x] 7.1 Generic attribute editor base.
+[x] 7.2 Attribute read from XML.
+[x] 7.3 Attribute write to XML.
+[x] 7.4 Attribute removal when serialized value is empty.
+[x] 7.5 Attribute-update locking.
+[x] 7.6 Model-to-widget signal blocking.
+[x] 7.7 Numeric range handling.
+[x] 7.8 Numeric step increment handling.
+[x] 7.9 Numeric decimal precision handling.
+[x] 7.10 Boolean attribute handling.
+[x] 7.11 Enum/combo attribute handling.
+[x] 7.12 Color attribute handling.
+[x] 7.13 Dual-value attribute handling.
+[x] 7.14 Multi-value attribute handling.
+[x] 7.15 Attribute tooltips.
+[x] 7.16 Attribute defaults.
+[x] 7.17 Primitive attribute undo coalescing.
+
+8. Primitive types and attributes
+---------------------------------
+[x] 8.1 feBlend: mode.
+[x] 8.2 feColorMatrix: type.
+[x] 8.3 feColorMatrix: matrix values.
+[x] 8.4 feComponentTransfer: R channel.
+[x] 8.5 feComponentTransfer: G channel.
+[x] 8.6 feComponentTransfer: B channel.
+[x] 8.7 feComponentTransfer: A channel.
+[x] 8.8 feComposite: operator.
+[x] 8.9 feComposite: K1.
+[x] 8.10 feComposite: K2.
+[x] 8.11 feComposite: K3.
+[x] 8.12 feComposite: K4.
+[x] 8.13 feComposite: arithmetic sensitivity.
+[x] 8.14 feConvolveMatrix: order.
+[x] 8.15 feConvolveMatrix: target X/Y.
+[x] 8.16 feConvolveMatrix: kernel matrix.
+[x] 8.17 feConvolveMatrix: divisor.
+[x] 8.18 feConvolveMatrix: bias.
+[x] 8.19 feConvolveMatrix: edge mode.
+[x] 8.20 feConvolveMatrix: preserve alpha.
+[x] 8.21 feDiffuseLighting: lighting color.
+[x] 8.22 feDiffuseLighting: surface scale.
+[x] 8.23 feDiffuseLighting: diffuse constant.
+[x] 8.24 feDiffuseLighting: light source.
+[x] 8.25 feDisplacementMap: scale.
+[x] 8.26 feDisplacementMap: X channel selector.
+[x] 8.27 feDisplacementMap: Y channel selector.
+[x] 8.28 feFlood: color.
+[x] 8.29 feFlood: opacity.
+[x] 8.30 feGaussianBlur: standard deviation X/Y.
+[x] 8.31 feMerge: no-parameter state.
+[x] 8.32 feMorphology: operator.
+[x] 8.33 feMorphology: radius.
+[x] 8.34 feImage: file source.
+[x] 8.35 feImage: SVG element source.
+[x] 8.36 feImage: subregion.
+[x] 8.37 feOffset: delta X.
+[x] 8.38 feOffset: delta Y.
+[x] 8.39 feOffset: preserve alpha.
+[x] 8.40 feSpecularLighting: lighting color.
+[x] 8.41 feSpecularLighting: surface scale.
+[x] 8.42 feSpecularLighting: specular constant.
+[x] 8.43 feSpecularLighting: specular exponent.
+[x] 8.44 feSpecularLighting: light source.
+[x] 8.45 feTile: subregion.
+[x] 8.46 feTurbulence: type.
+[x] 8.47 feTurbulence: base frequency X/Y.
+[x] 8.48 feTurbulence: number of octaves.
+[x] 8.49 feTurbulence: seed.
+
+9. Special editors
+------------------
+[x] 9.1 Matrix editor.
+[x] 9.2 Color-matrix shortcut modes.
+[x] 9.3 Color-matrix full 5x4 matrix.
+[x] 9.4 Component-transfer type selection.
+[x] 9.5 Component-transfer table/slider values.
+[x] 9.6 Light-source type selection.
+[x] 9.7 Distant-light settings.
+[x] 9.8 Point-light settings.
+[x] 9.9 Spot-light settings.
+[x] 9.10 File chooser.
+[x] 9.11 SVG element chooser.
+[x] 9.12 Dual spin/scale control.
+[x] 9.13 Multi spin control.
+[x] 9.14 Subregion scale control.
+
+10. Effect insertion and information
+------------------------------------
+[x] 10.1 Add-effect search field.
+[x] 10.2 Effect category hierarchy.
+[x] 10.3 Effect labels.
+[x] 10.4 Effect icons.
+[x] 10.5 Effect descriptions/tooltips.
+[x] 10.6 Effect information popup.
+[x] 10.7 Built-in Gaussian blur insertion.
+[ ] 10.8 Extension effect insertion.
+[x] 10.9 Hidden-effect filtering.
+[x] 10.10 Search filtering.
+[x] 10.11 Keyboard navigation in effect search.
+[x] 10.12 Duplicate selected effect.
+[x] 10.13 Remove selected effect.
+[x] 10.14 Disable insertion actions without a selected filter.
+
+11. Lifecycle and preferences
+-----------------------------
+[x] 11.1 Desktop replacement.
+[x] 11.2 Document replacement.
+[x] 11.3 Selection changes.
+[x] 11.4 Selection modification flags.
+[x] 11.5 Filter resource changes.
+[x] 11.6 Selected-filter XML observation.
+[x] 11.7 Selected-primitive XML observation.
+[x] 11.8 Disconnect all signals on destruction.
+[x] 11.9 Prevent updates during document writes.
+[x] 11.10 Persist show-all-sources preference.
+[x] 11.11 Persist splitter position.
+[x] 11.12 Preserve focus and keyboard behavior.
+
+12. Integration and retirement
+------------------------------
+[x] 12.1 Wire the Qt Open Filter Editor action.
+[ ] 12.2 Wire Object Attributes -> Edit filter to the Qt editor.
+[ ] 12.3 Verify docked editor behavior.
+[x] 12.4 Verify floating editor behavior.
+[x] 12.5 Verify duplicate-editor prevention.
+[ ] 12.6 Verify theme/icon behavior.
+[ ] 12.7 Verify translations.
+[x] 12.8 Verify full build with ninja linea_base.
+[x] 12.9 Verify full build with ninja.
+[ ] 12.10 Execute the complete manual regression matrix.
+[ ] 12.11 Confirm no active references to dialog-filter-editor.glade remain.
+[ ] 12.12 Remove GTK FilterEffectsDialog only after all preceding rows are [x].
+[ ] 12.13 Remove dialog-filter-editor.glade only after all preceding rows are [x].

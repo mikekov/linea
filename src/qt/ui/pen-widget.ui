@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PenWidget</class>
+  <widget class="QWidget" name="PenWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Pen Tool</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="penToolLabel">
+          <property name="text">
+            <string>Pen Tool</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+        <widget class="QLabel" name="modeLabel">
+          <property name="text">
+            <string>Draw</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="2">
+        <widget class="QPushButton" name="dummy">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/settings</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="modeLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="bezierButton">
+              <property name="toolTip">
+                <string>Create regular Bezier paths</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="checked">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-mode-bezier</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="bsplineButton">
+              <property name="toolTip">
+                <string>Create composite Bezier splines</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-mode-bspline</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="paraxialButton">
+              <property name="toolTip">
+                <string>Create paraxial line segments</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-mode-polyline-paraxial</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

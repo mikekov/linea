@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>TweakWidget</class>
+  <widget class="QWidget" name="TweakWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>240</width>
+        <height>360</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Tweak Tool</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="tweakToolLabel">
+          <property name="text">
+            <string>Tweak Tool</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+        <widget class="QLabel" name="modeLabel">
+          <property name="text">
+            <string>Mode</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
+        <layout class="QVBoxLayout" name="modeLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <layout class="QHBoxLayout" name="modeRow1">
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QPushButton" name="moveButton">
+              <property name="toolTip">
+                <string>Move objects in any direction</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-push</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="inOutButton">
+              <property name="toolTip">
+                <string>Move objects towards cursor; with Shift from cursor</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-attract</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="jitterButton">
+              <property name="toolTip">
+                <string>Move objects in random directions</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-randomize</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="scaleButton">
+              <property name="toolTip">
+                <string>Shrink objects, with Shift enlarge</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-shrink</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="rotateButton">
+              <property name="toolTip">
+                <string>Rotate objects, with Shift counterclockwise</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-rotate</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+          <item>
+            <layout class="QHBoxLayout" name="modeRow2">
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QPushButton" name="moreLessButton">
+              <property name="toolTip">
+                <string>Duplicate objects, with Shift delete</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-duplicate</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="pushButton">
+              <property name="toolTip">
+                <string>Push parts of paths in any direction</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-tweak-push</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="shrinkGrowButton">
+              <property name="toolTip">
+                <string>Shrink or grow parts of paths</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-tweak-shrink</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="attractRepelButton">
+              <property name="toolTip">
+                <string>Attract parts of paths towards cursor; with Shift from cursor</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-tweak-attract</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="roughenButton">
+              <property name="toolTip">
+                <string>Roughen parts of paths</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/path-tweak-roughen</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+          <item>
+            <layout class="QHBoxLayout" name="modeRow3">
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QPushButton" name="colorPaintButton">
+              <property name="toolTip">
+                <string>Paint the tool's color upon selected objects</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-paint</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="colorJitterButton">
+              <property name="toolTip">
+                <string>Jitter the colors of selected objects</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-jitter-color</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="blurButton">
+              <property name="toolTip">
+                <string>Blur selected objects more; with Shift, blur less</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-blur</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+        </layout>
+      </item>
+      <item row="5" column="0" colspan="1">
+        <widget class="QLabel" name="widthLabel">
+          <property name="text">
+            <string>Width</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
+        <widget class="QLabel" name="forceLabel">
+          <property name="text">
+            <string>Force</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="0">
+        <widget class="Linea::UI::NumberEdit" name="widthSpin">
+          <property name="toolTip">
+            <string>The width of the tweak area (relative to the visible canvas area)</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="1">
+        <widget class="Linea::UI::NumberEdit" name="forceSpin">
+          <property name="toolTip">
+            <string>The force of the tweak action</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="2">
+        <widget class="QPushButton" name="pressureCheck">
+          <property name="toolTip">
+            <string>Use the pressure of the input device to alter the force of tweak action</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/draw-use-pressure</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="8" column="0" colspan="2">
+        <widget class="QLabel" name="fidelityLabel">
+          <property name="text">
+            <string>Fidelity</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="fidelitySpin">
+          <property name="toolTip">
+            <string>Low fidelity simplifies paths; high fidelity preserves path features but may generate a lot of new nodes</string>
+          </property>
+        </widget>
+      </item>
+      <item row="11" column="0" colspan="3">
+        <widget class="QLabel" name="channelsLabel">
+          <property name="text">
+            <string>Channels</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="12" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="channelsLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="hueButton">
+              <property name="text">
+                <string>H</string>
+              </property>
+              <property name="toolTip">
+                <string>In color mode, act on object's hue</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="saturationButton">
+              <property name="text">
+                <string>S</string>
+              </property>
+              <property name="toolTip">
+                <string>In color mode, act on object's saturation</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="lightnessButton">
+              <property name="text">
+                <string>L</string>
+              </property>
+              <property name="toolTip">
+                <string>In color mode, act on object's lightness</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="opacityButton">
+              <property name="text">
+                <string>O</string>
+              </property>
+              <property name="toolTip">
+                <string>In color mode, act on object's opacity</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

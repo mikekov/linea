@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Authors: see git history
+ *
+ * Copyright (C) 2017 Authors
+ * Released under GNU GPL v2+, read the file 'COPYING' for more information.
+ */
+#ifndef SEEN_COLORS_CMS_TRANSFORM_H
+#define SEEN_COLORS_CMS_TRANSFORM_H
+
+#include <cassert>
+#include <lcms2.h>
+#include <memory>
+
+#include "colors/spaces/enum.h"
+
+namespace Inkscape::Colors::CMS {
+
+enum class Alpha {
+    NONE,
+    PRESENT,
+    PREMULTIPLIED,
+};
+
+class Profile;
+class Transform
+{
+public:
+    Transform(cmsHTRANSFORM handle, bool global = false)
+        : _handle(handle)
+        , _context(!global ? cmsGetTransformContextID(handle) : nullptr)
+        , _format_in(cmsGetTransformInputFormat(handle))
+        , _format_out(cmsGetTransformOutputFormat(handle))
+        , _channels_in(T_CHANNELS(_format_in))
+        , _channels_out(T_CHANNELS(_format_out))
+    {
+        assert(_handle);
+    }
+    ~Transform()
+    {
+        cmsDeleteTransform(_handle);
+        if (_context)
+            cmsDeleteContext(_context);
+    }
+    Transform(Transform const &) = delete;
+    Transform &operator=(Transform const &) = delete;
+
+    bool isValid() const { return _handle; }
+    cmsHTRANSFORM getHandle() const { return _handle; }
+
+protected:
+    cmsHTRANSFORM _handle;
+    cmsContext _context;
+
+    static int lcms_color_format(std::shared_ptr<Profile> const &profile, bool small = false, Alpha alpha = Alpha::NONE);
+    static int lcms_intent(RenderingIntent intent);
+    static int lcms_bpc(RenderingIntent intent);
+
+public:
+    cmsUInt32Number _format_in;
+    cmsUInt32Number _format_out;
+    int _channels_in;
+    int _channels_out;
+};
+
+} // namespace Inkscape::Colors::CMS
+
+#endif // SEEN_COLORS_CMS_TRANSFORM_H

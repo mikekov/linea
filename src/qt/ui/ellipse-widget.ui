@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>EllipseWidget</class>
+  <widget class="QWidget" name="EllipseWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>240</width>
+        <height>220</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Ellipse</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <!-- Row 0: Center label -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="centerLabel">
+          <property name="text">
+            <string>Center</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Cx, Cy -->
+      <item row="1" column="0">
+        <widget class="Linea::UI::NumberEdit" name="cxEdit">
+          <property name="minimum">
+            <double>-1000000.000000</double>
+          </property>
+          <property name="maximum">
+            <double>1000000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>6</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="label">
+            <string>X</string>
+          </property>
+          <property name="toolTip">
+            <string>Horizontal center of the circle, ellipse, or arc</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="Linea::UI::NumberEdit" name="cyEdit">
+          <property name="minimum">
+            <double>-1000000.000000</double>
+          </property>
+          <property name="maximum">
+            <double>1000000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>6</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="label">
+            <string>Y</string>
+          </property>
+          <property name="toolTip">
+            <string>Vertical center of the circle, ellipse, or arc</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="2">
+        <widget class="QPushButton" name="roundButton">
+          <property name="toolTip">
+            <string>Round values to the nearest integer</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/rounding</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 2: Radii label -->
+      <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="radiiLabel">
+          <property name="text">
+            <string>Radii</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 3: Rx, Ry -->
+      <item row="3" column="0">
+        <widget class="Linea::UI::NumberEdit" name="rxEdit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>1000000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>6</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="label">
+            <string>Rx</string>
+          </property>
+          <property name="toolTip">
+            <string>Horizontal radius of the circle, ellipse, or arc</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="1">
+        <widget class="Linea::UI::NumberEdit" name="ryEdit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>1000000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>6</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="label">
+            <string>Ry</string>
+          </property>
+          <property name="toolTip">
+            <string>Vertical radius of the circle, ellipse, or arc</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 4: Cut out label -->
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="cutOutLabel">
+          <property name="text">
+            <string>Cut out</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 5: Start, End angles -->
+      <item row="5" column="0">
+        <widget class="Linea::UI::NumberEdit" name="startEdit">
+          <property name="minimum">
+            <double>-360.000000</double>
+          </property>
+          <property name="maximum">
+            <double>360.000000</double>
+          </property>
+          <property name="decimals">
+            <number>1</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="suffix">
+            <string>°</string>
+          </property>
+          <property name="icon">
+            <string>ellipse-start-angle</string>
+          </property>
+          <property name="toolTip">
+            <string>The angle (in degrees) from the horizontal to the arc's start point</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="1">
+        <widget class="Linea::UI::NumberEdit" name="endEdit">
+          <property name="minimum">
+            <double>-360.000000</double>
+          </property>
+          <property name="maximum">
+            <double>360.000000</double>
+          </property>
+          <property name="decimals">
+            <number>1</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="suffix">
+            <string>°</string>
+          </property>
+          <property name="icon">
+            <string>ellipse-end-angle</string>
+          </property>
+          <property name="toolTip">
+            <string>The angle (in degrees) from the horizontal to the arc's end point</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 6: Mode label -->
+      <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="modeLabel">
+          <property name="text">
+            <string>Mode</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 7: Mode buttons -->
+      <item row="7" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="arcModeToggle">
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>draw-ellipse-whole</string>
+              <string>draw-ellipse-segment</string>
+              <string>draw-ellipse-arc</string>
+              <string>draw-ellipse-chord</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Make the shape a whole ellipse, not arc or segment</string>
+              <string>Switch to slice (closed shape with two radii)</string>
+              <string>Switch to arc (unclosed shape)</string>
+              <string>Switch to chord (closed shape)</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::RadioToggle</class>
+      <extends>QWidget</extends>
+      <header>radio-toggle.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

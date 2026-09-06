@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>TextPanel</class>
+  <widget class="QWidget" name="TextPanel">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>340</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="mainGrid" columnstretch="1,1,0">
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+
+      <!-- Heading -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="textHeader">
+          <property name="text">
+            <string>Text characters</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Font family -->
+      <item row="1" column="0" colspan="2">
+        <widget class="QLabel" name="fontLabel">
+          <property name="text">
+            <string>Font</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+        <widget class="QComboBox" name="fontFamily">
+          <property name="editable">
+            <bool>true</bool>
+          </property>
+          <property name="insertPolicy">
+            <enum>QComboBox::NoInsert</enum>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="2">
+        <widget class="QPushButton" name="fontBrowserBtn">
+          <property name="toolTip">
+            <string>Font browser</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/chevron-expand</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Font style -->
+      <item row="3" column="0" colspan="2">
+        <widget class="QLabel" name="styleLabel">
+          <property name="text">
+            <string>Style</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+        <widget class="QComboBox" name="fontStyle"/>
+      </item>
+
+      <!-- Font variations -->
+      <item row="5" column="0" colspan="2">
+        <widget class="QScrollArea" name="fontVariationsScroll">
+          <property name="widgetResizable">
+            <bool>true</bool>
+          </property>
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+          </property>
+          <widget class="Linea::UI::FontVariations" name="fontVariations"/>
+        </widget>
+      </item>
+
+      <!-- Font size -->
+      <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="sizeLabel">
+          <property name="text">
+            <string>Font Size</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="0">
+        <widget class="Linea::UI::NumberEdit" name="fontSize">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Font size</string>
+          </property>
+          <property name="minimum">
+            <double>0.001000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>1.000000</double>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="1">
+        <widget class="QComboBox" name="fontSizeUnit">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed"/>
+          </property>
+          <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+          </property>
+          <property name="minimumContentsLength">
+            <number>1</number>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Line height (leading) -->
+      <item row="8" column="0" colspan="2">
+        <widget class="QLabel" name="leadingLabel">
+          <property name="text">
+            <string>Leading</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="0">
+        <widget class="Linea::UI::NumberEdit" name="lineHeight">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Spacing between baselines</string>
+          </property>
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="icon" stdset="0">
+            <string>text_line_spacing</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="1">
+        <widget class="QComboBox" name="lineHeightUnit">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed"/>
+          </property>
+          <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+          </property>
+          <property name="minimumContentsLength">
+            <number>1</number>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Alignment -->
+      <item row="10" column="0" colspan="2">
+        <widget class="QLabel" name="alignmentLabel">
+          <property name="text">
+            <string>Alignment</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="11" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="alignToggle">
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>format-justify-left</string>
+              <string>format-justify-center</string>
+              <string>format-justify-right</string>
+              <string>format-justify-fill</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Align left</string>
+              <string>Align center</string>
+              <string>Align right</string>
+              <string>Justify (only flowed text)</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Typography heading -->
+      <item row="12" column="0" colspan="2">
+        <widget class="QLabel" name="typographyHeader">
+          <property name="text">
+            <string>Typography</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Styles (super/subscript) -->
+      <item row="13" column="0" colspan="2">
+        <widget class="QLabel" name="stylesLabel">
+          <property name="text">
+            <string>Styles</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="14" column="0">
+        <layout class="QHBoxLayout" name="stylesLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="superscriptButton">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Toggle superscript</string>
+              </property>
+              <property name="text">
+                <string>A²</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="subscriptButton">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Toggle subscript</string>
+              </property>
+              <property name="text">
+                <string>A₂</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <!-- Decoration -->
+      <item row="15" column="0" colspan="2">
+        <widget class="QLabel" name="decorationLabel">
+          <property name="text">
+            <string>Decoration</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="16" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="decorationLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="underlineButton">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Underline</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-underline</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="overlineButton">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Overline</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-overline</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="strikethroughButton">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Strikethrough</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-line-through</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="syntaxErrorButton">
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="toolTip">
+                <string>Spelling error</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-spelling</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item row="16" column="2">
+        <widget class="QPushButton" name="decorationMoreButton">
+          <property name="toolTip">
+            <string>More decoration options</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/pan-down</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Spacing -->
+      <item row="18" column="0" colspan="2">
+        <widget class="QLabel" name="spacingLabel">
+          <property name="text">
+            <string>Spacing</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="19" column="0">
+        <widget class="Linea::UI::NumberEdit" name="letterSpacing">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Spacing between letters (px)</string>
+          </property>
+          <property name="minimum">
+            <double>-100000.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="icon" stdset="0">
+            <string>text_letter_spacing</string>
+          </property>
+        </widget>
+      </item>
+      <item row="19" column="1">
+        <widget class="Linea::UI::NumberEdit" name="wordSpacing">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Spacing between words (px)</string>
+          </property>
+          <property name="minimum">
+            <double>-100000.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="icon" stdset="0">
+            <string>text_word_spacing</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Kerning -->
+      <item row="20" column="0" colspan="2">
+        <widget class="QLabel" name="kerningLabel">
+          <property name="text">
+            <string>Kerning</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="21" column="0">
+        <widget class="Linea::UI::NumberEdit" name="kernHorz">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Horizontal kerning (px)</string>
+          </property>
+          <property name="minimum">
+            <double>-100000.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="icon" stdset="0">
+            <string>text_horz_kern</string>
+          </property>
+        </widget>
+      </item>
+      <item row="21" column="1">
+        <widget class="Linea::UI::NumberEdit" name="kernVert">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Vertical kerning (px)</string>
+          </property>
+          <property name="minimum">
+            <double>-100000.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="icon" stdset="0">
+            <string>text_vert_kern</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Rotation -->
+      <item row="22" column="0" colspan="2">
+        <widget class="QLabel" name="rotationLabel">
+          <property name="text">
+            <string>Rotation</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="23" column="0">
+        <widget class="Linea::UI::NumberEdit" name="charRotation">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="toolTip">
+            <string>Character rotation (degrees)</string>
+          </property>
+          <property name="minimum">
+            <double>-360.000000</double>
+          </property>
+          <property name="maximum">
+            <double>360.000000</double>
+          </property>
+          <property name="decimals">
+            <number>4</number>
+          </property>
+          <property name="singleStep">
+            <double>1.000000</double>
+          </property>
+          <property name="suffix" stdset="0">
+            <string>°</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Vertical text -->
+      <item row="24" column="0" colspan="2">
+        <widget class="QLabel" name="verticalTextLabel">
+          <property name="text">
+            <string>Vertical text</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="25" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="writingModeToggle">
+          <property name="toolTip">
+            <string>Block progression</string>
+          </property>
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>frmt-text-direction-horizontal</string>
+              <string>frmt-text-direction-vertical</string>
+              <string>frmt-text-direction-vertical-lr</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Horizontal text</string>
+              <string>Vertical text — lines: right to left</string>
+              <string>Vertical text — lines: left to right</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+      <item row="26" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="orientationToggle">
+          <property name="toolTip">
+            <string>Text (glyph) orientation in vertical text</string>
+          </property>
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>text-orientation-auto</string>
+              <string>text-orientation-upright</string>
+              <string>text-orientation-sideways</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Auto glyph orientation in vertical text</string>
+              <string>Upright glyph orientation in vertical text</string>
+              <string>Sideways glyph orientation in vertical text</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Direction -->
+      <item row="27" column="0" colspan="2">
+        <widget class="QLabel" name="directionLabel">
+          <property name="text">
+            <string>Direction</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="28" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="directionToggle">
+          <property name="toolTip">
+            <string>Text direction for normally horizontal text</string>
+          </property>
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>frmt-text-direction-horizontal</string>
+              <string>frmt-text-direction-r2l</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Text left-to-right (LTR)</string>
+              <string>Text right-to-left (RTL)</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Bottom stretch -->
+      <item row="29" column="0" colspan="2">
+        <spacer>
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
+          </property>
+        </spacer>
+      </item>
+
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::ColorPicker</class>
+      <extends>QPushButton</extends>
+      <header>color-picker.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::FontVariations</class>
+      <extends>QWidget</extends>
+      <header>font-variations.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::RadioToggle</class>
+      <extends>QWidget</extends>
+      <header>radio-toggle.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

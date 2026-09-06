@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>FilterWidget</class>
+  <widget class="QWidget" name="FilterWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>300</width>
+        <height>60</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="headerLabel">
+          <property name="text">
+            <string>Filter</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="1">
+        <widget class="QPushButton" name="galleryButton">
+          <property name="text">
+            <string></string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/color-filters</normaloff>
+            </iconset>
+          </property>
+          <property name="toolTip">
+            <string>Filter gallery</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QPushButton" name="addButton">
+          <property name="text">
+            <string></string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/plus</normaloff>
+            </iconset>
+          </property>
+          <property name="toolTip">
+            <string>Add a filter</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+        <widget class="QLabel" name="blurLabel">
+          <property name="text">
+            <string>Gaussian Blur</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+        <widget class="Linea::UI::SpinScale" name="blurScale" native="true">
+          <property name="minimum">
+            <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+            <double>100.000000000000000</double>
+          </property>
+          <property name="decimals">
+            <number>0</number>
+          </property>
+          <property name="singleStep">
+            <double>1.000000000000000</double>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+          <property name="toolTip">
+            <string>Blur filter</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="filterLabel">
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+        <widget class="QPushButton" name="filterButton">
+          <property name="toolTip">
+            <string>Filter applied to this object</string>
+          </property>
+          <property name="styleSheet">
+            <string>text-align: left; padding-left: 6px;</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="2">
+        <widget class="QPushButton" name="removeButton">
+          <property name="toolTip">
+            <string>Remove filter</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/minus</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::SpinScale</class>
+      <extends>QWidget</extends>
+      <header>spin-scale.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

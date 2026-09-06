@@ -1,0 +1,160 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// Property table: element-specific (geometry/shape) properties.
+//
+// This file is the single source of truth for these properties. It is included
+// multiple times with LINEA_PROP / LINEA_PROP_RO defined by the including
+// header, generating in turn:
+//   - the ElementState struct fields   (selection-state.h)
+//   - the Field enum entries           (selection-state.h)
+//   - the delta diff                   (selection-state.h)
+//   - the per-item merge (query) code  (selection-state.h)
+//   - the Props:: property definitions (property-def.h)
+//
+// Row grammar:
+//   LINEA_PROP(type, name, (reader), (applier), undo_key, RC_("Undo", label))
+//   LINEA_PROP_RO(type, name, (reader))                      // query-only field
+//
+//   reader:  callable  SPItem*                          -> std::optional<type>
+//   applier: callable  (const EditTarget&, const type&) -> void  (applied per target)
+//
+// Readers/appliers are wrapped in parentheses to protect template commas.
+// Rows sharing an undo_key coalesce into one undo step (DocumentUndo::maybeDone).
+// no include guard: intentionally re-includable
+
+// --- rectangle ---------------------------------------------------------
+LINEA_PROP(double, rect_rx,
+           (fn_get<SPRect, &SPRect::getVisibleRx>),
+           (rect_radius_set<&SPRect::setVisibleRx, "rx">),
+           "rect-corner-change", RC_("Undo", "Set rectangle corner radius"))
+
+LINEA_PROP(double, rect_ry,
+           (fn_get<SPRect, &SPRect::getVisibleRy>),
+           (rect_radius_set<&SPRect::setVisibleRy, "ry">),
+           "rect-corner-change", RC_("Undo", "Set rectangle corner radius"))
+
+// Derived, not directly editable (drives sharp/rounded button state).
+LINEA_PROP_RO(bool, rect_round_corners, (read_rect_round_corners))
+
+// --- ellipse / arc ------------------------------------------------------
+// All rows share one undo key: consecutive edits to any ellipse property
+// coalesce into a single undo step (matches the old EllipseSource).
+LINEA_PROP(double, ellipse_cx,
+           (fn_get<SPGenericEllipse, &SPGenericEllipse::getVisibleCx>),
+           (fn_set<SPGenericEllipse, &SPGenericEllipse::setVisibleCx>),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+LINEA_PROP(double, ellipse_cy,
+           (fn_get<SPGenericEllipse, &SPGenericEllipse::getVisibleCy>),
+           (fn_set<SPGenericEllipse, &SPGenericEllipse::setVisibleCy>),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+LINEA_PROP(double, ellipse_rx,
+           (fn_get<SPGenericEllipse, &SPGenericEllipse::getVisibleRx>),
+           (ellipse_radius_set<&SPGenericEllipse::setVisibleRx>),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+LINEA_PROP(double, ellipse_ry,
+           (fn_get<SPGenericEllipse, &SPGenericEllipse::getVisibleRy>),
+           (ellipse_radius_set<&SPGenericEllipse::setVisibleRy>),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+// Angles in degrees (stored in radians on the object).
+LINEA_PROP(double, ellipse_start_angle,
+           (ellipse_angle_get<&SPGenericEllipse::start>),
+           (ellipse_angle_set<&SPGenericEllipse::start>),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+LINEA_PROP(double, ellipse_end_angle,
+           (ellipse_angle_get<&SPGenericEllipse::end>),
+           (ellipse_angle_set<&SPGenericEllipse::end>),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+// 0=whole, 1=slice, 2=arc, 3=chord
+LINEA_PROP(int, ellipse_arc_mode,
+           (read_ellipse_mode),
+           (apply_ellipse_mode),
+           "ellipse-change", RC_("Undo", "Set ellipse properties"))
+
+// --- image -------------------------------------------------------------------
+LINEA_PROP(double, image_dpi,
+           (read_image_dpi),
+           (apply_image_dpi),
+           "image-dpi", RC_("Undo", "Set image DPI"))
+
+LINEA_PROP(int, image_preserve_aspect,
+           (read_image_preserve_aspect),
+           (apply_image_preserve_aspect),
+           "image-aspect", RC_("Undo", "Set image aspect ratio"))
+
+LINEA_PROP_RO(bool, image_embedded, (read_image_embedded))
+LINEA_PROP_RO(bool, image_linked, (read_image_linked))
+LINEA_PROP_RO(ImageDimensions, image_dimensions, (read_image_dimensions))
+LINEA_PROP_RO(std::string, image_color_space, (read_image_color_space))
+LINEA_PROP_RO(bool, image_missing, (read_image_missing))
+LINEA_PROP_RO(std::size_t, image_data_size, (read_image_data_size))
+LINEA_PROP_RO(const void*, image_pixbuf, (read_image_pixbuf))
+LINEA_PROP(std::string, image_url,
+           (read_image_url),
+           (apply_image_url),
+           "image-url", RC_("Undo", "Set image URL"))
+
+// --- star ------------------------------------------------------------------
+// Sides exposed as a double because NumberEdit is double-valued; rounded and
+// randomized match the existing star-toolbar ranges; spoke is the ratio of the
+// smaller spoke radius to the larger one.
+LINEA_PROP(double, star_sides,
+           (read_star_sides),
+           (apply_star_sides),
+           "star-change", RC_("Undo", "Set star properties"))
+
+LINEA_PROP(int, star_flatsided,
+           (read_star_flatsided),
+           (apply_star_flatsided),
+           "star-change", RC_("Undo", "Set star properties"))
+
+LINEA_PROP(double, star_spoke_ratio,
+           (read_star_spoke_ratio),
+           (apply_star_spoke_ratio),
+           "star-change", RC_("Undo", "Set star properties"))
+
+LINEA_PROP(double, star_rounded,
+           (read_star_rounded),
+           (apply_star_rounded),
+           "star-change", RC_("Undo", "Set star properties"))
+
+LINEA_PROP(double, star_randomized,
+           (read_star_randomized),
+           (apply_star_randomized),
+           "star-change", RC_("Undo", "Set star properties"))
+
+// --- generic (title, description, locked) -------------------------------
+// Title and description are SVG <title>/<desc> child elements, not CSS
+// attributes; they use SPObject::title()/setTitle() and desc()/setDesc().
+// Locked toggles the sodipodi:insensitive attribute via SPItem::setLocked().
+// ID is read-only here (the Set button handles the write with validation).
+
+LINEA_PROP_RO(std::string, id, (read_id))
+
+LINEA_PROP(std::string, title,
+           (read_title),
+           (apply_title),
+           "object-title", RC_("Undo", "Set title"))
+
+LINEA_PROP(std::string, description,
+           (read_description),
+           (apply_description),
+           "object-description", RC_("Undo", "Set description"))
+
+LINEA_PROP(bool, locked,
+           (read_locked),
+           (apply_locked),
+           "object-locked", RC_("Undo", "Set locked"))
+
+// --- live path effects (read-only; count for change tracking) ---
+LINEA_PROP_RO(int, lpe_count,
+              ([](SPItem* item) -> std::optional<int> {
+                   auto lpe_item = cast<SPLPEItem>(item);
+                   if (!lpe_item || !lpe_item->path_effect_list) return 0;
+                   return static_cast<int>(lpe_item->path_effect_list->size());
+               }))

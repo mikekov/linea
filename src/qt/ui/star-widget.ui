@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>StarWidget</class>
+  <widget class="QWidget" name="StarWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>240</width>
+        <height>180</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Star</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <!-- Row 0: Shape label -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="shapeLabel">
+          <property name="text">
+            <string>Shape</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Star / polygon toggle -->
+      <item row="1" column="0" colspan="2">
+        <widget class="Linea::UI::RadioToggle" name="shapeToggle">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <property name="buttonIcons" stdset="0">
+            <stringlist>
+              <string>draw-star</string>
+              <string>draw-polygon-star</string>
+            </stringlist>
+          </property>
+          <property name="buttonToolTips" stdset="0">
+            <stringlist>
+              <string>Star shape</string>
+              <string>Regular polygon</string>
+            </stringlist>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 2: Sides label -->
+      <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="sidesLabel">
+          <property name="text">
+            <string>Sides</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 3: Sides count -->
+      <item row="3" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="sidesEdit">
+          <property name="minimum">
+            <double>2.000000</double>
+          </property>
+          <property name="maximum">
+            <double>1024.000000</double>
+          </property>
+          <property name="decimals">
+            <number>0</number>
+          </property>
+          <property name="singleStep">
+            <double>1.000000</double>
+          </property>
+          <property name="label">
+            <string>№</string>
+          </property>
+          <property name="toolTip">
+            <string>Number of corners or sides</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 3: Align button -->
+      <item row="3" column="2">
+        <widget class="QPushButton" name="alignButton">
+          <property name="toolTip">
+            <string>Turn star or polygon upright</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/object-level</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 4: Spoke ratio label -->
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="spokeLabel">
+          <property name="text">
+            <string>Spoke ratio</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 5: Spoke ratio -->
+      <item row="5" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="spokeEdit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100.000000</double>
+          </property>
+          <property name="decimals">
+            <number>1</number>
+          </property>
+          <property name="singleStep">
+            <double>5.000000</double>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+          <property name="toolTip">
+            <string>Ratio of the inner spoke radius to the outer one, as a percentage</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 6: Rounded / Randomized labels -->
+      <item row="6" column="0">
+        <widget class="QLabel" name="roundedLabel">
+          <property name="text">
+            <string>Rounded</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="1">
+        <widget class="QLabel" name="randomizedLabel">
+          <property name="text">
+            <string>Randomized</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 7: Rounded and randomized values -->
+      <item row="7" column="0">
+        <widget class="Linea::UI::NumberEdit" name="roundedEdit">
+          <property name="minimum">
+            <double>-10.000000</double>
+          </property>
+          <property name="maximum">
+            <double>10.000000</double>
+          </property>
+          <property name="decimals">
+            <number>3</number>
+          </property>
+          <property name="singleStep">
+            <double>0.050000</double>
+          </property>
+          <property name="label">
+            <string></string>
+          </property>
+          <property name="toolTip">
+            <string>Roundness of the corners</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="1">
+        <widget class="Linea::UI::NumberEdit" name="randomizedEdit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>10.000000</double>
+          </property>
+          <property name="decimals">
+            <number>3</number>
+          </property>
+          <property name="singleStep">
+            <double>0.050000</double>
+          </property>
+          <property name="label">
+            <string></string>
+          </property>
+          <property name="toolTip">
+            <string>Amount of random displacement applied to the points</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="2">
+        <widget class="QPushButton" name="resetButton">
+          <property name="toolTip">
+            <string>Reset to default values</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/reset-settings</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::RadioToggle</class>
+      <extends>QWidget</extends>
+      <header>radio-toggle.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

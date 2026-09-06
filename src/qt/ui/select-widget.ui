@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>SelectWidget</class>
+  <widget class="QWidget" name="SelectWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>100</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Select Widget</string>
+    </property>
+    <layout class="QGridLayout" name="mainLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>0</number>
+      </property>
+
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="selectTool">
+          <property name="text">
+            <string>Select Tool</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QPushButton" name="selectOptionsBtn">
+          <property name="toolTip">
+            <string>Options</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>no-menu-arrow</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/settings</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="1" column="0" colspan="3">
+        <widget class="QWidget" name="gridContainer">
+          <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <property name="spacing">
+              <number>4</number>
+            </property>
+            <item row="1" column="0" colspan="2">
+              <widget class="QLabel" name="selectWidgetTopLabel">
+                <property name="text">
+                  <string>Arrange</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="2" column="0" colspan="2">
+              <layout class="QHBoxLayout" name="extraLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <layout class="QHBoxLayout" name="distributeLayout1">
+                    <property name="spacing">
+                      <number>2</number>
+                    </property>
+                    <property name="leftMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                      <number>0</number>
+                    </property>
+                    <item>
+                      <widget class="QPushButton" name="rotate_left_btn">
+                        <property name="toolTip">
+                          <string>Rotate selection 90° counter-clockwise</string>
+                        </property>
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset>
+                            <normaloff>:/icons/object-rotate-left</normaloff>
+                          </iconset>
+                        </property>
+                        <property name="class" stdset="0">
+                          <string>segment-first</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QPushButton" name="rotate_right_btn">
+                        <property name="toolTip">
+                          <string>Rotate selection 90° clockwise</string>
+                        </property>
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset>
+                            <normaloff>:/icons/object-rotate-right</normaloff>
+                          </iconset>
+                        </property>
+                        <property name="class" stdset="0">
+                          <string>segment-last</string>
+                        </property>
+                      </widget>
+                    </item>
+                  </layout>
+                </item>
+                <item>
+                  <layout class="QHBoxLayout" name="distributeLayout2">
+                    <property name="spacing">
+                      <number>2</number>
+                    </property>
+                    <property name="leftMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                      <number>0</number>
+                    </property>
+                    <item>
+                      <widget class="QPushButton" name="flip_horizontal_btn">
+                        <property name="toolTip">
+                          <string>Flip selection horizontally</string>
+                        </property>
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset>
+                            <normaloff>:/icons/object-flip-horizontal</normaloff>
+                          </iconset>
+                        </property>
+                        <property name="class" stdset="0">
+                          <string>segment-first</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QPushButton" name="flip_vertical_btn">
+                        <property name="toolTip">
+                          <string>Flip selection vertically</string>
+                        </property>
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset>
+                            <normaloff>:/icons/object-flip-vertical</normaloff>
+                          </iconset>
+                        </property>
+                        <property name="class" stdset="0">
+                          <string>segment-last</string>
+                        </property>
+                      </widget>
+                    </item>
+                  </layout>
+                </item>
+                <item>
+                  <layout class="QHBoxLayout" name="distributeLayout3">
+                    <property name="spacing">
+                      <number>2</number>
+                    </property>
+                    <property name="leftMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                      <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                      <number>0</number>
+                    </property>
+                    <item>
+                      <widget class="QPushButton" name="raise_one_step_btn">
+                        <property name="toolTip">
+                          <string>Raise selection one step</string>
+                        </property>
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset>
+                            <normaloff>:/icons/selection-raise</normaloff>
+                          </iconset>
+                        </property>
+                        <property name="class" stdset="0">
+                          <string>segment-first</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QPushButton" name="lower_one_step_btn">
+                        <property name="toolTip">
+                          <string>Lower selection one step</string>
+                        </property>
+                        <property name="text">
+                          <string/>
+                        </property>
+                        <property name="icon">
+                          <iconset>
+                            <normaloff>:/icons/selection-lower</normaloff>
+                          </iconset>
+                        </property>
+                        <property name="class" stdset="0">
+                          <string>segment-last</string>
+                        </property>
+                      </widget>
+                    </item>
+                  </layout>
+                </item>
+              </layout>
+            </item>
+
+            <item row="3" column="0" colspan="2">
+              <widget class="QLabel" name="alignLabel">
+                <property name="text">
+                  <string>Align</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="4" column="0" colspan="1">
+              <layout class="QHBoxLayout" name="horizontalAlignLayout">
+                <property name="spacing">
+                  <number>2</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="align-horizontal-left">
+                    <property name="toolTip">
+                      <string>Align left edges</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/align-horizontal-left</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>segment-first</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="align-horizontal-center">
+                    <property name="toolTip">
+                      <string>Center on vertical axis</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/align-horizontal-center</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>segment-middle</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="align-horizontal-right">
+                    <property name="toolTip">
+                      <string>Align right edges</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/align-horizontal-right</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>segment-last</string>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item row="4" column="1" colspan="1">
+              <layout class="QHBoxLayout" name="verticalAlignLayout">
+                <property name="spacing">
+                  <number>2</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="align-vertical-top">
+                    <property name="toolTip">
+                      <string>Align top edges</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/align-vertical-top</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>segment-first</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="align-vertical-center">
+                    <property name="toolTip">
+                      <string>Center on horizontal axis</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/align-vertical-center</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>segment-middle</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="align-vertical-bottom">
+                    <property name="toolTip">
+                      <string>Align bottom edges</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="flat">
+                      <bool>true</bool>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/align-vertical-bottom</normaloff>
+                      </iconset>
+                    </property>
+                    <property name="class" stdset="0">
+                      <string>segment-last</string>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <!-- <item row="4" column="2" colspan="1">
+    <widget class="QPushButton" name="distributePanelBtn">
+     <property name="toolTip">
+      <string>Distribute</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>no-menu-arrow</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icons/pan-start</normaloff>
+      </iconset>
+     </property>
+    </widget>
+   </item> -->
+
+          </layout>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

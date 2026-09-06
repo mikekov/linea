@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>ConnectorWidget</class>
+  <widget class="QWidget" name="ConnectorWidget">
+    <property name="windowTitle">
+      <string>Connector Tool</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="connectorToolLabel">
+          <property name="text">
+            <string>Connector Tool</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0">
+        <layout class="QHBoxLayout" name="headerLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="avoidButton">
+              <property name="toolTip">
+                <string>Make connectors avoid selected objects</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/connector-avoid</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="ignoreButton">
+              <property name="toolTip">
+                <string>Make connectors ignore selected objects</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/connector-ignore</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="orthogonalButton">
+              <property name="toolTip">
+                <string>Make connector orthogonal or polyline</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/connector-orthogonal</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <item row="2" column="2">
+        <widget class="QPushButton" name="dummy">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/missing-element</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="4" column="0">
+        <widget class="QLabel" name="curvatureLabel">
+          <property name="text">
+            <string>Curvature</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="4" column="1">
+        <widget class="QLabel" name="spacingLabel">
+          <property name="text">
+            <string>Spacing</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="0">
+        <widget class="Linea::UI::NumberEdit" name="curvatureSpin">
+          <property name="toolTip">
+            <string>The amount of connector curvature</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="1">
+        <widget class="Linea::UI::NumberEdit" name="spacingSpin">
+          <property name="toolTip">
+            <string>The amount of space left around objects by auto-routing connectors</string>
+          </property>
+        </widget>
+      </item>
+      <item row="6" column="0">
+        <widget class="QLabel" name="lengthLabel">
+          <property name="text">
+            <string>Length</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="7" column="0">
+        <widget class="Linea::UI::NumberEdit" name="lengthSpin">
+          <property name="toolTip">
+            <string>Ideal length for connectors when layout is applied</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="1">
+        <widget class="QPushButton" name="graphButton">
+          <property name="toolTip">
+            <string>Nicely arrange selected connector network</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/distribute-graph</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="9" column="0">
+        <layout class="QHBoxLayout" name="headerLayout2">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="directedButton">
+              <property name="toolTip">
+                <string>Make connectors with end-markers (arrows) point downwards</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/distribute-graph-directed</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="overlapButton">
+              <property name="toolTip">
+                <string>Do not allow overlapping shapes</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/distribute-remove-overlaps</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

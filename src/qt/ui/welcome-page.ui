@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>WelcomePage</class>
+  <widget class="QWidget" name="WelcomePage">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>640</width>
+        <height>480</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" rowstretch="0,1,0,1" columnstretch="1,1">
+      <property name="horizontalSpacing">
+        <number>12</number>
+      </property>
+      <property name="verticalSpacing">
+        <number>4</number>
+      </property>
+
+      <item row="0" column="0">
+        <widget class="QLabel" name="topLeftLabel">
+          <property name="text">
+            <string>Recent files</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="0" rowspan="3">
+        <widget class="QWidget" name="topLeftPanel">
+          <property name="class" stdset="0">
+            <string>welcome-panel</string>
+          </property>
+          <layout class="QVBoxLayout" name="topLeftLayout">
+            <property name="leftMargin">
+              <number>8</number>
+            </property>
+            <property name="topMargin">
+              <number>8</number>
+            </property>
+            <property name="rightMargin">
+              <number>8</number>
+            </property>
+            <property name="bottomMargin">
+              <number>8</number>
+            </property>
+            <property name="spacing">
+              <number>1</number>
+            </property>
+            <item>
+              <layout class="QHBoxLayout" name="recentFilesSearchLayout">
+                <item>
+                  <spacer name="recentFilesSearchSpacer">
+                    <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                      <enum>QSizePolicy::Expanding</enum>
+                    </property>
+                  </spacer>
+                </item>
+                <item>
+                  <widget class="QLineEdit" name="recentFilesSearch">
+                    <property name="maximumSize">
+                      <size>
+                        <width>140</width>
+                        <height>16777215</height>
+                      </size>
+                    </property>
+                    <!-- <property name="placeholderText">
+                      <string>Search...</string>
+                    </property> -->
+                    <property name="clearButtonEnabled">
+                      <bool>true</bool>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <widget class="QListWidget" name="recentFilesList">
+                <property name="class" stdset="0">
+                  <string>welcome-recent-files</string>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+
+      <item row="0" column="1">
+        <widget class="QLabel" name="topRightLabel">
+          <property name="text">
+            <string>New document</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="QWidget" name="topRightPanel">
+          <property name="class" stdset="0">
+            <string>welcome-panel</string>
+          </property>
+          <layout class="QVBoxLayout" name="topRightLayout">
+            <property name="leftMargin">
+              <number>8</number>
+            </property>
+            <property name="topMargin">
+              <number>8</number>
+            </property>
+            <property name="rightMargin">
+              <number>8</number>
+            </property>
+            <property name="bottomMargin">
+              <number>8</number>
+            </property>
+            <item>
+              <widget class="QListWidget" name="templatesList">
+                <property name="class" stdset="0">
+                  <string>welcome-recent-files</string>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+
+      <item row="2" column="1">
+        <widget class="QLabel" name="recoverLabel">
+          <property name="text">
+            <string>Recover</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="1">
+        <widget class="QWidget" name="bottomPanel">
+          <property name="class" stdset="0">
+            <string>welcome-panel</string>
+          </property>
+          <layout class="QVBoxLayout" name="bottomLayout">
+            <property name="leftMargin">
+              <number>8</number>
+            </property>
+            <property name="topMargin">
+              <number>8</number>
+            </property>
+            <property name="rightMargin">
+              <number>8</number>
+            </property>
+            <property name="bottomMargin">
+              <number>8</number>
+            </property>
+            <item>
+              <widget class="QListWidget" name="recoverFilesList">
+                <property name="class" stdset="0">
+                  <string>welcome-recent-files</string>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

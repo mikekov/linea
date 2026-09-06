@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PatternEditor</class>
+  <widget class="QWidget" name="PatternEditor">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>240</width>
+        <height>540</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Pattern Editor</string>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>4</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+
+      <!-- Row 0: title label + options menu button + search box -->
+      <item>
+        <layout class="QHBoxLayout" name="headerLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="QLabel" name="titleLabel">
+              <property name="text">
+                <string>Pattern fill</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="headerSpacer">
+              <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>20</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <widget class="QPushButton" name="optionsButton">
+              <property name="toolTip">
+                <string>Options</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/gear</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QLineEdit" name="searchBox">
+              <property name="placeholderText">
+                <string>Search</string>
+              </property>
+              <property name="maximumWidth">
+                <number>100</number>
+              </property>
+              <property name="clearButtonEnabled">
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <!-- Splitter: doc gallery (top) / stock gallery (bottom) -->
+      <item>
+        <widget class="QSplitter" name="splitter">
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
+          </property>
+          <property name="childrenCollapsible">
+            <bool>false</bool>
+          </property>
+          <widget class="QWidget" name="docPanel">
+            <layout class="QVBoxLayout" name="docPanelLayout">
+              <property name="spacing">
+                <number>0</number>
+              </property>
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <item>
+                <widget class="Linea::UI::SimpleGrid" name="docGallery" native="true">
+                  <property name="minimumSize">
+                    <size>
+                      <width>0</width>
+                      <height>60</height>
+                    </size>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="stockPanel">
+            <layout class="QVBoxLayout" name="stockPanelLayout">
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <!-- Category selector row: prev / combo / next -->
+              <item>
+                <layout class="QHBoxLayout" name="categoryLayout">
+                  <property name="spacing">
+                    <number>0</number>
+                  </property>
+                  <item>
+                    <widget class="QPushButton" name="previousButton">
+                      <property name="icon">
+                        <iconset>
+                          <normaloff>:/icons/pan-start</normaloff>
+                        </iconset>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <spacer name="comboSpacerLeft">
+                      <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                        <size>
+                          <width>0</width>
+                          <height>0</height>
+                        </size>
+                      </property>
+                    </spacer>
+                  </item>
+                  <item>
+                    <widget class="QComboBox" name="patternCombo">
+                      <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed"/>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <spacer name="comboSpacerRight">
+                      <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                        <size>
+                          <width>0</width>
+                          <height>0</height>
+                        </size>
+                      </property>
+                    </spacer>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="nextButton">
+                      <property name="icon">
+                        <iconset>
+                          <normaloff>:/icons/pan-end</normaloff>
+                        </iconset>
+                      </property>
+                    </widget>
+                  </item>
+                </layout>
+              </item>
+              <item>
+                <widget class="Linea::UI::SimpleGrid" name="stockGallery" native="true">
+                  <property name="minimumSize">
+                    <size>
+                      <width>0</width>
+                      <height>60</height>
+                    </size>
+                  </property>
+                  <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding"/>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+        </widget>
+      </item>
+
+      <!-- Resizing separator between gallery splitter and preview -->
+      <item>
+        <widget class="Linea::UI::ResizingSeparator" name="separator" native="true">
+          <property name="minimumSize">
+            <size>
+              <width>0</width>
+              <height>4</height>
+            </size>
+          </property>
+          <property name="maximumSize">
+            <size>
+              <width>16777215</width>
+              <height>4</height>
+            </size>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Preview bar: color picker | preview drawing area | edit button -->
+      <item>
+        <layout class="QHBoxLayout" name="previewBarLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="Linea::UI::ColorPicker" name="colorPicker" native="true">
+              <property name="minimumSize">
+                <size>
+                  <width>20</width>
+                  <height>20</height>
+                </size>
+              </property>
+              <property name="maximumSize">
+                <size>
+                  <width>24</width>
+                  <height>24</height>
+                </size>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="Linea::UI::DrawingArea" name="preview" native="true">
+              <property name="class" stdset="0">
+                <string>active-frame</string>
+              </property>
+              <property name="minimumSize">
+                <size>
+                  <width>0</width>
+                  <height>22</height>
+                </size>
+              </property>
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="editButton">
+              <property name="toolTip">
+                <string>Change scale, position and rotation of this pattern by dragging handles on canvas.</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/edit</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <!-- Pattern name entry -->
+      <item>
+        <widget class="QLineEdit" name="patternName">
+          <property name="placeholderText">
+            <string>name</string>
+          </property>
+          <property name="alignment">
+            <set>Qt::AlignHCenter</set>
+          </property>
+          <property name="class" stdset="0">
+            <string>small-entry</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Properties grid -->
+      <item>
+        <layout class="QGridLayout" name="propsGrid">
+          <property name="horizontalSpacing">
+            <number>4</number>
+          </property>
+          <property name="verticalSpacing">
+            <number>4</number>
+          </property>
+
+          <!-- Row 0: Scale label -->
+          <item row="0" column="0" colspan="3">
+            <widget class="QLabel" name="scaleLabel">
+              <property name="text">
+                <string>Scale</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 1: scale-x | scale-y | link -->
+          <item row="1" column="0">
+            <widget class="Linea::UI::NumberEdit" name="scaleX" native="true">
+              <property name="toolTip">
+                <string>Scale X</string>
+              </property>
+              <property name="minimum">
+                <double>0.010000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>1000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>0.010000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>3</number>
+              </property>
+              <property name="label">
+                <string>X</string>
+              </property>
+            </widget>
+          </item>
+          <item row="1" column="1">
+            <widget class="Linea::UI::NumberEdit" name="scaleY" native="true">
+              <property name="toolTip">
+                <string>Scale Y</string>
+              </property>
+              <property name="minimum">
+                <double>0.010000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>1000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>0.010000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>3</number>
+              </property>
+              <property name="label">
+                <string>Y</string>
+              </property>
+            </widget>
+          </item>
+          <item row="1" column="2">
+            <widget class="QPushButton" name="linkScaleButton">
+              <property name="toolTip">
+                <string>Link X and Y scale</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+
+          <!-- Row 2: Stroke label -->
+          <item row="2" column="0" colspan="3">
+            <widget class="QLabel" name="strokeLabel">
+              <property name="text">
+                <string>Stroke</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 3: stroke spin (colspan 2) -->
+          <item row="3" column="0" colspan="2">
+            <widget class="Linea::UI::NumberEdit" name="strokeSpin" native="true">
+              <property name="toolTip">
+                <string>Stroke width</string>
+              </property>
+              <property name="minimum">
+                <double>0.001000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>1000000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>0.100000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>3</number>
+              </property>
+              <property name="icon">
+                <string>stroke-widths</string>
+              </property>
+            </widget>
+          </item>
+
+          <!-- Row 4: Rotation label -->
+          <item row="4" column="0" colspan="3">
+            <widget class="QLabel" name="rotationLabel">
+              <property name="text">
+                <string>Rotation</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 5: angle spin (colspan 2) -->
+          <item row="5" column="0" colspan="2">
+            <widget class="Linea::UI::NumberEdit" name="angleSpin" native="true">
+              <property name="toolTip">
+                <string>Pattern rotation in degrees</string>
+              </property>
+              <property name="minimum">
+                <double>-180.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>180.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>2</number>
+              </property>
+              <property name="suffix">
+                <string>°</string>
+              </property>
+              <property name="icon">
+                <string>transform-rotate</string>
+              </property>
+            </widget>
+          </item>
+
+          <!-- Row 6: Offset label -->
+          <item row="6" column="0" colspan="3">
+            <widget class="QLabel" name="offsetLabel">
+              <property name="text">
+                <string>Offset</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 7: offset-x | offset-y -->
+          <item row="7" column="0">
+            <widget class="Linea::UI::NumberEdit" name="offsetX" native="true">
+              <property name="toolTip">
+                <string>Offset X</string>
+              </property>
+              <property name="minimum">
+                <double>-10000.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>10000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>3</number>
+              </property>
+              <property name="label">
+                <string>X</string>
+              </property>
+            </widget>
+          </item>
+          <item row="7" column="1">
+            <widget class="Linea::UI::NumberEdit" name="offsetY" native="true">
+              <property name="toolTip">
+                <string>Offset Y</string>
+              </property>
+              <property name="minimum">
+                <double>-10000.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>10000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>3</number>
+              </property>
+              <property name="label">
+                <string>Y</string>
+              </property>
+            </widget>
+          </item>
+
+          <!-- Row 8: Gap label -->
+          <item row="8" column="0" colspan="3">
+            <widget class="QLabel" name="gapLabel">
+              <property name="text">
+                <string>Gap</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 9: gap-x | gap-y -->
+          <item row="9" column="0">
+            <widget class="Linea::UI::NumberEdit" name="gapXSpin" native="true">
+              <property name="toolTip">
+                <string>Gap X between tiles</string>
+              </property>
+              <property name="minimum">
+                <double>0.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>100000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>1</number>
+              </property>
+              <property name="label">
+                <string>W</string>
+              </property>
+            </widget>
+          </item>
+          <item row="9" column="1">
+            <widget class="Linea::UI::NumberEdit" name="gapYSpin" native="true">
+              <property name="toolTip">
+                <string>Gap Y between tiles</string>
+              </property>
+              <property name="minimum">
+                <double>0.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>100000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>1</number>
+              </property>
+              <property name="label">
+                <string>H</string>
+              </property>
+            </widget>
+          </item>
+
+          <!-- Row 10: Pitch label -->
+          <item row="10" column="0" colspan="3">
+            <widget class="QLabel" name="pitchLabel">
+              <property name="text">
+                <string>Pitch</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-label</string>
+              </property>
+            </widget>
+          </item>
+          <!-- Row 11: pitch spin (colspan 2) -->
+          <item row="11" column="0" colspan="2">
+            <widget class="Linea::UI::NumberEdit" name="pitchSpin" native="true">
+              <property name="toolTip">
+                <string>Hatch pitch</string>
+              </property>
+              <property name="minimum">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="maximum">
+                <double>1000000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+                <double>1.000000000000000</double>
+              </property>
+              <property name="decimals">
+                <number>1</number>
+              </property>
+              <property name="icon">
+                <string>distance</string>
+              </property>
+            </widget>
+          </item>
+
+        </layout>
+      </item>
+
+    </layout>
+
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::ResizingSeparator</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/resizing-separator.h</header>
+      <container>0</container>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::ColorPicker</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/color-picker.h</header>
+      <container>0</container>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/number-edit.h</header>
+      <container>0</container>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::SimpleGrid</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/simple-grid.h</header>
+      <container>0</container>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::DrawingArea</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/drawing-area.h</header>
+      <container>0</container>
+    </customwidget>
+  </customwidgets>
+</ui>

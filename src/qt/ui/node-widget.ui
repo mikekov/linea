@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>NodeWidget</class>
+  <widget class="QWidget" name="NodeWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>180</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Node Widget</string>
+    </property>
+    <layout class="QGridLayout" name="mainLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="nodeWidgetTopLabel">
+          <property name="text">
+            <string>Nodes</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QPushButton" name="nodeOptionsBtn">
+          <property name="toolTip">
+            <string>Options</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>no-menu-arrow</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/settings</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="0" colspan="3">
+        <widget class="QWidget" name="gridContainer">
+          <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <property name="spacing">
+              <number>4</number>
+            </property>
+            <item row="1" column="0">
+              <widget class="QLabel" name="joinLabel">
+                <property name="text">
+                  <string>Join</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="1" column="1">
+              <widget class="QLabel" name="breakLabel">
+                <property name="text">
+                  <string>Break apart</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="2" column="0">
+              <layout class="QHBoxLayout" name="joinLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="join_btn">
+                    <property name="toolTip">
+                      <string>Join selected nodes</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-join</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="join_segment_btn">
+                    <property name="toolTip">
+                      <string>Join selected endnodes with a new segment</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-join-segment</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item row="2" column="1">
+              <layout class="QHBoxLayout" name="breakLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="break_btn">
+                    <property name="toolTip">
+                      <string>Break path at selected nodes</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-break</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="delete_segment_btn">
+                    <property name="toolTip">
+                      <string>Delete segment between two non-endpoint nodes</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-delete-segment</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item row="3" column="0" colspan="2">
+              <widget class="QLabel" name="nodeTypeLabel">
+                <property name="text">
+                  <string>Node Type</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="4" column="0" colspan="2">
+              <layout class="QHBoxLayout" name="typeLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="cusp_btn">
+                    <property name="toolTip">
+                      <string>Make selected nodes corner</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-type-cusp</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="smooth_btn">
+                    <property name="toolTip">
+                      <string>Make selected nodes smooth</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-type-smooth</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="symmetric_btn">
+                    <property name="toolTip">
+                      <string>Make selected nodes symmetric</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-type-symmetric</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="auto_btn">
+                    <property name="toolTip">
+                      <string>Make selected nodes auto-smooth</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-type-auto-smooth</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item row="5" column="0">
+              <widget class="QLabel" name="changeLabel">
+                <property name="text">
+                  <string>Change</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="5" column="1">
+              <widget class="QLabel" name="convertLabel">
+                <property name="text">
+                  <string>Convert</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="6" column="0">
+              <layout class="QHBoxLayout" name="changeLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="line_btn">
+                    <property name="toolTip">
+                      <string>Straighten lines</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-segment-line</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="curve_btn">
+                    <property name="toolTip">
+                      <string>Add curve handles</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/node-segment-curve</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item row="6" column="1">
+              <layout class="QHBoxLayout" name="convertLayout">
+                <property name="spacing">
+                  <number>4</number>
+                </property>
+                <property name="leftMargin">
+                  <number>0</number>
+                </property>
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="rightMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QPushButton" name="object_to_path_btn">
+                    <property name="toolTip">
+                      <string>Convert selected object to path</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/object-to-path</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPushButton" name="object_stroke_to_path_btn">
+                    <property name="toolTip">
+                      <string>Convert selected object's stroke to paths</string>
+                    </property>
+                    <property name="text">
+                      <string/>
+                    </property>
+                    <property name="icon">
+                      <iconset>
+                        <normaloff>:/icons/stroke-to-path</normaloff>
+                      </iconset>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item row="7" column="0" colspan="2">
+              <widget class="QLabel" name="nodePositionLabel">
+                <property name="text">
+                  <string>Node position</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="8" column="0">
+              <widget class="Linea::UI::NumberEdit" name="nodeXEdit">
+                <property name="label">
+                  <string>X</string>
+                </property>
+              </widget>
+            </item>
+            <item row="8" column="1">
+              <widget class="Linea::UI::NumberEdit" name="nodeYEdit">
+                <property name="label">
+                  <string>Y</string>
+                </property>
+              </widget>
+            </item>
+            <item row="8" column="2">
+              <widget class="QPushButton" name="roundCoordsBtn">
+                <property name="toolTip">
+                  <string>Round coordinates</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/rounding</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+            <item row="9" column="0" colspan="2">
+              <widget class="QLabel" name="distanceLabel">
+                <property name="text">
+                  <string>Distance</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="10" column="0" colspan="2">
+              <widget class="Linea::UI::NumberEdit" name="distanceEdit"/>
+            </item>
+            <item row="11" column="0" colspan="3">
+              <spacer name="verticalSpacer">
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                  <enum>QSizePolicy::Expanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                  <size>
+                    <width>0</width>
+                    <height>0</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+          </layout>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

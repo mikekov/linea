@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GuidesPanel</class>
+ <widget class="QWidget" name="GuidesPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>220</width>
+    <height>280</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+
+   <item>
+    <widget class="QLabel" name="guidesLabel">
+     <property name="text">
+      <string>Guides</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>panel-heading</string>
+     </property>
+    </widget>
+   </item>
+
+   <!-- <item>
+    <layout class="QHBoxLayout" name="showGuidesLayout">
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="showGuidesLabel">
+       <property name="text">
+        <string>Show guides</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="Linea::UI::SwitchWidget" name="showGuides">
+       <property name="toolTip">
+        <string>Show or hide guides</string>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed"/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item> -->
+
+   <!-- <item>
+    <widget class="QCheckBox" name="lockGuides">
+     <property name="text">
+      <string>Lock all guides</string>
+     </property>
+     <property name="toolTip">
+      <string>Toggle lock of all guides in the document</string>
+     </property>
+    </widget>
+   </item> -->
+
+   <item>
+    <spacer>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>4</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="colorsLabel">
+     <property name="text">
+      <string>Default Colors</string>
+     </property>
+     <property name="class" stdset="0">
+      <string>panel-label</string>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <layout class="QHBoxLayout" name="colorLabelsLayout">
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="normalColorLabel">
+       <property name="text">
+        <string>Normal</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="class" stdset="0">
+        <string>info-text</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="highlightColorLabel">
+       <property name="text">
+        <string>Highlight</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="class" stdset="0">
+        <string>info-text</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <item>
+    <layout class="QHBoxLayout" name="colorPickersLayout">
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <item>
+      <widget class="Linea::UI::ColorPicker" name="guideColor" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Color of guidelines</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Linea::UI::ColorPicker" name="guideHighlightColor" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Color of a guideline when under mouse</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <item>
+    <spacer>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>12</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+
+   <item>
+    <widget class="QPushButton" name="createGuidesButton">
+     <property name="text">
+      <string>Create around the page</string>
+     </property>
+     <property name="toolTip">
+      <string>Create four guides aligned with the page borders of the current page</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icons/guides</normaloff>
+      </iconset>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QPushButton" name="deleteGuidesButton">
+     <property name="toolTip">
+      <string>Delete all guidelines</string>
+     </property>
+     <property name="text">
+      <string>Delete all</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icons/edit-delete</normaloff>
+      </iconset>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QPushButton" name="newGuideButton">
+     <property name="text">
+      <string>New Guide</string>
+     </property>
+     <property name="toolTip">
+      <string>Add a new guide to the document</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/icons/list-add</normaloff>
+      </iconset>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+     <widget class="QWidget" name="guideListContainer">
+      <layout class="QVBoxLayout" name="guideListLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>12</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+      </layout>
+     </widget>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="noGuidesLabel">
+     <property name="text">
+      <string>No guides defined</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="class" stdset="0">
+      <string>placeholder-label</string>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding"/>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <spacer>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </spacer>
+   </item>
+
+  </layout>
+ </widget>
+
+ <customwidgets>
+  <customwidget>
+   <class>Linea::UI::ColorPicker</class>
+   <extends>QPushButton</extends>
+   <header>color-picker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Linea::UI::SwitchWidget</class>
+   <extends>QAbstractButton</extends>
+   <header>switch-widget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

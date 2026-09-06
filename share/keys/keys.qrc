@@ -1,0 +1,6 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/keys">
+        <file>linea.xml</file>
+    </qresource>
+</RCC>

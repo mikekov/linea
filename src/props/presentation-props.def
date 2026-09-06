@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// Property table: presentation (style) properties.
+// See element-props.def for the row grammar.
+//
+// Three tiers demonstrated below:
+//   1. table-only        — generic style_get / css_set helpers cover the row
+//   2. shared helper     — parameterized accessor reused by several rows
+//   3. named functions   — irregular properties get ordinary functions in
+//                          accessors.h/.cpp; the table stays declarative
+// no include guard: intentionally re-includable
+
+// --- opacity & blend (tier 1) -------------------------------------------
+LINEA_PROP(double, opacity,
+           (style_get<[](const SPStyle& s) { return static_cast<double>(s.opacity); }>),
+           (css_set<"opacity">),
+           "object-opacity", RC_("Undo", "Set opacity"))
+
+LINEA_PROP(SPBlendMode, blend_mode,
+           (style_get<[](const SPStyle& s) { return s.mix_blend_mode.set ? s.mix_blend_mode.value : SP_CSS_BLEND_NORMAL; }>),
+           (css_set<"mix-blend-mode", format_blend_mode>),
+           "blend-mode", RC_("Undo", "Set blend mode"))
+
+// --- stroke geometry (tier 3: named accessors) ---------------------------
+LINEA_PROP(int, stroke_linecap,
+           (read_stroke_linecap),
+           (apply_stroke_linecap),
+           "stroke-linecap", RC_("Undo", "Set line cap"))
+
+LINEA_PROP(int, stroke_linejoin,
+           (read_stroke_linejoin),
+           (apply_stroke_linejoin),
+           "stroke-linejoin", RC_("Undo", "Set line join"))
+
+// Stroke width needs unit + transform context; edited via Editor::apply(StrokeWidthOp)
+// for now, so the table only declares the query side.
+LINEA_PROP_RO(StrokeWidthProp, stroke_width, (read_stroke_width))
+
+// --- paints (read-only fields; edited via the PaintEditDelegate::Op variant) ---
+// Gradients/patterns/swatches are structural edits, not value assignments;
+// they go through Editor::apply(Op). The state fields still live in this
+// table so the snapshot, delta and UI refresh are uniform.
+LINEA_PROP_RO(PaintProp, fill,   (read_fill_paint))
+LINEA_PROP_RO(PaintProp, stroke, (read_stroke_paint))
+
+// --- render ------------------------------------------------------------------
+LINEA_PROP(int, image_rendering,
+           (style_get<[](const SPStyle& s) { return static_cast<int>(s.image_rendering.value); }>),
+           (css_set<"image-rendering", format_image_rendering>),
+           "image-rendering", RC_("Undo", "Set image rendering"))
+
+// --- fill & stroke opacity (tier 1) -------------------------------------
+LINEA_PROP(double, fill_opacity,
+           (style_get<[](const SPStyle& s) { return static_cast<double>(s.fill_opacity.as_double()); }>),
+           (css_set<"fill-opacity">),
+           "fill-opacity", RC_("Undo", "Set fill opacity"))
+
+LINEA_PROP(double, stroke_opacity,
+           (style_get<[](const SPStyle& s) { return static_cast<double>(s.stroke_opacity.as_double()); }>),
+           (css_set<"stroke-opacity">),
+           "stroke-opacity", RC_("Undo", "Set stroke opacity"))
+
+// --- fill rule (tier 1: enum formatter) --------------------------------
+LINEA_PROP(SPWindRule, fill_rule,
+           (style_get<[](const SPStyle& s) { return s.fill_rule.computed; }>),
+           (css_set<"fill-rule", format_fill_rule>),
+           "fill-rule", RC_("Undo", "Set fill rule"))
+
+// --- stroke miterlimit (tier 1) ----------------------------------------
+LINEA_PROP(double, stroke_miterlimit,
+           (style_get<[](const SPStyle& s) { return s.stroke_miterlimit.value; }>),
+           (css_set<"stroke-miterlimit">),
+           "stroke-miterlimit", RC_("Undo", "Set stroke miter limit"))
+
+// --- markers (tier 1: string via css_set) ------------------------------
+LINEA_PROP(std::string, marker_start,
+           (style_get<[](const SPStyle& s) { return std::string(s.marker_start.value() ? s.marker_start.value() : ""); }>),
+           (css_set<"marker-start">),
+           "marker-change", RC_("Undo", "Set marker"))
+
+LINEA_PROP(std::string, marker_mid,
+           (style_get<[](const SPStyle& s) { return std::string(s.marker_mid.value() ? s.marker_mid.value() : ""); }>),
+           (css_set<"marker-mid">),
+           "marker-change", RC_("Undo", "Set marker"))
+
+LINEA_PROP(std::string, marker_end,
+           (style_get<[](const SPStyle& s) { return std::string(s.marker_end.value() ? s.marker_end.value() : ""); }>),
+           (css_set<"marker-end">),
+           "marker-change", RC_("Undo", "Set marker"))
+
+// --- paint order (tier 3: named accessor + formatter) ------------------
+LINEA_PROP(SPIPaintOrder, paint_order,
+           (read_paint_order),
+           (css_set<"paint-order", format_paint_order>),
+           "paint-order", RC_("Undo", "Set paint order"))
+
+// --- visibility (tier 3: item method, not CSS) -------------------------
+LINEA_PROP(bool, visibility,
+           (read_visibility),
+           (apply_visibility),
+           "visibility", RC_("Undo", "Set visibility"))
+
+// --- stroke dash (read-only; edited via Editor::apply(DashOp)) ----------
+// Like stroke_width, dash needs transform/scale context, so the table only
+// declares the query side.
+LINEA_PROP_RO(StrokeDashProp, stroke_dash, (read_stroke_dash))
+
+// --- hairline (read-only; toggled via Editor::apply(StrokeWidthOp)) -----
+LINEA_PROP_RO(bool, hairline,
+              (style_get<[](const SPStyle& s) { return static_cast<bool>(s.stroke_extensions.hairline); }>))
+
+// --- filter (read-only; presence + primitive count for change tracking) ---
+LINEA_PROP_RO(int, filter,
+              (style_get<[](const SPStyle& s) {
+                   if (!s.filter.set || !s.getFilter()) return 0;
+                   return static_cast<int>(s.getFilter()->children.size());
+               }>))
+
+// --- to port next (same pattern) ------------------------------------------
+// title / description / locked (element properties)

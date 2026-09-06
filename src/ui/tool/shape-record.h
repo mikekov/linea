@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/** @file
+ * Structures that store data needed for shape editing which are not contained
+ * directly in the XML node
+ */
+/* Authors:
+ *   Krzysztof Kosiński <tweenk.pl@gmail.com>
+ *
+ * Copyright (C) 2009 Authors
+ * Released under GNU GPL v2+, read the file 'COPYING' for more information.
+ */
+
+#ifndef INKSCAPE_UI_TOOL_SHAPE_RECORD_H
+#define INKSCAPE_UI_TOOL_SHAPE_RECORD_H
+
+class SPItem;
+class SPObject;
+namespace Inkscape {
+namespace UI {
+
+/** Role of the shape in the drawing - affects outline display and color */
+enum ShapeRole {
+    SHAPE_ROLE_NORMAL,
+    SHAPE_ROLE_CLIPPING_PATH,
+    SHAPE_ROLE_MASK,
+    SHAPE_ROLE_LPE_PARAM // implies edit_original set to true in ShapeRecord
+};
+
+struct ShapeRecord : public boost::totally_ordered<ShapeRecord>
+{
+    SPObject *object; // SP node for the edited shape could be a lpeoject invisible so we use a spobject
+    ShapeRole role;
+    Glib::ustring lpe_key; // name of LPE shape param being edited
+
+    Geom::Affine edit_transform; // how to transform controls - used for clipping paths, masks, and markers
+    double edit_rotation; // how to transform controls - used for markers
+
+    inline bool operator==(ShapeRecord const &o) const {
+        return object == o.object && lpe_key == o.lpe_key;
+    }
+    inline bool operator<(ShapeRecord const &o) const {
+        return object == o.object ? (lpe_key < o.lpe_key) : (object < o.object);
+    }
+};
+
+} // namespace UI
+} // namespace Inkscape
+
+#endif // INKSCAPE_UI_TOOL_SHAPE_RECORD_H

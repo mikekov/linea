@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>SymbolsWidget</class>
+  <widget class="QWidget" name="SymbolsWidget">
+    <property name="geometry">
+      <rect><x>0</x><y>0</y><width>640</width><height>480</height></rect>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="spacing"><number>2</number></property>
+      <item>
+        <layout class="QHBoxLayout" name="controlsLayout" stretch="2,1">
+          <item>
+            <widget class="QComboBox" name="collection">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Ignored" vsizetype="Fixed"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QLineEdit" name="search">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Ignored" vsizetype="Fixed"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
+              </property>
+              <property name="placeholderText"><string>Search symbols</string></property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item>
+        <widget class="QLabel" name="info">
+          <property name="class" stdset="0"><string>info-text</string></property>
+          <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+          <property name="text"><string/></property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QListView" name="view">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding"><horstretch>1</horstretch><verstretch>1</verstretch></sizepolicy>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <layout class="QHBoxLayout" name="tileSizeLayout">
+          <property name="leftMargin"><number>4</number></property>
+          <property name="topMargin"><number>0</number></property>
+          <property name="rightMargin"><number>4</number></property>
+          <property name="bottomMargin"><number>0</number></property>
+          <item>
+            <widget class="QSlider" name="tileSize">
+              <property name="toolTip"><string>Symbol tile size</string></property>
+              <property name="minimum"><number>0</number></property>
+              <property name="maximum"><number>50</number></property>
+              <property name="value"><number>12</number></property>
+              <property name="orientation"><enum>Qt::Horizontal</enum></property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

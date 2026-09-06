@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>RectangleWidget</class>
+  <widget class="QWidget" name="RectangleWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>240</width>
+        <height>120</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Rectangle</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <!-- Row 0: Corners label -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label">
+          <property name="text">
+            <string>Corners</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Rx, Ry -->
+      <item row="1" column="0">
+        <widget class="Linea::UI::NumberEdit" name="rxEdit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>6</number>
+          </property>
+          <property name="singleStep">
+            <double>0.500000</double>
+          </property>
+          <property name="label">
+            <string>Rx</string>
+          </property>
+          <property name="toolTip">
+            <string>Horizontal radius of rounded corners</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="Linea::UI::NumberEdit" name="ryEdit">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100000.000000</double>
+          </property>
+          <property name="decimals">
+            <number>6</number>
+          </property>
+          <property name="singleStep">
+            <double>0.500000</double>
+          </property>
+          <property name="label">
+            <string>Ry</string>
+          </property>
+          <property name="toolTip">
+            <string>Vertical radius of rounded corners</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="2">
+        <widget class="QPushButton" name="resetButton">
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/reset-to-defaults</normaloff>
+            </iconset>
+          </property>
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 2: Sharp/rounded buttons -->
+      <item row="2" column="0">
+        <layout class="QHBoxLayout" name="buttonsBox">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="sharpButton">
+              <property name="toolTip">
+                <string>Make corners sharp</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/rectangle-make-corners-sharp</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="roundedButton">
+              <property name="toolTip">
+                <string>Make corners independent (path effect)</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/rectangle-make-corners-round</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>narrow-button</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

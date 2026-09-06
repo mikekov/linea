@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MarkerPopup</class>
+ <widget class="QWidget" name="MarkerPopup">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <!-- Marker grid -->
+   <item>
+    <widget class="Linea::UI::SimpleGrid" name="markerGrid" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>240</width>
+       <height>112</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <!-- Preview area with clear/edit buttons -->
+   <item>
+    <widget class="QWidget" name="previewBox" native="true">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>85</height>
+      </size>
+     </property>
+     <property name="class" stdset="0"><string>active-frame</string></property>
+     <layout class="QHBoxLayout" name="previewLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="previewLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="previewButtonsWidget" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <layout class="QVBoxLayout" name="previewButtonsLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>4</number>
+         </property>
+         <property name="rightMargin">
+          <number>4</number>
+         </property>
+         <property name="bottomMargin">
+          <number>4</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="clearButton">
+           <property name="toolTip">
+            <string>Clear marker</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="previewBtnSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="editButton">
+           <property name="toolTip">
+            <string>Edit marker on canvas</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Marker name -->
+   <item>
+    <widget class="QLabel" name="markerName">
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <!-- Properties grid -->
+   <item>
+    <layout class="QGridLayout" name="propsGrid">
+     <property name="horizontalSpacing">
+      <number>4</number>
+     </property>
+     <property name="verticalSpacing">
+      <number>4</number>
+     </property>
+     <!-- Row 0: Size -->
+     <item row="0" column="0" colspan="3">
+      <widget class="QLabel" name="sizeLabel">
+       <property name="text">
+        <string>Size</string>
+       </property>
+       <property name="class" stdset="0"><string>panel-label</string></property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="Linea::UI::NumberEdit" name="scaleX">
+       <property name="label">
+        <string>X</string>
+       </property>
+       <property name="minimum">
+        <double>0.001000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000</double>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="Linea::UI::NumberEdit" name="scaleY">
+       <property name="label">
+        <string>Y</string>
+       </property>
+       <property name="minimum">
+        <double>0.001000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000</double>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QPushButton" name="linkScale">
+       <property name="toolTip">
+        <string>Lock aspect ratio</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <!-- Row 1: Scale with stroke -->
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="scaleWithStroke">
+       <property name="text">
+        <string>Scale with stroke</string>
+       </property>
+      </widget>
+     </item>
+     <!-- Row 2: Orientation -->
+     <item row="3" column="0" colspan="3">
+      <widget class="QLabel" name="orientLabel">
+       <property name="text">
+        <string>Orientation</string>
+       </property>
+       <property name="class" stdset="0"><string>panel-label</string></property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QWidget" name="orientBox" native="true">
+       <layout class="QHBoxLayout" name="orientLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="orientAutoRev">
+          <property name="toolTip">
+           <string>Orient along the path, reversing at the start</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="orientAuto">
+          <property name="toolTip">
+           <string>Orient along the path</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="orientAngle">
+          <property name="toolTip">
+           <string>Fixed specified angle</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="Linea::UI::NumberEdit" name="angle">
+       <property name="suffix">
+        <string>\u00b0</string>
+       </property>
+       <property name="minimum">
+        <double>-360.000000</double>
+       </property>
+       <property name="maximum">
+        <double>360.000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000</double>
+       </property>
+       <property name="decimals">
+        <number>2</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QPushButton" name="flipHorz">
+       <property name="toolTip">
+        <string>Flip marker horizontally</string>
+       </property>
+      </widget>
+     </item>
+     <!-- Row 3: Offset -->
+     <item row="5" column="0" colspan="3">
+      <widget class="QLabel" name="offsetLabel">
+       <property name="text">
+        <string>Offset</string>
+       </property>
+       <property name="class" stdset="0"><string>panel-label</string></property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="Linea::UI::NumberEdit" name="offsetX">
+       <property name="label">
+        <string>X</string>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000</double>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="Linea::UI::NumberEdit" name="offsetY">
+       <property name="label">
+        <string>Y</string>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000</double>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <!-- Row 4: Opacity -->
+     <item row="7" column="0" colspan="3">
+      <widget class="QLabel" name="opacityLabel">
+       <property name="text">
+        <string>Opacity</string>
+       </property>
+       <property name="class" stdset="0"><string>panel-label</string></property>
+      </widget>
+     </item>
+     <item row="8" column="0" colspan="2">
+      <widget class="Linea::UI::NumberEdit" name="opacity">
+       <property name="suffix">
+        <string>%</string>
+       </property>
+       <property name="minimum">
+        <double>0.000000</double>
+       </property>
+       <property name="maximum">
+        <double>100.000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000</double>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Linea::UI::NumberEdit</class>
+   <extends>QWidget</extends>
+   <header>number-edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Linea::UI::SimpleGrid</class>
+   <extends>QWidget</extends>
+   <header>simple-grid.h</header>
+  </customwidget>
+ </customwidgets>
+</ui>

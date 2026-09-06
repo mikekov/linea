@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>FilterEditor</class>
+  <widget class="QWidget" name="FilterEditor">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>640</width>
+        <height>720</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Filter Editor</string>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="leftMargin">
+        <number>8</number>
+      </property>
+      <property name="topMargin">
+        <number>4</number>
+      </property>
+      <property name="rightMargin">
+        <number>8</number>
+      </property>
+      <property name="bottomMargin">
+        <number>4</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item>
+        <layout class="QHBoxLayout" name="filterHeaderLayout">
+          <item>
+            <widget class="QCheckBox" name="filterEnabledCheckBox">
+              <property name="tristate"><bool>true</bool></property>
+              <property name="text">
+                <string>Filter</string>
+              </property>
+              <property name="toolTip">
+                <string>Apply filter to selection</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="filterSelectorButton">
+              <property name="text">
+                <string>-</string>
+              </property>
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                </sizepolicy>
+              </property>
+              <property name="toolTip">
+                <string>Select filter</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="newFilterButton">
+              <property name="text">
+                <string>+</string>
+              </property>
+              <property name="toolTip">
+                <string>Create a new filter</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="filterOptionsButton">
+              <property name="text">
+                <string>...</string>
+              </property>
+              <property name="toolTip">
+                <string>General filter parameters</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item>
+        <layout class="QHBoxLayout" name="effectSearchLayout">
+          <item>
+            <widget class="QLineEdit" name="effectSearchEdit">
+              <property name="placeholderText">
+                <string>Add effect</string>
+              </property>
+              <property name="toolTip">
+                <string>Search and add a filter primitive</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="effectPopupButton">
+              <property name="text">
+                <string>⌄</string>
+              </property>
+              <property name="toolTip">
+                <string>Choose a filter primitive</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="effectSearchSpacer">
+              <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <widget class="QPushButton" name="showSourcesButton">
+              <property name="text">
+                <string></string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="flat">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/show-sources</normaloff>
+                </iconset>
+              </property>
+              <property name="toolTip">
+                <string>Show all filter input sources</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item>
+        <widget class="QSplitter" name="editorSplitter">
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
+          </property>
+          <property name="childrenCollapsible">
+            <bool>false</bool>
+          </property>
+          <property name="handleWidth">
+            <number>5</number>
+          </property>
+          <widget class="QScrollArea" name="primitiveGraphScrollArea">
+            <property name="widgetResizable">
+              <bool>true</bool>
+            </property>
+            <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAsNeeded</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAsNeeded</enum>
+            </property>
+            <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+            </property>
+            <widget class="Linea::UI::FilterPrimitiveList" name="primitiveList" native="true">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+                <size>
+                  <width>0</width>
+                  <height>240</height>
+                </size>
+              </property>
+            </widget>
+          </widget>
+          <widget class="QWidget" name="settingsPane">
+            <property name="minimumSize">
+              <size>
+                <width>0</width>
+                <height>150</height>
+              </size>
+            </property>
+            <layout class="QGridLayout" name="settingsPaneLayout">
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <property name="horizontalSpacing">
+                <number>4</number>
+              </property>
+              <property name="verticalSpacing">
+                <number>4</number>
+              </property>
+              <item row="0" column="0">
+                <widget class="QLabel" name="effectNameLabel">
+                  <property name="text">
+                    <string></string>
+                  </property>
+                  <property name="minimumSize">
+                    <size>
+                      <width>220</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="styleSheet">
+                    <string>font-weight: bold;</string>
+                  </property>
+                </widget>
+              </item>
+              <item row="0" column="1">
+                <widget class="QPushButton" name="effectInfoButton">
+                  <property name="toolTip">
+                    <string>View information about the effect</string>
+                  </property>
+                  <property name="flat">
+                    <bool>true</bool>
+                  </property>
+                  <property name="icon">
+                    <iconset>
+                      <normaloff>:/icons/info-outline</normaloff>
+                    </iconset>
+                  </property>
+                </widget>
+              </item>
+              <item row="0" column="2">
+                <widget class="QPushButton" name="duplicatePrimitiveButton">
+                  <property name="toolTip">
+                    <string>Duplicate effect</string>
+                  </property>
+                  <property name="flat">
+                    <bool>true</bool>
+                  </property>
+                  <property name="icon">
+                    <iconset>
+                      <normaloff>:/icons/edit-duplicate</normaloff>
+                    </iconset>
+                  </property>
+                </widget>
+              </item>
+              <item row="0" column="3">
+                <widget class="QPushButton" name="deletePrimitiveButton">
+                  <property name="toolTip">
+                    <string>Remove effect</string>
+                  </property>
+                  <property name="flat">
+                    <bool>true</bool>
+                  </property>
+                  <property name="icon">
+                    <iconset>
+                      <normaloff>:/icons/edit-delete</normaloff>
+                    </iconset>
+                  </property>
+                </widget>
+              </item>
+              <item row="0" column="4">
+                <spacer name="effectHeaderSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                  </property>
+                </spacer>
+              </item>
+              <item row="1" column="0" colspan="5">
+                <widget class="QScrollArea" name="primitiveSettingsScrollArea">
+                  <property name="widgetResizable">
+                    <bool>true</bool>
+                  </property>
+                  <property name="frameShape">
+                    <enum>QFrame::NoFrame</enum>
+                  </property>
+                  <property name="minimumSize">
+                    <size>
+                      <width>0</width>
+                      <height>90</height>
+                    </size>
+                  </property>
+                  <widget class="QWidget" name="primitiveSettingsContainer">
+                    <layout class="QVBoxLayout" name="primitiveSettingsLayout">
+                      <property name="leftMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                        <number>0</number>
+                      </property>
+                      <item>
+                        <widget class="QLabel" name="primitiveSettingsLabel">
+                          <property name="text">
+                            <string>Select an effect</string>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <spacer name="primitiveSettingsSpacer">
+                          <property name="orientation">
+                            <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeType">
+                            <enum>QSizePolicy::Expanding</enum>
+                          </property>
+                        </spacer>
+                      </item>
+                    </layout>
+                  </widget>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+        </widget>
+      </item>
+      <item>
+        <widget class="QWidget" name="internalWidgets" native="true">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <layout class="QVBoxLayout" name="internalLayout">
+            <item>
+              <widget class="QListWidget" name="filterList"/>
+            </item>
+            <item>
+              <widget class="QComboBox" name="addPrimitiveCombo"/>
+            </item>
+            <item>
+              <widget class="QPushButton" name="duplicateFilterButton"/>
+            </item>
+            <item>
+              <widget class="QPushButton" name="deleteFilterButton"/>
+            </item>
+            <item>
+              <widget class="QPushButton" name="selectFilterButton"/>
+            </item>
+          </layout>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::FilterPrimitiveList</class>
+      <extends>QWidget</extends>
+      <header>filter/filter-primitive-list.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

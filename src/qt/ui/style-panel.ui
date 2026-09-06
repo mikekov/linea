@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>AppearancePanel</class>
+  <widget class="QWidget" name="AppearancePanel">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>400</width>
+        <height>280</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="mainGrid" columnstretch="1,1,0,0">
+      <property name="horizontalSpacing">
+        <number>4</number>
+      </property>
+      <property name="verticalSpacing">
+        <number>4</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+
+      <!-- Row 0: Fill label -->
+      <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="fillLabel">
+          <property name="text">
+            <string>Fill</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Fill controls -->
+      <item row="1" column="0">
+        <widget class="QPushButton" name="fillButton">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>1</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="toolTip">
+            <string>Fill paint</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="Linea::UI::NumberEdit" name="fillAlpha">
+          <property name="suffix">
+            <string>%</string>
+          </property>
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100.000000</double>
+          </property>
+          <property name="singleStep">
+            <double>1.000000</double>
+          </property>
+          <property name="decimals">
+            <number>0</number>
+          </property>
+          <property name="toolTip">
+            <string>Fill opacity</string>
+          </property>
+        </widget>
+      </item>
+      <item row="1" column="2">
+        <widget class="QWidget" name="fillButtons" native="true">
+          <layout class="QHBoxLayout" name="fillButtonsLayout">
+            <property name="spacing">
+              <number>0</number>
+            </property>
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <item>
+              <widget class="QPushButton" name="fillAdd">
+                <property name="toolTip">
+                  <string>Add fill</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/plus</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="fillClear">
+                <property name="toolTip">
+                  <string>No fill</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/minus</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+
+      <!-- Row 2: Stroke label -->
+      <item row="2" column="0" colspan="3">
+        <widget class="QLabel" name="strokeLabel">
+          <property name="text">
+            <string>Stroke</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 3: Stroke controls -->
+      <item row="3" column="0">
+        <widget class="QPushButton" name="strokeButton">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>1</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="toolTip">
+            <string>Stroke paint</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="1">
+        <widget class="Linea::UI::NumberEdit" name="strokeAlpha">
+          <property name="suffix">
+            <string>%</string>
+          </property>
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>100.000000</double>
+          </property>
+          <property name="singleStep">
+            <double>1.000000</double>
+          </property>
+          <property name="decimals">
+            <number>0</number>
+          </property>
+          <property name="toolTip">
+            <string>Stroke opacity</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="2">
+        <widget class="QWidget" name="strokeButtons" native="true">
+          <layout class="QHBoxLayout" name="strokeButtonsLayout">
+            <property name="spacing">
+              <number>0</number>
+            </property>
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <item>
+              <widget class="QPushButton" name="strokeAdd">
+                <property name="toolTip">
+                  <string>Add stroke</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/plus</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="strokeClear">
+                <property name="toolTip">
+                  <string>No stroke</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/minus</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+
+      <!-- Row 4: Stroke width + unit + options -->
+      <item row="4" column="0">
+        <widget class="Linea::UI::NumberEdit" name="strokeWidth">
+          <property name="minimum">
+            <double>0.000000</double>
+          </property>
+          <property name="maximum">
+            <double>1000000.000000</double>
+          </property>
+          <property name="singleStep">
+            <double>0.100000</double>
+          </property>
+          <property name="decimals">
+            <number>5</number>
+          </property>
+          <property name="toolTip">
+            <string>Stroke width</string>
+          </property>
+          <property name="icon">
+            <string>stroke-widths</string>
+          </property>
+        </widget>
+      </item>
+      <item row="4" column="1">
+        <widget class="QWidget" name="unitPlaceholder" native="true">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 5: Dash selector -->
+      <item row="5" column="0">
+        <widget class="Linea::UI::DashSelector" name="dashSelector">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="1">
+        <widget class="QPushButton" name="strokeOptionsBtn">
+          <property name="toolTip">
+            <string>Stroke options</string>
+          </property>
+          <layout class="QHBoxLayout" name="strokeOptionsBtnLayout">
+            <property name="leftMargin"><number>2</number></property>
+            <property name="topMargin"><number>0</number></property>
+            <property name="rightMargin"><number>2</number></property>
+            <property name="bottomMargin"><number>0</number></property>
+            <property name="spacing"><number>2</number></property>
+            <item>
+              <widget class="Linea::UI::IconWidget" name="joinIcon"/>
+            </item>
+            <item>
+              <widget class="Linea::UI::IconWidget" name="capIcon"/>
+            </item>
+            <item>
+              <widget class="Linea::UI::IconWidget" name="orderIcon"/>
+            </item>
+            <item>
+              <widget class="Linea::UI::IconWidget" name="arrow-down">
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/pan-down</normaloff>
+                  </iconset>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+
+      <!-- Row 6: Markers label -->
+      <item row="6" column="0" colspan="3">
+        <widget class="QLabel" name="markersLabel">
+          <property name="text">
+            <string>Markers</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 7: Markers controls -->
+      <item row="7" column="0" colspan="2">
+        <widget class="QWidget" name="markersPlaceholder" native="true">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 8: Opacity label -->
+      <item row="8" column="0" colspan="3">
+        <widget class="QLabel" name="opacityLabel">
+          <property name="text">
+            <string>Opacity</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 9: Opacity controls -->
+      <item row="9" column="0" colspan="2">
+        <widget class="Linea::UI::SpinScale" name="opacity">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="factor">
+            <double>100.0</double>
+          </property>
+          <property name="minimum">
+            <double>0.0</double>
+          </property>
+          <property name="maximum">
+            <double>1.0</double>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+          <property name="decimals">
+            <number>0</number>
+          </property>
+          <property name="maxBlockCount">
+            <number>20</number>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="2">
+        <widget class="QPushButton" name="resetOpacity">
+          <property name="toolTip">
+            <string>Make fully opaque</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/reset-to-defaults</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 10: Blend mode label -->
+      <item row="10" column="0" colspan="3">
+        <widget class="QLabel" name="blendLabel">
+          <property name="text">
+            <string>Blend mode</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 11: Blend mode controls -->
+      <item row="11" column="0" colspan="2">
+        <widget class="Linea::UI::BlendModeCombo" name="blendCombo">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+      <item row="11" column="2">
+        <widget class="QPushButton" name="resetBlendBtn">
+          <property name="toolTip">
+            <string>Normal blend mode</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/reset-settings</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::DashSelector</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/dash-selector.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::IconWidget</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/icon-widget.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::SpinScale</class>
+      <extends>QWidget</extends>
+      <header>spin-scale.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::BlendModeCombo</class>
+      <extends>QWidget</extends>
+      <header>blend-mode-combo.h</header>
+    </customwidget>
+  </customwidgets>
+</ui>

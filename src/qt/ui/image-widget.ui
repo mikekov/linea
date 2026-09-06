@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>ImageWidget</class>
+  <widget class="QWidget" name="ImageWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>320</width>
+        <height>260</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Image</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="horizontalSpacing">
+        <number>4</number>
+      </property>
+      <property name="verticalSpacing">
+        <number>4</number>
+      </property>
+
+      <item row="0" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="topLayout">
+          <property name="spacing">
+            <number>5</number>
+          </property>
+          <item>
+            <widget class="QLabel" name="previewLabel">
+              <property name="minimumSize">
+                <size>
+                  <width>80</width>
+                  <height>80</height>
+                </size>
+              </property>
+              <property name="maximumSize">
+                <size>
+                  <width>80</width>
+                  <height>80</height>
+                </size>
+              </property>
+              <property name="alignment">
+                <set>Qt::AlignCenter</set>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <layout class="QVBoxLayout" name="previewLayout">
+              <property name="spacing">
+                <number>1</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="infoLabel">
+                  <property name="text">
+                    <string notr="true">-</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                  </property>
+                  <property name="class" stdset="0">
+                    <string>info-text</string>
+                  </property>
+                </widget>
+              </item>
+              <item alignment="Qt::AlignRight">
+                <widget class="QPushButton" name="traceBtn">
+                  <property name="toolTip">
+                    <string>Trace bitmap...</string>
+                  </property>
+                  <property name="icon">
+                    <iconset>
+                      <normaloff>:/icons/bitmap-trace</normaloff>
+                    </iconset>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+        </layout>
+      </item>
+
+      <item row="1" column="0">
+        <widget class="QLabel" name="urlLabel">
+          <property name="text">
+            <string>URL</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="2" column="0" colspan="2">
+        <widget class="QLineEdit" name="hrefEdit"/>
+      </item>
+      <item row="2" column="2">
+        <widget class="QPushButton" name="changeButton">
+          <property name="toolTip">
+            <string>Link image...</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/document-open</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="3" column="0">
+        <widget class="QPushButton" name="embedButton">
+          <property name="toolTip">
+            <string>Embed image in the document</string>
+          </property>
+          <property name="text">
+            <string>Embed</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/shape-image</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="3" column="1">
+        <widget class="QPushButton" name="exportButton">
+          <property name="toolTip">
+            <string>Save a copy of this image to a file</string>
+          </property>
+          <property name="text">
+            <string>Save...</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/document-export</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="aspectLabel">
+          <property name="text">
+            <string>Aspect ratio</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="5" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="aspectLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="Linea::UI::RadioButtonGroup" name="aspectGroup">
+              <property name="buttonLabels" stdset="0">
+                <stringlist>
+                  <string>Preserve</string>
+                  <string>Stretch</string>
+                </stringlist>
+              </property>
+              <property name="buttonValues" stdset="0">
+                <stringlist>
+                  <string>1</string>
+                  <string>0</string>
+                </stringlist>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="aspectSpacer">
+              <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>0</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+        </layout>
+      </item>
+
+      <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="renderLabel">
+          <property name="text">
+            <string>Rendering</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="7" column="0" colspan="2">
+        <widget class="Linea::UI::IconComboBox" name="renderingCombo"/>
+      </item>
+
+      <item row="8" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="dpiEdit">
+          <property name="toolTip">
+            <string>Image resolution in dots per inch.
+Useful when rendering linked SVG images.</string>
+          </property>
+          <property name="label">
+            <string>DPI</string>
+          </property>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::IconComboBox</class>
+      <extends>QPushButton</extends>
+      <header>icon-combobox.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::RadioButtonGroup</class>
+      <extends>QWidget</extends>
+      <header>radio-button-group.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

@@ -1,0 +1,151 @@
+# TODO
+
+- zoom page width is weird - should be centered
+- pixel perfect icons: disabled and x2 checked together
+- guidelines: selected guide to show in bold?
+- guidelines: selected guide delete by pressing delete key
+- custom popup menus to watch actions toggle and update labels accordingly
+- replace gettext with tr
+- tool specific ActionAccel points to nonexistent actions; fix/add actions
+- obj tree model is still fubar. create text by typing with text tool and two copies show up in the tree
+- doc modified and save notification is ugly
+- cmd+a selects all objects even if i'm in a popup with line edit
+- navigading virtual nodes - something is stealing focus
+- Align buttons do not work
+- page labels are not visible / not showing up
+- add 'quit instantly' action
+- add spell checker (including in context menu)
+- expose this recolor functionality when selection is > 1
+- have modes of operation? so the main toolbar can adjust automatically
+- support page editing in DescriptionWidget
+- node tool buttons operate on paths but ignore other 'nodes' in shapes; add enableWhen rule to them
+- separate tools ui from object ui somehow, label maybe, like Appearance
+- allow closing last doc, show background page with recent files, templates, crash docs/recovery
+- spray tool - add reset to defaults btn
+- text subselection doesn't update font!
+- dropper icon is low res
+- tool panels: pass null desk and doc to hidden ones, only init visible
+- disable qactions that need document when there isn't one anymore
+- Esc to dismiss notification bar!
+- closing the last doc may leave left panel expanded, if there was a seleciton active before doc close
+
+## Missing features
+
+- path panel with d data
+- obj to bitmap command
+
+## UI Panels & Dialogs, widgets
+
+- add obj tree panel toolbar
+- obj tree add context menu
+- settings dlg
+- dedicated layer edit panel
+- add layer selector above/below obj tree view
+- add missing panels for spiral props, path props, etc.
+- add panel for groups and clones
+- add page support (page size, margins)
+- undo/redo history panel?
+- CSS/style support, panel?
+- bmp trace panel - abort btn is todo
+- add pin options to popups in appearance panel to dock them somewhere
+- tabstrip port sucks - make tabitems draw themselves and style them
+- list individual pages in object tree view, add export option to them?
+- add export strip in obj properties?
+- add dedicated 'export' panel dialog instead
+- add btn to round up coordinates of position
+- add notification bar for showing errors
+- add a way to show notifications?
+- handle old checkerboard attribute to set page color transparency
+- radio and check buttons have different accent color than the rest
+
+## Tools
+
+- expose tool params/options (star and polygon, node tool, select tool, eraser, tweak, caligraphy, etc)
+- quick zoom and quick preview keys?
+
+## Color & Paint
+
+- ColorPicker -> add a mode with some predefined colors to choose from
+- ColorPicker: add missing current color preview
+- more comprehensive set of palette colors across all color groups (UI theme cleanup)
+- add swatches in flat color picker
+- add swatch edit panel (virtual node)
+- customize color pallete: loading/selecting/size?, customize fixed colors
+- color palette visibility - separate setting in floating and docked dlg mode
+- add "%" unit to stroke width units
+- color picker button should have a distinct "disabled" style
+- fix paint indicator swatch triangle position when stroke is below fill
+- consider using circles for swatches, not squares, incl paint indicator?
+- paint indicator should have a tooltip with current paints and tell what it is: object style or tool style
+- assigning new gradient to multisel is broken
+- gradient lib - selecting gradient doesn't work
+- remember custom height of the pattern editor in paint selector
+
+## Snapping, Grid & Units
+
+- expose adv snapping options?
+- render grid behind objects option?
+- page/border colors -> use and configure default colors
+
+## Document & File
+
+- version info todo/improve
+- add missing export functionality
+- add doc template configuration; they are hardcoded
+
+## Shortcuts & Input
+
+- add missing shortcuts to linea.xml
+- fix kbd focus setting, esc back to canvas, etc.
+- Esc in number edit clears it instead of dismissing focus
+- allow multiple shortcuts per action (when editing)
+
+## Items, Objects & Extensions
+
+- support adding filters on top of existing filter (merging), not one at a time
+- ideally support editing filters (pref dialog is one way ticket, doesn't read existing filters)
+- impl extension run btn
+- add missing extenstion icons
+- make pref dialog use PopupMenu instead of or in addition to dialog window
+- marker transparency, direction, etc not reflected in preview
+- click on marker clear when none is assigned, and the list of markers disappears
+- 'corners' lpe in rect panel doesn't work
+- triangle knot is not pixel aligned (the one used in 'corners' lpe)
+
+## Fonts & Text
+
+- add font collections, font filtering, sorting, etc
+- sorting and filtering can be added to the font list popup
+- fix text panel underline options
+- connect font list popup to a combo, sync font selection
+
+## Canvas & Rendering
+
+- add context menu to canvas
+
+## App & Platform
+
+- missing 'About' dialog
+- missing app icon
+- multiwindow not supported and not planned; would require actions to be app-based
+
+## Glitches
+
+- hide DPI entry for bitmap image, keep it for SVG only
+- layer selection shouldn't be reflected on the canvas quite as easily or not at all
+- blend mode combo -> add separators betwen items to group them
+- fix multiline edit rounded corners
+- use inkscape-window-* and zoom/position attributes to position loaded doc
+
+## Feature requests
+
+- add virtual node Symbols if document has them
+- add Resources virtual node with a content of old Resources dialog, stats and individual nodes
+- should pages have background color, can they?
+- impl scrollbars?
+- add RecentColors to a document, connected to undo signals
+- consider adding ruler units to 'Display' section
+- add guide and grid default colors to css file; rename node-handles.css or add a new one?
+- text tool / text frame: there's no text editor other than on-canvas
+- display units -> option to use doc units (default to doc instead of explicit choice)
+- add command palette

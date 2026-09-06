@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/** @file
+ * Consolidates version info for Inkscape,
+ * its various dependencies and the OS we're running on
+ *//*
+ * Authors:
+ *   Patrick Storz <eduard.braun2@gmx.de>
+ *
+ * Copyright (C) 2021 Authors
+ * Released under GNU GPL v2+, read the file 'COPYING' for more information.
+ */
+
+
+#include <iostream>
+#include <ostream>
+#include <sstream>
+#include <string>
+
+#include <hb.h> // not indirectly included via gtk.h on macOS
+#include <glib.h>
+#include <glibmm.h>
+#include <cairo.h>
+#include <pango/pango.h>
+#include <QtGlobal> // Qt version
+#include <libxml2/libxml/xmlversion.h>
+#include <libxslt/xsltconfig.h>
+
+#ifdef WITH_POPPLER
+#include <poppler-config.h>
+#endif
+
+#include "inkscape-version.h" // Inkscape version
+
+
+namespace Inkscape {
+
+/**
+ * Return Inkscape engine version string
+ *
+ * Returns the Inkscape engine version string including program name.
+ *
+ * @return version string
+ */
+std::string inkscape_version() {
+    return std::string("Engine ") + Inkscape::version_string;
+}
+
+/**
+ * Return Inkscape repository revision string
+ *
+ * @return code revision string
+ */
+std::string inkscape_revision()
+{
+    return std::string("revision_" + std::string(Inkscape::revision_string));
+}
+
+/**
+ * Wrapper around g_spawn_sync which captures STDOUT and strips trailing whitespace.
+ *
+ * If an error occurs, report it to STDERR and return an empty string.
+ */
+[[maybe_unused]] static std::string _run(char const *command)
+{
+    std::string out;
+    try {
+        Glib::spawn_command_line_sync(command, &out);
+    } catch (Glib::Error const &) {
+        std::cerr << "Failed to execute " << command << std::endl;
+    }
+    auto pos = out.find_last_not_of(" \n\r\t");
+    out.resize(pos == std::string::npos ? 0 : pos + 1);
+    return out;
+}
+
+/**
+ * Return OS version string
+ *
+ * Returns the OS version string including OS name.
+ *
+ * Relies on glib's 'g_get_os_info'.
+ * Might be undefined on some OSs. "(unknown)" is returned in this case.
+ *
+ * @return version string
+ */
+std::string os_version() {
+    std::string os_version_string = "(unknown)";
+
+#ifdef __APPLE__
+    os_version_string = _run("sw_vers -productName") + " " +     //
+                        _run("sw_vers -productVersion") + " (" + //
+                        _run("sw_vers -buildVersion") + ") " +   //
+                        _run("uname -m");
+#elif GLIB_CHECK_VERSION(2, 64, 0)
+    char *os_name = g_get_os_info(G_OS_INFO_KEY_NAME);
+    char *os_pretty_name = g_get_os_info(G_OS_INFO_KEY_PRETTY_NAME);
+    if (os_pretty_name) {
+        os_version_string = os_pretty_name;
+    } else if (os_name) {
+        os_version_string = os_name;
+    }
+    g_free(os_name);
+    g_free(os_pretty_name);
+#endif
+
+    return os_version_string;
+}
+
+/**
+ * Return full debug info
+ *
+ * Returns full debug info including:
+ *  - Inkscape version
+ *  - versions of various dependencies
+ *  - OS name and version
+ *
+ * @return debug info
+ */
+std::string debug_info() {
+    std::stringstream ss;
+
+    ss << "Linea " << Linea::version_string_long << std::endl;
+    ss << inkscape_version() << std::endl;
+    ss << std::endl;
+
+    ss << "                      Compile  (Run)" << std::endl;
+    ss << "    Qt version:       " << QT_VERSION_MAJOR << "." << QT_VERSION_MINOR << "." << QT_VERSION_PATCH
+       << " (" << qVersion() << ")" << std::endl;
+    ss << "    GLib version:     " << GLIB_MAJOR_VERSION      << "." << GLIB_MINOR_VERSION      << "." << GLIB_MICRO_VERSION      << std::endl;
+    ss << "    glibmm version:   " << GLIBMM_MAJOR_VERSION    << "." << GLIBMM_MINOR_VERSION    << "." << GLIBMM_MICRO_VERSION    << std::endl;
+    ss << "    libxml2 version:  " << LIBXML_DOTTED_VERSION << std::endl;
+    ss << "    libxslt version:  " << LIBXSLT_DOTTED_VERSION << std::endl;
+    ss << "    Cairo version:    " << CAIRO_VERSION_MAJOR     << "." << CAIRO_VERSION_MINOR     << "." << CAIRO_VERSION_MICRO
+       << " (" << cairo_version_string() << ")" << std::endl;
+    ss << "    Pango version:    " << PANGO_VERSION_MAJOR     << "." << PANGO_VERSION_MINOR     << "." << PANGO_VERSION_MICRO
+       << " (" << pango_version_string() << ")" << std::endl;
+    ss << "    HarfBuzz version: " << HB_VERSION_MAJOR        << "." << HB_VERSION_MINOR        << "." << HB_VERSION_MICRO
+       << " (" << hb_version_string() << ")" << std::endl;
+#ifdef WITH_POPPLER
+    ss << "    Poppler version:  " << POPPLER_VERSION << std::endl;
+#endif
+    ss << std::endl;
+    ss << "    OS version:       " << os_version();
+
+    return ss.str();
+}
+
+/**
+ * Return build year as 4 digit
+ *
+ * @return Inkscape build year
+ */
+unsigned short int inkscape_build_year()
+{
+    return Inkscape::build_year;
+}
+
+} // namespace Inkscape
+
+namespace Linea {
+
+std::string linea_version() {
+    return Linea::version_string_short;
+}
+
+std::string linea_version_full() {
+    return Linea::version_string_long;
+}
+
+} // namespace Linea

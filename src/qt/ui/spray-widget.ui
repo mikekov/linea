@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>SprayWidget</class>
+  <widget class="QWidget" name="SprayWidget">
+    <property name="windowTitle">
+      <string>Spray Tool</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="sprayToolLabel">
+          <property name="text">
+            <string>Spray Tool</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+        <widget class="QLabel" name="modeLabel">
+          <property name="text">
+            <string>Mode</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="spacingLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="copyButton">
+              <property name="toolTip">
+                <string>Spray copies of the initial selection</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/spray-mode-copy</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="cloneButton">
+              <property name="toolTip">
+                <string>Spray clones of the initial selection</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/spray-mode-clone</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="unionButton">
+              <property name="toolTip">
+                <string>Spray objects in a single path</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/spray-mode-union</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="deleteButton">
+              <property name="toolTip">
+                <string>Delete sprayed items from selection</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/draw-eraser</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="widthLabel">
+          <property name="text">
+            <string>Width</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="5" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="widthSpin">
+          <property name="toolTip">
+            <string>The width of the spray area</string>
+          </property>
+        </widget>
+      </item>
+      <item row="5" column="2">
+        <widget class="QPushButton" name="pressureWidthButton">
+          <property name="toolTip">
+            <string>Use pressure to alter the width of the spray area</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/draw-use-pressure</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="amountLabel">
+          <property name="text">
+            <string>Amount</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="0" colspan="2">
+        <widget class="Linea::UI::NumberEdit" name="populationSpin">
+          <property name="toolTip">
+            <string>Adjusts the number of items sprayed per click</string>
+          </property>
+        </widget>
+      </item>
+      <item row="7" column="2">
+        <widget class="QPushButton" name="pressurePopulationButton">
+          <property name="toolTip">
+            <string>Use pressure to alter the amount of objects sprayed per click</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/draw-use-pressure</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="8" column="0">
+        <widget class="QLabel" name="rotationLabel">
+          <property name="text">
+            <string>Rotation</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="8" column="1">
+        <widget class="QLabel" name="scaleLabel">
+          <property name="text">
+            <string>Scale</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="0">
+        <widget class="Linea::UI::NumberEdit" name="rotationSpin">
+          <property name="toolTip">
+            <string>Variation of the rotation of the sprayed objects; 0% for the same rotation as the original object</string>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="1">
+        <widget class="Linea::UI::NumberEdit" name="scaleSpin">
+          <property name="toolTip">
+            <string>Variation in the scale of the sprayed objects; 0% for the same scale as the original object</string>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+        </widget>
+      </item>
+      <item row="9" column="2">
+        <widget class="QPushButton" name="pressureScaleButton">
+          <property name="toolTip">
+            <string>Use pressure to alter the scale of new items</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/draw-use-pressure</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <item row="11" column="0">
+        <widget class="QLabel" name="scatterLabel">
+          <property name="text">
+            <string>Scatter</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="11" column="1">
+        <widget class="QLabel" name="focusLabel">
+          <property name="text">
+            <string>Focus</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="12" column="0">
+        <widget class="Linea::UI::NumberEdit" name="scatterSpin">
+          <property name="toolTip">
+            <string>Increase to scatter sprayed objects</string>
+          </property>
+        </widget>
+      </item>
+      <item row="12" column="1">
+        <widget class="Linea::UI::NumberEdit" name="focusSpin">
+          <property name="toolTip">
+            <string>0 to spray a spot; increase to enlarge the ring radius</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="14" column="0">
+        <widget class="QLabel" name="optionsLabel">
+          <property name="text">
+            <string>Options</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item row="15" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="modeLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="overNoTransparentButton">
+              <property name="toolTip">
+                <string>Apply over no transparent areas</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-visible</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="overTransparentButton">
+              <property name="toolTip">
+                <string>Apply over transparent areas</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-hidden</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="pickNoOverlapButton">
+              <property name="toolTip">
+                <string>No overlap between colors</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/symbol-bigger</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <item row="16" column="0">
+        <widget class="QPushButton" name="noOverlapButton">
+          <property name="text">
+            <string>Gaps</string>
+          </property>
+          <property name="toolTip">
+            <string>Prevent overlapping objects</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/distribute-randomize</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <item row="16" column="1">
+        <widget class="Linea::UI::NumberEdit" name="offsetSpin">
+          <property name="toolTip">
+            <string>Increase to segregate objects more</string>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- <item row="17" column="0" colspan="2">
+        <widget class="QLabel" name="pickLabel">
+          <property name="text">
+            <string>Pick Color</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item> -->
+
+      <item row="18" column="0">
+        <widget class="QPushButton" name="pickerButton">
+          <property name="text">
+            <string>Color</string>
+          </property>
+          <property name="toolTip">
+            <string>Pick color from the drawing</string>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/color-picker</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <item row="18" column="1" colspan="2">
+        <layout class="QHBoxLayout" name="pickerLayout">
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="pickFillButton">
+              <property name="toolTip">
+                <string>Apply picked color to fill</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/paint-solid</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-first</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="pickStrokeButton">
+              <property name="toolTip">
+                <string>Apply picked color to stroke</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/paint-order-stroke</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="pickInverseValueButton">
+              <property name="toolTip">
+                <string>Inverted pick value</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/object-tweak-shrink</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-middle</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="pickCenterButton">
+              <property name="toolTip">
+                <string>Pick from center instead of average area</string>
+              </property>
+              <property name="checkable">
+                <bool>true</bool>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/snap-bounding-box-center</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>segment-last</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <item row="20" column="0">
+        <widget class="QWidget" name="spraySpacer">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>1</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="minimumSize">
+            <size>
+              <width>0</width>
+              <height>0</height>
+            </size>
+          </property>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

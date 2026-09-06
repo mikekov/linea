@@ -1,0 +1,713 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TransformPanel</class>
+ <widget class="QWidget" name="TransformPanel">
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred"/>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <!-- chosen to limit excessive page width -->
+    <width>240</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+
+   <!-- Tab strip row -->
+   <item>
+    <widget class="Linea::UI::TabStrip" name="tabStrip" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+     </property>
+     <property name="alignment">
+      <enum>Linea::UI::TabStrip::Alignment::Center</enum>
+     </property>
+    </widget>
+   </item>
+
+   <!-- ── Transform page ─────────────────────────────────────────────── -->
+   <item>
+    <widget class="QWidget" name="transformPage" native="true">
+     <layout class="QGridLayout" name="transformGrid" columnstretch="1,1,0">
+      <property name="horizontalSpacing">
+       <number>4</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+
+      <!-- Row 0: Move label -->
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="moveLabel">
+        <property name="text">
+         <string>Move</string>
+        </property>
+        <property name="class" stdset="0">
+         <string>panel-label</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 1: move-x + move-y -->
+      <item row="1" column="0">
+       <widget class="Linea::UI::NumberEdit" name="moveX">
+        <property name="minimum">
+         <double>-1000000.000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000</double>
+        </property>
+        <property name="icon">
+         <string>transform-move-horizontal</string>
+        </property>
+        <property name="toolTip">
+         <string>Horizontal displacement</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="Linea::UI::NumberEdit" name="moveY">
+        <property name="minimum">
+         <double>-1000000.000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000</double>
+        </property>
+        <property name="icon">
+         <string>transform-move-vertical</string>
+        </property>
+        <property name="toolTip">
+         <string>Vertical displacement</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 2: Relative checkbox (spans all columns) -->
+      <item row="2" column="0" colspan="2">
+       <widget class="QCheckBox" name="relativeMove">
+        <property name="text">
+         <string>Relative</string>
+        </property>
+        <property name="toolTip">
+         <string>Add the specified relative displacement to the current position; otherwise, edit the current absolute position directly</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 3: Scale label -->
+      <item row="3" column="0" colspan="2">
+       <widget class="QLabel" name="scaleLabel">
+        <property name="text">
+         <string>Scale</string>
+        </property>
+        <property name="class" stdset="0">
+         <string>panel-label</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 4: scale-x + link button + scale-y -->
+      <item row="4" column="0">
+       <widget class="Linea::UI::NumberEdit" name="scaleX">
+        <property name="minimum">
+         <double>0.000010</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000</double>
+        </property>
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="icon">
+         <string>transform-scale-horizontal</string>
+        </property>
+        <property name="toolTip">
+         <string>Horizontal scale factor</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QPushButton" name="linkScaleBtn">
+        <property name="toolTip">
+         <string>Preserve the width/height ratio of the scaled objects</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="Linea::UI::NumberEdit" name="scaleY">
+        <property name="minimum">
+         <double>0.000010</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000</double>
+        </property>
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="icon">
+         <string>transform-scale-vertical</string>
+        </property>
+        <property name="toolTip">
+         <string>Vertical scale factor</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 5: Rotate label -->
+      <item row="5" column="0" colspan="2">
+       <widget class="QLabel" name="rotateLabel">
+        <property name="text">
+         <string>Rotate</string>
+        </property>
+        <property name="class" stdset="0">
+         <string>panel-label</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 6: rotate (spans all columns) -->
+      <item row="6" column="0" colspan="2">
+       <widget class="Linea::UI::NumberEdit" name="rotate">
+        <property name="minimum">
+         <double>-360.000000</double>
+        </property>
+        <property name="maximum">
+         <double>360.000000</double>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="icon">
+         <string>transform-rotate</string>
+        </property>
+        <property name="toolTip">
+         <string>Rotation angle (positive = clockwise)</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 7: Skew label -->
+      <item row="7" column="0" colspan="2">
+       <widget class="QLabel" name="skewLabel">
+        <property name="text">
+         <string>Skew</string>
+        </property>
+        <property name="class" stdset="0">
+         <string>panel-label</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 8: skew-x + skew-y -->
+      <item row="8" column="0">
+       <widget class="Linea::UI::NumberEdit" name="skewX">
+        <property name="minimum">
+         <double>-1000000.000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000</double>
+        </property>
+        <property name="icon">
+         <string>transform-skew-horizontal</string>
+        </property>
+        <property name="toolTip">
+         <string>Horizontal skew factor</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="Linea::UI::NumberEdit" name="skewY">
+        <property name="minimum">
+         <double>-1000000.000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000</double>
+        </property>
+        <property name="icon">
+         <string>transform-skew-vertical</string>
+        </property>
+        <property name="toolTip">
+         <string>Vertical skew factor</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Row 9: Transform-each checkbox (spans all columns) -->
+      <item row="9" column="0" colspan="2">
+       <widget class="QCheckBox" name="objSeparately">
+        <property name="text">
+         <string>Transform each object separately</string>
+        </property>
+        <property name="toolTip">
+         <string>Apply the scale/rotate/skew to each selected object separately; otherwise, transform the selection as a whole</string>
+        </property>
+       </widget>
+      </item>
+
+     </layout>
+    </widget>
+   </item>
+
+   <!-- ── Matrix page ──────────────────────────────────────────────────── -->
+   <item>
+    <widget class="QWidget" name="matrixPage" native="true">
+     <layout class="QVBoxLayout" name="matrixLayout">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+
+      <item>
+       <widget class="QLabel" name="matrixHeading">
+        <property name="text">
+         <string>Transformation Matrix</string>
+        </property>
+        <property name="class" stdset="0">
+         <string>panel-label</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Matrix grid -->
+      <item>
+       <layout class="QGridLayout" name="matrixGrid" columnstretch="1,1,0">
+        <property name="horizontalSpacing">
+         <number>4</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>4</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+
+        <!-- Row 0: A, C -->
+        <item row="0" column="0">
+         <widget class="Linea::UI::NumberEdit" name="matrixA">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimum">
+           <double>-9999999999.000000</double>
+          </property>
+          <property name="maximum">
+           <double>9999999999.000000</double>
+          </property>
+          <property name="decimals">
+           <number>6</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000</double>
+          </property>
+          <property name="label">
+           <string>A</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="Linea::UI::NumberEdit" name="matrixC">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimum">
+           <double>-9999999999.000000</double>
+          </property>
+          <property name="maximum">
+           <double>9999999999.000000</double>
+          </property>
+          <property name="decimals">
+           <number>6</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000</double>
+          </property>
+          <property name="label">
+           <string>C</string>
+          </property>
+         </widget>
+        </item>
+
+        <!-- Row 1: B, D -->
+        <item row="1" column="0">
+         <widget class="Linea::UI::NumberEdit" name="matrixB">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimum">
+           <double>-9999999999.000000</double>
+          </property>
+          <property name="maximum">
+           <double>9999999999.000000</double>
+          </property>
+          <property name="decimals">
+           <number>6</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000</double>
+          </property>
+          <property name="label">
+           <string>B</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="Linea::UI::NumberEdit" name="matrixD">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimum">
+           <double>-9999999999.000000</double>
+          </property>
+          <property name="maximum">
+           <double>9999999999.000000</double>
+          </property>
+          <property name="decimals">
+           <number>6</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000</double>
+          </property>
+          <property name="label">
+           <string>D</string>
+          </property>
+         </widget>
+        </item>
+
+        <!-- Row 2: E, F -->
+        <item row="2" column="0">
+         <widget class="Linea::UI::NumberEdit" name="matrixE">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimum">
+           <double>-9999999999.000000</double>
+          </property>
+          <property name="maximum">
+           <double>9999999999.000000</double>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000</double>
+          </property>
+          <property name="label">
+           <string>E</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="Linea::UI::NumberEdit" name="matrixF">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
+          </property>
+          <property name="minimum">
+           <double>-9999999999.000000</double>
+          </property>
+          <property name="maximum">
+           <double>9999999999.000000</double>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="singleStep">
+           <double>0.100000</double>
+          </property>
+          <property name="label">
+           <string>F</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+      <!-- current-matrix checkbox — label switches between "single" and "multi" -->
+      <item>
+       <layout class="QHBoxLayout" name="currentMatrixLayout">
+        <property name="spacing">
+         <number>8</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="currentMatrix">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="replaceMatrixStack">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <!-- page 0: single selection -->
+          <widget class="QWidget" name="replaceMatrixSingle">
+           <layout class="QHBoxLayout" name="singleLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="singleLabel">
+              <property name="text">
+               <string>Edit current matrix</string>
+              </property>
+              <property name="toolTip">
+               <string>Edit the current transform matrix; otherwise, post-multiply transform by this matrix</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <!-- page 1: multi selection -->
+          <widget class="QWidget" name="replaceMatrixMulti">
+           <layout class="QHBoxLayout" name="multiLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="multiLabel">
+              <property name="text">
+               <string>Replace current matrices</string>
+              </property>
+              <property name="toolTip">
+               <string>Replace the current transform matrices in all objects; otherwise, post-multiply transform by this matrix</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+
+      <!-- matrix info: icon + description -->
+      <item>
+       <layout class="QHBoxLayout" name="matrixInfoLayout">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <item>
+        <widget class="Linea::UI::IconWidget" name="matrixIcon">
+            <property name="icon">
+            <iconset>
+            <normaloff>:/icons/matrix-2d</normaloff>
+            </iconset>
+            </property>
+             <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+             </property>
+          <!-- <property name="alignment">
+           <set>Qt::AlignTop|Qt::AlignLeft</set>
+          </property> -->
+        </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="matrixInfo">
+          <property name="text">
+           <string>&lt;small&gt;&lt;a href=&quot;https://www.w3.org/TR/SVG11/coords.html#TransformMatrixDefined&quot;&gt;2D transformation matrix&lt;/a&gt; that combines translation (E,F), scaling (A,D), rotation (A-D) and shearing (B,C).&lt;/small&gt;</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="openExternalLinks">
+           <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred"/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <!-- Spacer above footer -->
+   <item>
+    <spacer>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint">
+      <size>
+       <width>0</width>
+       <height>8</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+
+   <!-- ── Footer: reset / apply / duplicate ───────────────────────────── -->
+   <item>
+    <layout class="QGridLayout" name="footerLayout" columnstretch="1,1,0">
+     <property name="horizontalSpacing">
+      <number>4</number>
+     </property>
+     <property name="verticalSpacing">
+      <number>4</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="applyBtn">
+       <property name="text">
+        <string>&amp;Apply</string>
+       </property>
+       <property name="toolTip">
+        <string>Apply transformation to selection</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="duplicateBtn">
+       <property name="text">
+        <string>&amp;Duplicate</string>
+       </property>
+       <property name="toolTip">
+        <string>Duplicate selection and apply transformation to the copy</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="resetBtn">
+       <property name="icon">
+        <iconset>
+         <normaloff>:/icons/reset-settings</normaloff>
+        </iconset>
+       </property>
+       <property name="toolTip">
+        <string>Reset the values to defaults</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Linea::UI::NumberEdit</class>
+   <extends>QWidget</extends>
+   <header>number-edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Linea::UI::TabStrip</class>
+   <extends>QWidget</extends>
+   <header>tab-strip.h</header>
+   <container>0</container>
+  </customwidget>
+  <customwidget>
+   <class>Linea::UI::IconWidget</class>
+   <extends>QWidget</extends>
+   <header>icon-widget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

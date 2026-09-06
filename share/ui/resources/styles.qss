@@ -1,0 +1,851 @@
+/* Inkscape Qt Stylesheet */
+
+/* NumberEdit unified appearance */
+QWidget[class="NumberEdit"] {
+    background-color: palette(base);
+    color: palette(window-text);
+    border: 1px solid palette(midlight);
+    border-radius: 4px;
+    min-height: 22px;
+    max-height: 22px;
+}
+
+QWidget[class="NumberEdit"][frame="false"] {
+    border: none;
+}
+
+QWidget[class="NumberEdit"]:disabled {
+    background-color: palette(window);
+}
+QWidget[class="NumberEdit"]:disabled QDoubleSpinBox {
+    color: palette(disabled, window-text);
+}
+
+/* Indicator label styling */
+QWidget[class="NumberEdit"] QLabel#indicator {
+    background-color: transparent;
+    padding-left: 1px;
+    padding-right: 0px;
+    color: palette(dark);
+}
+
+/* Spinbox styling within NumberEdit */
+QWidget[class="NumberEdit"] QDoubleSpinBox {
+    background-color: transparent;
+    color: palette(window-text);
+    border: none;
+    padding: 2px;
+}
+
+/* Arrow buttons - shared base styles */
+QWidget[class="NumberEdit"] QDoubleSpinBox::up-button,
+QWidget[class="NumberEdit"] QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    min-width: 10px;
+    max-width: 10px;
+    min-height: 22px;
+    max-height: 22px;
+    width: 14px;
+    height: 16px;
+    background-color: transparent; /* #e0e0e0; */
+    border: none;
+    /* border-width: 1px; */
+}
+
+/* Unique positioning */
+QWidget[class="NumberEdit"] QDoubleSpinBox::up-button {
+    subcontrol-position: center right;
+    right: 1px;
+}
+
+QWidget[class="NumberEdit"] QDoubleSpinBox::down-button {
+    subcontrol-position: center left;
+    left: 1px;
+}
+
+/* Shared hover/pressed states */
+QWidget[class="NumberEdit"] QDoubleSpinBox::up-button:hover,
+QWidget[class="NumberEdit"] QDoubleSpinBox::down-button:hover {
+    background-color: rgba(0, 0, 0, 0.07);
+}
+
+QWidget[class="NumberEdit"] QDoubleSpinBox::up-button:pressed,
+QWidget[class="NumberEdit"] QDoubleSpinBox::down-button:pressed {
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Arrow Shapes (Inner part) */
+QWidget[class="NumberEdit"] QDoubleSpinBox::up-arrow {
+    image: url(:/icons/pan-right);
+    /* color: palette(mid); */
+}
+
+QWidget[class="NumberEdit"] QDoubleSpinBox::down-arrow {
+    image: url(:/icons/pan-left);
+    /* color: palette(mid); */
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    min-height: 22px;
+    border-radius: 4px;
+    border: 1px solid palette(midlight);
+    color: palette(window-text);
+}
+
+QLineEdit[frame="false"] {
+    border: none;
+}
+
+QLineEdit[warning="true"] {
+    border: 1px solid red;
+}
+
+QTreeView, QListView, QTableView {
+    /* color: palette(text); messes up disabled text color */
+    border: 1px solid palette(mid);
+    background-color: palette(base);
+    alternate-background-color: palette(alternate-base);
+}
+
+/* Reusable: subtly darkened list-view background for galleries with light page previews. */
+QListView[class="darker-background"] {
+    background-color: rgba(0, 0, 0, 10);
+}
+
+/* TODO: hover state needs to define selected and disabled, or else it will mess up those states */
+QTreeView::item:selected {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+QTreeView::item:hover {
+    background-color: palette(window);
+}
+
+QTreeView::item:selected:hover {
+    background-color: palette(highlight);
+}
+
+/* Reusable: list views with a thin separator drawn between items.
+   Apply by setting property class="separator-list" on a QListView/QListWidget. */
+QListView[class="separator-list"]::item {
+    border-bottom: 1px solid palette(mid);
+}
+
+QListView[class="separator-list"]::item:selected {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+QListView[class="separator-list"]::item:hover {
+    background-color: palette(window);
+}
+
+QListView[class="separator-list"]::item:selected:hover {
+    background-color: palette(highlight);
+}
+
+/* this doesn't work well with custom icons
+QTreeView::branch {
+    color: palette(window-text);
+    background: transparent;
+    min-width: 16px;
+    min-height: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+    image: url(:/icons/node-collapsed);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings {
+    image: url(:/icons/node-expanded);
+} */
+
+.panel-heading {
+    margin-top: 2px;
+    margin-left: 0px;
+    font-weight: bold;
+    color: palette(window-text);
+}
+
+.panel-label {
+    margin-top: 2px;
+    margin-left: 0px;
+    font-size: 10px;
+    font-weight: 500;
+    color: palette(dark);
+    text-transform: uppercase;
+}
+
+.dim-text {
+    color: palette(dark);
+}
+
+.info-text {
+    font-size: 10px;
+    font-style: italic;
+}
+
+QLineEdit.small-entry {
+    font-size: 10px;
+}
+
+QLabel[smallLabel="true"] {
+    /* margin-top: 2px;
+    margin-left: 1px;
+    font-size: 10px;
+    font-weight: 600;
+    color: palette(dark); */
+    /* text-transform: uppercase; */
+    /* color: rgba(0, 0, 0, 0.6); */
+}
+
+.widget-frame {
+    border: 1px solid palette(midlight);
+}
+
+.toolbar-widget {
+    background: palette(window);
+    border-radius: 8px;
+    color: palette(window-text);
+}
+
+.toolbar-widget[rounded="false"] {
+    border-radius: 0px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.toolbar-buttons QToolButton {
+    /* max-height: 30px; */
+    /* max-width: 30px; */
+}
+
+/* Welcome page panels */
+QWidget[class="welcome-panel"] {
+    background-color:  palette(button);
+    border-radius: 8px;
+}
+
+QListWidget[class="welcome-recent-files"] {
+    background: transparent;
+    border: none;
+}
+
+QListWidget[class="welcome-recent-files"]::item {
+    background: transparent;
+    border-radius: 4px;
+}
+
+QListWidget[class="welcome-recent-files"]::item:hover {
+    background-color: palette(window);
+}
+
+QListWidget[class="welcome-recent-files"]::item:pressed {
+    background-color: palette(highlight);
+}
+
+/* Overlay panels with rounded corners - reusable class */
+.overlay-panel {
+    background: palette(window);
+    border-radius: 8px;
+    color: palette(window-text);
+}
+
+.overlay-panel[rounded="false"] {
+    border-radius: 0px;
+}
+
+.overlay-panel[rounded="false"] .panel-header,
+.overlay-panel[rounded="false"] .panel-content {
+    border-radius: 0px;
+}
+
+/* Notification severity icon backgrounds */
+Linea--UI--IconWidget[severity="error"] {
+    background-color: #dc3545;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+Linea--UI--IconWidget[severity="warning"] {
+    background-color: #f0ad4e;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+Linea--UI--IconWidget[severity="info"] {
+    background-color: #0d6efd;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+Linea--UI--IconWidget[severity="success"] {
+    background-color: #198754;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.resize-handle {
+    /* background-color: #f00; */
+}
+
+/* Panel header - reusable class */
+.panel-header {
+    /* background-color: palette(alternate-base); */
+    /* background-color: #eee; */
+    /* border-bottom: 1px solid palette(mid); */
+    /* border-radius: 8px 8px 0 0; */
+    border-radius: 8px;
+}
+
+/* Panel title - reusable class */
+.panel-title {
+    color: palette(window-text);
+    font-weight: bold;
+}
+
+/* Panel toggle button - reusable class */
+.panel-toggle {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.panel-toggle:hover {
+    background-color: palette(mid);
+}
+
+/* Panel content - reusable class */
+.panel-content {
+    /* background-color: palette(window); */
+    /* border-radius: 8px 0 8px 0; */
+    border-radius: 8px;
+}
+
+/* Toolbars */
+.toolbar {
+    background-color: palette(window);
+    border: none;
+    border-radius: 8px;
+}
+
+.narrow-button {
+    min-width: 20px;
+    /* max-width: 24px; */
+}
+
+/* Tool buttons */
+QToolButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+QToolButton:hover {
+    background-color: palette(alternate-base);
+    border: 1px solid palette(midlight);
+}
+
+QToolButton:pressed {
+    background-color: palette(mid);
+}
+
+QToolButton:checked {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+/* Tool group arrow button - separate from main tool button */
+QToolButton[class="tool-group-arrow"] {
+    background-color: transparent;
+    padding: 0;
+}
+
+QToolButton[class="tool-group-arrow"]:hover {
+    background-color: palette(alternate-base);
+}
+
+QToolButton[class="tool-group-arrow"]:pressed {
+    background-color: palette(mid);
+}
+
+/* Hide the menu indicator arrow - we want a clean button */
+QToolButton[class="tool-group-arrow"]::menu-indicator {
+    image: none;
+    width: 0;
+}
+
+/* Tool button with popup but no menu-indicator arrow */
+QToolButton[class="popup-button"]::menu-indicator {
+    image: none;
+    width: 0;
+}
+
+/* Custom tool menu styling */
+QMenu#customToolMenu {
+    background-color: palette(window);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QMenu#customToolMenu::item {
+    background-color: transparent;
+    padding: 0;
+}
+
+QMenu#customToolMenu::item:selected {
+    background-color: palette(highlight);
+    border-radius: 4px;
+}
+
+.custom-tool-item {
+    border-radius: 4px;
+}
+
+.custom-tool-item:hover,
+.custom-tool-item[hovered="true"] {
+    background-color: palette(highlight);
+}
+
+.menu-item-description {
+    font-size: 10pt;
+    color: palette(dark);
+}
+
+/* Qt ignores :hover on ancestor selectors, so hover state is mirrored
+   into a dynamic "hovered" property by MenuClickHandler. */
+.custom-tool-item[hovered="true"] .menu-item-label,
+.custom-tool-item[hovered="true"] .menu-item-description,
+.custom-tool-item[hovered="true"] .menu-shortcut {
+    color: palette(highlighted-text);
+}
+
+.menu-shortcut {
+    color: palette(dark);
+}
+
+/* Splitter handle */
+QSplitter::handle:horizontal {
+    background-color: palette(mid);
+    width: 3px;
+}
+QSplitter::handle:vertical {
+    background-color: palette(mid);
+    height: 3px;
+}
+
+/* Scrollbars - modern overlay style without ugly arrow buttons */
+QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    margin: 0;
+    border: none;
+}
+
+QScrollBar::handle:vertical {
+    background-color: palette(mid);
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: palette(text);
+}
+
+/* Hide ugly up/down arrow buttons */
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+    background: transparent;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+/* Horizontal scrollbar */
+QScrollBar:horizontal {
+    background-color: transparent;
+    height: 8px;
+    margin: 0;
+    border: none;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: palette(mid);
+    border-radius: 4px;
+    min-width: 20px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: palette(text);
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0;
+    background: transparent;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: transparent;
+}
+
+.x-panel {
+    background: rgb(254, 203, 203);
+    border: 1px solid #f00;
+}
+QWidget[cssClass="x-panel"] {
+    background: #3498db;
+    border: 1px solid #f00;
+    border-radius: 4px;
+}
+
+#ScaleBar {
+}
+
+Linea--UI--SpinScale {
+    background: palette(base);
+    border: 1px solid palette(midlight);
+    border-radius: 4px;
+    min-height: 22px;
+}
+
+Linea--UI--SpinScale:disabled {
+    background: palette(window);
+    border: 1px solid palette(midlight);
+    border-radius: 4px;
+}
+
+QPushButton {
+    background-color: palette(button);
+    color: palette(window-text);
+    min-width: 22px;
+    min-height: 22px;
+    border-radius: 4px;
+}
+QPushButton:disabled {
+    color: palette(disabled-text);
+}
+QPushButton:hover {
+    background-color: palette(midlight);
+}
+QPushButton:pressed {
+    background-color: palette(mid);
+}
+QPushButton:checked {
+    background-color: palette(highlight);
+}
+QPushButton::menu-indicator {
+    image: url(:/icons/pan-down);
+    width: 16px;
+    height: 16px;
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+}
+
+QToolButton::menu-indicator {
+    image: url(:/icons/pan-down);
+    width: 16px;
+    height: 16px;
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+}
+QToolButton[popupMode="InstantPopup"] {
+    padding-right: 16px;   /* 16px indicator + breathing room */
+}
+
+QToolButton[popupMode="InstantPopup"][class="tool-group-arrow"],
+QToolButton[popupMode="InstantPopup"][class="popup-button"] {
+    padding-right: 0;
+}
+
+QPushButton.no-menu-arrow::menu-indicator,
+QToolButton.no-menu-arrow::menu-indicator {
+    image: none;
+    width: 0px;
+    /* subcontrol-origin: content; */
+}
+
+/* Reusable: a container bar that should match the push-button background */
+QWidget[class="button-bar"] {
+    background-color: palette(button);
+    border-radius: 4px;
+}
+
+/* Flat combobox: no border, no background, centred text — used e.g. in pattern category selector */
+QComboBox.flat-combobox {
+    border: none;
+    background: transparent;
+    padding: 4px 4px;
+}
+QComboBox.flat-combobox:hover {
+    background-color: palette(midlight);
+    border-radius: 4px;
+}
+QComboBox.flat-combobox::drop-down {
+    border: none;
+    width: 16px;
+}
+QComboBox.flat-combobox::down-arrow {
+    image: url(:/icons/pan-down);
+    width: 16px;
+    height: 16px;
+}
+
+/* IconComboBox styling */
+Linea--UI--IconComboBox {
+    background-color: palette(button);
+    min-width: 30px;
+    min-height: 22px;
+    border-radius: 4px;
+    padding: 0px 5px 0px 0px;
+}
+Linea--UI--IconComboBox::menu-indicator {
+    image: url(:/icons/pan-down);
+    width: 16px;
+    height: 16px;
+    subcontrol-origin: padding;
+    subcontrol-position: right center;
+    right: 2px;
+}
+Linea--UI--IconComboBox:hover {
+    background-color: palette(midlight);
+}
+Linea--UI--IconComboBox:focus {
+    /* outline implementation sucks: offset doesn't work and no border radius support;
+     it is still used as it doesn't enlarge the widget */
+    outline: 2px solid palette(highlight);
+}
+Linea--UI--IconComboBox:pressed {
+    background-color: palette(mid);
+}
+
+/* Popup menu styling */
+QWidget[class="popup-menu"] {
+    border-radius: 8px;
+    background-color: palette(window);
+    /* background: yellow; */
+    /* border: 1px solid palette(midlight); */
+    border: none;
+}
+
+.selected-menu-item {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+/* Linked button group */
+QPushButton.segment-first {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+QPushButton.segment-middle {
+    border-radius: 0;
+}
+QPushButton.segment-last {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+QPushButton[mixed="true"] {
+    /* background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0.00 palette(button),
+        stop:0.099 palette(button),
+        stop:0.100 palette(highlight),
+        stop:0.149 palette(highlight),
+        stop:0.150 palette(button),
+        stop:0.249 palette(button),
+        stop:0.250 palette(highlight),
+        stop:0.349 palette(highlight),
+        stop:0.350 palette(button),
+        stop:0.449 palette(button),
+        stop:0.450 palette(highlight),
+        stop:0.499 palette(highlight),
+        stop:0.500 palette(button),
+        stop:0.599 palette(button),
+        stop:0.600 palette(highlight),
+        stop:0.649 palette(highlight),
+        stop:0.650 palette(button),
+        stop:0.749 palette(button),
+        stop:0.750 palette(highlight),
+        stop:0.799 palette(highlight),
+        stop:0.800 palette(button),
+        stop:0.899 palette(button),
+        stop:0.900 palette(highlight),
+        stop:0.999 palette(highlight),
+        stop:1.000 palette(button)); */
+}
+
+QComboBox {
+    /* padding: 0; */
+    /* margin: 0; */
+    /* margin-right: 0; */
+}
+
+#ColorEntry {
+    /* background-color: aquamarine; */
+    max-height: 22px;
+    padding: 0;
+}
+
+.active-frame {
+    background-color: palette(base);
+    border: 1px solid palette(midlight);
+}
+
+.normal-background {
+    background-color: palette(window);
+}
+
+.active-background {
+    background-color: palette(base);
+    /* color: palette(highlighted-text); */
+}
+
+.resizing-separator {
+    background: palette(mid);
+}
+
+Linea--UI--SimpleGrid {
+    background-color: palette(base);
+    border: 1px solid palette(midlight);
+    padding: 1px;
+}
+
+Linea--UI--SimpleGrid[frame="false"] {
+    border: none;
+}
+
+Linea--UI--SimpleGrid[class="normal-background"] {
+    background-color: palette(window);
+}
+
+Linea--UI--SimpleGrid[class="normal-background"] > QScrollArea {
+    background-color: palette(window);
+}
+
+Linea--UI--SimpleGrid > QScrollArea {
+    background-color: palette(base);
+}
+
+Linea--UI--VirtualTreeList {
+    background-color: palette(base);
+    border: 1px solid palette(midlight);
+    padding: 1px;
+}
+
+Linea--UI--VirtualTreeList[frame="false"] {
+    border: none;
+}
+
+Linea--UI--VirtualTreeList[active-bgnd="false"] {
+    background-color: palette(window);
+}
+
+/* QTreeView header styling - scoped to specific class */
+QTreeView[class="styled-header"]::header {
+    background-color: palette(window);
+    border: none;
+    border-bottom: 1px solid palette(midlight);
+}
+
+QTreeView[class="styled-header"] QHeaderView::section {
+    background-color: palette(window);
+    color: palette(dark);
+    padding: 0px 4px;
+    border: none;
+    border-right: 1px solid palette(midlight);
+    border-bottom: 1px solid palette(midlight);
+    font-weight: 500;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+/* QTreeView[class="styled-header"] QHeaderView::section:first {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+QTreeView[class="styled-header"] QHeaderView::section:last {
+    border-right: none;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+} */
+
+QTreeView[class="styled-header"] QHeaderView::section:hover {
+    background-color: palette(midlight);
+}
+
+QTreeView[class="styled-header"] QHeaderView::section:pressed {
+    background-color: palette(mid);
+}
+
+/* Switch toggle widget */
+Linea--UI--SwitchWidget {
+    min-width: 34px;
+    min-height: 18px;
+    max-height: 18px;
+}
+
+Linea--UI--FontSelector {
+    background-color: palette(base);
+    border: 1px solid palette(midlight);
+    border-radius: 4px;
+}
+
+QPushButton#SelectorButton {
+    border-radius: 3px;
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    min-width: 22px;
+    min-height: 22px;
+}
+
+/* Linea--UI--GuideWidget {
+    background-color: red;
+    padding: 0;
+    margin: 0;
+} */
+
+/* Chrome button — accent color with a pressed shade */
+QToolButton[class="attention-button"] {
+    background-color: palette(highlight);
+}
+
+QToolButton[class="attention-button"]:pressed {
+    background-color: palette(accent);
+}
+
+/* Thin horizontal separator line. `color` sets the line colour (use any
+   palette role for theme-awareness); `qproperty-opacity` controls alpha. */
+Linea--UI--Separator {
+    color: palette(mid);
+    qproperty-opacity: 1.0;
+}
+
+/* Panel switch — horizontal strip of exclusive push buttons for switching
+   between panels. Active button uses a distinct background via :checked. */
+Linea--UI--PanelSwitch QPushButton {
+    min-width: 40px;
+    background-color: palette(window);
+}
+/* Linea--UI--PanelSwitch QPushButton[iconOnly="true"] {
+    min-width: 22px;
+} */
+Linea--UI--PanelSwitch QPushButton:checked {
+    background-color: palette(button);
+}
+
+QListView#symbols-view {
+    font-size: 10px;
+}
