@@ -830,7 +830,11 @@ PdfInput::add_builder_page(std::shared_ptr<PDFDoc>pdf_doc, SvgBuilder *builder, 
     }
 
     // Apply crop settings
+#if POPPLER_CHECK_VERSION(26, 6, 0)
+    std::optional<PDFRectangle> clipToBox;
+#else
     _POPPLER_CONST PDFRectangle *clipToBox = nullptr;
+#endif
 
     if (crop_to == "media-box") {
         clipToBox = page->getMediaBox();
@@ -844,8 +848,16 @@ PdfInput::add_builder_page(std::shared_ptr<PDFDoc>pdf_doc, SvgBuilder *builder, 
         clipToBox = page->getArtBox();
     }
 
+    std::optional<PDFRectangle> cropBox;
+#if POPPLER_CHECK_VERSION(26, 6, 0)
+    cropBox = clipToBox;
+#else
+    if (clipToBox) {
+        cropBox = *clipToBox;
+    }
+#endif
     // Create parser  (extension/internal/pdfinput/pdf-parser.h)
-    auto pdf_parser = PdfParser(pdf_doc, builder, page, clipToBox);
+    auto pdf_parser = PdfParser(pdf_doc, builder, page, cropBox);
 
     // Set up approximation precision for parser. Used for converting Mesh Gradients into tiles.
     if ( color_delta <= 0.0 ) {
@@ -863,9 +875,10 @@ PdfInput::add_builder_page(std::shared_ptr<PDFDoc>pdf_doc, SvgBuilder *builder, 
 
     // Parse the annotations
     if (auto annots = page->getAnnotsObject(); annots.isArray()) {
-        auto const size = annots.arrayGetLength();
+        auto* annotsArray = annots.getArray();
+        auto const size = annotsArray->getLength();
         for (int i = 0; i < size; i++) {
-            pdf_parser.build_annots(annots.arrayGet(i), page_num);
+            pdf_parser.build_annots(annotsArray->get(i), page_num);
         }
     }
 }
