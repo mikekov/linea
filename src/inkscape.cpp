@@ -44,7 +44,7 @@
 #include "libnrtype/font-factory.h"
 #include "object/sp-root.h"
 #include "io/resource.h"
-// #include "io/recent-files.h"
+#include "io/recent-files.h"
 // #include "ui/builder-utils.h"
 // #include "ui/themes.h"
 // #include "ui/dialog-events.h"
@@ -348,7 +348,7 @@ Application::crash_handler (int /*signum*/)
                 fclose (file);
 
                 // Attempt to add the emergency save to the recent files, so users can find it on restart
-                // Inkscape::IO::addInkscapeRecentSvg(c, docname, {"Crash"}, document_filename ? document_filename : "");
+                Linea::IO::addInkscapeRecentSvg(c, docname, {"Crash"}, document_filename ? document_filename : "");
             } else {
                 failednames.push_back((doc->getDocumentName()) ? g_strdup(doc->getDocumentName()) : g_strdup (_("Untitled document")));
             }
@@ -356,6 +356,7 @@ Application::crash_handler (int /*signum*/)
         }
     }
     g_free(curdir);
+    Inkscape::Preferences::get()->save();
 
     if (!savednames.empty()) {
         fprintf (stderr, "\nEmergency save document locations:\n");

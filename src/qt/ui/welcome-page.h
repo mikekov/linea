@@ -13,6 +13,7 @@
 
 class QEvent;
 class QListWidget;
+class QPoint;
 class QPropertyAnimation;
 class QListWidgetItem;
 class QObject;
@@ -36,6 +37,7 @@ protected:
 
 private:
     void setSearchExpanded(bool expanded);
+    void showRecentFileMenu(QListWidget* list, const QPoint& position);
     void rebuildRecentFiles(QListWidget* list, bool autosave);
     void rebuildTemplates();
     void openRecentFile(QListWidgetItem* item);

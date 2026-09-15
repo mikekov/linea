@@ -16,6 +16,7 @@
 #include <QListWidget>
 #include <QPropertyAnimation>
 #include <QListWidgetItem>
+#include <QMenu>
 #include <QVBoxLayout>
 #include <giomm.h>
 
@@ -30,18 +31,22 @@
 
 namespace Linea::UI {
 
+constexpr int min_width = 50;
+
 WelcomePage::WelcomePage(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::WelcomePage>()) {
     _ui->setupUi(this);
+
     auto searchAction = new QAction(QIcon(":/icons/searching"), {}, _ui->recentFilesSearch);
     _ui->recentFilesSearch->addAction(searchAction, QLineEdit::LeadingPosition);
     _ui->recentFilesSearch->installEventFilter(this);
-    _ui->recentFilesSearch->setFixedWidth(40);
+    _ui->recentFilesSearch->setFixedWidth(min_width);
     _searchAnimation = new QPropertyAnimation(_ui->recentFilesSearch, "maximumWidth", this);
     _searchAnimation->setDuration(180);
     _searchAnimation->setEasingCurve(QEasingCurve::OutCubic);
     setSearchExpanded(false);
+
     _ui->recentFilesList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     _ui->recentFilesList->setMouseTracking(true);
     _ui->recentFilesList->viewport()->setMouseTracking(true);
@@ -50,13 +55,17 @@ WelcomePage::WelcomePage(QWidget* parent)
         list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         list->setMouseTracking(true);
         list->viewport()->setMouseTracking(true);
+        list->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(list, &QListWidget::itemClicked, this, &WelcomePage::openRecentFile);
         connect(list, &QListWidget::itemActivated, this, &WelcomePage::openRecentFile);
+        connect(list, &QListWidget::customContextMenuRequested, this,
+                [this, list](const QPoint& position) { showRecentFileMenu(list, position); });
     }
 
     _ui->templatesList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     _ui->templatesList->setMouseTracking(true);
     _ui->templatesList->viewport()->setMouseTracking(true);
+
     connect(_ui->templatesList, &QListWidget::itemClicked, this, &WelcomePage::openTemplate);
     connect(_ui->templatesList, &QListWidget::itemActivated, this, &WelcomePage::openTemplate);
     setTabOrder(_ui->recentFilesList, _ui->recentFilesSearch);
@@ -70,11 +79,11 @@ WelcomePage::~WelcomePage() = default;
 void WelcomePage::setSearchExpanded(bool expanded) {
     if (!_ui->recentFilesSearch || !_searchAnimation) return;
 
-    auto width = expanded ? 140 : 40;
+    auto width = expanded ? 140 : min_width;
     if (_ui->recentFilesSearch->width() == width) return;
 
     _searchAnimation->stop();
-    _ui->recentFilesSearch->setMinimumWidth(40);
+    _ui->recentFilesSearch->setMinimumWidth(min_width);
     _searchAnimation->setStartValue(_ui->recentFilesSearch->width());
     _searchAnimation->setEndValue(width);
     _searchAnimation->start();
@@ -108,17 +117,33 @@ void WelcomePage::openRecentFile(QListWidgetItem* item) {
     LINEA_APP.openDocument(file);
 }
 
+void WelcomePage::showRecentFileMenu(QListWidget* list, const QPoint& position) {
+    if (!list) return;
+
+    auto item = list->itemAt(position);
+    if (!item) return;
+
+    auto path = item->data(Qt::UserRole).toString();
+    if (path.isEmpty()) return;
+
+    QMenu menu(this);
+    auto removeAction = menu.addAction(tr("Remove from Recent Files"));
+    connect(removeAction, &QAction::triggered, this, [this, path](bool) {
+        Linea::IO::removeInkscapeRecent(path.toStdString());
+        rebuildRecentFiles(_ui->recentFilesList, false);
+        rebuildRecentFiles(_ui->recoverFilesList, true);
+    });
+    menu.exec(list->viewport()->mapToGlobal(position));
+}
+
 void WelcomePage::rebuildRecentFiles(QListWidget* list, bool autosave) {
     if (!list) return;
 
     list->clear();
 
-    int max_files = Inkscape::Preferences::get()->getInt("/options/maxrecentdocuments/value", 20);
+    constexpr int limit = 100; // use some hard limit
+    int max_files = Inkscape::Preferences::get()->getIntLimited("/options/maxrecentdocuments/value", 20, 0, limit);
     if (max_files <= 0) return;
-
-    if (max_files > 20) {
-        max_files = 20; // TODO: find max
-    }
 
     auto recent = Linea::IO::getRecentFiles(max_files, autosave);
     auto shortened = Linea::IO::getShortenedPathMap(recent);

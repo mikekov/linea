@@ -231,6 +231,14 @@ QWidget[class="welcome-panel"] {
     border-radius: 8px;
 }
 
+QWidget[class="welcome-panel-search"] {
+    background-color:  palette(window);
+}
+
+QWidget[class="welcome-panel-search"]:focus {
+    background-color:  palette(base);
+}
+
 QListWidget[class="welcome-recent-files"] {
     background: transparent;
     border: none;

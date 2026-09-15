@@ -5,7 +5,6 @@
  */
 
 #include <QApplication>
-// #include <QGuiApplication>
 #include <QPalette>
 #include <QStyleHints>
 #include <QtGui/qrgb.h>
@@ -22,6 +21,7 @@
 #include <glibmm/miscutils.h>
 #include <giomm/file.h>
 
+#include "auto-save.h"
 #include "helper/gettext.h"
 #include "inkgc/gc-core.h"
 #include "inkscape.h"
@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
         g_message("XDG_DATA_DIRS = %s", Glib::getenv("XDG_DATA_DIRS").empty() ? "(not set)" : Glib::getenv("XDG_DATA_DIRS").c_str());
         Inkscape::Application::create(true);
         LineaApplication::create();
+        Inkscape::AutoSave::getInstance().init(&LineaApplication::instance());
 
         auto setTheme = []{
             int theme = LineaApplication::instance().settings().value("dark-theme", 0).toInt();

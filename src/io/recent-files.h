@@ -31,7 +31,7 @@ struct RecentFile {
 /// Generate a vector of recently used files, most-recent first.
 ///
 /// @arg max_files  Limits the output to this number of files; 0 means no limit.
-/// @arg is_autosave  If true, return only entries in the "Auto" group.
+/// @arg is_autosave  If true, return only auto-save and crash-recovery entries.
 std::vector<RecentFile> getRecentFiles(unsigned max_files = 0, bool is_autosave = false);
 
 /// Add (or promote) a recent SVG file.

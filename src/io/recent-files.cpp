@@ -209,7 +209,8 @@ std::vector<RecentFile> getRecentFiles(unsigned max_files, bool is_autosave) {
             --count;
             continue;
         }
-        if (is_autosave != has_group(rf->groups, "Auto")) {
+        auto is_recovery = has_group(rf->groups, "Auto") || has_group(rf->groups, "Crash");
+        if (is_autosave != is_recovery) {
             ++i;
             continue;
         }
