@@ -160,6 +160,7 @@ void TextPanel::setupUnitTrackers() {
     // unit changes from binder-initiated ones (e.g. via a flag or by checking
     // tracker->isUpdating() before the signal is emitted).
     connect(_tracker_lh, &UnitTracker::unitChanged, [this](const Unit* unit) {
+printf("line height unit: %s - upd: %d\n", unit ? unit->abbr.c_str() : "null", _tracker_lh->isUpdating());
         if (!unit || !canUpdate()) return;
 
         int new_css = unit_to_css_unit(unit);
@@ -275,7 +276,7 @@ void TextPanel::bind(Props::Binder& binder) {
 
     // Line height — model carries its own unit (em, %, px, ...), sync tracker
     binder.bind(Props::line_height,
-                Props::UnitEdit{_ui->lineHeight, _tracker_lh, Props::UnitStrategy::PreserveUnit});
+                Props::UnitEdit{_ui->lineHeight, _tracker_lh, Props::UnitStrategy::PreserveLineHeightUnit});
 
     // Letter spacing, word spacing — plain doubles (px)
     binder.bind(Props::letter_spacing, _ui->letterSpacing);

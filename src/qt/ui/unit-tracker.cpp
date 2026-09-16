@@ -56,9 +56,10 @@ void UnitTracker::setActiveUnit(const Unit* unit) {
     std::cerr << "UnitTracker::setActiveUnit: unit '" << unit->abbr << "' not found!" << std::endl;
 }
 
-void UnitTracker::setActiveUnitByAbbr(const char* abbr) {
+void UnitTracker::setActiveUnitByAbbr(const char* abbr, bool notify) {
     if (!abbr) return;
 
+    QSignalBlocker signal_blocker(notify ? nullptr : this);
     const auto& table = UnitTable::get();
     auto unit = table.getUnit(abbr);
     if (unit && unit->abbr == abbr) {

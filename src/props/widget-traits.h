@@ -115,8 +115,9 @@ struct WidgetTraits<UI::NumberEdit> {
 //               UnitEdit{_ui->lineHeight, _tracker_lh, UnitStrategy::PreserveUnit});
 
 enum class UnitStrategy {
-    ConvertFromPx,  // model speaks px; convert to/from display unit
-    PreserveUnit,   // model carries its own unit; sync tracker, no conversion
+    ConvertFromPx,        // model speaks px; convert to/from display unit
+    PreserveUnit,         // model carries its own unit; sync tracker, no conversion
+    PreserveLineHeightUnit, // line-height maps unitless CSS to the "lines" UI unit
 };
 
 struct UnitEdit {
@@ -135,12 +136,15 @@ struct WidgetTraits<UnitEdit> {
             return;
         }
         auto& prop = v.value();
-        if (w.strategy == UnitStrategy::PreserveUnit) {
-            w.tracker->setActiveUnitByAbbr(sp_style_get_css_unit_string(prop.unit));
+        if (w.strategy == UnitStrategy::PreserveUnit || w.strategy == UnitStrategy::PreserveLineHeightUnit) {
+            auto unit = w.strategy == UnitStrategy::PreserveLineHeightUnit && prop.unit == SP_CSS_UNIT_NONE
+                ? "lines"
+                : sp_style_get_css_unit_string(prop.unit);
+            w.tracker->setActiveUnitByAbbr(unit, false); // don't notify about the change, we set numeric value too
         }
         double display = prop.value;
         if (w.strategy == UnitStrategy::ConvertFromPx) {
-            if (auto* u = w.tracker->getActiveUnit()) {
+            if (auto u = w.tracker->getActiveUnit()) {
                 display = Inkscape::Util::Quantity::convert(prop.value, "px", u);
             }
         }
@@ -151,7 +155,7 @@ struct WidgetTraits<UnitEdit> {
     static QMetaObject::Connection on_changed(const UnitEdit& w, std::function<void(UnitValue)> fn) {
         return QObject::connect(w.widget, &UI::NumberEdit::valueChanged, w.widget,
             [tracker = w.tracker, strategy = w.strategy, fn = std::move(fn)](double display) {
-                auto* u = tracker->getActiveUnit();
+                auto u = tracker->getActiveUnit();
                 int css_unit = u ? Linea::unit_to_css_unit(u) : SP_CSS_UNIT_PX;
                 if (strategy == UnitStrategy::ConvertFromPx) {
                     double px = u ? Inkscape::Util::Quantity::convert(display, u, "px") : display;

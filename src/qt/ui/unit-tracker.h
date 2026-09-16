@@ -52,7 +52,7 @@ public:
     bool isUpdating() const;
 
     void setActiveUnit(const Unit* unit);
-    void setActiveUnitByAbbr(const char* abbr);
+    void setActiveUnitByAbbr(const char* abbr, bool notify = true);
     const Unit* getActiveUnit() const;
 
     void addSpinBox(NumberEdit* spin);

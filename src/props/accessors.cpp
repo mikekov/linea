@@ -590,7 +590,9 @@ void apply_line_height(const EditTarget& target, const UnitValue& lh) {
         if (lh.unit == SP_CSS_UNIT_PERCENT) {
             value *= 100.0;
             os << value << "%";
-        } else if (lh.unit == SP_CSS_UNIT_NONE || lh.unit == SP_CSS_UNIT_EM || lh.unit == SP_CSS_UNIT_EX) {
+        } else if (lh.unit == SP_CSS_UNIT_NONE) {
+            os << value;
+        } else if (lh.unit == SP_CSS_UNIT_EM || lh.unit == SP_CSS_UNIT_EX) {
             os << value << sp_style_get_css_unit_string(lh.unit);
         } else {
             // Absolute unit — convert to px for SVG storage
