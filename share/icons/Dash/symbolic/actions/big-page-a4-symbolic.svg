@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg width="24" height="24" viewBox="0 0 24 24" version="2.0" id="svg1" standalone="no" sodipodi:docname="big-page-a4-symbolic.svg" inkscape:version="1.5-dev-linea (678b3ef, 2026-09-15, custom)" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.1" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" showgrid="true" inkscape:zoom="25.65213528" inkscape:cx="11.05171156" inkscape:cy="14.2678181" inkscape:window-width="1363" inkscape:window-height="900" inkscape:window-maximized="0" inkscape:current-layer="svg1">
+    <inkscape:grid type="xygrid" id="grid1" units="px" originx="0" originy="0" spacingx="1" spacingy="1" empcolor="#6aabcb" empopacity="0.3607843137" color="#6aabcb" opacity="0.1803921569" empspacing="5" enabled="true" visible="true" />
+  </sodipodi:namedview>
+  <defs id="defs1" />
+  <g id="layer1">
+    <path id="rect17" style="fill:white" d="m 5.00051,2 h 10 l 4,4 v 17 h -14 z" sodipodi:nodetypes="cccccc" />
+    <path id="path14" opacity="0.3" d="M 14.99951,6 V 2.70601 L 18.2935,6 Z" fill="black" style="stroke-width:1" />
+    <path id="path15" d="M 20.00001,6.29297 20.00101,24 H 4.00097 L 4,1 H 14.70703 Z M 5.00097,23 H 19.00101 L 19.00001,7 H 14 V 2 H 5 Z M 15,6 h 3.29301 L 15,2.70703 Z" fill="black" sodipodi:nodetypes="ccccccccccccccccc" />
+  </g>
+</svg>

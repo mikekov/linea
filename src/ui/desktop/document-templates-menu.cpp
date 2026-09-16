@@ -11,20 +11,27 @@ std::vector<CustomMenuItem> newDocumentFromTemplateMenu() {
     return {
         CustomMenuItem{
             .action = "document-new-from-template-1",
-            .title = "Display",
+            .title = "Display 4:3",
             .description = "1024\u00d7768 px",
             .icon = QIcon(":/icons/big-display"),
             .iconSize = QSize(24, 24),
         },
-        {
+        CustomMenuItem{
             .action = "document-new-from-template-2",
-            .title = "A4",
-            .description = "210\u00d7297 mm",
-            .icon = QIcon(":/icons/big-page"),
+            .title = "Display 16:10",
+            .description = "1920\u00d71200 px",
+            .icon = QIcon(":/icons/big-display-wide"),
             .iconSize = QSize(24, 24),
         },
         {
             .action = "document-new-from-template-3",
+            .title = "A4",
+            .description = "210\u00d7297 mm",
+            .icon = QIcon(":/icons/big-page-a4"),
+            .iconSize = QSize(24, 24),
+        },
+        {
+            .action = "document-new-from-template-4",
             .title = "US Letter",
             .description = "8.5\u00d711 in",
             .icon = QIcon(":/icons/big-page"),

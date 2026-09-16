@@ -62,12 +62,12 @@ SPDesktop::SPDesktop(SPNamedView* namedview)
     _stateModel = std::make_unique<Linea::Props::SelectionStateModel>(this);
 
     // Set up the text-span scope once: the lambda dynamically checks the
-    // current tool, so it returns span items when the text tool is active
-    // and empty otherwise. The model re-evaluates it on each rebuild,
-    // including rebuilds triggered by tool changes (connectEventContextChanged).
+    // current tool, so it returns the selected spans or the span at the
+    // insertion point when the text tool is active. The model re-evaluates
+    // the scope on each rebuild, including cursor and tool changes.
     _stateModel->setTextScope([this]() -> std::vector<SPItem*> {
         if (auto tool = dynamic_cast<Inkscape::UI::Tools::TextTool*>(currentTool())) {
-            return tool->get_subselection(false);
+            return tool->get_subselection(true);
         }
         return {};
     });
@@ -538,8 +538,7 @@ void SPDesktop::zoom_quick(bool active) {
 }
 
 void SPDesktop::emit_text_cursor_moved(Inkscape::UI::Tools::TextTool* tool) {
-    // TODO: Implement text cursor moved signal
-    (void)tool;
+    signal_text_cursor_moved.emit(tool);
 }
 
 /*

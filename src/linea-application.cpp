@@ -74,9 +74,12 @@ void LineaApplication::createNewDocument(int templateIndex) {
     //TODO: configurable templates -------
     auto fname = "default.svg";
     if (templateIndex == 2) {
-        fname = "default-a4.svg";
+        fname = "default-wide.svg";
     }
     else if (templateIndex == 3) {
+        fname = "default-a4.svg";
+    }
+    else if (templateIndex == 4) {
         fname = "default-us-letter.svg";
     }
     auto def = Inkscape::IO::Resource::get_filename(Inkscape::IO::Resource::TEMPLATES, fname, true);
