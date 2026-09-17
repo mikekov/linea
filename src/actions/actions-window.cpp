@@ -138,24 +138,13 @@ void window_crash(LineaApplication* /*app*/) {
     std::abort();
 }
 
-const ApplicationActionDef window_action_defs[] = {
+static auto window_action_defs = std::to_array<ActionSpec<LineaApplication>>({
     {"window-crash", N_("Force Crash"), NC_("Action Section", "Window"),
-     N_("Force Linea to crash, useful for testing."), window_crash, nullptr},
-};
+     N_("Force Linea to crash, useful for testing."), nullptr, window_crash},
+});
 
 } // namespace
 
 void add_actions_window(LineaApplication* app) {
-    if (!app) return;
-
-    auto window = app->get_active_window();
-    if (!window) return;
-
-    auto& registry = ActionRegistry::get();
-    for (auto const& definition : window_action_defs) {
-        auto callback = definition.callback;
-        auto action = registry.createAction(definition, [app, callback]() { callback(app); });
-        window->addAction(action);
-    }
+    ActionRegistry::get().registerActions(app, window_action_defs);
 }
-

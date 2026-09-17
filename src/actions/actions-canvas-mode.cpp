@@ -10,6 +10,7 @@
 
 #include "actions-canvas-mode.h"
 
+#include <QActionGroup>
 #include <array>
 #include <iostream>
 
@@ -18,12 +19,12 @@
 
 #include "action-meta.h"
 #include "action-registry.h"
+#include "linea-application.h"
 #include "ui/interface.h"
 
 #include "actions-helper.h"
 
 #include "desktop.h"
-// #include "inkscape-application.h"
 #include "linea-window.h"
 
 #include "display/rendermode.h"
@@ -32,19 +33,12 @@
 
 #include "ui/widget/canvas.h"
 
-// TODO: Use action state rather than set variable in Canvas (via Desktop).
-// TODO: Move functions from Desktop to Canvas.
-// TODO: Canvas actions should belong to canvas (not window)!
-
 /**
  * Helper function to set display mode.
  */
-void canvas_set_display_mode(Inkscape::RenderMode value, LineaWindow* win) {
-    if (!win->get_desktop()) return;
-    // g_assert(value != Inkscape::RenderMode::size);
-    // saction->change_state((int)value);
-    win->get_desktop()->getCanvas()->set_render_mode(value);
-    // win->get_desktop()->setRenderMode(Inkscape::RenderMode(value));
+void canvas_set_display_mode(Inkscape::RenderMode value, SPDesktop* desktop) {
+    if (!desktop) return;
+    desktop->getCanvas()->set_render_mode(value);
 }
 
 /**
@@ -76,9 +70,9 @@ void canvas_set_display_mode(Inkscape::RenderMode value, LineaWindow* win) {
 /**
  * Cycle between values.
  */
-void canvas_display_mode_cycle(LineaWindow* win) {
-    if (!win->get_desktop()) return;
-    auto canvas = win->get_desktop()->getCanvas();
+void canvas_display_mode_cycle(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto canvas = desktop->getCanvas();
     // TODO: match order of UI instead
     auto current_mode = static_cast<int>(canvas->get_render_mode()) + 1;
     current_mode %= static_cast<int>(Inkscape::RenderMode::size);
@@ -111,9 +105,9 @@ void canvas_display_mode_cycle(LineaWindow* win) {
 /**
  * Toggle between normal and last set other value.
  */
-void canvas_display_mode_toggle(LineaWindow* win) {
-    if (!win->get_desktop()) return;
-    auto canvas = win->get_desktop()->getCanvas();
+void canvas_display_mode_toggle(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto canvas = desktop->getCanvas();
     static Inkscape::RenderMode old_value = Inkscape::RenderMode::OUTLINE;
     auto mode = canvas->get_render_mode();
     if (mode == Inkscape::RenderMode::NORMAL) {
@@ -151,6 +145,11 @@ void canvas_display_mode_toggle(LineaWindow* win) {
     }
     saction->activate_variant(Glib::Variant<int>::create(new_value));
     #endif
+}
+
+void canvas_display_mode_toggle_preview(SPDesktop* desktop) {
+    // TODO
+    (void)desktop;
 }
 
 /**
@@ -192,8 +191,9 @@ canvas_split_mode(int value, LineaWindow *win)
 }
 #endif
 
-void canvas_split_mode(LineaWindow* wnd, Inkscape::SplitMode mode) {
-    auto canvas = wnd->get_desktop()->getCanvas();
+void canvas_split_mode(SPDesktop* desktop, Inkscape::SplitMode mode) {
+    if (!desktop) return;
+    auto canvas = desktop->getCanvas();
     canvas->set_split_mode(mode);
 }
 
@@ -201,8 +201,9 @@ void canvas_split_mode(LineaWindow* wnd, Inkscape::SplitMode mode) {
  * Set gray scale for canvas.
  */
 void
-canvas_color_mode_gray(LineaWindow *win)
+canvas_color_mode_gray(SPDesktop* desktop)
 {
+    if (!desktop) return;
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
     gdouble r = prefs->getDoubleLimited("/options/rendering/grayscale/red-factor",   0.21,  0.0, 1.0);
     gdouble g = prefs->getDoubleLimited("/options/rendering/grayscale/green-factor", 0.72,  0.0, 1.0);
@@ -212,15 +213,15 @@ canvas_color_mode_gray(LineaWindow *win)
           r, g, b, 0, 0,
           r, g, b, 0, 0,
           0, 0, 0, 1, 0 };
-    SPDesktop* dt = win->get_desktop();
-    dt->getCanvasDrawing()->get_drawing()->setGrayscaleMatrix(grayscale_value_matrix);
+    desktop->getCanvasDrawing()->get_drawing()->setGrayscaleMatrix(grayscale_value_matrix);
 }
 
 /**
  * Toggle Gray scale on/off.
  */
-void canvas_color_mode_toggle(LineaWindow* wnd) {
-    auto canvas = wnd->get_desktop()->getCanvas();
+void canvas_color_mode_toggle(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto canvas = desktop->getCanvas();
     auto mode = canvas->get_color_mode();
     canvas->set_color_mode(mode == Inkscape::ColorMode::GRAYSCALE ? Inkscape::ColorMode::NORMAL : Inkscape::ColorMode::GRAYSCALE);
 
@@ -254,145 +255,127 @@ void canvas_color_mode_toggle(LineaWindow* wnd) {
 /**
  * Toggle pixel preview (drawing rendered at a capped resolution) on/off.
  */
-void canvas_pixel_preview_toggle(LineaWindow* wnd) {
-    auto drawing = wnd->get_desktop()->getCanvasDrawing();
+void canvas_pixel_preview_toggle(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto drawing = desktop->getCanvasDrawing();
     drawing->set_pixel_preview(!drawing->get_pixel_preview());
 }
 
-void canvas_pixel_preview_off(LineaWindow* wnd) {
-    auto drawing = wnd->get_desktop()->getCanvasDrawing();
+void canvas_pixel_preview_off(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto drawing = desktop->getCanvasDrawing();
     drawing->set_pixel_preview(false);
 }
 
 /**
  * Turn on pixel preview (1.0 = 100%, 2.0 = 200%).
  */
-void canvas_pixel_preview_cap(LineaWindow* wnd, double cap) {
-    auto drawing = wnd->get_desktop()->getCanvasDrawing();
+void canvas_pixel_preview_cap(SPDesktop* desktop, double cap) {
+    if (!desktop) return;
+    auto drawing = desktop->getCanvasDrawing();
     drawing->set_pixel_preview(true);
     drawing->set_pixel_preview_cap(cap);
 }
 
-bool get_canvas_pixel_preview(LineaWindow* wnd) {
-    return wnd->get_desktop()->getCanvasDrawing()->get_pixel_preview();
+bool get_canvas_pixel_preview(SPDesktop* desktop) {
+    return desktop && desktop->getCanvasDrawing()->get_pixel_preview();
 }
 
-bool get_canvas_pixel_preview_off(LineaWindow* wnd) {
-    return !wnd->get_desktop()->getCanvasDrawing()->get_pixel_preview();
+bool get_canvas_pixel_preview_off(SPDesktop* desktop) {
+    return !desktop || !desktop->getCanvasDrawing()->get_pixel_preview();
 }
 
-bool get_canvas_pixel_preview_100(LineaWindow* wnd) {
-    auto drawing = wnd->get_desktop()->getCanvasDrawing();
+bool get_canvas_pixel_preview_100(SPDesktop* desktop) {
+    if (!desktop) return false;
+    auto drawing = desktop->getCanvasDrawing();
     return drawing->get_pixel_preview() && drawing->get_pixel_preview_cap() == 1.0;
 }
 
-bool get_canvas_pixel_preview_200(LineaWindow* wnd) {
-    auto drawing = wnd->get_desktop()->getCanvasDrawing();
+bool get_canvas_pixel_preview_200(SPDesktop* desktop) {
+    if (!desktop) return false;
+    auto drawing = desktop->getCanvasDrawing();
     return drawing->get_pixel_preview() && drawing->get_pixel_preview_cap() == 2.0;
 }
 
 /**
  * Toggle Color management on/off.
  */
-void
-canvas_color_manage_toggle(LineaWindow *win)
-{
-    auto action = win->lookup_action("canvas-color-manage");
-    if (!action) {
-        show_output("canvas_color_manage_toggle: action missing!");
-        return;
-    }
+void canvas_color_manage_toggle(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    auto saction = std::dynamic_pointer_cast<Gio::SimpleAction>(action);
-    if (!saction) {
-        show_output("canvas_color_manage_toggle: action not SimpleAction!");
-        return;
-    }
-
-    bool state = false;
-    saction->get_state(state);
-    state = !state;
-    saction->change_state(state);
+    auto canvas = desktop->getCanvas();
+    auto state = !canvas->get_cms_active();
 
     // Save value as a preference
-    Inkscape::Preferences *pref = Inkscape::Preferences::get();
-    pref->setBool("/options/displayprofile/enable", state);
+    Inkscape::Preferences* prefs = Inkscape::Preferences::get();
+    prefs->setBool("/options/displayprofile/enable", state);
 
-    SPDesktop* dt = win->get_desktop();
-    auto canvas = dt->getCanvas();
     canvas->set_cms_active(state);
     canvas->redraw_all();
 }
 
 const Glib::ustring SECTION = NC_("Action Section", "Canvas Display");
 
-struct CanvasModeEntry : public ActionMeta2 {
-    void (*fn)(LineaWindow*);
-    bool (*state)(LineaWindow*) = nullptr;
-    const char* icon_name = nullptr;
-};
-
-static auto canvas_mode_entries = std::to_array<CanvasModeEntry>({
+static auto canvas_mode_entries = std::to_array<ActionSpec<SPDesktop>>({
     // clang-format off
-    {"canvas-display-mode-normal",          N_("Display Mode: Normal"),             SECTION,    N_("Use normal rendering mode"),
-        [](LineaWindow* win) { canvas_set_display_mode(Inkscape::RenderMode::NORMAL, win); }},
-    {"canvas-display-mode-outline",         N_("Display Mode: Outline"),            SECTION,    N_("Show only object outlines"),
-        [](LineaWindow* win) { canvas_set_display_mode(Inkscape::RenderMode::OUTLINE, win); }},
-    {"canvas-display-mode-no-filters",      N_("Display Mode: No Filters"),         SECTION,    N_("Do not render filters (for speed)"),
-        [](LineaWindow* win) { canvas_set_display_mode(Inkscape::RenderMode::NO_FILTERS, win); }},
-    {"canvas-display-mode-enhanced-lines",  N_("Display Mode: Enhance Thin Lines"), SECTION,    N_("Ensure all strokes are displayed on screen as at least 1 pixel wide"),
-        [](LineaWindow* win) { canvas_set_display_mode(Inkscape::RenderMode::VISIBLE_HAIRLINES, win); }},
-    {"canvas-display-mode-outline-overlay", N_("Display Mode: Outline Overlay"),    SECTION,    N_("Show objects as outlines, and the actual drawing below them with reduced opacity"),
-        [](LineaWindow* win) { canvas_set_display_mode(Inkscape::RenderMode::OUTLINE_OVERLAY, win); }},
+    {"canvas-display-mode-normal",          N_("Display Mode: Normal"),             SECTION,    N_("Use normal rendering mode"), nullptr,
+        [](auto desktop) { canvas_set_display_mode(Inkscape::RenderMode::NORMAL, desktop); }},
+    {"canvas-display-mode-outline",         N_("Display Mode: Outline"),            SECTION,    N_("Show only object outlines"), nullptr,
+        [](auto desktop) { canvas_set_display_mode(Inkscape::RenderMode::OUTLINE, desktop); }},
+    {"canvas-display-mode-no-filters",      N_("Display Mode: No Filters"),         SECTION,    N_("Do not render filters (for speed)"), nullptr,
+        [](auto desktop) { canvas_set_display_mode(Inkscape::RenderMode::NO_FILTERS, desktop); }},
+    {"canvas-display-mode-enhanced-lines",  N_("Display Mode: Enhance Thin Lines"), SECTION,    N_("Ensure all strokes are displayed on screen as at least 1 pixel wide"), nullptr,
+        [](auto desktop) { canvas_set_display_mode(Inkscape::RenderMode::VISIBLE_HAIRLINES, desktop); }},
+    {"canvas-display-mode-outline-overlay", N_("Display Mode: Outline Overlay"),    SECTION,    N_("Show objects as outlines, and the actual drawing below them with reduced opacity"), nullptr,
+        [](auto desktop) { canvas_set_display_mode(Inkscape::RenderMode::OUTLINE_OVERLAY, desktop); }},
 
-    {"canvas-display-mode-cycle",           N_("Display Mode: Cycle"),              SECTION,    N_("Cycle through display modes")                   ,
-        [](auto win) { canvas_display_mode_cycle(win); }},
+    {"canvas-display-mode-cycle",           N_("Display Mode: Cycle"),              SECTION,    N_("Cycle through display modes")                   , nullptr,
+        [](auto desktop) { canvas_display_mode_cycle(desktop); }},
 
-    {"canvas-display-mode-toggle",          N_("Toggle Outline Mode"),              SECTION,    N_("Toggle between normal and last non-normal mode"),
-        [](auto win) { canvas_display_mode_toggle(win); }},
+    {"canvas-display-mode-toggle",          N_("Toggle Outline Mode"),              SECTION,    N_("Toggle between normal and last non-normal mode"), nullptr,
+        [](auto desktop) { canvas_display_mode_toggle(desktop); }},
 
         //TODO:
-    {"canvas-display-mode-toggle-preview",  N_("Display Mode: Toggle Preview"),     SECTION,    N_("Toggle between preview and previous mode")      },
+    {"canvas-display-mode-toggle-preview",  N_("Display Mode: Toggle Preview"),     SECTION,    N_("Toggle between preview and previous mode"), nullptr,
+        [](auto desktop) { canvas_display_mode_toggle_preview(desktop); } },
 
-    {"canvas-split-mode-off",               N_("Split Mode: Normal"),               SECTION,    N_("Do not split canvas"),
-        [](auto win) { canvas_split_mode(win, Inkscape::SplitMode::NORMAL); }},
-    {"canvas-split-mode-on",                N_("Split Mode: Split"),                SECTION,    N_("Render part of the canvas in outline mode"),
-        [](auto win) { canvas_split_mode(win, Inkscape::SplitMode::SPLIT); }},
-    {"canvas-split-mode-xray",             N_("Split Mode: X-Ray"),                SECTION,    N_("Render a circular area in outline mode"),
-        [](auto win) { canvas_split_mode(win, Inkscape::SplitMode::XRAY); }},
+    {"canvas-split-mode-off",               N_("Split Mode: Normal"),               SECTION,    N_("Do not split canvas"), nullptr,
+        [](auto desktop) { canvas_split_mode(desktop, Inkscape::SplitMode::NORMAL); }},
+    {"canvas-split-mode-on",                N_("Split Mode: Split"),                SECTION,    N_("Render part of the canvas in outline mode"), nullptr,
+        [](auto desktop) { canvas_split_mode(desktop, Inkscape::SplitMode::SPLIT); }},
+    {"canvas-split-mode-xray",             N_("Split Mode: X-Ray"),                SECTION,    N_("Render a circular area in outline mode"), nullptr,
+        [](auto desktop) { canvas_split_mode(desktop, Inkscape::SplitMode::XRAY); }},
 
-    {"canvas-color-mode",                  N_("Color Mode"),                       SECTION,    N_("Toggle between normal and grayscale modes"),
-        [](auto win) { canvas_color_mode_toggle(win); }},
-
-    {"canvas-pixel-preview-toggle",        N_("Disabled"),             SECTION,    N_("Toggle pixel preview rendering"),
-        [](auto win) { canvas_pixel_preview_toggle(win); }, get_canvas_pixel_preview_off},
-    {"canvas-pixel-preview-off",           N_("Disabled"),                         SECTION,    N_("Disable pixel preview rendering"),
-        [](auto win) { canvas_pixel_preview_off(win); }, get_canvas_pixel_preview_off},
-    {"canvas-pixel-preview-100",           N_("Pixel ×1"),                         SECTION,    N_("Enable pixel preview (×1)"),
-        [](auto win) { canvas_pixel_preview_cap(win, 1.0); }, get_canvas_pixel_preview_100},
-    {"canvas-pixel-preview-200",           N_("Pixel ×2"),                         SECTION,    N_("Enable pixel preview (×2)"),
-        [](auto win) { canvas_pixel_preview_cap(win, 2.0); }, get_canvas_pixel_preview_200},
-
+    {"canvas-color-mode",                  N_("Color Mode"),                       SECTION,    N_("Toggle between normal and grayscale modes"), nullptr,
+        [](auto desktop) { canvas_color_mode_toggle(desktop); }},
     //TODO
-    {"canvas-color-manage",                N_("Color Managed Mode"),               SECTION,    N_("Toggle between normal and color managed modes")    }
+    {"canvas-color-manage",                N_("Color Managed Mode"),               SECTION,    N_("Toggle between normal and color managed modes"), nullptr,
+        [](auto desktop) { canvas_color_manage_toggle(desktop); }},
+    // this may not be needed
+    {"canvas-pixel-preview-off",           N_("Disabled"),                         SECTION,    N_("Disable pixel preview rendering"), nullptr,
+        [](auto desktop) { canvas_pixel_preview_off(desktop); }, get_canvas_pixel_preview_off},
+});
+
+static auto canvas_pixel_entries = std::to_array<ActionSpec<SPDesktop>>({
+    {"canvas-pixel-preview-toggle",        N_("Disabled"),             SECTION,    N_("Disable pixel preview rendering"), nullptr,
+        [](auto desktop) { canvas_pixel_preview_toggle(desktop); }, get_canvas_pixel_preview_off},
+    {"canvas-pixel-preview-100",           N_("Pixel ×1"),             SECTION,    N_("Enable pixel preview (×1)"), nullptr,
+        [](auto desktop) { canvas_pixel_preview_cap(desktop, 1.0); }, get_canvas_pixel_preview_100},
+    {"canvas-pixel-preview-200",           N_("Pixel ×2"),             SECTION,    N_("Enable pixel preview (×2)"), nullptr,
+        [](auto desktop) { canvas_pixel_preview_cap(desktop, 2.0); }, get_canvas_pixel_preview_200},
     // clang-format on
 });
 
-void add_actions_canvas_mode(LineaWindow* win) {
+void add_actions_canvas_pixel_preview(LineaApplication* app) {
     auto& registry = ActionRegistry::get();
+    registry.registerActions(app, canvas_pixel_entries, true);
+}
 
-    for (auto& e : canvas_mode_entries) {
-        QAction* a;
-        if (e.state) {
-            a = registry.createBoolAction(
-                {e.id, e.label, e.tooltip, nullptr},
-                [fn = e.fn, win](bool) { fn(win); },
-                [state = e.state, win]() { return state(win); });
-        } else {
-            a = registry.createAction(e, [fn = e.fn, win]() { fn(win); });
-        }
-        win->addAction(a);
-    }
+void add_actions_canvas_mode(LineaApplication* app) {
+    auto& registry = ActionRegistry::get();
+    registry.registerActions(app, canvas_mode_entries);
+
+    add_actions_canvas_pixel_preview(app);
 
 #if 0
     // clang-format off

@@ -11,11 +11,9 @@
 #ifndef INK_ACTIONS_DIALOGS_H
 #define INK_ACTIONS_DIALOGS_H
 
-class InkscapeApplication;
-class LineaWindow;
+class LineaApplication;
 
 // Standard function to add actions.
-void add_actions_dialogs(InkscapeApplication *app);
-void add_actions_dialogs(LineaWindow *win);
+void add_actions_dialogs(LineaApplication *app);
 
 #endif // INK_ACTIONS_DIALOGS_H

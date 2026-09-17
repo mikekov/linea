@@ -23,28 +23,27 @@
 #include "document-undo.h"
 #include "i18n/action-strings.h"
 #include "linea-application.h"
-#include "linea-window.h"
 
 namespace {
 
-void undo(LineaWindow* win) {
-    if (auto document = win->get_document()) {
+void undo(SPDocument* document) {
+    if (document) {
         Inkscape::DocumentUndo::undo(document);
     }
 }
 
-void redo(LineaWindow* win) {
-    if (auto document = win->get_document()) {
+void redo(SPDocument* document) {
+    if (document) {
         Inkscape::DocumentUndo::redo(document);
     }
 }
 
 const Glib::ustring SECTION = NC_("Action Section", "Edit Document");
 
-static auto undo_document_action_defs = std::to_array<WindowActionDef>({
+static auto undo_document_action_defs = std::to_array<ActionSpec<SPDocument>>({
     // clang-format off
-    {"undo", N_("Undo"), SECTION, N_("Undo last action"), undo},
-    {"redo", N_("Redo"), SECTION, N_("Do again the last undone action"), redo}
+    {"undo", N_("Undo"), SECTION, N_("Undo last action"), nullptr, undo},
+    {"redo", N_("Redo"), SECTION, N_("Do again the last undone action"), nullptr, redo}
     // clang-format on
 });
 
@@ -58,11 +57,6 @@ void enable_undo_actions(SPDocument* document, bool undo, bool redo) {
     }
 }
 
-void add_actions_undo_document(LineaWindow* win) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : undo_document_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, win]() { fn(win); });
-        win->addAction(a);
-    }
+void add_actions_undo_document(LineaApplication* app) {
+    ActionRegistry::get().registerActions(app, undo_document_action_defs);
 }

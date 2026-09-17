@@ -1,6 +1,6 @@
 # TODO
 
-- zoom page width is weird - should be centered
+x zoom page width is weird - should be centered
 - pixel perfect icons: disabled and x2 checked together
 - guidelines: selected guide to show in bold?
 - guidelines: selected guide delete by pressing delete key
@@ -28,11 +28,12 @@
 - disable qactions that need document when there isn't one anymore
 - Esc to dismiss notification bar!
 - closing the last doc may leave left panel expanded, if there was a seleciton active before doc close
+- TextPanel is a work in progress, remove current item
 
 ## Missing features
 
 - path panel with d data
-- obj to bitmap command
+x obj to bitmap command
 
 ## UI Panels & Dialogs, widgets
 

@@ -12,8 +12,8 @@
 #ifndef INK_ACTIONS_VIEW_WINDOW_H
 #define INK_ACTIONS_VIEW_WINDOW_H
 
-class LineaWindow;
+class LineaApplication;
 
-void add_actions_view_window(LineaWindow* wnd);
+void add_actions_view_window(LineaApplication* app);
 
 #endif // INK_ACTIONS_VIEW_WINDOW_H

@@ -12,9 +12,7 @@
 #define INK_ACTIONS_PATH_H
 
 class LineaApplication;
-class LineaWindow;
 
 void add_actions_path(LineaApplication* app);
-void add_actions_path(LineaWindow* win);
 
 #endif // INK_ACTIONS_PATH_H

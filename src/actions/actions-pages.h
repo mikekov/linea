@@ -11,8 +11,8 @@
 #ifndef INK_ACTIONS_PAGES_H
 #define INK_ACTIONS_PAGES_H
 
-class LineaWindow;
+class LineaApplication;
 
-void add_actions_pages(LineaWindow* win);
+void add_actions_pages(LineaApplication* app);
 
 #endif // INK_ACTIONS_PAGES_H

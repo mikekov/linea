@@ -76,7 +76,7 @@ const ActionMeta toggleMeta[] = {
 
 // ActionGroup registration for UI discovery
 const ActionGroup toolActionGroup = {
-    "tools", N_("Tools"), ActionScope::Window, {}
+    "tools", N_("Tools"), ActionScope::Window
 };
 
 // Track last tool for toggling

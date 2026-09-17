@@ -12,11 +12,8 @@
 #ifndef INK_ACTIONS_EFFECT_H
 #define INK_ACTIONS_EFFECT_H
 
-class InkscapeApplication;
 class LineaApplication;
 
 void add_actions_effect(LineaApplication* app);
-
-void enable_effect_actions(InkscapeApplication* app, bool enabled);
 
 #endif // INK_ACTIONS_EFFECT_H

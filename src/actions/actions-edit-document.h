@@ -13,8 +13,8 @@
 #define INK_ACTIONS_EDIT_DOCUMENT_H
 
 class SPDocument;
-class LineaWindow;
+class LineaApplication;
 
-void add_actions_edit_document(LineaWindow* win);
+void add_actions_edit_document(LineaApplication* app);
 
 #endif // INK_ACTIONS_EDIT_DOCUMENT_H

@@ -12,8 +12,8 @@
 #ifndef INK_ACTIONS_EDIT_WINDOW_H
 #define INK_ACTIONS_EDIT_WINDOW_H
 
-class LineaWindow;
+class LineaApplication;
 
-void add_actions_edit_window(LineaWindow* win);
+void add_actions_edit_window(LineaApplication* app);
 
 #endif // INK_ACTIONS_EDIT_WINDOW_H

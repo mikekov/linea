@@ -12,12 +12,13 @@
 #ifndef INK_ACTIONS_FILE_WINDOW_H
 #define INK_ACTIONS_FILE_WINDOW_H
 
+class LineaApplication;
 class LineaWindow;
 
 void document_new(LineaWindow* win);
 void document_open(LineaWindow* win);
 void document_save(LineaWindow* win);
 
-void add_actions_file_window(LineaWindow* win);
+void add_actions_file_window(LineaApplication* app);
 
 #endif // INK_ACTIONS_FILE_WINDOW_H

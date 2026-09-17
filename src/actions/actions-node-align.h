@@ -11,8 +11,8 @@
 #ifndef INK_ACTIONS_NODE_ALIGN_H
 #define INK_ACTIONS_NODE_ALIGN_H
 
-class LineaWindow;
+class LineaApplication;
 
-void add_actions_node_align(LineaWindow* win);
+void add_actions_node_align(LineaApplication* app);
 
 #endif // INK_ACTIONS_NODe_ALIGN_H

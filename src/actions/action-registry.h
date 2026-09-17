@@ -1,13 +1,16 @@
 #ifndef LINEA_ACTION_REGISTRY_H
 #define LINEA_ACTION_REGISTRY_H
 
+#include <array>
 #include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <QAction>
+#include <QActionGroup>
 #include <QObject>
 #include "action-meta.h"
+#include "linea-application.h"
 #include "linea-window.h"
 #include "ui/shortcut-manager.h"
 
@@ -17,7 +20,6 @@ class LineaWindow;
 
 // Forward declarations
 enum class ActionScope;
-struct ActionDef;
 struct ActionMeta;
 struct ActionParamMeta;
 struct ActionGroup;
@@ -32,9 +34,14 @@ public:
     std::vector<const ActionGroup*> allGroups() const;
     const ActionGroup* findGroup(const char* id) const;
 
-    // For tree view: returns all action metadata with their group
-    struct Entry { const ActionGroup* group; const ActionMeta* meta; };
-    std::vector<Entry> allActionsBySection() const;
+    // Register all actions defined by a span of ActionSpec<Context>
+    template <typename Context>
+    void registerActions(LineaApplication* app, std::span<const ActionSpec<Context>> entries, bool radioGroup = false);
+
+    // Register all actions defined by a fixed-size array of ActionSpec<Context>
+    template <typename Context, std::size_t N>
+    void registerActions(LineaApplication* app, const std::array<ActionSpec<Context>, N>& entries,
+                         bool radioGroup = false);
 
     // Create and register actions (templates avoid std::function overhead)
     template<typename Meta, typename Callback>
@@ -63,6 +70,7 @@ public:
 
     ActionRegistry(const ActionRegistry&) = delete;
     ActionRegistry& operator = (const ActionRegistry&) = delete;
+
 private:
     ActionRegistry() = default;
     ~ActionRegistry() = default;
@@ -122,6 +130,96 @@ QAction* ActionRegistry::createToggleAction(const ActionParamMeta& meta,
         action->setIcon(checked);
     }
     return action;
+}
+
+namespace details {
+
+template <typename>
+inline constexpr bool dependent_false_v = false;
+
+template <typename Context>
+Context* active_context(LineaApplication* app) {
+    if constexpr (std::same_as<Context, LineaApplication>) {
+        return app;
+    } else if constexpr (std::same_as<Context, LineaWindow>) {
+        return app->get_active_window();
+    } else if constexpr (std::same_as<Context, SPDocument>) {
+        return app->get_active_document();
+    } else if constexpr (std::same_as<Context, Inkscape::Selection>) {
+        return app->get_active_selection();
+    } else if constexpr (std::same_as<Context, SPDesktop>) {
+        return app->get_active_desktop();
+    } else {
+        static_assert(dependent_false_v<Context>, "Unsupported action context");
+        return nullptr;
+    }
+}
+
+} // namespace details
+
+template <typename Context>
+void ActionRegistry::registerActions(
+    LineaApplication* app,
+    std::span<const ActionSpec<Context>> entries,
+    bool radioGroup) {
+
+    assert(app);
+    if (!app) return;
+
+    auto wnd = app->get_active_window();
+    assert(wnd);
+    if (!wnd) return;
+
+    auto group = radioGroup ? new QActionGroup(wnd) : nullptr;
+
+    for (const auto& entry : entries) {
+        if (entry.state) {
+            auto state_query = [app, state = entry.state]() {
+                if (auto context = details::active_context<Context>(app)) {
+                    return state(context);
+                }
+                return false;
+            };
+            auto initial = state_query();
+            auto action = createBoolAction(
+                {entry.id,
+                 entry.label,
+                 entry.tooltip,
+                 entry.icon_name,
+                 entry.checked_label},
+
+                [app, fn = entry.callback](bool) {
+                    if (auto context = details::active_context<Context>(app)) {
+                        fn(context);
+                    }
+                },
+
+                state_query,
+                initial);
+
+            wnd->addAction(action);
+            if (group) group->addAction(action);
+        } else {
+            auto action = createAction(
+                entry,
+                [app, fn = entry.callback]() {
+                    if (auto context = details::active_context<Context>(app)) {
+                        fn(context);
+                    }
+                });
+
+            wnd->addAction(action);
+            if (group) group->addAction(action);
+        }
+    }
+}
+
+template <typename Context, std::size_t N>
+void ActionRegistry::registerActions(
+    LineaApplication* app,
+    const std::array<ActionSpec<Context>, N>& entries,
+    bool radioGroup) {
+    registerActions<Context>(app, std::span<const ActionSpec<Context>>(entries), radioGroup);
 }
 
 #endif

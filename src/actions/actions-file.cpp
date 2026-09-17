@@ -178,7 +178,7 @@ add_actions_file(LineaApplication* app)
 }
 
 const ActionGroup fileActionGroup = {
-    "file", N_("File"), ActionScope::Window, {}
+    "file", N_("File"), ActionScope::Window
 };
 
 

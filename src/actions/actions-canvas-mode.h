@@ -11,9 +11,9 @@
 #ifndef INK_ACTIONS_CANVAS_MODE_H
 #define INK_ACTIONS_CANVAS_MODE_H
 
-class LineaWindow;
+class LineaApplication;
 class SPDesktop;
 
-void add_actions_canvas_mode(LineaWindow* win);
+void add_actions_canvas_mode(LineaApplication* app);
 
 #endif // INK_ACTIONS_CANVAS_MODE_H

@@ -13,6 +13,7 @@
 
 #include "actions-edit-document.h"
 
+#include <array>
 #include <glibmm/i18n.h>
 #include <glibmm/ustring.h>
 
@@ -20,7 +21,7 @@
 #include "action-registry.h"
 #include "document-undo.h"
 #include "document.h"
-#include "linea-window.h"
+#include "linea-application.h"
 #include "object/sp-guide.h"
 #include "object/sp-namedview.h"
 #include "selection-chemistry.h"
@@ -86,64 +87,26 @@ bool are_grids_visible(SPDocument* document) {
     return document->getNamedView()->getShowGrids();
 }
 
-// Wraps a DocCallback: fetches the active document from win at trigger time.
-// If there is no document the action is a no-op.
-template <typename Fn>
-auto doc_action(LineaWindow* win, Fn fn) {
-    return [win, fn]() {
-        if (auto* doc = win->get_document()) {
-            fn(doc);
-        }
-    };
-}
+const ActionGroup editDocActionGroup = {"edit-document", N_("Edit Document"), ActionScope::Document};
 
-// Wraps a state query function: fetches the active document from win at query time.
-// Returns false if there is no document.
-template <typename Fn>
-auto doc_state_query(LineaWindow* win, Fn fn) {
-    return [win, fn]() -> bool {
-        if (auto* doc = win->get_document()) {
-            return fn(doc);
-        }
-        return false;
-    };
-}
+const Glib::ustring SECTION = NC_("Action Section", "Edit Document");
 
-struct EditDocEntry {
-    BoolActionMeta meta;
-    DocCallback fn;
-    bool (*state_fn)(SPDocument*);
-};
-
-const ActionGroup editDocActionGroup = {"edit-document", N_("Edit Document"), ActionScope::Document, {}};
-
-const EditDocEntry editDocTable[] = {
+static auto editDocTable = std::to_array<ActionSpec<SPDocument>>({
     // clang-format off
-    {{"create-guides-around-page", N_("Create Guides Around the Current Page"), N_("Create four guides aligned with the page borders of the current page"), "guide",       nullptr}, create_guides_around_page, nullptr},
-    {{"lock-all-guides",           N_("Lock All Guides"),                       N_("Toggle lock of all guides in the document"),                            "guide",       N_("Unlock All Guides")}, lock_all_guides,           nullptr},
-    {{"show-all-guides",           N_("Show All Guides"),                       N_("Toggle visibility of all guides in the document"),                       "show-guides", N_("Hide All Guides")}, show_all_guides,           are_guides_visible },
-    {{"delete-all-guides",         N_("Delete All Guides"),                     N_("Delete all the guides in the document"),                                "guide",       nullptr}, delete_all_guides,         nullptr},
-    {{"fit-canvas-to-drawing",     N_("Fit Page to Drawing"),                   N_("Fit the page to the drawing"),                                          "pages-resize",nullptr}, fit_canvas_drawing,        nullptr},
-    {{"clip-to-page",              N_("Clip to Page"),                          N_("Toggle between clipped to page and complete rendering"),                 "page",        N_("Unclip to Page")}, toggle_clip_to_page,       is_clip_to_page_active },
-    {{"show-grids",                N_("Show Grids"),                            N_("Toggle the visibility of grids"),                                       "show-grid",   N_("Hide Grids")}, show_grids,                are_grids_visible },
+    {"create-guides-around-page", N_("Create Guides Around the Current Page"), SECTION, N_("Create four guides aligned with the page borders of the current page"), "guide",        create_guides_around_page},
+    {"lock-all-guides",           N_("Lock All Guides"),                       SECTION, N_("Toggle lock of all guides in the document"),                            "guide",        lock_all_guides},
+    {"show-all-guides",           N_("Show All Guides"),                       SECTION, N_("Toggle visibility of all guides in the document"),                      "show-guides",  show_all_guides,      are_guides_visible,      N_("Hide All Guides")},
+    {"delete-all-guides",         N_("Delete All Guides"),                     SECTION, N_("Delete all the guides in the document"),                                "guide",        delete_all_guides},
+    {"fit-canvas-to-drawing",     N_("Fit Page to Drawing"),                   SECTION, N_("Fit the page to the drawing"),                                          "pages-resize", fit_canvas_drawing},
+    {"clip-to-page",              N_("Clip to Page"),                          SECTION, N_("Toggle between clipped to page and complete rendering"),                "page",         toggle_clip_to_page,  is_clip_to_page_active,  N_("Unclip to Page")},
+    {"show-grids",                N_("Show Grids"),                            SECTION, N_("Toggle the visibility of grids"),                                       "show-grid",    show_grids,           are_grids_visible,       N_("Hide Grids")},
     // clang-format on
-};
+});
 
 } // namespace
 
-void add_actions_edit_document(LineaWindow* win) {
+void add_actions_edit_document(LineaApplication* app) {
     auto& registry = ActionRegistry::get();
     registry.registerGroup(editDocActionGroup);
-
-    for (auto& e : editDocTable) {
-        QAction* a;
-        if (e.state_fn) {
-            a = registry.createBoolAction(e.meta,
-                [fn = e.fn, win](bool) { doc_action(win, fn)(); },
-                [state_fn = e.state_fn, win]() { return doc_state_query(win, state_fn)(); });
-        } else {
-            a = registry.createAction(e.meta, [fn = e.fn, win]() { doc_action(win, fn)(); });
-        }
-        win->addAction(a);
-    }
+    registry.registerActions(app, editDocTable);
 }

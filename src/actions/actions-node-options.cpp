@@ -17,7 +17,7 @@ using namespace Inkscape;
 
 namespace {
 
-const ActionGroup nodeOptionsGroup = {"node-options", N_("Node Options"), ActionScope::Window, {}};
+const ActionGroup nodeOptionsGroup = {"node-options", N_("Node Options"), ActionScope::Window};
 
 struct NodeOptionEntry {
     BoolActionMeta meta;

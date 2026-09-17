@@ -17,6 +17,7 @@
 #include <giomm.h>
 
 #include "action-registry.h"
+#include "linea-application.h"
 #include "actions-helper.h"
 #include "actions/action-meta.h"
 #include "desktop.h"
@@ -60,22 +61,17 @@ void path_effect_parameter_next(LineaWindow* win) {
 
 const Glib::ustring SECTION = NC_("Action Section", "Edit");
 
-static auto edit_window_action_defs = std::to_array<WindowActionDef>({
+static auto edit_window_action_defs = std::to_array<ActionSpec<LineaWindow>>({
     // clang-format off
-    {"paste",                       N_("Paste"),                     SECTION, N_("Paste objects from clipboard to mouse point, or paste text"), paste},
-    {"paste-in-place",              N_("Paste in Place"),            SECTION, N_("Paste objects from clipboard to the original position of the copied objects"), paste_in_place},
-    {"paste-on-page",               N_("Paste on Page"),             SECTION, N_("Paste objects from clipboard into the same place on the selected page."), paste_on_page},
-    {"path-effect-parameter-next",  N_("Next Path Effect Parameter"), SECTION, N_("Show next editable path effect parameter"), path_effect_parameter_next}
+    {"paste",                       N_("Paste"),                     SECTION, N_("Paste objects from clipboard to mouse point, or paste text"), nullptr, paste},
+    {"paste-in-place",              N_("Paste in Place"),            SECTION, N_("Paste objects from clipboard to the original position of the copied objects"), nullptr, paste_in_place},
+    {"paste-on-page",               N_("Paste on Page"),             SECTION, N_("Paste objects from clipboard into the same place on the selected page."), nullptr, paste_on_page},
+    {"path-effect-parameter-next",  N_("Next Path Effect Parameter"), SECTION, N_("Show next editable path effect parameter"), nullptr, path_effect_parameter_next}
     // clang-format on
 });
 
 } // namespace
 
-void add_actions_edit_window(LineaWindow* win) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : edit_window_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, win]() { fn(win); });
-        win->addAction(a);
-    }
+void add_actions_edit_window(LineaApplication* app) {
+    ActionRegistry::get().registerActions(app, edit_window_action_defs);
 }

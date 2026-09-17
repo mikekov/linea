@@ -14,10 +14,10 @@
 #ifndef INK_ACTIONS_DOCUMENT_UNDO_H
 #define INK_ACTIONS_DOCUMENT_UNDO_H
 
-class LineaWindow;
+class LineaApplication;
 class SPDocument;
 
-void add_actions_undo_document(LineaWindow* window);
+void add_actions_undo_document(LineaApplication* app);
 
 void enable_undo_actions(SPDocument* document, bool undo, bool redo);
 

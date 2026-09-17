@@ -33,156 +33,134 @@
 
 namespace ActionsEdit {
 
-void object_to_pattern(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void object_to_pattern(Inkscape::Selection* selection) {
 
     //  Objects to Pattern
     selection->tile();
 }
 
-void pattern_to_object(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void pattern_to_object(Inkscape::Selection* selection) {
 
     //  Pattern to Objects
     selection->untile();
 }
 
-void object_to_marker(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void object_to_marker(Inkscape::Selection* selection) {
 
     //  Objects to Marker
     selection->toMarker();
 }
 
-void object_to_guides(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void object_to_guides(Inkscape::Selection* selection) {
 
     //  Objects to Guides
     selection->toGuides();
 }
 
-void cut(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void cut(Inkscape::Selection* selection) {
 
     // Cut
     selection->cut();
 }
 
-void copy(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void copy(Inkscape::Selection* selection) {
 
     //  Copy
     selection->copy();
 }
 
-void paste_style(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_style(Inkscape::Selection* selection) {
 
     //  Paste Style
     selection->pasteStyle();
 }
 
-void paste_size(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_size(Inkscape::Selection* selection) {
 
     //  Paste Size
     selection->pasteSize(true, true);
 }
 
-void paste_width(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_width(Inkscape::Selection* selection) {
 
     //  Paste Width
     selection->pasteSize(true, false);
 }
 
-void paste_height(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_height(Inkscape::Selection* selection) {
 
     //  Paste Height
     selection->pasteSize(false, true);
 }
 
-void paste_size_separately(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_size_separately(Inkscape::Selection* selection) {
 
     //  Paste Size Separately
     selection->pasteSizeSeparately(true, true);
 }
 
-void paste_width_separately(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_width_separately(Inkscape::Selection* selection) {
 
     //  Paste Width Separately
     selection->pasteSizeSeparately(true, false);
 }
 
-void paste_height_separately(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_height_separately(Inkscape::Selection* selection) {
 
     //  Paste Height Separately
     selection->pasteSizeSeparately(false, true);
 }
 
-void duplicate(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void duplicate(Inkscape::Selection* selection) {
 
     //  Duplicate
     selection->duplicate();
 }
 
-void duplicate_transform(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void duplicate_transform(Inkscape::Selection* selection) {
     selection->duplicate(true);
     selection->reapplyAffine();
-    Inkscape::DocumentUndo::done(app->get_active_document(), RC_("Undo", "Duplicate and Transform"),
+    Inkscape::DocumentUndo::done(selection->document(), RC_("Undo", "Duplicate and Transform"),
                                  INKSCAPE_ICON("edit-duplicate"));
 }
 
-void clone(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void clone(Inkscape::Selection* selection) {
 
     //  Create Clone
     selection->clone();
 }
 
-void clone_unlink(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void clone_unlink(Inkscape::Selection* selection) {
 
     //  Unlink Clone
     selection->unlink();
 }
 
-void clone_unlink_recursively(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void clone_unlink_recursively(Inkscape::Selection* selection) {
 
     //  Unlink Clones recursively
     selection->unlinkRecursive(false, true);
 }
 
-void clone_link(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void clone_link(Inkscape::Selection* selection) {
 
     //  Relink to Copied
     selection->relink();
 }
 
-void select_original(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void select_original(Inkscape::Selection* selection) {
 
     //  Select Original
     selection->cloneOriginal();
 }
 
-void clone_link_lpe(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void clone_link_lpe(Inkscape::Selection* selection) {
 
     //  Clone original path (LPE)
     selection->cloneOriginalPathLPE();
 }
 
-void edit_delete(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void edit_delete(Inkscape::Selection* selection) {
 
     // For text and node too special handling.
     if (auto desktop = selection->desktop()) {
@@ -203,76 +181,71 @@ void edit_delete(LineaApplication* app) {
     selection->deleteItems();
 }
 
-void edit_delete_selection(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void edit_delete_selection(Inkscape::Selection* selection) {
     selection->deleteItems();
 }
 
-void paste_path_effect(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void paste_path_effect(Inkscape::Selection* selection) {
 
     //  Paste Path Effect
     selection->pastePathEffect();
 }
 
-void remove_path_effect(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void remove_path_effect(Inkscape::Selection* selection) {
 
     //  Remove Path Effect
     selection->removeLPE();
 }
 
-void swap_fill_and_stroke(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void swap_fill_and_stroke(Inkscape::Selection* selection) {
 
     // Swap fill and Stroke
     selection->swapFillStroke();
 }
 
-void fit_canvas_to_selection(LineaApplication* app) {
-    auto selection = app->get_active_selection();
+void fit_canvas_to_selection(Inkscape::Selection* selection) {
 
     // Fit Page to Selection
     selection->fitCanvas(true);
 }
 
-void chameleon_fill(LineaApplication* app) {
-    app->get_active_selection()->chameleonFill();
+void chameleon_fill(Inkscape::Selection* selection) {
+    if (selection) selection->chameleonFill();
 }
 
 const Glib::ustring SECTION = NC_("Action Section", "Edit");
 
 // std::vector<std::vector<Glib::ustring>> raw_data_edit = {
-static auto edit_action_defs = std::to_array<ApplicationActionDef>({
+static auto edit_action_defs = std::to_array<ActionSpec<Inkscape::Selection>>({
     // clang-format off
-    {"object-to-pattern",        N_("Objects to Pattern"),        SECTION, N_("Convert selection to a rectangle with tiled pattern fill"), object_to_pattern},
-    {"pattern-to-object",        N_("Pattern to Objects"),        SECTION, N_("Extract objects from a tiled pattern fill"), pattern_to_object},
-    {"object-to-marker",         N_("Objects to Marker"),         SECTION, N_("Convert selection to a line marker"), object_to_marker},
-    {"object-to-guides",         N_("Objects to Guides"),         SECTION, N_("Convert selected objects to a collection of guidelines aligned with their edges"), object_to_guides},
-    {"cut",                      N_("Cut"),                       SECTION, N_("Cut selection to clipboard"), cut},
-    {"copy",                     N_("Copy"),                      SECTION, N_("Copy selection to clipboard"), copy},
-    {"paste-style",              N_("Paste Style"),               SECTION, N_("Apply the style of the copied object to selection"), paste_style},
-    {"paste-size",               N_("Paste Size"),                SECTION, N_("Scale selection to match the size of the copied object"), paste_size},
-    {"paste-width",              N_("Paste Width"),               SECTION, N_("Scale selection horizontally to match the width of the copied object"), paste_width},
-    {"paste-height",             N_("Paste Height"),              SECTION, N_("Scale selection vertically to match the height of the copied object"), paste_height},
-    {"paste-size-separately",    N_("Paste Size Separately"),     SECTION, N_("Scale each selected object to match the size of the copied object"), paste_size_separately},
-    {"paste-width-separately",   N_("Paste Width Separately"),    SECTION, N_("Scale each selected object horizontally to match the width of the copied object"), paste_width_separately},
-    {"paste-height-separately",  N_("Paste Height Separately"),   SECTION, N_("Scale each selected object vertically to match the height of the copied object"), paste_height_separately},
-    {"duplicate",                N_("Duplicate"),                 SECTION, N_("Duplicate Selected Objects"), duplicate},
-    {"duplicate-transform",      N_("Duplicate and Transform"),   SECTION, N_("Duplicate selected objects and reapply last transformation"), duplicate_transform},
-    {"clone",                    N_("Create Clone"),              SECTION, N_("Create a clone (a copy linked to the original) of selected object"), clone},
-    {"clone-unlink",             N_("Unlink Clone"),              SECTION, N_("Cut the selected clones' links to the originals, turning them into standalone objects"), clone_unlink},
-    {"clone-unlink-recursively", N_("Unlink Clones recursively"), SECTION, N_("Unlink all clones in the selection, even if they are in groups."), clone_unlink_recursively},
-    {"clone-link",               N_("Relink to Copied"),          SECTION, N_("Relink the selected clones to the object currently on the clipboard"), clone_link},
-    {"select-original",          N_("Select Original"),           SECTION, N_("Select the object to which the selected clone is linked"), select_original},
-    {"clone-link-lpe",           N_("Clone original path (LPE)"), SECTION, N_("Creates a new path, applies the Clone original LPE, and refers it to the selected path"), clone_link_lpe},
-    {"delete",                   N_("Delete"),                    SECTION, N_("Delete selected items, nodes or text."), edit_delete},
-    {"delete-selection",         N_("Delete Items"),              SECTION, N_("Delete selected items"), edit_delete_selection},
-    {"paste-path-effect",        N_("Paste Path Effect"),         SECTION, N_("Apply the path effect of the copied object to selection"), paste_path_effect},
-    {"remove-path-effect",       N_("Remove Path Effect"),        SECTION, N_("Remove any path effects from selected objects"), remove_path_effect},
-    {"swap-fill-and-stroke",     N_("Swap fill and stroke"),      SECTION, N_("Swap fill and stroke of an object"), swap_fill_and_stroke},
-    {"fit-canvas-to-selection",  N_("Fit Page to Selection"),     SECTION, N_("Fit the page to the current selection"), fit_canvas_to_selection},
-    {"chameleon-fill",           N_("Chameleon Fill"),            SECTION, N_("Set each object's color to the average of all colors inside that shape."), chameleon_fill}
+    {"object-to-pattern",        N_("Objects to Pattern"),        SECTION, N_("Convert selection to a rectangle with tiled pattern fill"), nullptr, object_to_pattern},
+    {"pattern-to-object",        N_("Pattern to Objects"),        SECTION, N_("Extract objects from a tiled pattern fill"), nullptr, pattern_to_object},
+    {"object-to-marker",         N_("Objects to Marker"),         SECTION, N_("Convert selection to a line marker"), nullptr, object_to_marker},
+    {"object-to-guides",         N_("Objects to Guides"),         SECTION, N_("Convert selected objects to a collection of guidelines aligned with their edges"), nullptr, object_to_guides},
+    {"cut",                      N_("Cut"),                       SECTION, N_("Cut selection to clipboard"), nullptr, cut},
+    {"copy",                     N_("Copy"),                      SECTION, N_("Copy selection to clipboard"), nullptr, copy},
+    {"paste-style",              N_("Paste Style"),               SECTION, N_("Apply the style of the copied object to selection"), nullptr, paste_style},
+    {"paste-size",               N_("Paste Size"),                SECTION, N_("Scale selection to match the size of the copied object"), nullptr, paste_size},
+    {"paste-width",              N_("Paste Width"),               SECTION, N_("Scale selection horizontally to match the width of the copied object"), nullptr, paste_width},
+    {"paste-height",             N_("Paste Height"),              SECTION, N_("Scale selection vertically to match the height of the copied object"), nullptr, paste_height},
+    {"paste-size-separately",    N_("Paste Size Separately"),     SECTION, N_("Scale each selected object to match the size of the copied object"), nullptr, paste_size_separately},
+    {"paste-width-separately",   N_("Paste Width Separately"),    SECTION, N_("Scale each selected object horizontally to match the width of the copied object"), nullptr, paste_width_separately},
+    {"paste-height-separately",  N_("Paste Height Separately"),   SECTION, N_("Scale each selected object vertically to match the height of the copied object"), nullptr, paste_height_separately},
+    {"duplicate",                N_("Duplicate"),                 SECTION, N_("Duplicate Selected Objects"), nullptr, duplicate},
+    {"duplicate-transform",      N_("Duplicate and Transform"),   SECTION, N_("Duplicate selected objects and reapply last transformation"), nullptr, duplicate_transform},
+    {"clone",                    N_("Create Clone"),              SECTION, N_("Create a clone (a copy linked to the original) of selected object"), nullptr, clone},
+    {"clone-unlink",             N_("Unlink Clone"),              SECTION, N_("Cut the selected clones' links to the originals, turning them into standalone objects"), nullptr, clone_unlink},
+    {"clone-unlink-recursively", N_("Unlink Clones recursively"), SECTION, N_("Unlink all clones in the selection, even if they are in groups."), nullptr, clone_unlink_recursively},
+    {"clone-link",               N_("Relink to Copied"),          SECTION, N_("Relink the selected clones to the object currently on the clipboard"), nullptr, clone_link},
+    {"select-original",          N_("Select Original"),           SECTION, N_("Select the object to which the selected clone is linked"), nullptr, select_original},
+    {"clone-link-lpe",           N_("Clone original path (LPE)"), SECTION, N_("Creates a new path, applies the Clone original LPE, and refers it to the selected path"), nullptr, clone_link_lpe},
+    {"delete",                   N_("Delete"),                    SECTION, N_("Delete selected items, nodes or text."), nullptr, edit_delete},
+    {"delete-selection",         N_("Delete Items"),              SECTION, N_("Delete selected items"), nullptr, edit_delete_selection},
+    {"paste-path-effect",        N_("Paste Path Effect"),         SECTION, N_("Apply the path effect of the copied object to selection"), nullptr, paste_path_effect},
+    {"remove-path-effect",       N_("Remove Path Effect"),        SECTION, N_("Remove any path effects from selected objects"), nullptr, remove_path_effect},
+    {"swap-fill-and-stroke",     N_("Swap fill and stroke"),      SECTION, N_("Swap fill and stroke of an object"), nullptr, swap_fill_and_stroke},
+    {"fit-canvas-to-selection",  N_("Fit Page to Selection"),     SECTION, N_("Fit the page to the current selection"), nullptr, fit_canvas_to_selection},
+    {"chameleon-fill",           N_("Chameleon Fill"),            SECTION, N_("Set each object's color to the average of all colors inside that shape."), nullptr, chameleon_fill}
     // clang-format on
 });
 
@@ -281,12 +254,7 @@ static auto edit_action_defs = std::to_array<ApplicationActionDef>({
 using namespace ActionsEdit;
 
 void add_actions_edit(LineaApplication* app) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : edit_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, app]() { fn(app); });
-        app->get_active_window()->addAction(a);
-    }
+    ActionRegistry::get().registerActions(app, edit_action_defs);
 #if 0
     auto* gapp = app->gio_app();
 

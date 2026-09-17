@@ -15,6 +15,7 @@
 #include "actions-view-window.h"
 #include "action-meta.h"
 #include "action-registry.h"
+#include "linea-application.h"
 
 #include <array>
 #include <glibmm/i18n.h>
@@ -94,23 +95,15 @@ void add_actions_view_window(LineaWindow* win)
 
 Glib::ustring const SECTION = NC_("Action Section", "View");
 
-const auto tabActions =  std::to_array<WindowActionDef>({
+const auto tabActions = std::to_array<ActionSpec<LineaWindow>>({
     // clang-format off
-    {"tab-next",     N_("Next Tab"),     SECTION, N_("Switch to the next document tab"),     tab_next},
-    {"tab-previous", N_("Previous Tab"), SECTION, N_("Switch to the previous document tab"), tab_previous}
+    {"tab-next",     N_("Next Tab"),     SECTION, N_("Switch to the next document tab"), nullptr, tab_next},
+    {"tab-previous", N_("Previous Tab"), SECTION, N_("Switch to the previous document tab"), nullptr, tab_previous}
     // clang-format on
 });
 
 } // namespace
 
-void add_actions_view_window(LineaWindow* wnd) {
-    if (!wnd) return;
-
-    auto& registry = ActionRegistry::get();
-
-    for (const auto& m : tabActions) {
-        auto action = registry.createAction(m, [cb = m.callback, wnd] { cb(wnd); });
-        wnd->addAction(action);
-    }
-
+void add_actions_view_window(LineaApplication* app) {
+    ActionRegistry::get().registerActions(app, tabActions);
 }

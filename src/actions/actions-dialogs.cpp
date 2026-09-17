@@ -20,6 +20,7 @@
 
 #include "action-meta.h"
 #include "action-registry.h"
+#include "linea-application.h"
 #include "linea-window.h"
 #include "qt/ui/about-widget.h"
 #include "qt/ui/filter/filter-editor.h"
@@ -178,11 +179,6 @@ void add_actions_dialogs(LineaWindow *win)
 
 const Glib::ustring SECTION = NC_("Action Section", "Dialog");
 
-struct DialogActionEntry : public ActionMeta2 {
-    const char* icon_name;
-    void (*fn)(LineaWindow*);
-};
-
 static QPointer<QDialog> filter_editor_dialog;
 
 static void open_filter_gallery(LineaWindow* /*win*/) {}
@@ -231,7 +227,7 @@ static void show_about(LineaWindow* window) {
     about_widget->move(center - QPoint(about_widget->width() / 2, about_widget->height() / 2));
 }
 
-static auto dialog_entries = std::to_array<DialogActionEntry>({
+static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
     // clang-format off
     {"dialog-open-filter-gallery", N_("Open Filter Gallery"), SECTION,
      N_("Show and apply available filters"), "color-filters",
@@ -248,30 +244,12 @@ static auto dialog_entries = std::to_array<DialogActionEntry>({
     {"toggle-panel-docking", N_("Toggle all Dialogs"), SECTION,
      N_("Dock or collapse all dialogs"), "panel-left",
      [](LineaWindow* win) { toggle_dialogs(win); }},
+    {"about-linea", N_("About Linea"), ABOUT_SECTION,
+     N_("Show information about Linea"), nullptr, show_about},
     // clang-format on
 });
 
-static auto about_entries = std::to_array<WindowActionDef>({
-    {"about-linea", N_("About Linea"), ABOUT_SECTION, N_("Show information about Linea"), show_about},
-});
-
-void add_actions_dialogs(LineaWindow* win) {
+void add_actions_dialogs(LineaApplication* app) {
     auto& registry = ActionRegistry::get();
-
-    for (auto& e : dialog_entries) {
-        auto action = registry.createAction(e, [fn = e.fn, win]() { fn(win); });
-        if (e.icon_name) {
-            action->setIcon(QIcon(QString(":/icons/%1").arg(e.icon_name)));
-        }
-        win->addAction(action);
-    }
-
-    for (const auto& entry : about_entries) {
-        auto action = registry.createAction(entry, [callback = entry.callback, win] { callback(win); });
-        win->addAction(action);
-    }
-}
-
-void add_actions_dialogs(InkscapeApplication* /*app*/) {
-    // No app-scope dialog actions yet.
+    registry.registerActions(app, dialog_entries);
 }

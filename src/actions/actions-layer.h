@@ -12,8 +12,8 @@
 #ifndef INK_ACTIONS_LAYER_H
 #define INK_ACTIONS_LAYER_H
 
-class LineaWindow;
+class LineaApplication;
 
-void add_actions_layer(LineaWindow* win);
+void add_actions_layer(LineaApplication* app);
 
 #endif // INK_ACTIONS_LAYER_H

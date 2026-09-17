@@ -146,40 +146,35 @@ void document_close(LineaWindow* win) {
 
 const Glib::ustring SECTION = NC_("Action Section", "Window-File");
 
-static auto file_window_action_defs = std::to_array<WindowActionDef>({
+static auto file_window_action_defs = std::to_array<ActionSpec<LineaWindow>>({
     // clang-format off
-    {"document-new",              N_("New"),               SECTION,   N_("Create new document from the default template"), document_new, "document-new"},
-    {"document-dialog-templates", N_("New from Template"), SECTION,   N_("Create new project from template"), document_dialog_templates},
-    {"document-open",             N_("Open…"),             SECTION,   N_("Open an existing document"), document_open, "document-open"},
-    {"document-revert",           N_("Revert"),            SECTION,   N_("Revert to the last saved version of document (changes will be lost)"), document_revert, "document-revert"},
-    {"document-save",             N_("Save"),              SECTION,   N_("Save document"), document_save, "document-save"},
-    {"document-save-as",          N_("Save As…"),          SECTION,   N_("Save document under a new name"), document_save_as, "document-save-as"},
-    {"document-save-copy",        N_("Save a Copy"),       SECTION,   N_("Save a copy of the document under a new name"), document_save_copy},
-    {"document-save-template",    N_("Save Template"),     SECTION,   N_("Save a copy of the document as template"), document_save_template},
-    {"document-import",           N_("Import…"),            SECTION,   N_("Import a bitmap or SVG image into this document"), document_import, "document-import"},
-    {"document-print",            N_("Print"),             SECTION,   N_("Print document"), document_print, "document-print"},
-    {"document-cleanup",          N_("Clean Up Document"), SECTION,   N_("Remove unused definitions (such as gradients or clipping paths) from the document"), document_cleanup, "document-cleanup"},
-    {"document-close",            N_("Close"),             SECTION,   N_("Close document (unless last document)"), document_close},
+    {"document-new",              N_("New"),               SECTION,   N_("Create new document from the default template"), "document-new", document_new},
+    {"document-dialog-templates", N_("New from Template"), SECTION,   N_("Create new project from template"), nullptr, document_dialog_templates},
+    {"document-open",             N_("Open…"),             SECTION,   N_("Open an existing document"), "document-open", document_open},
+    {"document-revert",           N_("Revert"),            SECTION,   N_("Revert to the last saved version of document (changes will be lost)"), "document-revert", document_revert},
+    {"document-save",             N_("Save"),              SECTION,   N_("Save document"), "document-save", document_save},
+    {"document-save-as",          N_("Save As…"),          SECTION,   N_("Save document under a new name"), "document-save-as", document_save_as},
+    {"document-save-copy",        N_("Save a Copy"),       SECTION,   N_("Save a copy of the document under a new name"), nullptr, document_save_copy},
+    {"document-save-template",    N_("Save Template"),     SECTION,   N_("Save a copy of the document as template"), nullptr, document_save_template},
+    {"document-import",           N_("Import…"),            SECTION,   N_("Import a bitmap or SVG image into this document"), "document-import", document_import},
+    {"document-print",            N_("Print"),             SECTION,   N_("Print document"), "document-print", document_print},
+    {"document-cleanup",          N_("Clean Up Document"), SECTION,   N_("Remove unused definitions (such as gradients or clipping paths) from the document"), "document-cleanup", document_cleanup},
+    {"document-close",            N_("Close"),             SECTION,   N_("Close document (unless last document)"), nullptr, document_close},
 
-    {"document-new-from-template-1", N_("New from Template 1"), SECTION, N_("Create new document from template 1"), [](LineaWindow* wnd){document_new_from_template(wnd, 1);}},
-    {"document-new-from-template-2", N_("New from template 2"), SECTION, N_("Create new document from template 2"), [](LineaWindow* wnd){document_new_from_template(wnd, 2);}},
-    {"document-new-from-template-3", N_("New from template 3"), SECTION, N_("Create new document from template 3"), [](LineaWindow* wnd){document_new_from_template(wnd, 3);}},
-    {"document-new-from-template-4", N_("New from template 4"), SECTION, N_("Create new document from template 4"), [](LineaWindow* wnd){document_new_from_template(wnd, 4);}},
-    {"document-new-from-template-5", N_("New from template 5"), SECTION, N_("Create new document from template 5"), [](LineaWindow* wnd){document_new_from_template(wnd, 5);}},
-    {"document-new-from-template-6", N_("New from template 6"), SECTION, N_("Create new document from template 6"), [](LineaWindow* wnd){document_new_from_template(wnd, 6);}},
-    {"document-new-from-template-7", N_("New from template 7"), SECTION, N_("Create new document from template 7"), [](LineaWindow* wnd){document_new_from_template(wnd, 7);}},
-    {"document-new-from-template-8", N_("New from template 8"), SECTION, N_("Create new document from template 8"), [](LineaWindow* wnd){document_new_from_template(wnd, 8);}},
-    {"document-new-from-template-9", N_("New from template 9"), SECTION, N_("Create new document from template 9"), [](LineaWindow* wnd){document_new_from_template(wnd, 9);}},
+    {"document-new-from-template-1", N_("New from Template 1"), SECTION, N_("Create new document from template 1"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 1);}},
+    {"document-new-from-template-2", N_("New from template 2"), SECTION, N_("Create new document from template 2"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 2);}},
+    {"document-new-from-template-3", N_("New from template 3"), SECTION, N_("Create new document from template 3"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 3);}},
+    {"document-new-from-template-4", N_("New from template 4"), SECTION, N_("Create new document from template 4"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 4);}},
+    {"document-new-from-template-5", N_("New from template 5"), SECTION, N_("Create new document from template 5"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 5);}},
+    {"document-new-from-template-6", N_("New from template 6"), SECTION, N_("Create new document from template 6"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 6);}},
+    {"document-new-from-template-7", N_("New from template 7"), SECTION, N_("Create new document from template 7"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 7);}},
+    {"document-new-from-template-8", N_("New from template 8"), SECTION, N_("Create new document from template 8"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 8);}},
+    {"document-new-from-template-9", N_("New from template 9"), SECTION, N_("Create new document from template 9"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 9);}},
     // clang-format on
 });
 
-void add_actions_file_window(LineaWindow* win) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : file_window_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, win]() { fn(win); });
-        win->addAction(a);
-    }
+void add_actions_file_window(LineaApplication* app) {
+    ActionRegistry::get().registerActions(app, file_window_action_defs);
 #if 0
     // clang-format off
     win->add_action( "document-new",                sigc::bind(sigc::ptr_fun(&document_new),               win));

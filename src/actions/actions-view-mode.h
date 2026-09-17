@@ -12,9 +12,10 @@
 #ifndef INK_ACTIONS_VIEW_MODE_H
 #define INK_ACTIONS_VIEW_MODE_H
 
+class LineaApplication;
 class LineaWindow;
 
-void add_actions_view_mode(LineaWindow* wnd);
+void add_actions_view_mode(LineaApplication* app);
 void view_set_gui(LineaWindow* win);
 
 #endif // INK_ACTIONS_VIEW_MODE_H

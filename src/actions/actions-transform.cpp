@@ -87,39 +87,37 @@ transform_grow_screen(const Glib::VariantBase& value, LineaWindow *win)
     desktop->getSelection()->scaleAnchored(scale / desktop->current_zoom());
 }
 
-void transform_rotate(LineaApplication* app, double angle) {
+void transform_rotate(Inkscape::Selection* selection, double angle) {
     // auto angle = (Glib::VariantBase::cast_dynamic<Glib::Variant<double>>(value)).get();
 
-    if (auto doc = app->get_active_document()) {
+    if (auto doc = selection->document()) {
         angle *= doc->yaxisdir();
     }
-    app->get_active_selection()->rotateAnchored(angle);
+    selection->rotateAnchored(angle);
 }
 
-void transform_rotate_right(LineaApplication* app) {
-    transform_rotate(app, 90.0);
+void transform_rotate_right(Inkscape::Selection* selection) {
+    transform_rotate(selection, 90.0);
 }
 
-void transform_rotate_left(LineaApplication* app) {
-    transform_rotate(app, -90.0);
+void transform_rotate_left(Inkscape::Selection* selection) {
+    transform_rotate(selection, -90.0);
 }
 
 
-void
-transform_rotate_step(double angle, LineaApplication* app)
-{
+void transform_rotate_step(double angle, Inkscape::Selection* selection) {
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
 
     double snaps = prefs->getDoubleLimited("/options/rotationsnapsperpi/value", 12.0, 0.1, 1800.0);
 
-    if (auto doc = app->get_active_document()) {
+    if (auto doc = selection->document()) {
         angle *= doc->yaxisdir();
     }
-    app->get_active_selection()->rotateAnchored(angle / snaps);
+    selection->rotateAnchored(angle / snaps);
 }
 
-void transform_rotate_step_cw (LineaApplication* app) { transform_rotate_step(180.0, app); }
-void transform_rotate_step_ccw(LineaApplication* app) { transform_rotate_step(-180.0, app); }
+void transform_rotate_step_cw (Inkscape::Selection* selection) { transform_rotate_step(180.0, selection); }
+void transform_rotate_step_ccw(Inkscape::Selection* selection) { transform_rotate_step(-180.0, selection); }
 
 void
 transform_rotate_screen(const Glib::VariantBase& value, LineaWindow *win)
@@ -233,20 +231,15 @@ add_actions_transform(LineaWindow* win)
 }
 #endif
 
-static auto transform_action_defs = std::to_array<ApplicationActionDef>({
+static auto transform_action_defs = std::to_array<ActionSpec<Inkscape::Selection>>({
     // clang-format off
-    { "transform-rotate-right", N_("Rotate 90°"),        SECTION, N_("Rotate selection 90° clockwise"),      transform_rotate_right },
-    { "transform-rotate-left",  N_("Rotate 90° CCW"),    SECTION, N_("Rotate selection 90° counter-clockwise"), transform_rotate_left },
-    { "transform-rotate-step-cw",  N_("Rotate one step CW"),  SECTION, N_("Rotate selection one step clockwise"), transform_rotate_step_cw },
-    { "transform-rotate-step-ccw", N_("Rotate one step CCW"), SECTION, N_("Rotate selection one step counter-clockwise"), transform_rotate_step_ccw },
+    { "transform-rotate-right",    N_("Rotate 90°"),            SECTION, N_("Rotate selection 90° clockwise"),               nullptr, transform_rotate_right },
+    { "transform-rotate-left",     N_("Rotate 90° CCW"),        SECTION, N_("Rotate selection 90° counter-clockwise"),       nullptr, transform_rotate_left },
+    { "transform-rotate-step-cw",  N_("Rotate one step CW"),    SECTION, N_("Rotate selection one step clockwise"),          nullptr, transform_rotate_step_cw },
+    { "transform-rotate-step-ccw", N_("Rotate one step CCW"),   SECTION, N_("Rotate selection one step counter-clockwise"),  nullptr, transform_rotate_step_ccw },
     // clang-format on
 });
 
 void add_actions_transform(LineaApplication* app) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : transform_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, app]() { fn(app); });
-        app->get_active_window()->addAction(a);
-    }
+    ActionRegistry::get().registerActions(app, transform_action_defs);
 }

@@ -61,7 +61,7 @@ enum class ObjectAlignTarget {
 };
 
 void
-object_align(QString const &value, LineaApplication *app)
+object_align(QString const &value, Inkscape::Selection *selection)
 {
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
     Glib::ustring s = value.toStdString();
@@ -125,12 +125,10 @@ object_align(QString const &value, LineaApplication *app)
     }
     // clang-format on
 
-    auto selection = app->get_active_selection();
-    auto document  = app->get_active_document();
-    if (!selection || !document) {
+    auto document  = selection->document();
+    if (!document) {
         return;
     }
-    selection->setDocument(document);
 
     // We force unselect operand in bool LPE. TODO: See if we can use "selected" from below.
     auto list = selection->items();
@@ -246,16 +244,14 @@ object_align(QString const &value, LineaApplication *app)
 }
 
 void
-object_distribute(QString const &value, LineaApplication *app)
+object_distribute(QString const &value, Inkscape::Selection *selection)
 {
     Glib::ustring token = value.toStdString();
 
-    auto selection = app->get_active_selection();
-    auto document  = app->get_active_document();
-    if (!selection || !document) {
+    auto document  = selection->document();
+    if (!document) {
         return;
     }
-    selection->setDocument(document);
 
     if (std::ranges::distance(selection->items()) < 2) {
         return;
@@ -384,7 +380,7 @@ public:
 };
 
 void
-object_distribute_text(QString const &value, LineaApplication *app)
+object_distribute_text(QString const &value, Inkscape::Selection *selection)
 {
     Glib::ustring token = value.toStdString();
 
@@ -393,12 +389,10 @@ object_distribute_text(QString const &value, LineaApplication *app)
         orientation = Geom::Dim2::Y;
     }
 
-    auto selection = app->get_active_selection();
-    auto document  = app->get_active_document();
-    if (!selection || !document) {
+    auto document  = selection->document();
+    if (!document) {
         return;
     }
-    selection->setDocument(document);
 
     if (selection->size() < 2) {
         return;
@@ -442,7 +436,7 @@ object_distribute_text(QString const &value, LineaApplication *app)
 }
 
 void
-object_align_text(QString const &value, LineaApplication *app)
+object_align_text(QString const &value, Inkscape::Selection *selection)
 {
     Glib::ustring s = value.toStdString();
     std::vector<Glib::ustring> tokens = Glib::Regex::split_simple(" ", s);
@@ -476,12 +470,10 @@ object_align_text(QString const &value, LineaApplication *app)
         }
     }
 
-    auto selection = app->get_active_selection();
-    auto document  = app->get_active_document();
-    if (!selection || !document || selection->items().empty()) {
+    auto document  = selection->document();
+    if (!document || selection->items().empty()) {
         return;
     }
-    selection->setDocument(document);
 
     // Find alignment rectangle. This can come from:
     // - The bounding box of an object
@@ -667,16 +659,14 @@ void randomize(Inkscape::Selection* selection)
 
 
 void
-object_rearrange(QString const &value, LineaApplication *app)
+object_rearrange(QString const &value, Inkscape::Selection *selection)
 {
     Glib::ustring token = value.toStdString();
 
-    auto selection = app->get_active_selection();
-    auto document = app->get_active_document();
-    if (!selection || !document) {
+    auto document = selection->document();
+    if (!document) {
         return;
     }
-    selection->setDocument(document);
 
     auto items = selection->items_vector();
     if (items.size() < 2) {
@@ -707,14 +697,12 @@ object_rearrange(QString const &value, LineaApplication *app)
 
 
 void
-object_remove_overlaps(QString const &value, LineaApplication *app)
+object_remove_overlaps(QString const &value, Inkscape::Selection *selection)
 {
-    auto selection = app->get_active_selection();
-    auto document  = app->get_active_document();
-    if (!selection || !document) {
+    auto document  = selection->document();
+    if (!document) {
         return;
     }
-    selection->setDocument(document);
 
     auto items = selection->items_vector();
     if (items.size() < 2) {
@@ -745,39 +733,39 @@ object_remove_overlaps(QString const &value, LineaApplication *app)
 
 const Glib::ustring SECTION = NC_("Action Section", "Object");
 
-static auto object_align_action_defs = std::to_array<ApplicationActionDef>({
+static auto object_align_action_defs = std::to_array<ActionSpec<Inkscape::Selection>>({
     // clang-format off
-    {"object-align-left-pref",                 N_("Align to left edge"),          SECTION, N_("Align selection horizontally to left edge"),                 [](LineaApplication* app){ object_align(QStringLiteral("left pref"), app); }},
-    {"object-align-hcenter-pref",              N_("Align to horizontal center"),  SECTION, N_("Align selection horizontally to the center"),                 [](LineaApplication* app){ object_align(QStringLiteral("hcenter pref"), app); }},
-    {"object-align-right-pref",                N_("Align to right edge"),         SECTION, N_("Align selection horizontally to right edge"),                 [](LineaApplication* app){ object_align(QStringLiteral("right pref"), app); }},
-    {"object-align-top-pref",                  N_("Align to top edge"),            SECTION, N_("Align selection vertically to top edge"),                   [](LineaApplication* app){ object_align(QStringLiteral("top pref"), app); }},
-    {"object-align-bottom-pref",               N_("Align to bottom edge"),        SECTION, N_("Align selection vertically to bottom edge"),                 [](LineaApplication* app){ object_align(QStringLiteral("bottom pref"), app); }},
-    {"object-align-vcenter-pref",              N_("Align to vertical center"),    SECTION, N_("Align selection vertically to the center"),                 [](LineaApplication* app){ object_align(QStringLiteral("vcenter pref"), app); }},
-    {"object-align-hcenter-vcenter-pref",      N_("Align to center"),             SECTION, N_("Align selection to the center"),                          [](LineaApplication* app){ object_align(QStringLiteral("hcenter vcenter pref"), app); }},
+    {"object-align-left-pref",                 N_("Align to left edge"),          SECTION, N_("Align selection horizontally to left edge"),                 nullptr, [](auto selection){ object_align(QStringLiteral("left pref"), selection); }},
+    {"object-align-hcenter-pref",              N_("Align to horizontal center"),  SECTION, N_("Align selection horizontally to the center"),                 nullptr, [](auto selection){ object_align(QStringLiteral("hcenter pref"), selection); }},
+    {"object-align-right-pref",                N_("Align to right edge"),         SECTION, N_("Align selection horizontally to right edge"),                 nullptr, [](auto selection){ object_align(QStringLiteral("right pref"), selection); }},
+    {"object-align-top-pref",                  N_("Align to top edge"),            SECTION, N_("Align selection vertically to top edge"),                   nullptr, [](auto selection){ object_align(QStringLiteral("top pref"), selection); }},
+    {"object-align-bottom-pref",               N_("Align to bottom edge"),        SECTION, N_("Align selection vertically to bottom edge"),                 nullptr, [](auto selection){ object_align(QStringLiteral("bottom pref"), selection); }},
+    {"object-align-vcenter-pref",              N_("Align to vertical center"),    SECTION, N_("Align selection vertically to the center"),                 nullptr, [](auto selection){ object_align(QStringLiteral("vcenter pref"), selection); }},
+    {"object-align-hcenter-vcenter-pref",      N_("Align to center"),             SECTION, N_("Align selection to the center"),                          nullptr, [](auto selection){ object_align(QStringLiteral("hcenter vcenter pref"), selection); }},
 
-    {"object-align-text-horizontal-pref",      N_("Align text anchors horizontally"), SECTION, N_("Align selected text anchors horizontally"),             [](LineaApplication* app){ object_align_text(QStringLiteral("horizontal pref"), app); }},
-    {"object-align-text-vertical-pref",        N_("Align text anchors vertically"), SECTION, N_("Align selected text anchors vertically"),                   [](LineaApplication* app){ object_align_text(QStringLiteral("vertical pref"), app); }},
+    {"object-align-text-horizontal-pref",      N_("Align text anchors horizontally"), SECTION, N_("Align selected text anchors horizontally"),             nullptr, [](auto selection){ object_align_text(QStringLiteral("horizontal pref"), selection); }},
+    {"object-align-text-vertical-pref",        N_("Align text anchors vertically"), SECTION, N_("Align selected text anchors vertically"),                   nullptr, [](auto selection){ object_align_text(QStringLiteral("vertical pref"), selection); }},
 
-    {"object-distribute-hgap",                 N_("Even horizontal gaps"),        SECTION, N_("Distribute horizontally with even horizontal gaps"),          [](LineaApplication* app){ object_distribute(QStringLiteral("hgap"), app); }},
-    {"object-distribute-left",                 N_("Even left edges"),             SECTION, N_("Distribute horizontally with even spacing between left edges"), [](LineaApplication* app){ object_distribute(QStringLiteral("left"), app); }},
-    {"object-distribute-hcenter",                N_("Even horizontal centers"),     SECTION, N_("Distribute horizontally with even spacing between centers"),  [](LineaApplication* app){ object_distribute(QStringLiteral("hcenter"), app); }},
-    {"object-distribute-right",                N_("Even right edges"),            SECTION, N_("Distribute horizontally with even spacing between right edges"), [](LineaApplication* app){ object_distribute(QStringLiteral("right"), app); }},
-    {"object-distribute-vgap",                 N_("Even vertical gaps"),          SECTION, N_("Distribute vertically with even vertical gaps"),              [](LineaApplication* app){ object_distribute(QStringLiteral("vgap"), app); }},
-    {"object-distribute-top",                  N_("Even top edges"),               SECTION, N_("Distribute vertically with even spacing between top edges"),   [](LineaApplication* app){ object_distribute(QStringLiteral("top"), app); }},
-    {"object-distribute-vcenter",              N_("Even vertical centers"),       SECTION, N_("Distribute vertically with even spacing between centers"),    [](LineaApplication* app){ object_distribute(QStringLiteral("vcenter"), app); }},
-    {"object-distribute-bottom",               N_("Even bottom edges"),            SECTION, N_("Distribute vertically with even spacing between bottom edges"), [](LineaApplication* app){ object_distribute(QStringLiteral("bottom"), app); }},
+    {"object-distribute-hgap",                 N_("Even horizontal gaps"),        SECTION, N_("Distribute horizontally with even horizontal gaps"),          nullptr, [](auto selection){ object_distribute(QStringLiteral("hgap"), selection); }},
+    {"object-distribute-left",                 N_("Even left edges"),             SECTION, N_("Distribute horizontally with even spacing between left edges"), nullptr, [](auto selection){ object_distribute(QStringLiteral("left"), selection); }},
+    {"object-distribute-hcenter",                N_("Even horizontal centers"),     SECTION, N_("Distribute horizontally with even spacing between centers"),  nullptr, [](auto selection){ object_distribute(QStringLiteral("hcenter"), selection); }},
+    {"object-distribute-right",                N_("Even right edges"),            SECTION, N_("Distribute horizontally with even spacing between right edges"), nullptr, [](auto selection){ object_distribute(QStringLiteral("right"), selection); }},
+    {"object-distribute-vgap",                 N_("Even vertical gaps"),          SECTION, N_("Distribute vertically with even vertical gaps"),              nullptr, [](auto selection){ object_distribute(QStringLiteral("vgap"), selection); }},
+    {"object-distribute-top",                  N_("Even top edges"),               SECTION, N_("Distribute vertically with even spacing between top edges"),   nullptr, [](auto selection){ object_distribute(QStringLiteral("top"), selection); }},
+    {"object-distribute-vcenter",              N_("Even vertical centers"),       SECTION, N_("Distribute vertically with even spacing between centers"),    nullptr, [](auto selection){ object_distribute(QStringLiteral("vcenter"), selection); }},
+    {"object-distribute-bottom",               N_("Even bottom edges"),            SECTION, N_("Distribute vertically with even spacing between bottom edges"), nullptr, [](auto selection){ object_distribute(QStringLiteral("bottom"), selection); }},
 
-    {"object-distribute-text-horizontal",      N_("Distribute text anchors horizontally"), SECTION, N_("Distribute text anchors horizontally"),             [](LineaApplication* app){ object_distribute_text(QStringLiteral("horizontal"), app); }},
-    {"object-distribute-text-vertical",        N_("Distribute text anchors vertically"), SECTION, N_("Distribute text anchors vertically"),                   [](LineaApplication* app){ object_distribute_text(QStringLiteral("vertical"), app); }},
+    {"object-distribute-text-horizontal",      N_("Distribute text anchors horizontally"), SECTION, N_("Distribute text anchors horizontally"),             nullptr, [](auto selection){ object_distribute_text(QStringLiteral("horizontal"), selection); }},
+    {"object-distribute-text-vertical",        N_("Distribute text anchors vertically"), SECTION, N_("Distribute text anchors vertically"),                   nullptr, [](auto selection){ object_distribute_text(QStringLiteral("vertical"), selection); }},
 
-    {"object-rearrange-graph",                 N_("Rearrange as graph"),          SECTION, N_("Nicely arrange selected connector network"),                  [](LineaApplication* app){ object_rearrange(QStringLiteral("graph"), app); }},
-    {"object-rearrange-exchange",              N_("Exchange in selection order"), SECTION, N_("Exchange positions of selected objects - selection order"), [](LineaApplication* app){ object_rearrange(QStringLiteral("exchange"), app); }},
-    {"object-rearrange-exchangez",             N_("Exchange in z-order"),         SECTION, N_("Exchange positions of selected objects - stacking order"),    [](LineaApplication* app){ object_rearrange(QStringLiteral("exchangez"), app); }},
-    {"object-rearrange-rotate",                N_("Exchange around center"),        SECTION, N_("Exchange positions of selected objects - rotate around center point"), [](LineaApplication* app){ object_rearrange(QStringLiteral("rotate"), app); }},
-    {"object-rearrange-randomize",             N_("Random exchange"),             SECTION, N_("Randomize centers in both dimensions"),                     [](LineaApplication* app){ object_rearrange(QStringLiteral("randomize"), app); }},
-    {"object-rearrange-unclump",               N_("Unclump"),                     SECTION, N_("Unclump objects: try to equalize edge-to-edge distances"),      [](LineaApplication* app){ object_rearrange(QStringLiteral("unclump"), app); }},
+    {"object-rearrange-graph",                 N_("Rearrange as graph"),          SECTION, N_("Nicely arrange selected connector network"),                  nullptr, [](auto selection){ object_rearrange(QStringLiteral("graph"), selection); }},
+    {"object-rearrange-exchange",              N_("Exchange in selection order"), SECTION, N_("Exchange positions of selected objects - selection order"), nullptr, [](auto selection){ object_rearrange(QStringLiteral("exchange"), selection); }},
+    {"object-rearrange-exchangez",             N_("Exchange in z-order"),         SECTION, N_("Exchange positions of selected objects - stacking order"),    nullptr, [](auto selection){ object_rearrange(QStringLiteral("exchangez"), selection); }},
+    {"object-rearrange-rotate",                N_("Exchange around center"),        SECTION, N_("Exchange positions of selected objects - rotate around center point"), nullptr, [](auto selection){ object_rearrange(QStringLiteral("rotate"), selection); }},
+    {"object-rearrange-randomize",             N_("Random exchange"),             SECTION, N_("Randomize centers in both dimensions"),                     nullptr, [](auto selection){ object_rearrange(QStringLiteral("randomize"), selection); }},
+    {"object-rearrange-unclump",               N_("Unclump"),                     SECTION, N_("Unclump objects: try to equalize edge-to-edge distances"),      nullptr, [](auto selection){ object_rearrange(QStringLiteral("unclump"), selection); }},
 
-    {"object-remove-overlaps",                 N_("Remove overlaps"),             SECTION, N_("Remove overlaps between objects with zero gaps"),            [](LineaApplication* app){ object_remove_overlaps(QStringLiteral("0,0"), app); }},
+    {"object-remove-overlaps",                 N_("Remove overlaps"),             SECTION, N_("Remove overlaps between objects with zero gaps"),            nullptr, [](auto selection){ object_remove_overlaps(QStringLiteral("0,0"), selection); }},
     // clang-format on
 });
 
@@ -786,15 +774,12 @@ static auto object_align_action_defs = std::to_array<ApplicationActionDef>({
 void add_actions_object_align(LineaApplication* app) {
     auto& registry = ActionRegistry::get();
 
-    for (auto& e : object_align_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, app]() { fn(app); });
-        app->get_active_window()->addAction(a);
-    }
+    registry.registerActions(app, object_align_action_defs);
 
     auto prefs = Inkscape::Preferences::get();
     bool on_canvas = prefs->getBool("/dialogs/align/oncanvas");
 
-    auto* on_canvas_action = registry.createBoolAction(
+    auto on_canvas_action = registry.createBoolAction(
         {"object-align-on-canvas", N_("Enable on-canvas alignment"), N_("Enable on-canvas alignment handles"), nullptr},
         [](bool checked) {
             Inkscape::Preferences::get()->setBool("/dialogs/align/oncanvas", checked);

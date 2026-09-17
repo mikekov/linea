@@ -25,9 +25,8 @@
 #include "desktop.h"
 #include "document-undo.h"
 #include "document.h"
-// #include "inkscape-application.h"
+#include "linea-application.h"
 #include "layer-manager.h"
-#include "linea-window.h"
 #include "message-stack.h"
 #include "object/sp-root.h"
 #include "selection.h"
@@ -46,8 +45,7 @@
 
 namespace {
 
-void xlayer_new(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
+void xlayer_new(SPDesktop* dt) {
     (void)dt;
 
     // New Layer
@@ -56,8 +54,7 @@ void xlayer_new(LineaWindow* win) {
     g_warning("layer_new not implemented");
 }
 
-void add_new_layer(LineaWindow* win, LayerRelativePosition pos) {
-    auto desktop = win->get_desktop();
+void add_new_layer(SPDesktop* desktop, LayerRelativePosition pos) {
     if (!desktop) return;
     auto document = desktop->getDocument();
     auto current_layer = desktop->layerManager().currentLayer();
@@ -69,49 +66,47 @@ void add_new_layer(LineaWindow* win, LayerRelativePosition pos) {
     desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("New layer created."));
 }
 
-void layer_new_above(LineaWindow* wnd, LayerRelativePosition pos) {
-    add_new_layer(wnd, Inkscape::LPOS_ABOVE);
+void layer_new_above(SPDesktop* desktop, LayerRelativePosition pos) {
+    add_new_layer(desktop, Inkscape::LPOS_ABOVE);
 }
 
-void layer_new(LineaWindow* wnd) {
-    layer_new_above(wnd, Inkscape::LPOS_ABOVE);
+void layer_new(SPDesktop* desktop) {
+    layer_new_above(desktop, Inkscape::LPOS_ABOVE);
 }
 
-void layer_new_below(LineaWindow* wnd, LayerRelativePosition pos) {
-    add_new_layer(wnd, Inkscape::LPOS_BELOW);
+void layer_new_below(SPDesktop* desktop, LayerRelativePosition pos) {
+    add_new_layer(desktop, Inkscape::LPOS_BELOW);
 }
 
-void layer_new_child(LineaWindow* wnd, LayerRelativePosition pos) {
-    add_new_layer(wnd, Inkscape::LPOS_CHILD);
+void layer_new_child(SPDesktop* desktop, LayerRelativePosition pos) {
+    add_new_layer(desktop, Inkscape::LPOS_CHILD);
 }
 
-void layer_new_above_action(LineaWindow* win) { layer_new_above(win, Inkscape::LPOS_ABOVE); }
-void layer_new_below_action(LineaWindow* win) { layer_new_below(win, Inkscape::LPOS_BELOW); }
-void layer_new_child_action(LineaWindow* win) { layer_new_child(win, Inkscape::LPOS_CHILD); }
+void layer_new_above_action(SPDesktop* desktop) { layer_new_above(desktop, Inkscape::LPOS_ABOVE); }
+void layer_new_below_action(SPDesktop* desktop) { layer_new_below(desktop, Inkscape::LPOS_BELOW); }
+void layer_new_child_action(SPDesktop* desktop) { layer_new_child(desktop, Inkscape::LPOS_CHILD); }
 
-void layer_duplicate(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_duplicate(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    if (!dt->layerManager().isRoot()) {
-        dt->getSelection()->duplicate(true, true); // This requires the selection to be a layer!
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Duplicate layer"),
+    if (!desktop->layerManager().isRoot()) {
+        desktop->getSelection()->duplicate(true, true); // This requires the selection to be a layer!
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Duplicate layer"),
                                      INKSCAPE_ICON("layer-duplicate"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Duplicated layer."));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Duplicated layer."));
 
     } else {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
     }
 }
 
-void layer_delete(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    auto root = dt->layerManager().currentRoot();
+void layer_delete(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto root = desktop->layerManager().currentRoot();
 
-    if (!dt->layerManager().isRoot()) {
-        dt->getSelection()->clear();
-        SPObject* old_layer = dt->layerManager().currentLayer();
+    if (!desktop->layerManager().isRoot()) {
+        desktop->getSelection()->clear();
+        SPObject* old_layer = desktop->layerManager().currentLayer();
         SPObject* old_parent = old_layer->parent;
         SPObject* old_parent_parent = (old_parent != nullptr) ? old_parent->parent : nullptr;
 
@@ -137,191 +132,177 @@ void layer_delete(LineaWindow* win) {
         old_layer->deleteObject();
 
         if (survivor) {
-            dt->layerManager().setCurrentLayer(survivor);
+            desktop->layerManager().setCurrentLayer(survivor);
         }
 
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Delete layer"), INKSCAPE_ICON("layer-delete"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Deleted layer."));
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Delete layer"), INKSCAPE_ICON("layer-delete"));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Deleted layer."));
 
     } else {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
     }
 }
 
-void layer_rename(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    (void)dt;
+void layer_rename(SPDesktop* desktop) {
+    if (!desktop) return;
+    (void)desktop;
 
     // Rename Layer
     // QT TODO: Inkscape::UI::Dialog::LayerPropertiesDialog::showRename(dt, dt->layerManager().currentLayer());
     g_warning("layer_rename not implemented");
 }
 
-void layer_hide_all(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    dt->layerManager().toggleHideAllLayers(true);
-    Inkscape::DocumentUndo::maybeDone(dt->getDocument(), "layer:hideall", RC_("Undo", "Hide all layers"), "");
+void layer_hide_all(SPDesktop* desktop) {
+    if (!desktop) return;
+    desktop->layerManager().toggleHideAllLayers(true);
+    Inkscape::DocumentUndo::maybeDone(desktop->getDocument(), "layer:hideall", RC_("Undo", "Hide all layers"), "");
 }
 
-void layer_unhide_all(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    dt->layerManager().toggleHideAllLayers(false);
-    Inkscape::DocumentUndo::maybeDone(dt->getDocument(), "layer:showall", RC_("Undo", "Show all layers"), "");
+void layer_unhide_all(SPDesktop* desktop) {
+    if (!desktop) return;
+    desktop->layerManager().toggleHideAllLayers(false);
+    Inkscape::DocumentUndo::maybeDone(desktop->getDocument(), "layer:showall", RC_("Undo", "Show all layers"), "");
 }
 
-void layer_hide_toggle(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    auto layer = dt->layerManager().currentLayer();
+void layer_hide_toggle(SPDesktop* desktop) {
+    auto layer = desktop->layerManager().currentLayer();
 
-    if (!layer || dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (!layer || desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
     } else {
         layer->setHidden(!layer->isHidden());
     }
 }
 
-void layer_hide_toggle_others(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    auto layer = dt->layerManager().currentLayer();
+void layer_hide_toggle_others(SPDesktop* desktop) {
+    auto layer = desktop->layerManager().currentLayer();
 
-    if (!layer || dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (!layer || desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
     } else {
-        dt->layerManager().toggleLayerSolo(layer); // Weird name!
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Hide other layers"), "");
+        desktop->layerManager().toggleLayerSolo(layer); // Weird name!
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Hide other layers"), "");
     }
 }
 
-void layer_lock_all(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    dt->layerManager().toggleLockAllLayers(true);
-    Inkscape::DocumentUndo::maybeDone(dt->getDocument(), "layer:lockall", RC_("Undo", "Lock all layers"), "");
+void layer_lock_all(SPDesktop* desktop) {
+    if (!desktop) return;
+    desktop->layerManager().toggleLockAllLayers(true);
+    Inkscape::DocumentUndo::maybeDone(desktop->getDocument(), "layer:lockall", RC_("Undo", "Lock all layers"), "");
 }
 
-void layer_unlock_all(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    dt->layerManager().toggleLockAllLayers(false);
-    Inkscape::DocumentUndo::maybeDone(dt->getDocument(), "layer:unlockall", RC_("Undo", "Unlock all layers"), "");
+void layer_unlock_all(SPDesktop* desktop) {
+    if (!desktop) return;
+    desktop->layerManager().toggleLockAllLayers(false);
+    Inkscape::DocumentUndo::maybeDone(desktop->getDocument(), "layer:unlockall", RC_("Undo", "Unlock all layers"), "");
 }
 
-void layer_lock_toggle(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    auto layer = dt->layerManager().currentLayer();
+void layer_lock_toggle(SPDesktop* desktop) {
+    auto layer = desktop->layerManager().currentLayer();
 
-    if (!layer || dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (!layer || desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
     } else {
         layer->setLocked(!layer->isLocked());
     }
 }
 
-void layer_lock_toggle_others(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    auto layer = dt->layerManager().currentLayer();
+void layer_lock_toggle_others(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto layer = desktop->layerManager().currentLayer();
 
-    if (!layer || dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (!layer || desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
     } else {
-        dt->layerManager().toggleLockOtherLayers(layer);
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Lock other layers"), "");
+        desktop->layerManager().toggleLockOtherLayers(layer);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Lock other layers"), "");
     }
 }
 
-void layer_previous(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_previous(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    SPObject* next = Inkscape::next_layer(dt->layerManager().currentRoot(), dt->layerManager().currentLayer());
+    SPObject* next = Inkscape::next_layer(desktop->layerManager().currentRoot(), desktop->layerManager().currentLayer());
     if (next) {
-        dt->layerManager().setCurrentLayer(next);
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Switch to next layer"),
+        desktop->layerManager().setCurrentLayer(next);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Switch to next layer"),
                                      INKSCAPE_ICON("layer-previous"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Switched to next layer."));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Switched to next layer."));
     } else {
-        dt->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot go past last layer."));
+        desktop->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot go past last layer."));
     }
 }
 
-void layer_next(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_next(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    SPObject* prev = Inkscape::previous_layer(dt->layerManager().currentRoot(), dt->layerManager().currentLayer());
+    SPObject* prev = Inkscape::previous_layer(desktop->layerManager().currentRoot(), desktop->layerManager().currentLayer());
     if (prev) {
-        dt->layerManager().setCurrentLayer(prev);
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Switch to previous layer"),
+        desktop->layerManager().setCurrentLayer(prev);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Switch to previous layer"),
                                      INKSCAPE_ICON("layer-next"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Switched to previous layer."));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, _("Switched to previous layer."));
     } else {
-        dt->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot go before first layer."));
+        desktop->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot go before first layer."));
     }
 }
 
-void selection_move_to_layer_above(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void selection_move_to_layer_above(SPDesktop* desktop) {
+    if (!desktop) return;
 
     // Layer Rise
-    dt->getSelection()->toNextLayer();
+    desktop->getSelection()->toNextLayer();
 }
 
-void selection_move_to_layer_below(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void selection_move_to_layer_below(SPDesktop* desktop) {
+    if (!desktop) return;
 
     // Layer Lower
-    dt->getSelection()->toPrevLayer();
+    desktop->getSelection()->toPrevLayer();
 }
 
-void selection_move_to_layer(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    (void)dt;
+void selection_move_to_layer(SPDesktop* desktop) {
+    if (!desktop) return;
+    (void)desktop;
 
     // Selection move to layer
     // QT TODO: Inkscape::UI::Dialog::LayerPropertiesDialog::showMove(dt, dt->layerManager().currentLayer());
     g_warning("selection_move_to_layer not implemented");
 }
 
-void layer_top(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_top(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    if (dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
         return;
     }
 
-    SPItem* layer = dt->layerManager().currentLayer();
+    SPItem* layer = desktop->layerManager().currentLayer();
     g_return_if_fail(layer != nullptr);
     SPObject* old_pos = layer->getNext();
     layer->raiseToTop();
 
     if (layer->getNext() != old_pos) {
         const char* message = g_strdup_printf(_("Raised layer <b>%s</b>."), layer->defaultLabel());
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Layer to top"), INKSCAPE_ICON("layer-top"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Layer to top"), INKSCAPE_ICON("layer-top"));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
         g_free((void*)message);
 
     } else {
-        dt->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
+        desktop->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
     }
 }
 
-void layer_raise(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_raise(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    if (dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
         return;
     }
 
-    SPItem* layer = dt->layerManager().currentLayer();
+    SPItem* layer = desktop->layerManager().currentLayer();
     g_return_if_fail(layer != nullptr);
 
     SPObject* old_pos = layer->getNext();
@@ -330,85 +311,82 @@ void layer_raise(LineaWindow* win) {
 
     if (layer->getNext() != old_pos) {
         const char* message = g_strdup_printf(_("Raised layer <b>%s</b>."), layer->defaultLabel());
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Raise layer"), INKSCAPE_ICON("layer-raise"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Raise layer"), INKSCAPE_ICON("layer-raise"));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
         g_free((void*)message);
 
     } else {
-        dt->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
+        desktop->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
     }
 }
 
-void layer_lower(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_lower(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    if (dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
         return;
     }
 
-    SPItem* layer = dt->layerManager().currentLayer();
+    SPItem* layer = desktop->layerManager().currentLayer();
     g_return_if_fail(layer != nullptr);
     SPObject* old_pos = layer->getNext();
     layer->lowerOne();
 
     if (layer->getNext() != old_pos) {
         const char* message = g_strdup_printf(_("Lowered layer <b>%s</b>."), layer->defaultLabel());
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Lower layer"), INKSCAPE_ICON("layer-lower"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Lower layer"), INKSCAPE_ICON("layer-lower"));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
         g_free((void*)message);
 
     } else {
-        dt->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
+        desktop->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
     }
 }
 
-void layer_bottom(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
+void layer_bottom(SPDesktop* desktop) {
+    if (!desktop) return;
 
-    if (dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
         return;
     }
 
-    SPItem* layer = dt->layerManager().currentLayer();
+    SPItem* layer = desktop->layerManager().currentLayer();
     g_return_if_fail(layer != nullptr);
     SPObject* old_pos = layer->getNext();
     layer->lowerToBottom();
 
     if (layer->getNext() != old_pos) {
         const char* message = g_strdup_printf(_("Lowered layer <b>%s</b>."), layer->defaultLabel());
-        Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Layer to bottom"), INKSCAPE_ICON("layer-bottom"));
-        dt->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
+        Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Layer to bottom"), INKSCAPE_ICON("layer-bottom"));
+        desktop->messageStack()->flash(Inkscape::NORMAL_MESSAGE, message);
         g_free((void*)message);
 
     } else {
-        dt->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
+        desktop->messageStack()->flash(Inkscape::WARNING_MESSAGE, _("Cannot move layer any further."));
     }
 }
 
-void layer_to_group(LineaWindow* win) {
-    SPDesktop* dt = win->get_desktop();
-    if (!dt) return;
-    auto layer = dt->layerManager().currentLayer();
+void layer_to_group(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto layer = desktop->layerManager().currentLayer();
 
-    if (!layer || dt->layerManager().isRoot()) {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
+    if (!layer || desktop->layerManager().isRoot()) {
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("No current layer."));
         return;
     }
 
     layer->setLayerMode(SPGroup::GROUP);
     layer->updateRepr(SP_OBJECT_WRITE_NO_CHILDREN | SP_OBJECT_WRITE_EXT);
-    dt->getSelection()->set(layer);
-    Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Layer to group"), INKSCAPE_ICON("dialog-objects"));
+    desktop->getSelection()->set(layer);
+    Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Layer to group"), INKSCAPE_ICON("dialog-objects"));
 }
 
-void layer_from_group(LineaWindow* win) {
-    auto dt = win->get_desktop();
-    if (!dt) return;
-    auto selection = dt->getSelection();
+void layer_from_group(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto selection = desktop->getSelection();
+    if (!selection) return;
 
     auto obj = selection->single();
     if (!obj) {
@@ -421,38 +399,36 @@ void layer_from_group(LineaWindow* win) {
             group->setLayerMode(SPGroup::LAYER);
             group->updateRepr(SP_OBJECT_WRITE_NO_CHILDREN | SP_OBJECT_WRITE_EXT);
             selection->set(group);
-            Inkscape::DocumentUndo::done(dt->getDocument(), RC_("Undo", "Group to layer"),
+            Inkscape::DocumentUndo::done(desktop->getDocument(), RC_("Undo", "Group to layer"),
                                          INKSCAPE_ICON("dialog-objects"));
         } else {
-            dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("Group already layer."));
+            desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("Group already layer."));
         }
     } else {
-        dt->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("Selection is not a group."));
+        desktop->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("Selection is not a group."));
     }
 }
 
 // Does not change XML.
-void group_enter(LineaWindow* win) {
-    auto dt = win->get_desktop();
-    if (!dt) return;
-    auto selection = dt->getSelection();
+void group_enter(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto selection = desktop->getSelection();
 
     auto obj = selection->single();
     if (is<SPGroup>(obj)) {
         // Only one item and it is a group!
-        dt->layerManager().setCurrentLayer(obj);
+        desktop->layerManager().setCurrentLayer(obj);
         selection->clear();
     }
 }
 
 // Does not change XML.
-void group_exit(LineaWindow* win) {
-    auto dt = win->get_desktop();
-    if (!dt) return;
-    auto selection = dt->getSelection();
+void group_exit(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto selection = desktop->getSelection();
 
-    auto parent = dt->layerManager().currentLayer()->parent;
-    dt->layerManager().setCurrentLayer(parent);
+    auto parent = desktop->layerManager().currentLayer()->parent;
+    desktop->layerManager().setCurrentLayer(parent);
 
     auto obj = selection->single();
     if (obj && is<SPGroup>(obj->parent)) {
@@ -468,53 +444,48 @@ void group_exit(LineaWindow* win) {
 const Glib::ustring SECTION_LAYER = NC_("Action Section", "Layer");
 const Glib::ustring SECTION_SELECT = NC_("Action Section", "Select");
 
-static auto layer_action_defs = std::to_array<WindowActionDef>({
+static auto layer_action_defs = std::to_array<ActionSpec<SPDesktop>>({
     // clang-format off
-    {"layer-new",                       N_("Add Layer"),                        SECTION_LAYER,     N_("Create a new layer"),                          layer_new, "layer-new"},
-    {"layer-new-above",                 N_("Add Layer Above"),                  SECTION_LAYER,     N_("Create a new layer above current"),            layer_new_above_action},
-    {"layer-new-below",                 N_("Add Layer Below"),                  SECTION_LAYER,     N_("Create a new layer below current"),            layer_new_below_action},
-    {"layer-new-child",                 N_("Add Layer as Child"),               SECTION_LAYER,     N_("Create a new layer as child of current"),      layer_new_child_action},
-    {"layer-duplicate",                 N_("Duplicate Current Layer"),          SECTION_LAYER,     N_("Duplicate the current layer"),                 layer_duplicate},
-    {"layer-delete",                    N_("Delete Current Layer"),             SECTION_LAYER,     N_("Delete the current layer"),                    layer_delete},
-    {"layer-rename",                    N_("Rename Layer"),                     SECTION_LAYER,     N_("Rename the current layer"),                    layer_rename},
+    {"layer-new",                       N_("Add Layer"),                        SECTION_LAYER,     N_("Create a new layer"),                          "layer-new", layer_new},
+    {"layer-new-above",                 N_("Add Layer Above"),                  SECTION_LAYER,     N_("Create a new layer above current"),            nullptr, layer_new_above_action},
+    {"layer-new-below",                 N_("Add Layer Below"),                  SECTION_LAYER,     N_("Create a new layer below current"),            nullptr, layer_new_below_action},
+    {"layer-new-child",                 N_("Add Layer as Child"),               SECTION_LAYER,     N_("Create a new layer as child of current"),      nullptr, layer_new_child_action},
+    {"layer-duplicate",                 N_("Duplicate Current Layer"),          SECTION_LAYER,     N_("Duplicate the current layer"),                 nullptr, layer_duplicate},
+    {"layer-delete",                    N_("Delete Current Layer"),             SECTION_LAYER,     N_("Delete the current layer"),                    nullptr, layer_delete},
+    {"layer-rename",                    N_("Rename Layer"),                     SECTION_LAYER,     N_("Rename the current layer"),                    nullptr, layer_rename},
 
-    {"layer-hide-toggle",               N_("Show/Hide Current Layer"),          SECTION_LAYER,     N_("Toggle visibility of current layer"),         layer_hide_toggle},
-    {"layer-hide-toggle-others",        N_("Hide/Show Other Layers"),           SECTION_LAYER,     N_("Toggle visibility of other layers"),          layer_hide_toggle_others},
-    {"layer-hide-all",                  N_("Hide All Layers"),                  SECTION_LAYER,     N_("Hide all layers"),                            layer_hide_all},
-    {"layer-unhide-all",                N_("Show All Layers"),                  SECTION_LAYER,     N_("Show all layers"),                            layer_unhide_all},
-    {"layer-lock-toggle",               N_("Lock/Unlock Current Layer"),        SECTION_LAYER,     N_("Toggle lock on current layer"),               layer_lock_toggle},
-    {"layer-lock-toggle-others",        N_("Lock/Unlock Other Layers"),         SECTION_LAYER,     N_("Toggle lock on other layers"),                layer_lock_toggle_others},
-    {"layer-lock-all",                  N_("Lock All Layers"),                  SECTION_LAYER,     N_("Lock all layers"),                            layer_lock_all},
-    {"layer-unlock-all",                N_("Unlock All Layers"),                SECTION_LAYER,     N_("Unlock all layers"),                          layer_unlock_all},
+    {"layer-hide-toggle",               N_("Show/Hide Current Layer"),          SECTION_LAYER,     N_("Toggle visibility of current layer"),         nullptr, layer_hide_toggle},
+    {"layer-hide-toggle-others",        N_("Hide/Show Other Layers"),           SECTION_LAYER,     N_("Toggle visibility of other layers"),          nullptr, layer_hide_toggle_others},
+    {"layer-hide-all",                  N_("Hide All Layers"),                  SECTION_LAYER,     N_("Hide all layers"),                            nullptr, layer_hide_all},
+    {"layer-unhide-all",                N_("Show All Layers"),                  SECTION_LAYER,     N_("Show all layers"),                            nullptr, layer_unhide_all},
+    {"layer-lock-toggle",               N_("Lock/Unlock Current Layer"),        SECTION_LAYER,     N_("Toggle lock on current layer"),               nullptr, layer_lock_toggle},
+    {"layer-lock-toggle-others",        N_("Lock/Unlock Other Layers"),         SECTION_LAYER,     N_("Toggle lock on other layers"),                nullptr, layer_lock_toggle_others},
+    {"layer-lock-all",                  N_("Lock All Layers"),                  SECTION_LAYER,     N_("Lock all layers"),                            nullptr, layer_lock_all},
+    {"layer-unlock-all",                N_("Unlock All Layers"),                SECTION_LAYER,     N_("Unlock all layers"),                          nullptr, layer_unlock_all},
 
-    {"layer-previous",                  N_("Switch to Layer Above"),            SECTION_LAYER,     N_("Switch to the layer above the current"),       layer_previous},
-    {"layer-next",                      N_("Switch to Layer Below"),            SECTION_LAYER,     N_("Switch to the layer below the current"),       layer_next},
+    {"layer-previous",                  N_("Switch to Layer Above"),            SECTION_LAYER,     N_("Switch to the layer above the current"),       nullptr, layer_previous},
+    {"layer-next",                      N_("Switch to Layer Below"),            SECTION_LAYER,     N_("Switch to the layer below the current"),       nullptr, layer_next},
 
-    {"selection-move-to-layer-above",   N_("Move Selection to Layer Above"),    SECTION_LAYER,     N_("Move selection to the layer above the current"), selection_move_to_layer_above},
-    {"selection-move-to-layer-below",   N_("Move Selection to Layer Below"),    SECTION_LAYER,     N_("Move selection to the layer below the current"), selection_move_to_layer_below},
-    {"selection-move-to-layer",         N_("Move Selection to Layer..."),       SECTION_LAYER,     N_("Move selection to layer"),                      selection_move_to_layer},
+    {"selection-move-to-layer-above",   N_("Move Selection to Layer Above"),    SECTION_LAYER,     N_("Move selection to the layer above the current"), nullptr, selection_move_to_layer_above},
+    {"selection-move-to-layer-below",   N_("Move Selection to Layer Below"),    SECTION_LAYER,     N_("Move selection to the layer below the current"), nullptr, selection_move_to_layer_below},
+    {"selection-move-to-layer",         N_("Move Selection to Layer..."),       SECTION_LAYER,     N_("Move selection to layer"),                      nullptr, selection_move_to_layer},
 
-    {"layer-top",                       N_("Layer to Top"),                     SECTION_LAYER,     N_("Raise the current layer to the top"),          layer_top},
-    {"layer-raise",                     N_("Raise Layer"),                      SECTION_LAYER,     N_("Raise the current layer"),                       layer_raise, "move-up"},
-    {"layer-lower",                     N_("Lower Layer"),                      SECTION_LAYER,     N_("Lower the current layer"),                       layer_lower, "move-down"},
-    {"layer-bottom",                    N_("Layer to Bottom"),                  SECTION_LAYER,     N_("Lower the current layer to the bottom"),       layer_bottom},
+    {"layer-top",                       N_("Layer to Top"),                     SECTION_LAYER,     N_("Raise the current layer to the top"),          nullptr, layer_top},
+    {"layer-raise",                     N_("Raise Layer"),                      SECTION_LAYER,     N_("Raise the current layer"),                       "move-up", layer_raise},
+    {"layer-lower",                     N_("Lower Layer"),                      SECTION_LAYER,     N_("Lower the current layer"),                       "move-down", layer_lower},
+    {"layer-bottom",                    N_("Layer to Bottom"),                  SECTION_LAYER,     N_("Lower the current layer to the bottom"),       nullptr, layer_bottom},
 
-    {"layer-to-group",                  N_("Layer to Group"),                   SECTION_LAYER,     N_("Convert the current layer to a group"),        layer_to_group},
-    {"layer-from-group",                N_("Layer from Group"),                 SECTION_LAYER,     N_("Convert the group to a layer"),                  layer_from_group},
+    {"layer-to-group",                  N_("Layer to Group"),                   SECTION_LAYER,     N_("Convert the current layer to a group"),        nullptr, layer_to_group},
+    {"layer-from-group",                N_("Layer from Group"),                 SECTION_LAYER,     N_("Convert the group to a layer"),                  nullptr, layer_from_group},
 
     //se use Layer technology even if they don't act on layers.
-    {"selection-group-enter",           N_("Enter Group"),                      SECTION_SELECT,    N_("Enter group"),                                   group_enter},
-    {"selection-group-exit",            N_("Exit Group"),                       SECTION_SELECT,    N_("Exit group"),                                    group_exit},
+    {"selection-group-enter",           N_("Enter Group"),                      SECTION_SELECT,    N_("Enter group"),                                   nullptr, group_enter},
+    {"selection-group-exit",            N_("Exit Group"),                       SECTION_SELECT,    N_("Exit group"),                                    nullptr, group_exit},
     // clang-format on
 });
 
-void add_actions_layer(LineaWindow* win) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : layer_action_defs) {
-        QAction* a = registry.createAction(e, [fn = e.callback, win]() { fn(win); });
-        win->addAction(a);
-    }
+void add_actions_layer(LineaApplication* app) {
+    ActionRegistry::get().registerActions(app, layer_action_defs);
 
 #if 0
     // clang-format off

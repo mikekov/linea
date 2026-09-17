@@ -53,16 +53,6 @@ const ActionGroup* ActionRegistry::findGroup(const char* id) const {
     return nullptr;
 }
 
-std::vector<ActionRegistry::Entry> ActionRegistry::allActionsBySection() const {
-    std::vector<Entry> result;
-    for (const auto group : _groups) {
-        for (const auto& def : group->actions) {
-            result.push_back({group, &def.meta});
-        }
-    }
-    return result;
-}
-
 QAction* ActionRegistry::action(const std::string& id) const {
     auto it = _actionMap.find(id);
     if (it == _actionMap.end()) {

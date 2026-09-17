@@ -425,7 +425,7 @@ void transition_to_simple_snapping() {
 namespace {
 
 const ActionGroup snapActionGroup = {
-    "snapping", N_("Snap"), ActionScope::Window, {}
+    "snapping", N_("Snap"), ActionScope::Window
 };
 
 struct SnapEntry {

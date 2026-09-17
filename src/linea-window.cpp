@@ -111,10 +111,10 @@ void LineaWindow::setupUI() {
 void LineaWindow::createActions() {
     add_actions_tools(this);
     add_actions_file(this);
-    add_actions_file_window(this);
-    add_actions_edit_window(this);
+    add_actions_file_window(_app);
+    add_actions_edit_window(_app);
     add_actions_effect(_app);
-    add_actions_select_window(this);
+    add_actions_select_window(_app);
     add_actions_text(_app);
     add_actions_edit(_app);
     add_actions_selection(_app);
@@ -123,20 +123,19 @@ void LineaWindow::createActions() {
     add_actions_transform(_app);
     add_actions_object_align(_app);
     add_actions_object(_app);
-    add_actions_pages(this);
+    add_actions_pages(_app);
     add_actions_path(_app);
-    add_actions_edit_document(this);
-    add_actions_path(this);
+    add_actions_edit_document(_app);
     add_actions_canvas_snapping(this);
     add_actions_canvas_transform(this);
     add_actions_node_options(this);
-    add_actions_canvas_mode(this);
-    add_actions_dialogs(this);
-    add_actions_layer(this);
-    add_actions_node_align(this);
-    add_actions_undo_document(this);
-    add_actions_view_mode(this);
-    add_actions_view_window(this);
+    add_actions_canvas_mode(_app);
+    add_actions_dialogs(_app);
+    add_actions_layer(_app);
+    add_actions_node_align(_app);
+    add_actions_undo_document(_app);
+    add_actions_view_mode(_app);
+    add_actions_view_window(_app);
     add_actions_window(_app);
 }
 
@@ -205,27 +204,27 @@ void LineaWindow::present() {
 }
 
 void LineaWindow::toggleColorPalette() {
-    _desktop_widget->toggleColorPalette();
+    if (_desktop_widget) _desktop_widget->toggleColorPalette();
 }
 
 bool LineaWindow::colorPaletteVisible() const {
-    return _desktop_widget->colorPaletteVisible();
+    return _desktop_widget && _desktop_widget->colorPaletteVisible();
 }
 
 void LineaWindow::toggleRulers() {
-    _desktop_widget->toggleRulers();
+    if (_desktop_widget) _desktop_widget->toggleRulers();
 }
 
 bool LineaWindow::rulersVisible() const {
-    return _desktop_widget->rulersVisible();
+    return _desktop_widget && _desktop_widget->rulersVisible();
 }
 
 void LineaWindow::toggleDialogs() {
-    _desktop_widget->toggleDialogs();
+    if (_desktop_widget) _desktop_widget->toggleDialogs();
 }
 
 bool LineaWindow::dialogsVisible() const {
-    return _desktop_widget->dialogsVisible();
+    return _desktop_widget && _desktop_widget->dialogsVisible();
 }
 
 bool LineaWindow::getFullscreen() const {

@@ -16,48 +16,43 @@
 #include <giomm.h>
 #include <glibmm/i18n.h>
 
-#include "document.h"
 #include "actions-helper.h"
+#include "actions/action-registry.h"
+#include "desktop.h"
+#include "document.h"
+#include "extension/db.h"
+#include "extension/effect.h"
 #include "linea-application.h"
 #include "selection.h"
-#include "extension/effect.h"
-#include "extension/db.h"
-#include "actions/action-registry.h"
 
-void edit_remove_filter(LineaApplication *app)
-{
-    auto selection = app->get_active_selection();
-
+void edit_remove_filter(SPDesktop* desktop) {
     // Remove Filter
-    selection->removeFilter();
+    desktop->getSelection()->removeFilter();
 }
 
-void last_effect(LineaApplication *app)
-{
-    Inkscape::Extension::Effect *effect = Inkscape::Extension::Effect::get_last_effect();
+void last_effect(SPDesktop* desktop) {
+    Inkscape::Extension::Effect* effect = Inkscape::Extension::Effect::get_last_effect();
 
     if (effect == nullptr) {
         return;
     }
 
     // Last Effect
-    effect->effect(LineaApplication::instance().get_active_desktop());
+    effect->effect(desktop);
 }
 
-void last_effect_pref(LineaApplication *app)
-{
-    Inkscape::Extension::Effect *effect = Inkscape::Extension::Effect::get_last_effect();
+void last_effect_pref(SPDesktop* desktop) {
+    Inkscape::Extension::Effect* effect = Inkscape::Extension::Effect::get_last_effect();
 
     if (effect == nullptr) {
         return;
     }
 
     // Last Effect Pref
-    effect->prefs(LineaApplication::instance().get_active_desktop());
+    effect->prefs(desktop);
 }
 
-void enable_effect_actions(LineaApplication* app, bool enabled)
-{
+void enable_effect_actions(LineaApplication* app, bool enabled) {
     /* Qt TODO
     auto gapp = app->gio_app();
     auto le_action = gapp->lookup_action("last-effect");
@@ -80,19 +75,14 @@ void enable_effect_actions(LineaApplication* app, bool enabled)
 const Glib::ustring SECTION_FILTERS = NC_("Action Section", "Filters");
 const Glib::ustring SECTION_EXT = NC_("Action Section", "Extensions");
 
-static auto effect_action_defs = std::to_array<ApplicationActionDef>({
+static auto effect_action_defs = std::to_array<ActionSpec<SPDesktop>>({
     // clang-format off
-    {"edit-remove-filter",      N_("Remove Filters"),              SECTION_FILTERS, N_("Remove any filters from selected objects"), edit_remove_filter},
-    {"last-effect",             N_("Previous Extension"),          SECTION_EXT,     N_("Repeat the last extension with the same settings"), last_effect},
-    {"last-effect-pref",        N_("Previous Extension Settings"), SECTION_EXT,     N_("Repeat the last extension with new settings"), last_effect_pref},
+    {"edit-remove-filter",      N_("Remove Filters"),              SECTION_FILTERS, N_("Remove any filters from selected objects"),          nullptr, edit_remove_filter},
+    {"last-effect",             N_("Previous Extension"),          SECTION_EXT,     N_("Repeat the last extension with the same settings"),  nullptr, last_effect},
+    {"last-effect-pref",        N_("Previous Extension Settings"), SECTION_EXT,     N_("Repeat the last extension with new settings"),       nullptr, last_effect_pref},
     // clang-format on
 });
 
 void add_actions_effect(LineaApplication* app) {
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : effect_action_defs) {
-        auto a = registry.createAction(e, [fn = e.callback, app]() { fn(app); });
-        app->get_active_window()->addAction(a);
-    }
+    ActionRegistry::get().registerActions(app, effect_action_defs);
 }

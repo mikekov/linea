@@ -12,9 +12,6 @@
 #define INK_ACTIONS_WINDOW_H
 
 class LineaApplication;
-class InkscapeApplication;
-
-void add_actions_window(InkscapeApplication* app);
 
 void add_actions_window(LineaApplication* app);
 

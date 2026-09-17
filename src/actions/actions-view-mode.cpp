@@ -21,7 +21,7 @@
 #include "actions-helper.h"
 
 #include "desktop.h"
-// #include "inkscape-application.h"
+#include "linea-application.h"
 #include "linea-window.h"
 
 #include "object/sp-namedview.h"
@@ -314,24 +314,17 @@ std::vector<std::vector<Glib::ustring>> raw_data_view_mode =
     // clang-format on
 };
 
-using WindowStateCallback = bool (*)(LineaWindow*);
-struct WindowBoolActionDef : BoolActionMeta {
-    WindowCallback callback;
-    WindowStateCallback state;
-};
-
-static auto action_defs = std::to_array<WindowBoolActionDef>({
-    {"view-fullscreen", N_("Enter Full Screen"), N_("Stretch this document window to full screen"), "", N_("Exit Full Screen"),
-        view_fullscreen, get_view_fullscreen},
+static auto action_defs = std::to_array<ActionSpec<LineaWindow>>({
+    // clang-format off
+    {"view-fullscreen",    N_("Enter Full Screen"),  SECTION, N_("Stretch this document window to full screen"), nullptr, view_fullscreen,    get_view_fullscreen,    N_("Exit Full Screen")},
     // {"view-toggle-ui",  N_("Show dialogs"),  N_("Toggle visibility of all dialogs"), "", N_("Hide dialogs"),
         // view_toggle_dialogs, get_view_toggle_dialogs},
-    {"view-color-palette", N_("Show Color Palette"), N_("Show or hide the color palette"), "", "Hide Color Palette",
-        view_color_palette, get_view_color_palette},
-    {"view-rulers", N_("Show Rulers"), N_("Show or hide the rulers"), "", N_("Hide Rulers"),
-        view_rulers, get_view_rulers},
+    {"view-color-palette", N_("Show Color Palette"), SECTION, N_("Show or hide the color palette"),            nullptr, view_color_palette, get_view_color_palette, "Hide Color Palette"},
+    {"view-rulers",        N_("Show Rulers"),        SECTION, N_("Show or hide the rulers"),                   nullptr, view_rulers,        get_view_rulers,        N_("Hide Rulers")},
+    // clang-format on
 });
 
-void add_actions_view_mode(LineaWindow* wnd) {
+void add_actions_view_mode(LineaApplication* app) {
     // auto prefs = Inkscape::Preferences::get();
 
     // Glib::ustring const pref_root = "/window/";
@@ -356,19 +349,7 @@ void add_actions_view_mode(LineaWindow* wnd) {
 
     // bool interface_mode     = prefs->getBool(pref_root + "interface_mode", widescreen);
 
-    auto& registry = ActionRegistry::get();
-
-    for (auto& e : action_defs) {
-        QAction* a = registry.createBoolAction(e,
-            [fn = e.callback, cb = e.state, wnd](bool on) {
-                if (cb(wnd) != on) fn(wnd);
-            },
-            [fn = e.state, wnd]() {
-                return fn(wnd);
-            }
-        );
-        wnd->addAction(a);
-    }
+    ActionRegistry::get().registerActions(app, action_defs);
 
 #if 0
     win->add_action_bool(          "canvas-commands-bar",           sigc::bind(sigc::ptr_fun(&canvas_commands_bar_toggle),         win), commands_toggle);
