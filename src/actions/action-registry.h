@@ -102,9 +102,19 @@ QAction* ActionRegistry::createBoolAction(const BoolActionMeta& meta, Callback c
     // this action's own state and correct its checked state if the callback
     // didn't actually change the underlying state. Mutually-exclusive groups
     // are handled by QActionGroup (Qt unchecks the others automatically).
-    QObject::connect(action, &QAction::triggered, this, [action, callback, state_query](bool checked) {
+    QObject::connect(action, &QAction::triggered, this, [this, action, callback, state_query](bool checked) {
         callback(checked);
         action->setChecked(state_query());
+        // Sibling actions in an exclusive QActionGroup observe the same underlying state
+        // but Qt only unchecks them — re-query each to restore the right mark.
+        if (auto group = action->actionGroup()) {
+            for (auto sibling : group->actions()) {
+                if (sibling == action) continue;
+                if (auto it = _stateQueries.find(sibling); it != _stateQueries.end()) {
+                    sibling->setChecked(it->second());
+                }
+            }
+        }
     });
     if (meta.checked_label) {
         setupDualLabel(action, meta.checked_label);
