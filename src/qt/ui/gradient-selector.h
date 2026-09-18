@@ -11,8 +11,10 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <sigc++/scoped_connection.h>
 
 #include "object/sp-paint-server-data.h"
+#include "ui/operation-blocker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -80,11 +82,14 @@ private:
     void vectorSet(SPGradient* gr);
     void moveSelection(int amount, bool down = true, bool toEnd = false);
     void getUsageCounts(SPDocument* doc, std::map<SPGradient*, int>& usageCount);
+    void defsRelease();
+    void defsModified();
+    void gradientRelease();
 
     std::unique_ptr<Ui::GradientSelector> _ui;
 
     // State
-    bool _blocked = false;
+    OperationBlocker _update;
     SelectorMode _mode = MODE_LINEAR;
     SPGradientUnits _gradientUnits = SP_GRADIENT_UNITS_USERSPACEONUSE;
     SPGradientSpread _gradientSpread = SP_GRADIENT_SPREAD_PAD;
@@ -92,6 +97,9 @@ private:
     // Document and gradient
     SPDocument* _doc = nullptr;
     SPGradient* _gradient = nullptr;
+    sigc::scoped_connection _defsReleaseConn;
+    sigc::scoped_connection _defsModifiedConn;
+    sigc::scoped_connection _gradientReleaseConn;
 
     // Gradient list
     std::vector<SPGradient*> _gradients;

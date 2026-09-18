@@ -109,7 +109,7 @@ void GradientEditor::setupCustomWidgets(Inkscape::Colors::Space::Type space, boo
     ).release();
 
     if (_ui->colorPickerPlaceholder) {
-        auto* layout = new QVBoxLayout(_ui->colorPickerPlaceholder);
+        auto layout = new QVBoxLayout(_ui->colorPickerPlaceholder);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->addWidget(_colorPicker);
     }
@@ -141,6 +141,14 @@ void GradientEditor::connectSignals() {
     _colorChanged = _colors->signal_changed.connect([this]() {
         setStopColor(_colors->getAverage());
     });
+
+    // Gradient selector in the library menu: adopt the gradient picked in the
+    // table and forward it so listeners can assign it to the selection.
+    connect(_selector.get(), &GradientSelector::signalChanged, this,
+            [this](SPGradient* gradient) {
+                setGradient(gradient);
+                Q_EMIT signalChanged(gradient);
+            });
 }
 
 void GradientEditor::onLinearToggled(bool checked) {
@@ -221,7 +229,7 @@ void GradientEditor::setGradientInternal(SPGradient* gradient) {
 
     auto canRotate = false;
     // only linear gradient can be rotated currently
-    if (auto* linear = dynamic_cast<SPLinearGradient*>(gradient)) {
+    if (auto linear = dynamic_cast<SPLinearGradient*>(gradient)) {
         canRotate = true;
         auto line = Geom::Line(
             Geom::Point(linear->x1.computed, linear->y1.computed),
@@ -323,7 +331,7 @@ void GradientEditor::setStopColor(const Inkscape::Colors::Color& color) {
     SPGradient* vector = getGradientVector();
     if (!vector) return;
 
-    if (auto* stop = currentStop()) {
+    if (auto stop = currentStop()) {
         if (_document) {
             auto scoped = _update.block();
             sp_set_gradient_stop_color(_document, stop, color);
@@ -339,7 +347,7 @@ SPStop* GradientEditor::currentStop() {
     vector->ensureVector();
     int index = 0;
     for (auto& child : vector->children) {
-        if (auto* stop = dynamic_cast<SPStop*>(&child)) {
+        if (auto stop = dynamic_cast<SPStop*>(&child)) {
             if (index == _currentStopIndex) return stop;
             ++index;
         }
@@ -373,7 +381,7 @@ void GradientEditor::stopSelectedInternal() {
     auto scoped = _update.block();
     _colors->clear();
 
-    if (auto* stop = currentStop()) {
+    if (auto stop = currentStop()) {
         _colors->set(stop->getId(), stop->getColor());
 
         auto [before, after] = sp_get_before_after_stops(stop);

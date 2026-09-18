@@ -197,39 +197,57 @@ void GradientSelector::setVector(SPDocument* doc, SPGradient* vector) {
 
     // Update document connections
     if (doc != _doc) {
+        _defsReleaseConn.disconnect();
+        _defsModifiedConn.disconnect();
+        _gradientReleaseConn.disconnect();
         _doc = doc;
         _gradient = nullptr;
+
+        if (doc) {
+            _defsReleaseConn = doc->getDefs()->connectRelease(
+                [this](SPObject*) { defsRelease(); });
+            _defsModifiedConn = doc->getDefs()->connectModified(
+                [this](SPObject*, unsigned) { defsModified(); });
+        }
     }
 
-    _gradient = vector;
+    if (vector != _gradient) {
+        _gradientReleaseConn.disconnect();
+        if (vector) {
+            _gradientReleaseConn = vector->connectRelease(
+                [this](SPObject*) { gradientRelease(); });
+        }
+        _gradient = vector;
+    }
+
     updateTable();
     selectGradientInTable(vector);
 
     // Update button states
     if (vector) {
-        for (auto* widget : _nonsolidWidgets) {
+        for (auto widget : _nonsolidWidgets) {
             widget->setEnabled(true);
         }
-        for (auto* widget : _swatchWidgets) {
+        for (auto widget : _swatchWidgets) {
             widget->setEnabled(true);
         }
 
         // Handle swatch mode
         if (_mode == MODE_SWATCH && vector->isSwatch()) {
             if (vector->isSolid()) {
-                for (auto* widget : _nonsolidWidgets) {
+                for (auto widget : _nonsolidWidgets) {
                     widget->setVisible(false);
                 }
             } else {
-                for (auto* widget : _nonsolidWidgets) {
+                for (auto widget : _nonsolidWidgets) {
                     widget->setVisible(true);
                 }
             }
         } else if (_mode != MODE_SWATCH) {
-            for (auto* widget : _swatchWidgets) {
+            for (auto widget : _swatchWidgets) {
                 widget->setVisible(false);
             }
-            for (auto* widget : _nonsolidWidgets) {
+            for (auto widget : _nonsolidWidgets) {
                 widget->setVisible(true);
             }
         }
@@ -243,24 +261,46 @@ void GradientSelector::setVector(SPDocument* doc, SPGradient* vector) {
     }
 }
 
+void GradientSelector::gradientRelease() {
+    _gradientReleaseConn.disconnect();
+    _gradient = nullptr;
+    updateTable();
+}
+
+void GradientSelector::defsRelease() {
+    _defsReleaseConn.disconnect();
+    _defsModifiedConn.disconnect();
+    _gradientReleaseConn.disconnect();
+    _doc = nullptr;
+    _gradient = nullptr;
+    updateTable();
+}
+
+void GradientSelector::defsModified() {
+    // A gradient may have been added or removed; rebuild the table so
+    // deleted gradients can't be selected through stale rows.
+    updateTable();
+    selectGradientInTable(_gradient);
+}
+
 void GradientSelector::setMode(SelectorMode mode) {
     if (mode == _mode) return;
 
     _mode = mode;
 
     if (mode == MODE_SWATCH) {
-        for (auto* widget : _nonsolidWidgets) {
+        for (auto widget : _nonsolidWidgets) {
             widget->setVisible(false);
         }
-        for (auto* widget : _swatchWidgets) {
+        for (auto widget : _swatchWidgets) {
             widget->setVisible(true);
         }
         _ui->gradientTable->horizontalHeaderItem(0)->setText(tr("Swatch"));
     } else {
-        for (auto* widget : _nonsolidWidgets) {
+        for (auto widget : _nonsolidWidgets) {
             widget->setVisible(true);
         }
-        for (auto* widget : _swatchWidgets) {
+        for (auto widget : _swatchWidgets) {
             widget->setVisible(false);
         }
         _ui->gradientTable->horizontalHeaderItem(0)->setText(tr("Gradient"));
@@ -311,22 +351,22 @@ void GradientSelector::updateTable() {
 
     if (!_doc) {
         _ui->gradientTable->setRowCount(1);
-        auto* item = new QTableWidgetItem(tr("No document selected"));
+        auto item = new QTableWidgetItem(tr("No document selected"));
         _ui->gradientTable->setItem(0, 1, item);
         return;
     }
 
     if (!_gradient) {
         _ui->gradientTable->setRowCount(1);
-        auto* item = new QTableWidgetItem(tr("No gradient selected"));
+        auto item = new QTableWidgetItem(tr("No gradient selected"));
         _ui->gradientTable->setItem(0, 1, item);
         return;
     }
 
     // Collect gradients
     auto resources = _gradient->document->getResourceList("gradient");
-    for (auto* obj : resources) {
-        auto* gr = cast<SPGradient>(obj);
+    for (auto obj : resources) {
+        auto gr = cast<SPGradient>(obj);
         if (gr && gr->hasStops() && gr->isSwatch() == (_mode == MODE_SWATCH)) {
             _gradients.push_back(gr);
         }
@@ -334,14 +374,14 @@ void GradientSelector::updateTable() {
 
     if (_gradients.empty()) {
         _ui->gradientTable->setRowCount(1);
-        auto* item = new QTableWidgetItem(tr("No gradients in document"));
+        auto item = new QTableWidgetItem(tr("No gradients in document"));
         _ui->gradientTable->setItem(0, 1, item);
         return;
     }
 
     // Calculate usage counts
-    for (auto* obj : _doc->getRoot()) {
-        auto* item = cast<SPItem>(obj);
+    for (auto obj : _doc->getRoot()) {
+        auto item = cast<SPItem>(obj);
         if (!item || !item->getId()) continue;
 
         SPGradient* gr = sp_item_get_gradient(item, true);  // fill
@@ -382,12 +422,12 @@ void GradientSelector::updateTable() {
     _ui->gradientTable->setRowCount(static_cast<int>(_gradients.size()));
 
     for (size_t i = 0; i < _gradients.size(); ++i) {
-        auto* gr = _gradients[i];
+        auto gr = _gradients[i];
         int row = static_cast<int>(i);
 
         // Gradient icon
         QPixmap pixmap = gradientToPixmap(gr, _pixWidth, _pixHeight);
-        auto* iconItem = new QTableWidgetItem();
+        auto iconItem = new QTableWidgetItem();
         iconItem->setData(Qt::DecorationRole, pixmap);
         iconItem->setData(Qt::UserRole, QVariant::fromValue(static_cast<void*>(gr)));
         iconItem->setFlags(iconItem->flags() & ~Qt::ItemIsEditable);
@@ -395,14 +435,14 @@ void GradientSelector::updateTable() {
 
         // Name
         QString label = ellipsizeText(prepareLabel(gr), 35);
-        auto* nameItem = new QTableWidgetItem(label);
+        auto nameItem = new QTableWidgetItem(label);
         nameItem->setData(Qt::UserRole, QVariant::fromValue(static_cast<void*>(gr)));
         nameItem->setFlags(nameItem->flags() | Qt::ItemIsEditable);
         _ui->gradientTable->setItem(row, 1, nameItem);
 
         // Refcount
         int count = _usageCounts[gr];
-        auto* countItem = new QTableWidgetItem(QString::number(count));
+        auto countItem = new QTableWidgetItem(QString::number(count));
         countItem->setData(Qt::UserRole, QVariant::fromValue(static_cast<void*>(gr)));
         countItem->setFlags(countItem->flags() & ~Qt::ItemIsEditable);
         _ui->gradientTable->setItem(row, 2, countItem);
@@ -414,10 +454,10 @@ void GradientSelector::selectGradientInTable(SPGradient* vector) {
 
     QSignalBlocker blocker(_ui->gradientTable);
     for (int row = 0; row < _ui->gradientTable->rowCount(); ++row) {
-        auto* item = _ui->gradientTable->item(row, 0);
+        auto item = _ui->gradientTable->item(row, 0);
         if (!item) continue;
 
-        auto* gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
+        auto gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
         if (gr == vector) {
             _ui->gradientTable->selectRow(row);
             _ui->gradientTable->scrollToItem(item, QAbstractItemView::PositionAtCenter);
@@ -427,13 +467,13 @@ void GradientSelector::selectGradientInTable(SPGradient* vector) {
 }
 
 void GradientSelector::onTableSelectionChanged() {
-    if (_blocked) return;
+    if (_update.pending()) return;
 
     auto selected = _ui->gradientTable->selectedItems();
     if (selected.isEmpty()) return;
 
-    auto* item = selected.first();
-    auto* gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
+    auto item = selected.first();
+    auto gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
 
     if (gr) {
         vectorSet(gr);
@@ -445,10 +485,10 @@ void GradientSelector::onTableSelectionChanged() {
 void GradientSelector::onTableCellChanged(int row, int column) {
     if (column != 1) return;  // Only handle name changes
 
-    auto* item = _ui->gradientTable->item(row, column);
+    auto item = _ui->gradientTable->item(row, column);
     if (!item) return;
 
-    auto* gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
+    auto gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
     if (!gr) return;
 
     QString newText = item->text();
@@ -457,7 +497,12 @@ void GradientSelector::onTableCellChanged(int row, int column) {
     if (!newText.isEmpty() && newText != currentLabel) {
         gr->setLabel(newText.toUtf8().constData());
         DocumentUndo::done(gr->document, RC_("Undo", "Rename gradient"), INKSCAPE_ICON("color-gradient"));
-        item->setText(ellipsizeText(prepareLabel(gr), 35));
+        // setLabel fires the defs modified signal, which may have rebuilt the
+        // table and freed this item
+        if (_ui->gradientTable->item(row, column) == item) {
+            QSignalBlocker blocker(_ui->gradientTable);
+            item->setText(ellipsizeText(prepareLabel(gr), 35));
+        }
     }
 }
 
@@ -498,8 +543,8 @@ void GradientSelector::checkDeleteButton() {
         return;
     }
 
-    auto* item = selected.first();
-    auto* gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
+    auto item = selected.first();
+    auto gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
 
     if (!gr || !_doc) {
         _ui->del2Button->setEnabled(false);
@@ -512,13 +557,12 @@ void GradientSelector::checkDeleteButton() {
 }
 
 void GradientSelector::vectorSet(SPGradient* gr) {
-    if (_blocked) return;
+    if (_update.pending()) return;
 
-    _blocked = true;
+    auto scoped = _update.block();
     gr = sp_gradient_ensure_vector_normalized(gr);
     setVector(gr ? gr->document : nullptr, gr);
     Q_EMIT signalChanged(gr);
-    _blocked = false;
 }
 
 void GradientSelector::moveSelection(int amount, bool down, bool toEnd) {
@@ -538,7 +582,9 @@ void GradientSelector::moveSelection(int amount, bool down, bool toEnd) {
 
     if (newRow != currentRow) {
         _ui->gradientTable->selectRow(newRow);
-        _ui->gradientTable->scrollToItem(_ui->gradientTable->item(newRow, 0), QAbstractItemView::PositionAtCenter);
+        if (auto target = _ui->gradientTable->item(newRow, 0)) {
+            _ui->gradientTable->scrollToItem(target, QAbstractItemView::PositionAtCenter);
+        }
     }
 }
 
@@ -570,8 +616,8 @@ void GradientSelector::onKeyPressed(int key) {
 void GradientSelector::onAddClicked() {
     if (!_doc) return;
 
-    auto* gr = _gradient;
-    auto* xmlDoc = _doc->getReprDoc();
+    auto gr = _gradient;
+    auto xmlDoc = _doc->getReprDoc();
 
     Inkscape::XML::Node* repr = nullptr;
 
@@ -583,7 +629,7 @@ void GradientSelector::onAddClicked() {
         _doc->getDefs()->getRepr()->appendChild(repr);
     } else {
         repr = xmlDoc->createElement("svg:linearGradient");
-        auto* stop = xmlDoc->createElement("svg:stop");
+        auto stop = xmlDoc->createElement("svg:stop");
         stop->setAttribute("offset", "0");
         stop->setAttribute("style", "stop-color:#000;stop-opacity:1;");
         repr->appendChild(stop);
@@ -610,8 +656,8 @@ void GradientSelector::onDeleteClicked() {
     auto selected = _ui->gradientTable->selectedItems();
     if (selected.isEmpty()) return;
 
-    auto* item = selected.first();
-    auto* gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
+    auto item = selected.first();
+    auto gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
 
     if (gr) {
         std::string id = gr->getId();
@@ -623,18 +669,20 @@ void GradientSelector::onDeleteUnusedClicked() {
     auto selected = _ui->gradientTable->selectedItems();
     if (selected.isEmpty()) return;
 
-    auto* item = selected.first();
-    auto* gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
+    auto item = selected.first();
+    auto gr = static_cast<SPGradient*>(item->data(Qt::UserRole).value<void*>());
 
     if (!gr) return;
 
-    auto* repr = gr->getRepr();
+    auto repr = gr->getRepr();
     if (!repr) return;
 
+    // Capture the row before setAttribute: the defs modified signal it fires
+    // rebuilds the table and frees the item
+    int row = item->row();
     repr->setAttribute("inkscape:collect", "always");
 
     // Select next or previous row
-    int row = item->row();
     int newRow = row - 1;
     if (newRow < 0) {
         newRow = row + 1;
@@ -642,7 +690,9 @@ void GradientSelector::onDeleteUnusedClicked() {
 
     if (newRow >= 0 && newRow < _ui->gradientTable->rowCount()) {
         _ui->gradientTable->selectRow(newRow);
-        _ui->gradientTable->scrollToItem(_ui->gradientTable->item(newRow, 0), QAbstractItemView::PositionAtCenter);
+        if (auto target = _ui->gradientTable->item(newRow, 0)) {
+            _ui->gradientTable->scrollToItem(target, QAbstractItemView::PositionAtCenter);
+        }
     }
 }
 
