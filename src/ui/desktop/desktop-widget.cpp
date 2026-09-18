@@ -11,6 +11,7 @@
 #include <QDir>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QToolButton>
@@ -82,6 +83,8 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     // the tab strip in its header row (created in its constructor).
     _canvasContainer = _ui->canvasContainer;
     _canvasFrame = _ui->canvasFrame;
+
+    this->installEventFilter(this);
 
     _tabStrip = _canvasFrame->tabStrip();
     _tabStrip->setVisible(false); // hidden until a second desktop is added
@@ -935,6 +938,22 @@ void SPDesktopWidget::dropEvent(QDropEvent* event) {
     } else {
         event->acceptProposedAction();
     }
+}
+
+bool SPDesktopWidget::eventFilter(QObject* watched, QEvent* event) {
+    // Esc release dismisses the notification bar while it is up. The event is
+    // never consumed — it still reaches the canvas/tools, which use Esc for
+    // cancel/deselect.
+    if (event->type() == QEvent::KeyRelease) {
+        auto key = static_cast<QKeyEvent*>(event);
+        if (key->key() == Qt::Key_Escape && !key->isAutoRepeat()) {
+            auto target = qobject_cast<QWidget*>(watched);
+            if (target && target->window() == window() && _notificationBar->isVisible()) {
+                _notificationBar->fadeOut();
+            }
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 } // namespace Linea::UI

@@ -210,6 +210,7 @@ void DocumentPropertiesPanel::setSelection(SPDesktop* desktop) {
         _pagesPanel->setDesktop(nullptr);
         _pagesPanel->setDocument(nullptr);
         _pagesPanel->update(nullptr);
+        showObjectProperties();
     }
 
     // New property system: rebuild the editor/binder for this desktop.
@@ -226,6 +227,7 @@ void DocumentPropertiesPanel::setSelection(SPDesktop* desktop) {
     _sprayWidget->setDesktop(desktop);
     _paintbucketWidget->setDesktop(desktop);
     _connectorWidget->setDesktop(desktop);
+    _zoomWidget->setDesktop(desktop);
     _nodeWidget->setDesktop(desktop);
 
     if (desktop) {
@@ -260,6 +262,11 @@ void DocumentPropertiesPanel::setSelection(SPDesktop* desktop) {
 
         _exportWidget->bind(*_binder);
         syncVisibility(_exportSeparator, _exportWidget);
+
+        // Select the stacked page matching this desktop's saved virtual node
+        // (or object properties for a fresh document). Required because the
+        // left panel's restore signals fire before this panel has a desktop.
+        showProperties(desktop->selectedVirtualNode());
     }
 }
 

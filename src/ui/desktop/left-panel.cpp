@@ -75,7 +75,7 @@ std::vector<CustomMenuItem> recentFilesMenu() {
     if (max_files <= 0) return {};
 
     if (max_files > 20) {
-        max_files = 20; //TODO: find max
+        max_files = 20; //TODO: find max for the popup to fit on the screen
     }
 
     auto recent = Linea::IO::getRecentFiles(max_files);

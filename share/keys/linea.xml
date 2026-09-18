@@ -85,6 +85,7 @@ This file is the default keymap for LineaDraw. User customizations are stored se
   <bind action="select-all"                    keys="Cmd+A" />
   <bind action="select-same-object-type"       keys="Cmd+Shift+A" />
   <!-- <bind action="select-none"            keys="esc" /> -->
+  <bind action="selection-make-bitmap-copy"    keys="Alt+B" />
   <bind action="selection-group"               keys="Cmd+G" />
   <bind action="selection-ungroup"             keys="Cmd+Shift+G" />
 
@@ -167,4 +168,5 @@ This file is the default keymap for LineaDraw. User customizations are stored se
 
   <!-- temporary -->
   <bind action="open-settings"                 keys="Alt+S" />
+  <!-- <bind action="window-crash"                  keys="Alt+X" /> -->
 </keys>

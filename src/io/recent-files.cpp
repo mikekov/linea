@@ -96,10 +96,6 @@ std::string uri_to_filename(const std::string& uri) {
 
 std::string get_entry_uri(int index) {
     auto uri = get_field(index, "uri");
-    if (uri.empty()) {
-        // Read entries written by older versions, which stored a filesystem path.
-        uri = filename_to_uri(get_field(index, "path"));
-    }
     return uri;
 }
 
@@ -144,7 +140,9 @@ std::optional<RecentFile> read_entry(int index) {
     RecentFile rf;
     rf.uri = get_entry_uri(index);
     rf.path = uri_to_filename(rf.uri);
-    if (rf.path.empty() || !g_file_test(rf.path.c_str(), G_FILE_TEST_IS_REGULAR)) {
+    if (rf.path.empty()
+        // no file presence test - disconnected network share would kill performance
+        /* || !g_file_test(rf.path.c_str(), G_FILE_TEST_IS_REGULAR) */) {
         return std::nullopt;
     }
 

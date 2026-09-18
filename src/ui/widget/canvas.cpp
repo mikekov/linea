@@ -1630,6 +1630,7 @@ void Canvas::on_key_released(int keyval, int keycode, int state)
 
 void Canvas::keyPressEvent(QKeyEvent* event) {
     auto canvasEvent = Linea::convertKeyPress(event);
+
     _state = canvasEvent->modifiers;
     canvasEvent->orig_pos = d->last_mouse;
     if (!d->process_event(*canvasEvent)) {
@@ -1643,7 +1644,10 @@ void Canvas::keyReleaseEvent(QKeyEvent* event) {
 
     _state = canvasEvent->modifiers;
     canvasEvent->orig_pos = d->last_mouse;
-    d->process_event(*canvasEvent);
+    if (!d->process_event(*canvasEvent)) {
+        // Event not handled, pass to parent
+        QOpenGLWidget::keyReleaseEvent(event);
+    }
 }
 /* QT-specific end */
 
