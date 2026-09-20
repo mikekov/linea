@@ -143,6 +143,7 @@ void createMainMenu(QMenuBar* bar) {
         {"toggle-panel-docking"},
         {"view-color-palette"},
         {"view-rulers"},
+        {"view-command-palette"},
         // {"view-fullscreen"}, - fullscreen gets inserted automatically on macos
     };
 

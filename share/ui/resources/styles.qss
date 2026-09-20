@@ -336,6 +336,20 @@ Linea--UI--IconWidget[severity="success"] {
     border-radius: 8px;
 }
 
+/* Console panel - dark floating terminal */
+Linea--UI--ConsolePanel.console-panel {
+    background-color: #1e1e1e;
+    color: #e6e6e6;
+    border-radius: 8px;
+}
+
+Linea--UI--ConsolePanel.console-panel .console {
+    background-color: #1e1e1e;
+    color: #e6e6e6;
+    border: none;
+    border-radius: 0;
+}
+
 /* Toolbars */
 .toolbar {
     background-color: palette(window);

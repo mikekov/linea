@@ -7,8 +7,6 @@
 #include "overlay-layout.h"
 #include "toolbar.h"
 #include <algorithm>
-#include <ranges>
-#include <vector>
 
 namespace Linea::UI {
 
@@ -55,6 +53,24 @@ QRect OverlayLayout::calculatePanelGeometry(const PanelInfo& panel, QRect& rect)
         }
         return panel.size.height();
     };
+
+    if (panel.position == Position::Bottom) {
+        // Bottom-anchored, horizontally centered strip: uses the widget's
+        // current size, so drag-resized width/height persist across relayouts.
+        const int availableWidth = rect.width() - margins.left - margins.right;
+        int w = panelWidth();
+        int h = panelHeight();
+        if (panel.widget) {
+            w = std::clamp(w, panel.widget->minimumWidth(),
+                           std::min(availableWidth, panel.widget->maximumWidth()));
+            h = std::clamp(h, panel.widget->minimumHeight(), panel.widget->maximumHeight());
+        }
+        const int x = rect.left() + margins.left + (availableWidth - w) / 2;
+        const int y = rect.bottom() - margins.bottom - h + 1;
+        geom = QRect(x, y, w, h);
+        rect.adjust(0, 0, 0, -(h + margins.bottom));
+        return geom;
+    }
 
     if (panel.scaleHeight) {
         // Calculate height based on margins, but respect panel's current size
@@ -165,6 +181,9 @@ void OverlayLayout::setGeometry(const QRect& rect) {
                         docked.setRight(area.right());
                         break;
                     case Position::Center:
+                        break;
+                    case Position::Bottom:
+                        docked.setBottom(area.bottom());
                         break;
                 }
             }

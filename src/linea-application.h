@@ -143,7 +143,7 @@ public:
     void openDocument(const Glib::RefPtr<Gio::File>& file);
 
     /// Create a new document; use given template or default one (if 0 is specified)
-    void createNewDocument(int templateIndex = 0);
+    bool createNewDocument(int templateIndex = 0);
 
     /// Destroy a desktop and its document, checking for unsaved data.
     /// If keep_alive=true and this is the last window, replaces with a new document.

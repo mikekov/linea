@@ -241,7 +241,7 @@ static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
     {"dialog-open-extension-gallery", N_("Open Extension Gallery"), SECTION,
      N_("Show and run available extensions"), "dialog-extensions",
      [](LineaWindow* win) { open_extension_gallery(win); }},
-    {"toggle-panel-docking", N_("Toggle all Dialogs"), SECTION,
+    {"toggle-panel-docking", N_("Toggle All Dialogs"), SECTION,
      N_("Dock or collapse all dialogs"), "panel-left",
      [](LineaWindow* win) { toggle_dialogs(win); }},
     {"about-linea", N_("About Linea"), ABOUT_SECTION,

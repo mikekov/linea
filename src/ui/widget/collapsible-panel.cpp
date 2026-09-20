@@ -30,6 +30,8 @@ CollapsiblePanel::CollapsiblePanel(QWidget* parent)
 
     Inkscape::UI::add_drop_shadow(this);
 
+    setResizeStep(QSize(10, 10));
+
     _animation = new QPropertyAnimation(this, "maximumHeight", this);
     _animation->setDuration(_animationDuration);
     _animation->setEasingCurve(QEasingCurve::OutQuart);
@@ -158,11 +160,11 @@ int CollapsiblePanel::animationDuration() const {
 }
 
 void CollapsiblePanel::setResizeStep(int step) {
-    _resizeStep = step;
+    ResizableEdgeWidget::setResizeStep(QSize(step, step));
 }
 
 int CollapsiblePanel::resizeStep() const {
-    return _resizeStep;
+    return ResizableEdgeWidget::resizeStep().width();
 }
 
 void CollapsiblePanel::setRounded(bool rounded) {
@@ -203,10 +205,6 @@ void CollapsiblePanel::updateHeight() {
 
 bool CollapsiblePanel::canResize() const {
     return ResizableEdgeWidget::canResize() && !_collapsed;
-}
-
-int CollapsiblePanel::snapResizeWidth(int newWidth) const {
-    return ((newWidth + _resizeStep / 2) / _resizeStep) * _resizeStep;
 }
 
 } // namespace Linea::UI

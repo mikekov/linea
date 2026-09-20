@@ -124,6 +124,7 @@ This file is the default keymap for LineaDraw. User customizations are stored se
   <bind action="view-fullscreen"               keys="Cmd+Ctrl+F" />
   <bind action="view-rulers"                   keys="Alt+R" />
   <bind action="view-color-palette"            keys="" />
+  <bind action="view-command-palette"          keys="?" />
   <bind action="toggle-panel-docking"          keys="F12" />
   <bind action="snap-global-toggle"            keys="%" />
   <bind action="show-grids"                    keys="#" />

@@ -341,24 +341,28 @@ list(APPEND INKSCAPE_LIBS GLibmm::GLibmm)
 set(WITH_LIBSPELLING OFF)
 set(WITH_GSOURCEVIEW OFF)
 
+# Boost.Parser (console command specs) debuted in 1.87; 1.89 picks up a
+# year of fixes to quoted_string/attribute/error reporting.
+set(BOOST_MIN_VERSION 1.89.0)
+
 # stacktrace print on crash
 if(WIN32)
-    find_package(Boost 1.19.0 REQUIRED COMPONENTS stacktrace_windbg)
+    find_package(Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS stacktrace_windbg)
     list(APPEND INKSCAPE_LIBS "-lole32")
     list(APPEND INKSCAPE_LIBS "-ldbgeng")
     add_definitions("-DBOOST_STACKTRACE_USE_WINDBG")
 elseif(APPLE)
-    find_package(Boost 1.19.0 REQUIRED COMPONENTS stacktrace_basic)
+    find_package(Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS stacktrace_basic)
     list(APPEND INKSCAPE_CXX_FLAGS "-D_GNU_SOURCE")
 else()
-    find_package(Boost 1.19.0 REQUIRED)
+    find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
     # The package stacktrace_backtrace may not be available on all distros.
-    find_package(Boost 1.19.0 COMPONENTS stacktrace_backtrace)
+    find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS stacktrace_backtrace)
     if (BOOST_FOUND)
         list(APPEND INKSCAPE_LIBS "-lbacktrace")
         add_definitions("-DBOOST_STACKTRACE_USE_BACKTRACE")
     else() # fall back to stacktrace_basic
-        find_package(Boost 1.19.0 REQUIRED COMPONENTS stacktrace_basic)
+        find_package(Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS stacktrace_basic)
         list(APPEND INKSCAPE_CXX_FLAGS "-D_GNU_SOURCE")
     endif()
 endif()
@@ -370,6 +374,13 @@ if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7 AND
 endif()
 
 list(APPEND INKSCAPE_LIBS Boost::headers)
+
+# Boost.Parser's double_ falls back to Boost.Charconv where std::from_chars
+# lacks floating-point support (e.g. libc++); header-only elsewhere.
+find_package(Boost ${BOOST_MIN_VERSION} QUIET COMPONENTS charconv)
+if (TARGET Boost::charconv)
+    list(APPEND INKSCAPE_LIBS Boost::charconv)
+endif()
 
 find_package(LibXslt REQUIRED)
 list(APPEND INKSCAPE_LIBS LibXslt::LibXslt)

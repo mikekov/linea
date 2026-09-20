@@ -21,7 +21,7 @@ class OverlayLayout : public QLayout {
     Q_OBJECT
 
 public:
-    enum class Position { Left, Right, Center, Canvas };
+    enum class Position { Left, Right, Center, Bottom, Canvas };
     enum class Mode { Floating, Docked };
 
     struct PanelMargins {

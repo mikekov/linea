@@ -45,6 +45,7 @@ public:
     void setAnimationDuration(int msecs);
     int animationDuration() const;
 
+    using ResizableEdgeWidget::setResizeStep;
     void setResizeStep(int step);
     int resizeStep() const;
 
@@ -59,7 +60,6 @@ private Q_SLOTS:
 
 protected:
     bool canResize() const override;
-    int snapResizeWidth(int newWidth) const override;
 
 private:
     void updateToggleButtonIcon();
@@ -70,8 +70,6 @@ private:
     bool _collapsed = false;
     int _collapsedHeight = 40;
     int _animationDuration = 200;
-
-    int _resizeStep = 10;
     bool _rounded = true;
 };
 

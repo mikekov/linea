@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>ConsolePanel</class>
+  <widget class="QWidget" name="ConsolePanel">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>600</width>
+        <height>320</height>
+      </rect>
+    </property>
+    <layout class="QHBoxLayout" name="panelLayout">
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <property name="leftMargin">
+        <number>5</number>
+      </property>
+      <property name="topMargin">
+        <number>5</number>
+      </property>
+      <property name="rightMargin">
+        <number>5</number>
+      </property>
+      <property name="bottomMargin">
+        <number>5</number>
+      </property>
+      <item>
+        <widget class="Linea::UI::ConsoleWidget" name="console">
+          <property name="class" stdset="0">
+            <string>console</string>
+          </property>
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::ConsoleWidget</class>
+      <extends>QPlainTextEdit</extends>
+      <header>qt/ui/console/console-widget.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

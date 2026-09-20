@@ -66,6 +66,16 @@ bool ActionRegistry::hasAction(const std::string& id) const {
     return _actionMap.find(id) != _actionMap.end();
 }
 
+std::vector<std::string> ActionRegistry::actionIds() const {
+    std::vector<std::string> ids;
+    ids.reserve(_actionMap.size());
+    for (const auto& [id, action] : _actionMap) {
+        ids.push_back(id);
+    }
+    std::sort(ids.begin(), ids.end());
+    return ids;
+}
+
 void ActionRegistry::syncAllActions() {
     for (auto& [action, state_query] : _stateQueries) {
         if (action->isCheckable()) {

@@ -233,16 +233,19 @@ view_focus_toggle(LineaWindow *win)
     dt->focusMode(!dt->is_focusMode());
 }
 
-void canvas_command_palette(LineaWindow *win)
-{
-    // We have to defer showing the command palette until idle, otherwise the application menu
-    // will steal back the focus from the command palette, instantly closing it again. Even then,
-    // it doesn't behave properly, vanishing when the mouse is next moved.
-    // Todo: Report/fix these issues upstream.
-    // Glib::signal_idle().connect(sigc::track_object([win] {
-        win->get_desktop()->toggleCommandPalette();
-        // return false; // once
-    // }, *win));
+void canvas_command_palette(LineaWindow* wnd) {
+    // go through the desktop widget so the console also works with no
+    // document open (get_desktop() is null then)
+    if (auto widget = wnd ? wnd->getDesktopWidget() : nullptr) {
+        widget->toggleConsolePanel();
+    }
+}
+
+bool get_command_palette_visible(LineaWindow* wnd) {
+    if (auto widget = wnd ? wnd->getDesktopWidget() : nullptr) {
+        return widget->isConsolePanelVisible();
+    }
+    return false;
 }
 
 /*
@@ -291,7 +294,7 @@ view_set_gui(LineaWindow* win)
 }
 
 const Glib::ustring SECTION = NC_("Action Section", "Canvas Display");
-
+#if 0
 std::vector<std::vector<Glib::ustring>> raw_data_view_mode =
 {
     // clang-format off
@@ -313,14 +316,18 @@ std::vector<std::vector<Glib::ustring>> raw_data_view_mode =
     {"win.canvas-interface-mode",    N_("Interface Mode"),          SECTION, N_("Toggle wide or narrow screen setup")},
     // clang-format on
 };
+#endif
 
 static auto action_defs = std::to_array<ActionSpec<LineaWindow>>({
     // clang-format off
-    {"view-fullscreen",    N_("Enter Full Screen"),  SECTION, N_("Stretch this document window to full screen"), nullptr, view_fullscreen,    get_view_fullscreen,    N_("Exit Full Screen")},
-    // {"view-toggle-ui",  N_("Show dialogs"),  N_("Toggle visibility of all dialogs"), "", N_("Hide dialogs"),
-        // view_toggle_dialogs, get_view_toggle_dialogs},
-    {"view-color-palette", N_("Show Color Palette"), SECTION, N_("Show or hide the color palette"),            nullptr, view_color_palette, get_view_color_palette, "Hide Color Palette"},
-    {"view-rulers",        N_("Show Rulers"),        SECTION, N_("Show or hide the rulers"),                   nullptr, view_rulers,        get_view_rulers,        N_("Hide Rulers")},
+    {"view-fullscreen",      N_("Enter Full Screen"),    SECTION, N_("Stretch this document window to full screen"),
+        nullptr, view_fullscreen,    get_view_fullscreen,    N_("Exit Full Screen")},
+    {"view-color-palette",   N_("Show Color Palette"),   SECTION, N_("Show or hide the color palette"),
+        nullptr, view_color_palette, get_view_color_palette, "Hide Color Palette"},
+    {"view-rulers",          N_("Show Rulers"),          SECTION, N_("Show or hide the rulers"),
+        nullptr, view_rulers,        get_view_rulers,        N_("Hide Rulers")},
+    {"view-command-palette", N_("Show Command Palette"), SECTION, N_("Show or hide the command palette"),
+        nullptr, canvas_command_palette, get_command_palette_visible, "Hide Command Palette"},
     // clang-format on
 });
 

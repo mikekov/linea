@@ -181,6 +181,13 @@ target_sources(linea_base PRIVATE
   linea-application.h
   linea-application.cpp
 
+  command-interpreter.h
+  command-args.h
+  command-args.cpp
+  interpreter.h
+  interpreter.cpp
+  builtin-commands.cpp
+
   main-menu.h
   main-menu.cpp
 

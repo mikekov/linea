@@ -50,7 +50,7 @@ public:
     void updateButtonMargin();
 
 protected:
-    int snapResizeWidth(int newWidth) const override;
+    QSize snapResize(QSize newSize) const override;
 
 private:
     void showOptions();

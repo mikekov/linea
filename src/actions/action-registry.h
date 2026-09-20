@@ -9,6 +9,7 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QObject>
+#include <QStringList>
 #include "action-meta.h"
 #include "linea-application.h"
 #include "linea-window.h"
@@ -67,6 +68,9 @@ public:
     QAction* action(const std::string& id) const;
 
     bool hasAction(const std::string& id) const;
+
+    // ids of all registered actions, sorted — for discovery and completion
+    std::vector<std::string> actionIds() const;
 
     ActionRegistry(const ActionRegistry&) = delete;
     ActionRegistry& operator = (const ActionRegistry&) = delete;

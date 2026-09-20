@@ -271,4 +271,11 @@ target_sources(linea_base PRIVATE
     ui/export-widget.cpp
     ui/export-widget.h
     ui/export-widget.ui
+    ui/console/console-widget.cpp
+    ui/console/console-widget.h
+    ui/console/console-completer.cpp
+    ui/console/console-completer.h
+    ui/console/console-panel.cpp
+    ui/console/console-panel.h
+    ui/console/console-panel.ui
 )

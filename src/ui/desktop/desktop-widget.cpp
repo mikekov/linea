@@ -33,10 +33,14 @@
 #include "document-undo.h"
 #include "document.h"
 #include "layer-manager.h"
+#include "interpreter.h"
 #include "linea-application.h"
 #include "object-tree-view.h"
 #include "object/sp-namedview.h"
 #include "preferences.h"
+#include "qt/ui/console/console-completer.h"
+#include "qt/ui/console/console-panel.h"
+#include "qt/ui/console/console-widget.h"
 #include "qt/ui/document-properties-panel.h"
 #include "qt/ui/panel-switch.h"
 #include "qt/ui/welcome-page.h"
@@ -206,11 +210,42 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
 
     // Connect resize signals to update layout
     connect(_leftPanel, &CollapsiblePanel::resized, this,
-            [this](int) { _overlayLayout->updatePanelGeometry(); });
+            [this](QSize) { _overlayLayout->updatePanelGeometry(); });
     connect(_rightPanel, &CollapsiblePanel::resized, this,
-            [this](int) { _overlayLayout->updatePanelGeometry(); });
+            [this](QSize) { _overlayLayout->updatePanelGeometry(); });
     connect(_colorPalettePanel, &ColorPalettePanel::resized, this,
-            [this](int) { _overlayLayout->updatePanelGeometry(); });
+            [this](QSize) { _overlayLayout->updatePanelGeometry(); });
+
+    // Floating console panel anchored at the bottom of the canvas; resizable
+    // from its left/top/right edges, capped at a fixed number of text lines.
+    _consolePanel = new ConsolePanel(_canvasContainer);
+    _consolePanel->setResizableEdges(Qt::LeftEdge | Qt::TopEdge | Qt::RightEdge);
+    // the Bottom position keeps the panel horizontally centered
+    _consolePanel->setSymmetricResizeAxes(Qt::Horizontal);
+    _consolePanel->setMaxLines(20);
+    _consolePanel->setMinColumns(24);
+    _consolePanel->console()->showPrompt("> ");
+    _overlayLayout->setPanelPosition(_consolePanel, OverlayLayout::Position::Bottom, QSize(600, 60), true,
+                                     {PANEL_MARGIN, PANEL_MARGIN, 0, PANEL_MARGIN});
+    _overlayLayout->setPanelMode(_consolePanel, OverlayLayout::Mode::Floating);
+    connect(_consolePanel, &ConsolePanel::resized, this,
+            [this](QSize) { _overlayLayout->updatePanelGeometry(); });
+    connect(_consolePanel, &ConsolePanel::closeRequested, _consolePanel, &QWidget::hide);
+
+    // command interpreter backing the console; resolves the active
+    // document/desktop/selection through the application singleton
+    auto interpreter = new Linea::Interpreter(this);
+    ConsoleWidget* console = _consolePanel->console();
+    console->setCompleter(new InterpreterCompleter(interpreter, &LINEA_APP, console));
+    connect(_consolePanel, &ConsolePanel::commandEntered, interpreter,
+            [interpreter](const QString& command) { interpreter->evaluate(command.toStdString(), &LINEA_APP); });
+    connect(console, &ConsoleWidget::abortEvaluation, interpreter, &Linea::CommandInterpreter::abort);
+    connect(interpreter, &Linea::CommandInterpreter::stdOut, console, &ConsoleWidget::writeStdOut);
+    connect(interpreter, &Linea::CommandInterpreter::stdErr, console, &ConsoleWidget::writeStdErr);
+    connect(interpreter, &Linea::CommandInterpreter::evaluationFinished, console,
+            [console] { console->showPrompt(QStringLiteral("> ")); });
+
+    _consolePanel->hide();
 
     // Create toolbar and place in center overlay
     _toolbar = new MainToolbar(_canvasContainer);
@@ -802,6 +837,7 @@ void SPDesktopWidget::saveSettings() {
     _leftPanel->saveSettings(*_settings);
     _rightPanel->saveSettings(*_settings);
     _settings->setValue("colorPaletteWidth", _colorPalettePanel->width());
+    _settings->setValue("consolePanelSize", _consolePanel->size());
     _settings->setValue("colorPaletteVisible", _colorPaletteVisible);
     _settings->setValue("showDialogIndex", _rightPanel->switchWidget()->currentIndex());
     _settings->setValue("dockedDialogs", dialogsDocked());
@@ -828,6 +864,7 @@ void SPDesktopWidget::restoreSettings() {
     _leftPanel->restoreSettings(*_settings);
     _rightPanel->restoreSettings(*_settings);
     int colorPaletteWidth = _settings->value("colorPaletteWidth", _colorPalette->widthForColumns(1)).toInt();
+    const QSize consoleSize = _settings->value("consolePanelSize", QSize(600, 60)).toSize();
     _colorPaletteVisible = _settings->value("colorPaletteVisible", true).toBool();
     bool toggleSvgTree = _settings->value("toggleSvgTree", false).toBool();
     int showDialog = _settings->value("showDialogIndex", 0).toInt();
@@ -838,6 +875,7 @@ void SPDesktopWidget::restoreSettings() {
     _settings->endGroup();
 
     _colorPalettePanel->resize(colorPaletteWidth, _colorPalettePanel->height());
+    _consolePanel->resize(consoleSize); // snapped to the character grid on show
 
     _overlayLayout->updatePanelGeometry();
 
@@ -880,6 +918,23 @@ void SPDesktopWidget::toggleColorPalette() {
     _colorPalettePanel->setVisible(dialogsDocked() && _colorPaletteVisible);
     _overlayLayout->invalidate();
     _overlayLayout->activate();
+}
+
+void SPDesktopWidget::toggleConsolePanel() {
+    if (!_consolePanel) return;
+
+    if (_consolePanel->isVisible()) {
+        _consolePanel->hide();
+    }
+    else {
+        _consolePanel->show();
+        _consolePanel->raise();
+        _consolePanel->console()->setFocus();
+    }
+}
+
+bool SPDesktopWidget::isConsolePanelVisible() const {
+    return _consolePanel && _consolePanel->isVisible();
 }
 
 void SPDesktopWidget::dragEnterEvent(QDragEnterEvent* event) {

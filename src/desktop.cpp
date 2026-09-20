@@ -1320,9 +1320,9 @@ void SPDesktop::setColorMode(Inkscape::ColorMode mode) {
     }
 }
 
-// UI toggles (stubs for Qt)
+// UI toggles
 void SPDesktop::toggleCommandPalette() {
-    // TODO: Implement command palette toggle for Qt
+    if (_widget) _widget->toggleConsolePanel();
 }
 
 void SPDesktop::toggleRulers() {

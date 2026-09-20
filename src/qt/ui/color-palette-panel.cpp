@@ -60,8 +60,9 @@ void ColorPalettePanel::updateButtonMargin() {
     _buttonRow->setContentsMargins(0, 0, right, 4);
 }
 
-int ColorPalettePanel::snapResizeWidth(int newWidth) const {
-    return _palette->snapResizeWidth(newWidth);
+QSize ColorPalettePanel::snapResize(QSize newSize) const {
+    newSize.setWidth(_palette->snapResizeWidth(newSize.width()));
+    return newSize;
 }
 
 } // namespace Linea::UI

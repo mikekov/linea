@@ -64,8 +64,12 @@ std::string get_field(int index, const char* field, const std::string& def = "")
     return val.raw();
 }
 
+bool is_valid_utf8(const std::string& value) {
+    return g_utf8_validate(value.data(), value.size(), nullptr);
+}
+
 std::string make_valid_utf8(const std::string& value) {
-    if (g_utf8_validate(value.c_str(), -1, nullptr)) return value;
+    if (is_valid_utf8(value)) return value;
 
     auto valid = g_utf8_make_valid(value.c_str(), -1);
     std::string result{valid};
@@ -79,6 +83,8 @@ void set_field(int index, const char* field, const std::string& value) {
 }
 
 std::string filename_to_uri(const std::string& filename) {
+    if (!is_valid_utf8(filename)) return {};
+
     try {
         return Glib::filename_to_uri(filename).raw();
     } catch (const Glib::ConvertError&) {
@@ -88,7 +94,8 @@ std::string filename_to_uri(const std::string& filename) {
 
 std::string uri_to_filename(const std::string& uri) {
     try {
-        return Glib::filename_from_uri(uri);
+        auto filename = Glib::filename_from_uri(uri);
+        return is_valid_utf8(filename) ? filename : std::string{};
     } catch (const Glib::ConvertError&) {
         return {};
     }
@@ -140,7 +147,7 @@ std::optional<RecentFile> read_entry(int index) {
     RecentFile rf;
     rf.uri = get_entry_uri(index);
     rf.path = uri_to_filename(rf.uri);
-    if (rf.path.empty()
+    if (rf.path.empty() || !Glib::path_is_absolute(rf.path)
         // no file presence test - disconnected network share would kill performance
         /* || !g_file_test(rf.path.c_str(), G_FILE_TEST_IS_REGULAR) */) {
         return std::nullopt;
@@ -342,7 +349,7 @@ std::map<std::string, std::string> getShortenedPathMap(const std::vector<RecentF
         }
 
         // Disambiguate both entries.
-        for (auto* parts : {&parts_a, &parts_b}) {
+        for (auto parts : {&parts_a, &parts_b}) {
             auto& p = *parts;
             auto size = p.size();
             auto path = (parts == &parts_a) ? a.path : b.path;

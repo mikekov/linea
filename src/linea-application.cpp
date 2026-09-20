@@ -68,7 +68,7 @@ void LineaApplication::set_active_desktop(SPDesktop* desktop) {
 // Document management
 // ---------------------------------------------------------------------------
 
-void LineaApplication::createNewDocument(int templateIndex) {
+bool LineaApplication::createNewDocument(int templateIndex) {
     UI::OverrideCursor wait(Qt::WaitCursor);
 
     //TODO: configurable templates -------
@@ -90,10 +90,12 @@ void LineaApplication::createNewDocument(int templateIndex) {
         desktop = desktopOpen(document);
     } else {
         std::cerr << "LineaApplication::createNewDocument: Failed to open default document!" << std::endl;
+        return false;
     }
 
     _active_document = document;
     _active_window = desktop ? desktop->getLineaWindow() : nullptr;
+    return true;
 }
 
 SPDocument* LineaApplication::document_add(std::unique_ptr<SPDocument> document) {

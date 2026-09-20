@@ -51,6 +51,7 @@ class ustring;
 }
 
 namespace Linea::UI {
+class ConsolePanel;
 class XmlTreeWidget;
 class ObjectTreeView;
 class NumberEdit;
@@ -105,6 +106,10 @@ public:
     // color palette on the right
     void toggleColorPalette();
     bool colorPaletteVisible() const { return _colorPaletteVisible; }
+    // console panel at the bottom
+    Linea::UI::ConsolePanel* consolePanel() const { return _consolePanel; }
+    void toggleConsolePanel();
+    bool isConsolePanelVisible() const;
     // canvas rulers
     void toggleRulers();
     bool rulersVisible() const;
@@ -161,6 +166,7 @@ private:
     WelcomePage* _welcomePage = nullptr;
     ColorPaletteWidget* _colorPalette = nullptr;
     ColorPalettePanel* _colorPalettePanel = nullptr;
+    Linea::UI::ConsolePanel* _consolePanel = nullptr;
     NotificationBar* _notificationBar = nullptr;
 
     // Desktop management
