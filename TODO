@@ -29,6 +29,7 @@ x dropper icon is low res
 - Esc to dismiss notification bar!
 x closing the last doc may leave left panel expanded, if there was a seleciton active before doc close
 - TextPanel is a work in progress, remove current item
+- add Blender-like shortcuts (for object manipulation)
 
 ## Missing features
 

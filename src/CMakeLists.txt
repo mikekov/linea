@@ -469,15 +469,20 @@ endif()
 # Bundle Qt frameworks and shared libraries into the .app at install time.
 # Only runs during `cmake --install`, not on dev builds.
 if(APPLE)
-    get_filename_component(QT_DEPLOY_PREFIX "${QT_DEPLOY_TOOL}/.." ABSOLUTE)
-    get_filename_component(QT_BREW_PREFIX "${QT_DEPLOY_PREFIX}/../.." ABSOLUTE)
-    set(QT_DEPLOY_LIBPATH_ARGS)
-    foreach(QT_PACKAGE qt qtbase qtsvg qtdeclarative qtvirtualkeyboard)
-        set(QT_PACKAGE_LIBDIR "${QT_BREW_PREFIX}/opt/${QT_PACKAGE}/lib")
-        if(IS_DIRECTORY "${QT_PACKAGE_LIBDIR}")
-            list(APPEND QT_DEPLOY_LIBPATH_ARGS "-libpath=${QT_PACKAGE_LIBDIR}")
-        endif()
-    endforeach()
+    # Homebrew splits Qt 6 into per-module kegs (qtsvg, qtvirtualkeyboard,
+    # qtwebengine which ships QtPdf, ...), so the modules linea's own rpaths
+    # cover (qtbase et al) don't lead macdeployqt to every framework it may
+    # need to resolve while walking plugin dependencies. Homebrew symlinks
+    # every keg's public frameworks into one flat directory at
+    # <homebrew prefix>/lib (verified: QtSvg.framework, QtPdf.framework,
+    # QtVirtualKeyboard.framework, etc. all resolve there), so pointing
+    # -libpath at just that directory covers every installed Qt module,
+    # present and future, without enumerating individual kegs.
+    # QT_BREW_PREFIX is the umbrella qt keg (e.g. /opt/homebrew/opt/qt);
+    # its grandparent is the Homebrew prefix (e.g. /opt/homebrew).
+    get_filename_component(QT_BREW_OPT_DIR "${QT_BREW_PREFIX}/.." ABSOLUTE)
+    get_filename_component(HOMEBREW_PREFIX "${QT_BREW_OPT_DIR}/.." ABSOLUTE)
+    set(QT_DEPLOY_LIBPATH_ARGS "-libpath=${HOMEBREW_PREFIX}/lib")
 
     install(CODE "
         execute_process(

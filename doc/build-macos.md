@@ -73,6 +73,8 @@ To create a distributable app bundle, run:
 
 ```
 ninja install
+# repeat to fix up QtSvg references that macdeployqt misses
+ninja install
 ```
 
 It will create `build/install/linea.app` with all dependencies bundled.
@@ -82,6 +84,7 @@ It will create `build/install/linea.app` with all dependencies bundled.
 `ninja install` (or `cmake --install build`) installs to `build/install` by default,
 producing `build/install/linea.app` with Qt frameworks bundled via `macdeployqt`.
 Set `-DCMAKE_INSTALL_PREFIX=...` at configure time to install elsewhere.
+Due to bugs in `macdeployqt`, the first run may miss QtSvg references. Running `ninja install` a second time will fix this.
 
 ## Problems
 
