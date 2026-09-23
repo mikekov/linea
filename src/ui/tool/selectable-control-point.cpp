@@ -33,6 +33,10 @@ SelectableControlPoint::~SelectableControlPoint()
 
 bool SelectableControlPoint::grabbed(MotionEvent const &)
 {
+    return dragStarted();
+}
+
+bool SelectableControlPoint::dragStarted() {
     // if a point is dragged while not selected, it should select itself
     if (!selected()) {
         _takeSelection();

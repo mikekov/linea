@@ -89,6 +89,7 @@ public:
     void spatialGrow(SelectableControlPoint *origin, int dir);
 
     bool event(Inkscape::UI::Tools::ToolBase *tool, CanvasEvent const &event) override;
+    void beginDrag(SelectableControlPoint* point);
 
     void transform(Geom::Affine const &m);
     void align(Geom::Dim2 d, AlignTargetNode target = AlignTargetNode::MID_NODE);

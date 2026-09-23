@@ -57,9 +57,9 @@ static bool is_cycling = false;
 
 SelectTool::SelectTool(SPDesktop *desktop)
     : ToolBase(desktop, "/tools/select", "select.svg")
-    , _acc_st_grab{"tool.sel.stkey-grab"}
-    , _acc_st_scale{"tool.sel.stkey-scale"}
-    , _acc_st_rotate{"tool.sel.stkey-rotate"}
+    , _acc_st_grab{"tool-sel-stkey-grab"}
+    , _acc_st_scale{"tool-sel-stkey-scale"}
+    , _acc_st_rotate{"tool-sel-stkey-rotate"}
 {
     auto select_click = Modifier::get(Modifiers::Type::SELECT_ADD_TO)->get_label();
     auto select_scroll = Modifier::get(Modifiers::Type::SELECT_CYCLE)->get_label();

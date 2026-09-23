@@ -63,9 +63,9 @@ static bool pen_within_tolerance = false;
 
 PenTool::PenTool(SPDesktop *desktop, std::string &&prefs_path, std::string &&cursor_filename)
     : FreehandBase(desktop, std::move(prefs_path), std::move(cursor_filename))
-    , _acc_to_line{"tool.pen.to-line"}
-    , _acc_to_curve{"tool.pen.to-curve"}
-    , _acc_to_guides{"tool.pen.to-guides"}
+    , _acc_to_line{"tool-pen-to-line"}
+    , _acc_to_curve{"tool-pen-to-curve"}
+    , _acc_to_guides{"tool-pen-to-guides"}
 {
     tablet_enabled = false;
 
@@ -848,6 +848,20 @@ void PenTool::_lastpointMove(double x, double y)
 void PenTool::_lastpointMoveScreen(double x, double y)
 {
     _lastpointMove(x / _desktop->current_zoom(), y / _desktop->current_zoom());
+}
+
+void PenTool::lastPointToCurve() {
+    _lastpointToCurve();
+}
+
+void PenTool::lastPointToLine() {
+    _lastpointToLine();
+}
+
+void PenTool::selectionToGuides() {
+    if (_desktop && _desktop->getSelection()) {
+        _desktop->getSelection()->toGuides();
+    }
 }
 
 void PenTool::_lastpointToCurve()

@@ -334,6 +334,31 @@ void MultiPathManipulator::insertNodesAtExtrema(ExtremumType extremum)
     _done(RC_("Undo", "Add extremum nodes"));
 }
 
+bool MultiPathManipulator::canAppendNode() {
+    int paths = 0;
+    for (auto &entry : _mmap) {
+        if (entry.second->canAppendNode()) {
+            ++paths;
+        }
+    }
+
+    return paths == 1;
+}
+
+bool MultiPathManipulator::appendNode(const Geom::Point& point) {
+    if (!canAppendNode()) {
+        return false;
+    }
+
+    for (auto &entry : _mmap) {
+        if (entry.second->canAppendNode()) {
+            return entry.second->appendNode(point);
+        }
+    }
+
+    return false;
+}
+
 void MultiPathManipulator::insertNode(Geom::Point pt)
 {
     // When double clicking to insert nodes, we might not have a selection of nodes (and we don't need one)
@@ -649,6 +674,7 @@ bool MultiPathManipulator::event(Inkscape::UI::Tools::ToolBase *tool, CanvasEven
         Inkscape::Preferences *prefs = Inkscape::Preferences::get();
 
         switch (key) {
+#if 0 // those are now handled by explicit action shortcuts
         case INK_KEY_Insert:
         case INK_KEY_KP_Insert:
             // Insert - insert nodes in the middle of selected segments
@@ -760,6 +786,7 @@ bool MultiPathManipulator::event(Inkscape::UI::Tools::ToolBase *tool, CanvasEven
                 return;
             }
             break;
+#endif
         case INK_KEY_Delete:
         case INK_KEY_KP_Delete:
         case INK_KEY_BackSpace:

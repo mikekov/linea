@@ -86,6 +86,8 @@ public:
     void insertNodeAtExtremum(ExtremumType extremum);
     void insertNodes();
     void insertNode(Geom::Point);
+    bool canAppendNode();
+    Node* appendNode(const Geom::Point& point);
     void insertNode(NodeList::iterator first, double t, bool take_selection);
     void duplicateNodes();
     void copySelectedPath(Geom::PathBuilder *builder);

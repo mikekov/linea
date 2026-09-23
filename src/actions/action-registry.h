@@ -84,7 +84,8 @@ private:
 
     std::vector<const ActionGroup*> _groups;
     std::unordered_map<std::string, QAction*> _actionMap;
-    std::unordered_map<QAction*, std::function<bool()>> _stateQueries;
+    std::unordered_map<QAction*, std::function<bool ()>> _stateQueries;
+    std::unordered_map<QAction*, std::function<bool ()>> _enabledQueries;
 };
 
 template<typename Meta, typename Callback>
@@ -100,6 +101,7 @@ QAction* ActionRegistry::createBoolAction(const BoolActionMeta& meta, Callback c
     auto action = createActionBase(meta.id, meta.label, meta.icon_name, meta.tooltip);
     action->setCheckable(true);
     action->setChecked(initial);
+    // NOTE:
     // Side-effect callback on triggered (user activation only), NOT toggled.
     // setChecked from syncAllActions fires toggled (buttons update) but not
     // triggered (no side-effect re-entry). After the callback runs, re-query
@@ -187,6 +189,16 @@ void ActionRegistry::registerActions(
     auto group = radioGroup ? new QActionGroup(wnd) : nullptr;
 
     for (const auto& entry : entries) {
+        auto enabled_query = [app, enabled = entry.enabled]() {
+            if (!enabled) {
+                return true;
+            }
+            if (auto context = details::active_context<Context>(app)) {
+                return enabled(context);
+            }
+            return false;
+        };
+
         if (entry.state) {
             auto state_query = [app, state = entry.state]() {
                 if (auto context = details::active_context<Context>(app)) {
@@ -211,6 +223,8 @@ void ActionRegistry::registerActions(
                 state_query,
                 initial);
 
+            action->setEnabled(enabled_query());
+            _enabledQueries[action] = enabled_query;
             wnd->addAction(action);
             if (group) group->addAction(action);
         } else {
@@ -222,6 +236,8 @@ void ActionRegistry::registerActions(
                     }
                 });
 
+            action->setEnabled(enabled_query());
+            _enabledQueries[action] = enabled_query;
             wnd->addAction(action);
             if (group) group->addAction(action);
         }

@@ -151,8 +151,6 @@ bool ControlPoint::_eventHandler(Tools::ToolBase *tool, CanvasEvent const &event
         g_warning("ControlPoint: desktop pointers not equal!");
     }
 
-    // offset from the pointer hotspot to the center of the grabbed knot in desktop coords
-    static Geom::Point pointer_offset;
     // number of last doubleclicked button
     static unsigned next_release_doubleclick = 0;
 
@@ -183,15 +181,19 @@ bool ControlPoint::_eventHandler(Tools::ToolBase *tool, CanvasEvent const &event
         if (event.num_press == 1) {
             next_release_doubleclick = 0;
             if (event.button == 1 && !tool->is_space_panning()) {
-                // 1st mouse button click. internally, start dragging, but do not emit signals
-                // or change position until drag tolerance is exceeded.
-                _drag_event_origin = event.pos;
-                pointer_offset = _position - _desktop->w2d(_drag_event_origin);
-                _drag_initiated = false;
-                // route all events to this handler
-                _canvas_item_ctrl->grab(grab_event_mask); // cursor is null
-                _event_grab = true;
-                _setState(STATE_CLICKED);
+                if (_drag_initiated) {
+                    _finishDrag(tool, nullptr);
+                } else {
+                    // 1st mouse button click. internally, start dragging, but do not emit signals
+                    // or change position until drag tolerance is exceeded.
+                    _drag_event_origin = event.pos;
+                    _pointer_offset = _position - _desktop->w2d(_drag_event_origin);
+                    _drag_initiated = false;
+                    // route all events to this handler
+                    _canvas_item_ctrl->grab(grab_event_mask); // cursor is null
+                    _event_grab = true;
+                    _setState(STATE_CLICKED);
+                }
                 ret = true;
             } else {
                 ret = _event_grab;
@@ -222,7 +224,7 @@ bool ControlPoint::_eventHandler(Tools::ToolBase *tool, CanvasEvent const &event
 
             if (!transferred) {
                 // dragging in progress
-                auto new_pos = _desktop->w2d(event.pos) + pointer_offset;
+                auto new_pos = _desktop->w2d(event.pos) + _pointer_offset;
                 // the new position is passed by reference and can be changed in the handlers.
                 dragged(new_pos, event);
                 move(new_pos);
@@ -244,18 +246,13 @@ bool ControlPoint::_eventHandler(Tools::ToolBase *tool, CanvasEvent const &event
             // We must snap at some point in time though, and this is our last chance)
             // PS: For other contexts this is handled already in start_item_handler or start_root_handler
             // if (_desktop && _desktop->getTool() && _desktop->getTool()->_delayed_snap_event) {
-            tool->process_delayed_snap_event();
-
-            _canvas_item_ctrl->ungrab();
-            _setMouseover(this, event.modifiers);
-            _event_grab = false;
-
             if (_drag_initiated) {
-                // it is the end of a drag
-                _drag_initiated = false;
-                ungrabbed(&event);
+                _finishDrag(tool, &event);
                 ret = true;
             } else {
+                _canvas_item_ctrl->ungrab();
+                _setMouseover(this, event.modifiers);
+                _event_grab = false;
                 // it is the end of a click
                 if (next_release_doubleclick) {
                     _double_clicked = true;
@@ -281,6 +278,14 @@ bool ControlPoint::_eventHandler(Tools::ToolBase *tool, CanvasEvent const &event
     // TODO add ESC keybinding as drag cancel
     [&] (KeyPressEvent const &event) {
         switch (Tools::get_latin_keyval(event)) {
+        case INK_KEY_Return:
+        case INK_KEY_ISO_Enter:
+            if (_drag_initiated) {
+                _finishDrag(tool, nullptr);
+                ret = true;
+                return;
+            }
+            break;
         case INK_KEY_Escape: {
             // ignore Escape if this is not a drag
             if (!_drag_initiated) break;
@@ -409,6 +414,38 @@ void ControlPoint::_clearMouseover()
     signal_mouseover_change.emit(mouseovered_point);
 }
 
+void ControlPoint::beginDrag() {
+    if (!_desktop || !_desktop->getTool() || _event_grab) return;
+
+    _drag_event_origin = _desktop->d2w(_position);
+    _drag_origin = _position;
+    _pointer_offset = {};
+    _drag_initiated = true;
+    _canvas_item_ctrl->grab(grab_event_mask);
+    _event_grab = true;
+    _setState(STATE_CLICKED);
+    dragStarted();
+}
+
+void ControlPoint::_finishDrag(Tools::ToolBase* tool, const ButtonReleaseEvent* event) {
+    if (!_event_grab || !_drag_initiated) return;
+
+    if (tool) {
+        tool->process_delayed_snap_event();
+    }
+
+    _canvas_item_ctrl->ungrab();
+    if (event) {
+        _setMouseover(this, event->modifiers);
+    } else {
+        _clearMouseover();
+        _setState(STATE_NORMAL);
+    }
+    _event_grab = false;
+    _drag_initiated = false;
+    ungrabbed(event);
+}
+
 void ControlPoint::transferGrab(ControlPoint *prev_point, MotionEvent const &event)
 {
     if (!_event_grab) return;
@@ -461,6 +498,11 @@ bool ControlPoint::_is_drag_cancelled(MotionEvent const &event)
 // dummy implementations for handlers
 
 bool ControlPoint::grabbed(MotionEvent const &)
+{
+    return dragStarted();
+}
+
+bool ControlPoint::dragStarted()
 {
     return false;
 }

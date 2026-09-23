@@ -265,6 +265,81 @@ void PathManipulator::insertNode(Geom::Point pt)
     }
 }
 
+bool PathManipulator::canAppendNode() {
+    int endpoints = 0;
+    for (auto &subpath : _subpaths) {
+        if (subpath->closed()) {
+            continue;
+        }
+
+        for (auto node = subpath->begin(); node != subpath->end(); ++node) {
+            if (node->selected() && (node == subpath->begin() || !node.next())) {
+                ++endpoints;
+            }
+        }
+    }
+
+    return endpoints == 1;
+}
+
+Node* PathManipulator::appendNode(const Geom::Point& point) {
+    if (!canAppendNode()) {
+        return nullptr;
+    }
+
+    NodeList *target = nullptr;
+    NodeList::iterator endpoint;
+    bool prepend = false;
+
+    for (auto &subpath : _subpaths) {
+        if (subpath->closed()) {
+            continue;
+        }
+
+        for (auto node = subpath->begin(); node != subpath->end(); ++node) {
+            if (!node->selected()) {
+                continue;
+            }
+            if (node == subpath->begin()) {
+                target = subpath.get();
+                endpoint = node;
+                prepend = true;
+                break;
+            }
+            if (!node.next()) {
+                target = subpath.get();
+                endpoint = node;
+                break;
+            }
+        }
+        if (target) {
+            break;
+        }
+    }
+
+    if (!target || !endpoint) {
+        return nullptr;
+    }
+
+    auto node = new Node(_multi_path_manipulator._path_data.node_data, point);
+    node->setType(NODE_CUSP, false);
+    endpoint->setType(NODE_CUSP, false);
+    endpoint->front()->retract();
+    endpoint->back()->retract();
+
+    if (prepend) {
+        target->push_front(node);
+    } else {
+        target->push_back(node);
+    }
+
+    _selection.clear();
+    _selection.insert(node);
+    update(true);
+    _selection.beginDrag(node);
+    return node;
+}
+
 void PathManipulator::insertNode(NodeList::iterator first, double t, bool take_selection)
 {
     NodeList::iterator inserted = subdivideSegment(first, t);

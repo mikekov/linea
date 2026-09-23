@@ -14,12 +14,13 @@
 #include <glibmm.h>
 #include <2geom/point.h>
 
+class LineaApplication;
 class LineaWindow;
 class SPDesktop;
 class SPItem;
 
 // Returns the action ID (e.g. "tool-rect") for a tool name (e.g. "Rect").
-std::string tool_action_id(std::string_view tool_name);
+// std::string tool_action_id(std::string_view tool_name);
 
 void open_tool_preferences(LineaWindow* win, Glib::ustring const &tool);
 
@@ -31,6 +32,6 @@ void recreate_active_tool(SPDesktop* desktop);
 void tool_preferences(Glib::ustring const &tool, LineaWindow *win);
 
 // Standard function to add actions.
-void add_actions_tools(LineaWindow* win);
+void add_actions_tools(LineaApplication* app);
 
 #endif // INK_ACTIONS_TOOLS_H

@@ -64,10 +64,12 @@ struct ActionSpec {
     const char* icon_name;
     // action's callback
     void (*callback)(Context*);
-    // optional state query
+    // optional state query (for checkable actions)
     bool (*state)(Context*) = nullptr;
     // optional checked state label
     const char* checked_label = nullptr;
+    // optional enabled state query
+    bool (*enabled)(Context*) = nullptr;
 };
 
 // Parameterized action metadata (e.g., tool-switch with specific tool name)

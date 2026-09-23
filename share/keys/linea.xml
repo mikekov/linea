@@ -36,22 +36,21 @@ This file is the default keymap for LineaDraw. User customizations are stored se
   <bind action="tool-star"                     keys="*" />
   <bind action="tool-polygon"                  keys="A" />
   <bind action="tool-spiral"                   keys="" />
-  <!-- <bind action="tool-marker"            keys="M" /> -->
   <bind action="tool-pen"                      keys="P" />
   <bind action="tool-pencil"                   keys="F" />
   <bind action="tool-calligraphy"              keys="C" />
   <bind action="tool-text"                     keys="T" />
   <bind action="tool-gradient"                 keys="G" />
-  <bind action="tool-mesh"                     keys="Shift+M" />
+  <bind action="tool-mesh"                     keys="U" />
   <bind action="tool-dropper"                  keys="D" />
-  <bind action="tool-paintbucket"              keys="Shift+P" />
-  <bind action="tool-tweak"                    keys="Shift+T" />
-  <bind action="tool-spray"                    keys="Shift+S" />
-  <bind action="tool-eraser"                   keys="Shift+E" />
-  <bind action="tool-connector"                keys="Shift+C" />
+  <bind action="tool-paintbucket"              keys="B" />
+  <bind action="tool-tweak"                    keys="W" />
+  <bind action="tool-spray"                    keys="Y" />
+  <bind action="tool-eraser"                   keys="E" />
+  <bind action="tool-connector"                keys="K" />
   <bind action="tool-lpe"                      keys="" />
   <bind action="tool-zoom"                     keys="Z" />
-  <bind action="tool-measure"                  keys="" />
+  <bind action="tool-measure"                  keys="M" />
   <bind action="tool-pages"                    keys="" />
 
   <bind action="document-new"                  keys="Cmd+N" />
@@ -166,6 +165,24 @@ This file is the default keymap for LineaDraw. User customizations are stored se
 
   <bind action="undo"                          keys="Cmd+Z" />
   <bind action="redo"                          keys="Cmd+Shift+Z" />
+
+  <bind action="tool-node-append-node"         keys="Shift+P" />
+  <bind action="tool-node-insert-nodes"        keys="Insert; Shift+I" />
+  <bind action="tool-node-duplicate-nodes"     keys="Shift+D" />
+  <bind action="tool-node-join-nodes"          keys="Shift+J" />
+  <bind action="tool-node-join-segments"       keys="Alt+J" />
+  <bind action="tool-node-break-nodes"         keys="Shift+B" />
+  <bind action="tool-node-cusp"                keys="Shift+C" />
+  <bind action="tool-node-smooth"              keys="Shift+S" />
+  <bind action="tool-node-auto-smooth"         keys="Shift+A" />
+  <bind action="tool-node-symmetric"           keys="Shift+Y" />
+  <bind action="tool-node-reverse-subpaths"    keys="Shift+R" />
+  <bind action="tool-node-straight-segments"   keys="Shift+L" />
+  <bind action="tool-node-curve-segments"      keys="Shift+U" />
+
+  <bind action="tool-sel-stkey-grab"           keys="Shift+G" />
+  <bind action="tool-sel-stkey-scale"          keys="Shift+S" />
+  <bind action="tool-sel-stkey-rotate"         keys="Shift+R" />
 
   <!-- temporary -->
   <bind action="open-settings"                 keys="Alt+S" />

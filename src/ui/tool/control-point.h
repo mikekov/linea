@@ -153,6 +153,7 @@ public:
      * desktops, which doesn't make much sense anyway.
      */
     void transferGrab(ControlPoint *from, MotionEvent const &event);
+    void beginDrag();
     /// @}
 
     /// @name Inspect the state of the control point
@@ -207,6 +208,7 @@ protected:
      * @return true if you called transferGrab() during this method.
      */
     virtual bool grabbed(MotionEvent const &event);
+    virtual bool dragStarted();
 
     /**
      * Called while dragging, but before moving the knot to new position.
@@ -282,6 +284,7 @@ private:
     bool _updateDragTip(MotionEvent const &event);
 
     void _setDefaultColors();
+    void _finishDrag(Inkscape::UI::Tools::ToolBase* tool, const ButtonReleaseEvent* event);
 
     void _commonInit();
 
@@ -294,6 +297,8 @@ private:
     /** Stores the desktop point from which the last drag was initiated. */
     static Geom::Point _drag_origin;
     static bool _event_grab;
+    // offset from the pointer hotspot to the center of the grabbed knot in desktop coords
+    Geom::Point _pointer_offset;
 
     bool _double_clicked = false;
     bool _selected_appearance = false;

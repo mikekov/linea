@@ -42,6 +42,7 @@ protected:
 
     void dragged(Geom::Point &new_pos, MotionEvent const &event) override;
     bool grabbed(MotionEvent const &event) override;
+    bool dragStarted() override;
     void ungrabbed(ButtonReleaseEvent const *event) override;
     bool clicked(ButtonReleaseEvent const &event) override;
 

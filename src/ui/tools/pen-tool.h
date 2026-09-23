@@ -88,6 +88,9 @@ public:
     void setPolylineMode();
     bool hasWaitingLPE();
     void waitForLPEMouseClicks(Inkscape::LivePathEffect::EffectType effect_type, unsigned int num_clicks, bool use_polylines = true);
+    void lastPointToLine();
+    void lastPointToCurve();
+    void selectionToGuides();
 
 protected:
     void set(Inkscape::Preferences::Entry const &val) override;

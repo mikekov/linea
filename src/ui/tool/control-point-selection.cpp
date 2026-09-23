@@ -685,8 +685,15 @@ void ControlPointSelection::_commitHandlesTransform(CommitEvent ce)
     signal_commit.emit(ce);
 }
 
-bool ControlPointSelection::event(Inkscape::UI::Tools::ToolBase *, CanvasEvent const &event)
-{
+void ControlPointSelection::beginDrag(SelectableControlPoint* point) {
+    if (_dragging || !point || !point->selected()) {
+        return;
+    }
+
+    point->beginDrag();
+}
+
+bool ControlPointSelection::event(Inkscape::UI::Tools::ToolBase*, const CanvasEvent& event) {
     // implement generic event handling that should apply for all control point selections here;
     // for example, keyboard moves and transformations. This way this functionality doesn't need
     // to be duplicated in many places

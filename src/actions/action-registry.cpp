@@ -82,6 +82,10 @@ void ActionRegistry::syncAllActions() {
             action->setChecked(state_query());
         }
     }
+
+    for (auto& [action, enabled_query] : _enabledQueries) {
+        action->setEnabled(enabled_query());
+    }
 }
 
 void ActionRegistry::setupDualLabel(QAction* action, const char* checked_label) {

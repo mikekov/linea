@@ -564,6 +564,10 @@ void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
     });
 
     _desktopToolChanged = desktop->connectEventContextChanged([this](auto desk, auto tool) {
+        // When the tool changes from outside the action system (e.g. double-click
+        // on a shape), check the corresponding tool action.
+        ActionRegistry::get().syncAllActions();
+
         // selection takes precedent over tool style: don't update if there's a selection
         if (_desktop && !_desktop->getSelection()->isEmpty()) return;
 
@@ -621,15 +625,8 @@ void SPDesktopWidget::switchDesktop(SPDesktop* desktop) {
 
     _updatePanelsForDesktop(desktop);
 
-    // Check the tool action for the new desktop (QActionGroup unchecks the
-    // rest). All other stateful actions are re-evaluated via syncAllActions
+    // All stateful actions are re-evaluated via syncAllActions
     // since the entire desktop context changed.
-    auto toolName = desktop->getActiveTool();
-    if (auto actionId = tool_action_id(toolName); !actionId.empty()) {
-        if (auto action = ActionRegistry::get().action(actionId)) {
-            action->setChecked(true);
-        }
-    }
     ActionRegistry::get().syncAllActions();
 
     // Ensure paint indicator reflects the new desktop's current tool style

@@ -109,7 +109,7 @@ void LineaWindow::setupUI() {
 }
 
 void LineaWindow::createActions() {
-    add_actions_tools(this);
+    add_actions_tools(_app);
     add_actions_file(this);
     add_actions_file_window(_app);
     add_actions_edit_window(_app);

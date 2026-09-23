@@ -29,6 +29,7 @@ namespace Inkscape {
 namespace UI {
 enum class NodeDeleteMode;
 
+class Node;
 class PathManipulator;
 class MultiPathManipulator;
 struct PathSharedData;
@@ -59,6 +60,8 @@ public:
 
     void insertNodesAtExtrema(ExtremumType extremum);
     void insertNodes();
+    bool canAppendNode();
+    bool appendNode(const Geom::Point& point);
     void insertNode(Geom::Point pt);
     void alertLPE();
     void duplicateNodes();
