@@ -182,7 +182,7 @@ SPObject* createElement(Interpreter& interp, LineaApplication* app, const char* 
         interp.printErr(std::format("{}: no editable document\n", cmd));
         return nullptr;
     }
-    Inkscape::XML::Node* repr = doc->getReprDoc()->createElement(tag);
+    auto repr = doc->getReprDoc()->createElement(tag);
     desktop->applyCurrentOrToolStyle(repr, stylePath, false);
     if (args.has("id")) {
         repr->setAttribute("id",
@@ -209,7 +209,7 @@ SPObject* createElement(Interpreter& interp, LineaApplication* app, const char* 
 Inkscape::Selection* needSelection(Interpreter& interp, const char* cmd,
                                    LineaApplication* app) {
     SPDesktop* desktop = app->get_active_desktop();
-    Inkscape::Selection* sel = desktop ? desktop->getSelection() : nullptr;
+    auto sel = desktop ? desktop->getSelection() : nullptr;
     if (!sel || sel->isEmpty()) {
         interp.printErr(std::format("{}: nothing selected\n", cmd));
         return nullptr;
@@ -324,7 +324,7 @@ void cmdLocation(Interpreter& interp, const ParsedArgs& args, LineaApplication* 
 }
 
 void cmdTranslate(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "translate", app);
+    auto sel = needSelection(interp, "translate", app);
     if (!sel) {
         return;
     }
@@ -333,7 +333,7 @@ void cmdTranslate(Interpreter& interp, const ParsedArgs& args, LineaApplication*
 }
 
 void cmdScale(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "scale", app);
+    auto sel = needSelection(interp, "scale", app);
     if (!sel) {
         return;
     }
@@ -348,7 +348,7 @@ void cmdScale(Interpreter& interp, const ParsedArgs& args, LineaApplication* app
 }
 
 void cmdRotate(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "rotate", app);
+    auto sel = needSelection(interp, "rotate", app);
     if (!sel) {
         return;
     }
@@ -361,8 +361,22 @@ void cmdRotate(Interpreter& interp, const ParsedArgs& args, LineaApplication* ap
     DocumentUndo::done(app->get_active_document(), RC_("Undo", "Rotate"), "");
 }
 
+void cmdSkew(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
+    auto sel = needSelection(interp, "skew", app);
+    if (!sel) {
+        return;
+    }
+    const Geom::OptRect bbox = sel->visualBounds();
+    if (!bbox) {
+        interp.printErr("skew: selection has no bounds\n");
+        return;
+    }
+    sel->skewRelative(bbox->midpoint(), args.num("sx"), args.num("sy", 0));
+    DocumentUndo::done(app->get_active_document(), RC_("Undo", "Skew"), "");
+}
+
 void cmdFlip(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "flip", app);
+    auto sel = needSelection(interp, "flip", app);
     if (!sel) {
         return;
     }
@@ -390,7 +404,7 @@ void setPaintCss(SPCSSAttr* css, const char* prop, const std::string& v) {
 }
 
 void cmdFill(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "fill", app);
+    auto sel = needSelection(interp, "fill", app);
     if (!sel) {
         return;
     }
@@ -403,7 +417,7 @@ void cmdFill(Interpreter& interp, const ParsedArgs& args, LineaApplication* app)
 }
 
 void cmdOpacity(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "opacity", app);
+    auto sel = needSelection(interp, "opacity", app);
     if (!sel) {
         return;
     }
@@ -416,7 +430,7 @@ void cmdOpacity(Interpreter& interp, const ParsedArgs& args, LineaApplication* a
 }
 
 void cmdStroke(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "stroke", app);
+    auto sel = needSelection(interp, "stroke", app);
     if (!sel) {
         return;
     }
@@ -444,7 +458,7 @@ void cmdStroke(Interpreter& interp, const ParsedArgs& args, LineaApplication* ap
 }
 
 void cmdDuplicate(Interpreter& interp, const ParsedArgs& /*args*/, LineaApplication* app) {
-    Inkscape::Selection* sel = needSelection(interp, "duplicate", app);
+    auto sel = needSelection(interp, "duplicate", app);
     if (sel) {
         sel->duplicate();
     }
@@ -517,6 +531,8 @@ const Interpreter::CommandDef kCommands[] = {
      spec(pos("s") >> -pos("sy"))},
     {"rotate", R"(@b{rotate} angle — rotate the selection about its center (degrees))", &cmdRotate,
      spec(num("angle"))},
+    {"skew", R"(@b{skew} sx [sy] — skew the selection about its center)", &cmdSkew,
+     spec(num("sx") >> -num("sy"))},
     {"flip", R"(@b{flip} x|y|xy — mirror the selection about its center)", &cmdFlip,
      spec(kw("dir", {"x", "y", "xy"}))},
     {"fill", R"(@b{fill} none|inherit|NN%|css-color — set fill or fill-opacity)", &cmdFill,
