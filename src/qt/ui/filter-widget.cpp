@@ -173,8 +173,8 @@ void FilterWidget::setObject(SPObject* object) {
     _objectDelete.disconnect();
     _object = object;
     if (_object) {
-        _objectDelete = _object->connectDelete([this](SPObject* deleted) {
-            if (deleted != _object) return;
+        _objectDelete = _object->connectRelease([this](SPObject* released) {
+            if (released != _object) return;
             _object = nullptr;
             refreshFilters();
         });
