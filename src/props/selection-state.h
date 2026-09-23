@@ -61,7 +61,9 @@ struct Counts {
     int rectangles = 0;
     int ellipses = 0;
     int stars = 0;
-    int polygons = 0;
+    int polygon_paths = 0;  // our own editable polygon object (similar to star)
+    int polylines = 0; // svg:polyline
+    int polygons = 0;  // svg:polygon
     int paths = 0;
     int lines = 0;
     int groups = 0;

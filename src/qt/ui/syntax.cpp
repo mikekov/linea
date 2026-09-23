@@ -54,6 +54,10 @@ struct ColorTheme {
     QColor value;
     QColor command;
     QColor punctuation;
+    QColor path_node;
+    QColor path_control;
+    QColor path_angle;
+    QColor path_flags;
     QColor error;
 };
 
@@ -71,6 +75,10 @@ ColorTheme themeFromPalette(const QPalette& palette) {
         t.value = QColor(0xbb, 0x88, 0xff);
         t.command = QColor(0x88, 0xbb, 0xff);
         t.punctuation = QColor(0xcc, 0xcc, 0xcc);
+        t.path_node = QColor(0xff, 0x66, 0x66);
+        t.path_control = QColor(0x55, 0xcc, 0xcc);
+        t.path_angle = QColor(0xff, 0xcc, 0x66);
+        t.path_flags = QColor(0x99, 0xdd, 0x99);
         t.error = QColor(0xff, 0x55, 0x55);
     } else {
         t.keyword = QColor(0x00, 0x00, 0xcc);
@@ -81,6 +89,10 @@ ColorTheme themeFromPalette(const QPalette& palette) {
         t.value = QColor(0x88, 0x00, 0x88);
         t.command = QColor(0x00, 0x00, 0xcc);
         t.punctuation = QColor(0x44, 0x44, 0x44);
+        t.path_node = QColor(0xdd, 0x22, 0x22);
+        t.path_control = QColor(0x00, 0x88, 0x88);
+        t.path_angle = QColor(0xaa, 0x66, 0x00);
+        t.path_flags = QColor(0x22, 0x77, 0x22);
         t.error = QColor(0xcc, 0x00, 0x00);
     }
     return t;
@@ -102,17 +114,32 @@ public:
         QTextCharFormat format;
     };
 
-    RuleHighlighter(QTextDocument* parent, std::vector<Rule> rules)
+    RuleHighlighter(QTextDocument* parent, std::vector<Rule> rules, bool svgPath = false)
         : QSyntaxHighlighter(parent)
-        , _rules(std::move(rules)) {}
+        , _rules(std::move(rules))
+        , _svgPath(svgPath) {}
 
     void setRules(std::vector<Rule> rules) {
         _rules = std::move(rules);
         rehighlight();
     }
 
+    void setPathTheme(const ColorTheme& theme) {
+        _pathCommand = makeFormat(theme.command, true);
+        _pathNode = makeFormat(theme.path_node);
+        _pathControl = makeFormat(theme.path_control);
+        _pathAngle = makeFormat(theme.path_angle);
+        _pathFlags = makeFormat(theme.path_flags);
+        _pathPunctuation = makeFormat(theme.punctuation);
+        rehighlight();
+    }
+
 protected:
     void highlightBlock(const QString& text) override {
+        if (_svgPath) {
+            highlightSvgPath(text);
+            return;
+        }
         for (const auto& rule : _rules) {
             auto it = rule.pattern.globalMatch(text);
             while (it.hasNext()) {
@@ -123,7 +150,68 @@ protected:
     }
 
 private:
+    static int argumentCount(QChar command) {
+        switch (command.toUpper().toLatin1()) {
+            case 'M': case 'L': case 'T': return 2;
+            case 'H': case 'V': return 1;
+            case 'C': return 6;
+            case 'S': case 'Q': return 4;
+            case 'A': return 7;
+            case 'Z': return 0;
+            default: return 0;
+        }
+    }
+
+    QTextCharFormat formatForArgument(QChar command, int index) const {
+        const char upper = command.toUpper().toLatin1();
+        if (upper == 'C') return index % 6 < 4 ? _pathControl : _pathNode;
+        if (upper == 'S' || upper == 'Q') return index % 4 < 2 ? _pathControl : _pathNode;
+        if (upper == 'A') {
+            const int position = index % 7;
+            if (position < 2) return _pathControl;
+            if (position == 2) return _pathAngle;
+            if (position == 3 || position == 4) return _pathFlags;
+        }
+        return _pathNode;
+    }
+
+    void highlightSvgPath(const QString& text) {
+        QRegularExpression token(QStringLiteral("[MmLlHhVvCcSsQqTtAaZz]|[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?"));
+        auto match = token.globalMatch(text);
+        QChar command;
+        int argument = 0;
+        if (previousBlockState() >= 0) {
+            command = QChar((previousBlockState() >> 8) & 0xff);
+            argument = previousBlockState() & 0xff;
+        }
+        while (match.hasNext()) {
+            const auto item = match.next();
+            const QString value = item.captured();
+            if (value.size() == 1 && value.at(0).isLetter()) {
+                command = value.at(0);
+                argument = 0;
+                setFormat(item.capturedStart(), item.capturedLength(), _pathCommand);
+                continue;
+            }
+            if (command.isNull() || argumentCount(command) == 0) {
+                continue;
+            }
+            setFormat(item.capturedStart(), item.capturedLength(), formatForArgument(command, argument));
+            argument = (argument + 1) % argumentCount(command);
+        }
+        if (!command.isNull()) {
+            setCurrentBlockState((command.unicode() << 8) | argument);
+        }
+    }
+
     std::vector<Rule> _rules;
+    bool _svgPath = false;
+    QTextCharFormat _pathCommand;
+    QTextCharFormat _pathNode;
+    QTextCharFormat _pathControl;
+    QTextCharFormat _pathAngle;
+    QTextCharFormat _pathFlags;
+    QTextCharFormat _pathPunctuation;
 };
 
 using Rule = RuleHighlighter::Rule;
@@ -223,7 +311,7 @@ private:
 
 class HighlightingEditView : public TextEditView {
 public:
-    HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify);
+    HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify, bool svgPath = false);
 
     void setStyle(const QString& /*theme*/) override;
     void setText(const QString& text) override;
@@ -260,9 +348,9 @@ QPlainTextEdit& PlainTextEditView::getEditor() const {
     return *_editor;
 }
 
-HighlightingEditView::HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify)
+HighlightingEditView::HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify, bool svgPath)
     : _editor(std::make_unique<QPlainTextEdit>())
-    , _highlighter(std::make_unique<RuleHighlighter>(_editor->document(), std::vector<Rule>{}))
+    , _highlighter(std::make_unique<RuleHighlighter>(_editor->document(), std::vector<Rule>{}, svgPath))
     , _builder(std::move(builder))
     , _prettify(std::move(prettify))
     , _minify(std::move(minify)) {
@@ -274,6 +362,7 @@ HighlightingEditView::HighlightingEditView(RuleBuilder builder, Formatter pretti
 void HighlightingEditView::setStyle(const QString& /*theme*/) {
     const ColorTheme t = themeFromPalette(QGuiApplication::palette());
     _highlighter->setRules(_builder(t));
+    _highlighter->setPathTheme(t);
     QPalette p = _editor->palette();
     p.setColor(QPalette::Base, t.background);
     p.setColor(QPalette::Text, t.text);
@@ -317,7 +406,7 @@ std::unique_ptr<TextEditView> TextEditView::create(SyntaxMode mode) {
         case SyntaxMode::CssStyle:
             return std::make_unique<HighlightingEditView>(makeCssRules, noReformat(), noReformat());
         case SyntaxMode::SvgPathData:
-            return std::make_unique<HighlightingEditView>(makeSvgPathRules, &prettifySvgd, &minifySvgd);
+            return std::make_unique<HighlightingEditView>(makeSvgPathRules, &prettifySvgd, &minifySvgd, true);
         case SyntaxMode::SvgPolyPoints:
             return std::make_unique<HighlightingEditView>(makeSvgPointsRules, noReformat(), noReformat());
         case SyntaxMode::JavaScript:

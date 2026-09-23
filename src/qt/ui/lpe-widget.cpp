@@ -150,7 +150,7 @@ void LpeWidget::bind(Linea::Props::Binder& binder) {
     binder.visibleWhen(this, [](const Linea::Props::SelectionState& s) {
         if (!Linea::Props::Cond::singleSelection(s)) return false;
         const auto& c = s.element.count;
-        int lpe_capable = c.paths + c.rectangles + c.ellipses + c.stars + c.polygons + c.lines + c.groups;
+        int lpe_capable = c.paths + c.rectangles + c.ellipses + c.stars + c.polygon_paths + c.lines + c.groups;
         return lpe_capable == c.items;
     });
 }

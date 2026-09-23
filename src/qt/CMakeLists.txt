@@ -67,6 +67,12 @@ target_sources(linea_base PRIVATE
     ui/theme.h
     ui/attribute-edit-widget.cpp
     ui/attribute-edit-widget.h
+    ui/point-widget.cpp
+    ui/point-widget.h
+    ui/point-widget.ui
+    ui/path-widget.cpp
+    ui/path-widget.h
+    ui/path-widget.ui
     ui/xml-tree-widget.cpp
     ui/xml-tree-widget.h
     ui/xml-tree-widget.ui

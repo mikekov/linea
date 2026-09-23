@@ -6,6 +6,7 @@
 #include <numbers>
 
 #include "props/accessors.h"
+#include "object/sp-polyline.h"
 #include "props/selection-state.h"
 
 #include "display/cairo-utils.h"
@@ -399,7 +400,7 @@ void merge_counts(Counts& counts, SPObject* item) {
         counts.ellipses++;
     } else if (auto star = cast<SPStar>(item)) {
         if (star->flatsided) {
-            counts.polygons++;
+            counts.polygon_paths++;
         } else {
             counts.stars++;
         }
@@ -407,6 +408,10 @@ void merge_counts(Counts& counts, SPObject* item) {
         counts.images++;
     } else if (is<SPPath>(item)) {
         counts.paths++;
+    } else if (is<SPPolyLine>(item)) {
+        counts.polylines++;
+    } else if (is<SPPolygon>(item)) {
+        counts.polygons++;
     } else if (is<SPLine>(item)) {
         counts.lines++;
     } else if (is<SPPage>(item)) {

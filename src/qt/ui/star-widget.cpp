@@ -70,7 +70,7 @@ void StarWidget::bind(Props::Binder& binder) {
 
     // Shown when the selection consists solely of stars or polygons.
     binder.visibleWhen(this,
-        Props::Cond::allOfSum<&Props::Counts::stars, &Props::Counts::polygons>);
+        Props::Cond::allOfSum<&Props::Counts::stars, &Props::Counts::polygon_paths>);
 
     // Reset button visible only when rounded or randomized is non-zero.
     binder.visibleWhen(_ui->resetButton,

@@ -13,6 +13,8 @@
 
 namespace Linea::UI {
 
+class ResizingSeparator;
+
 /**
  * Reusable popup widget with styled container and automatic positioning
  */
@@ -24,6 +26,7 @@ public:
     ~PopupMenu() override;
 
     void setContent(QWidget* content);
+    void setResizable(bool enabled, QSize minimum, QSize maximum);
 
     void showBelowWidget(QWidget* widget);
     void showLeftOfWidget(QWidget* widget);
@@ -33,14 +36,30 @@ public:
     // stretches popup to window size before opening
     void showBesideWidget(QWidget* widget);
 
+Q_SIGNALS:
+    void popupHidden();
+    void resized(QSize size);
+
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
 
 private:
+    enum class Placement {
+        Below,
+        Above,
+        Left,
+        LeftRightEdge,
+        Beside,
+    };
+
+    void showAt(QWidget* widget, Placement placement);
     void ensurePopupOnScreen(QPoint& pos);
 
     QVBoxLayout* _layout = nullptr;
     QWidget* _content = nullptr;
+    ResizingSeparator* _resizeSeparator = nullptr;
+    bool _resizable = false;
 };
 
 } // namespace Linea::UI

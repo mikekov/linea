@@ -48,6 +48,7 @@ class ImageWidget;
 class LpeWidget;
 class Separator;
 class PageWidget;
+class PathWidget;
 
 /**
  * Widget-based component for appearance properties.
@@ -89,10 +90,12 @@ private:
     TextPanel* _textPanel = nullptr;
     ImageWidget* _imageWidget = nullptr;
     LpeWidget* _lpeWidget = nullptr;
+    PathWidget* _pathWidget = nullptr;
     FilterWidget* _filterWidget = nullptr;
     PathOperations* _pathOperations = nullptr;
     Separator* _filterSeparator = nullptr;
     Separator* _lpeSeparator = nullptr;
+    Separator* _pathSeparator = nullptr;
     Separator* _textSeparator = nullptr;
 
     // Property system (per-desktop); widgets are re-bound on desktop change.

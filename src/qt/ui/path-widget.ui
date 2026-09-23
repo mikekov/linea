@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PathWidget</class>
+  <widget class="QWidget" name="PathWidget">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>300</width>
+        <height>32</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="pathLabel">
+          <property name="text">
+            <string>Path</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QPushButton" name="pathButton">
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/edit</normaloff>
+            </iconset>
+          </property>
+          <property name="toolTip">
+            <string>Edit path data</string>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

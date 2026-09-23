@@ -38,7 +38,7 @@ public:
     Q_ENUM(Orientation)
 
     explicit ResizingSeparator(QWidget* parent = nullptr, Orientation orientation = Orientation::Vertical);
-    ~ResizingSeparator() override = default;
+    ~ResizingSeparator() override;
 
     /**
      * Use this separator to resize the given widget and set max size.
@@ -71,6 +71,8 @@ private:
 
     void enterEvent(QEnterEvent* event) override;
     void leaveEvent(QEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
+    void clearOverrideCursor();
 
     Orientation _orientation = Orientation::Vertical;
     QSize _size{4, 4};
@@ -80,6 +82,7 @@ private:
     QSize _maxSize;
     QWidget* _resizeWidget = nullptr;
     bool _dragging = false;
+    bool _overrideCursor = false;
 };
 
 } // namespace Linea::UI

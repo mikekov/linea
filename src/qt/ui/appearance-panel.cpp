@@ -15,6 +15,7 @@
 #include "image-widget.h"
 #include "label-widget.h"
 #include "page-widget.h"
+#include "path-widget.h"
 #include "props/binder.h"
 #include "selection.h"
 #include "ellipse-widget.h"
@@ -77,22 +78,24 @@ void AppearancePanel::setupUi() {
 
     _textSeparator = new Separator(this);
     _layout->addWidget(_textSeparator, row++, 0, 1, 3);
-
     _textPanel = new TextPanel();
     _layout->addWidget(_textPanel, row++, 0, 1, 3);
 
     _imageWidget = new ImageWidget();
     _layout->addWidget(_imageWidget, row++, 0, 1, 3);
 
+    _pathSeparator = new Separator(this);
+    _layout->addWidget(_pathSeparator, row++, 0, 1, 3);
+    _pathWidget = new PathWidget();
+    _layout->addWidget(_pathWidget, row++, 0, 1, 3);
+
     _filterSeparator = new Separator(this);
     _layout->addWidget(_filterSeparator, row++, 0, 1, 3);
-
     _filterWidget = new FilterWidget();
     _layout->addWidget(_filterWidget, row++, 0, 1, 3);
 
     _lpeSeparator = new Separator(this);
     _layout->addWidget(_lpeSeparator, row++, 0, 1, 3);
-
     _lpeWidget = new LpeWidget();
     _layout->addWidget(_lpeWidget, row++, 0, 1, 3);
 
@@ -106,11 +109,12 @@ void AppearancePanel::setupUi() {
         applyHorizontalPadding(child, _leftPadding, _rightPadding);
     }
 
-    // Separators above the filter and LPE widgets mirror their visibility, so
-    // they disappear when the widget they introduce is hidden by the Binder.
+    // Separators above the filter, LPE, and path widgets mirror their visibility,
+    // so they disappear when the widget they introduce is hidden by the Binder.
     syncVisibility(_textSeparator, _textPanel);
     syncVisibility(_filterSeparator, _filterWidget);
     syncVisibility(_lpeSeparator, _lpeWidget);
+    syncVisibility(_pathSeparator, _pathWidget);
 
     // Prevent horizontal stretching
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -142,11 +146,12 @@ void AppearancePanel::setDesktop(SPDesktop* desktop, SPDocument* document, Props
     _textPanel->bind(*_binder);
     _filterWidget->bind(*_binder);
     _lpeWidget->bind(*_binder);
+    _pathWidget->bind(*_binder);
 
     // path operations need two shapes/paths to work
     _binder->visibleWhen(_pathOperations, [](const Props::SelectionState& s) {
         auto& c = s.element.count;
-        auto n = c.paths + c.rectangles + c.ellipses + c.stars + c.polygons + c.lines + c.textual;
+        auto n = c.paths + c.rectangles + c.ellipses + c.stars + c.polygon_paths + c.lines + c.textual;
         return n >= 2;
     });
 

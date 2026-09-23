@@ -32,6 +32,10 @@ ResizingSeparator::ResizingSeparator(QWidget* parent, Orientation orientation)
     updateCursor();
 }
 
+ResizingSeparator::~ResizingSeparator() {
+    clearOverrideCursor();
+}
+
 void ResizingSeparator::resize(QWidget* widget, QSize min, QSize max) {
     _resizeWidget = widget;
     _minSize = min;
@@ -76,13 +80,29 @@ void ResizingSeparator::updateCursor() {
 
 void ResizingSeparator::enterEvent(QEnterEvent* event) {
     // this is needed to show the cursor when we are in a popup
-    QApplication::setOverrideCursor(cursor());
+    if (!_overrideCursor) {
+        QApplication::setOverrideCursor(cursor());
+        _overrideCursor = true;
+    }
     QWidget::enterEvent(event);
 }
 
 void ResizingSeparator::leaveEvent(QEvent* event) {
-    QApplication::restoreOverrideCursor();
+    clearOverrideCursor();
     QWidget::leaveEvent(event);
+}
+
+void ResizingSeparator::hideEvent(QHideEvent* event) {
+    clearOverrideCursor();
+    QWidget::hideEvent(event);
+}
+
+void ResizingSeparator::clearOverrideCursor() {
+    if (!_overrideCursor) {
+        return;
+    }
+    QApplication::restoreOverrideCursor();
+    _overrideCursor = false;
 }
 
 void ResizingSeparator::mousePressEvent(QMouseEvent* event) {

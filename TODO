@@ -80,6 +80,7 @@ x add a way to show notifications?
 - fix paint indicator swatch triangle position when stroke is below fill
 - consider using circles for swatches, not squares, incl paint indicator?
 - paint indicator should have a tooltip with current paints and tell what it is: object style or tool style
+- paint indicator - allow changing paint
 - assigning new gradient to multisel is broken
 - gradient lib - selecting gradient doesn't work
 - remember custom height of the pattern editor in paint selector
@@ -114,6 +115,7 @@ x add a way to show notifications?
 - click on marker clear when none is assigned, and the list of markers disappears
 - 'corners' lpe in rect panel doesn't work
 - triangle knot is not pixel aligned (the one used in 'corners' lpe)
+- LPEs - add flatten, show/hide?
 
 ## Fonts & Text
 
@@ -130,7 +132,7 @@ x add a way to show notifications?
 
 x missing 'About' dialog
 - missing app icon
-- multiwindow not supported and not planned; would require actions to be app-based
+- multiwindow not supported and not planned
 
 ## Glitches
 
@@ -151,4 +153,4 @@ x use inkscape-window-* and zoom/position attributes to position loaded doc
 - add guide and grid default colors to css file; rename node-handles.css or add a new one?
 - text tool / text frame: there's no text editor other than on-canvas
 - display units -> option to use doc units (default to doc instead of explicit choice)
-- add command palette
+x add command palette
