@@ -357,14 +357,15 @@ void XmlTreeWidget::onIndentNode() {
     if (!_document || !_selectedNode) {
         return;
     }
-    auto parent = _selectedNode->parent();
-    if (!parent || parent->firstChild() == _selectedNode) {
+    auto node = _selectedNode;
+    auto parent = node->parent();
+    if (!parent || parent->firstChild() == node) {
         return;
     }
 
     Inkscape::XML::Node* prev = nullptr;
     for (auto it = parent->firstChild(); it; it = it->next()) {
-        if (it->next() == _selectedNode) {
+        if (it->next() == node) {
             prev = it;
             break;
         }
@@ -379,9 +380,11 @@ void XmlTreeWidget::onIndentNode() {
         }
     }
 
-    parent->removeChild(_selectedNode);
-    prev->addChild(_selectedNode, ref);
-    _treeView->selectNode(_selectedNode);
+    Inkscape::GC::anchor(node);
+    parent->removeChild(node);
+    prev->addChild(node, ref);
+    Inkscape::GC::release(node);
+    _treeView->selectNode(node);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Indent node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -391,7 +394,8 @@ void XmlTreeWidget::onUnindentNode() {
     if (!_document || !_selectedNode) {
         return;
     }
-    auto parent = _selectedNode->parent();
+    auto node = _selectedNode;
+    auto parent = node->parent();
     if (!parent) {
         return;
     }
@@ -400,9 +404,11 @@ void XmlTreeWidget::onUnindentNode() {
         return;
     }
 
-    parent->removeChild(_selectedNode);
-    grandparent->addChild(_selectedNode, parent);
-    _treeView->selectNode(_selectedNode);
+    Inkscape::GC::anchor(node);
+    parent->removeChild(node);
+    grandparent->addChild(node, parent);
+    Inkscape::GC::release(node);
+    _treeView->selectNode(node);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Unindent node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
