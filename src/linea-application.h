@@ -14,19 +14,19 @@
 #ifndef LINEA_APPLICATION_H
 #define LINEA_APPLICATION_H
 
+#include <QObject>
+#include <QSettings>
 #include <memory>
 #include <span>
 #include <string>
 #include <utility>
 #include <vector>
 #include <glibmm/refptr.h>
-#include <QSettings>
-#include <QObject>
 
-#include "util/smart_ptr_keys.h"
-#include "io/file-error.h"
-#include "document.h"
 #include "desktop.h"
+#include "document.h"
+#include "io/file-error.h"
+#include "util/smart_ptr_keys.h"
 
 class LineaWindow;
 
@@ -37,6 +37,11 @@ class Selection;
 namespace Gio {
 class File;
 } // namespace Gio
+
+namespace Linea::Script {
+class Engine;
+class Registry;
+} // namespace Linea::Script
 
 /**
  * Singleton that owns documents, desktops, and windows for the Linea application.
@@ -73,7 +78,9 @@ public:
     SPDocument* get_active_document() const { return _active_document; }
     void set_active_document(SPDocument* document) { _active_document = document; }
 
-    Inkscape::Selection* get_active_selection() const { return _active_desktop ? _active_desktop->getSelection() : nullptr; }
+    Inkscape::Selection* get_active_selection() const {
+        return _active_desktop ? _active_desktop->getSelection() : nullptr;
+    }
     // void set_active_selection(Inkscape::Selection* sel) { _active_selection = sel; }
 
     SPDesktop* get_active_desktop() const { return _active_desktop; }
@@ -165,10 +172,13 @@ public:
     /// App-wide settings
     QSettings& settings() { return *_settings; }
 
+    Linea::Script::Engine& scriptEngine();
+    Linea::Script::Registry& scriptRegistry();
+
 private:
     // Private ctor/dtor — use create() / instance().
     LineaApplication();
-    ~LineaApplication() = default;
+    ~LineaApplication();
 
     // class ConstructibleApplication;
     static LineaApplication* _instance;
@@ -182,6 +192,8 @@ private:
     std::vector<std::unique_ptr<LineaWindow>> _windows;
 
     QSettings* _settings = nullptr;
+    std::unique_ptr<Linea::Script::Engine> _script_engine;
+    std::unique_ptr<Linea::Script::Registry> _script_registry;
 
     // Active context (raw, non-owning pointers).
     SPDocument* _active_document = nullptr;

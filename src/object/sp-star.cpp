@@ -16,7 +16,9 @@
 
 #include "sp-star.h"
 
+#include <cmath>
 #include <cstring>
+#include <numbers>
 
 #include <glib.h>
 #include <glibmm/i18n.h>
@@ -438,6 +440,20 @@ sp_star_position_set (SPStar *star, gint sides, Geom::Point center, gdouble r1, 
     star->rounded = rounded;
     star->randomized = randomized;
     star->requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
+}
+
+void sp_star_set_regular_polygon(SPStar* star, int sides, Geom::Point center, double side_length) {
+    g_return_if_fail(star != nullptr);
+    if (sides < 3 || sides > 1024 || !std::isfinite(side_length) || side_length <= 0 ||
+        !std::isfinite(center[Geom::X]) || !std::isfinite(center[Geom::Y])) {
+        return;
+    }
+
+    const double radius = side_length / (2.0 * std::sin(std::numbers::pi / sides));
+    const double arg1 = -std::numbers::pi / 2.0;
+    sp_star_position_set(star, sides, center, radius, radius,
+                         arg1, arg1 + std::numbers::pi / sides,
+                         true, 0.0, 0.0);
 }
 
 void SPStar::snappoints(std::vector<Inkscape::SnapCandidatePoint> &p, Inkscape::SnapPreferences const *snapprefs) const {

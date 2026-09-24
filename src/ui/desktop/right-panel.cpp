@@ -18,6 +18,7 @@
 
 #include "desktop.h"
 #include "export-widget.h"
+#include "linea-application.h"
 #include "number-edit.h"
 #include "qt/ui/document-properties-panel.h"
 #include "qt/ui/extension-gallery.h"
@@ -26,6 +27,7 @@
 #include "qt/ui/separator.h"
 #include "qt/ui/stock-symbol-source.h"
 #include "qt/ui/symbols-widget.h"
+#include "script-editor-panel.h"
 #include "ui/widget/toolbar.h"
 #include "util/numeric/converters.h"
 
@@ -41,7 +43,6 @@ RightPanel::RightPanel(QWidget* parent)
     : CollapsiblePanel(parent) {
     setResizableEdge(Qt::LeftEdge);
     setMinimumWidth(210);
-    setMaximumWidth(400);
 
     buildUi();
     connectSignals();
@@ -68,6 +69,7 @@ void RightPanel::buildUi() {
     contentLayout->addWidget(_panelSwitch);
     _panelSwitch->addButton("properties", {}, tr("Properties"));
     _panelSwitch->addButton("symbols", {}, tr("Symbols"));
+    _panelSwitch->addButton("play", {}, tr("Scripts"));
     _panelSwitch->setCurrentIndex(0);
 
     auto separator = new Separator(content);
@@ -80,6 +82,10 @@ void RightPanel::buildUi() {
     _panelStack->setCurrentIndex(0);
     contentLayout->addWidget(_panelStack);
 
+    _scriptEditorPanel = new ScriptEditorPanel(LINEA_APP);
+    _scriptEditorPanel->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 0);
+    _panelStack->addWidget(_scriptEditorPanel);
+    
     setContentWidget(content);
     setContentMargins(0, 0, 0, 0);
 }

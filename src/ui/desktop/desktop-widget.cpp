@@ -59,6 +59,8 @@
 #include "util/style-utils.h"
 
 constexpr int PANEL_MARGIN = 10;
+constexpr int LEFT_PANEL_WIDTH = 400;
+constexpr int RIGHT_PANEL_WIDTH = 600;
 
 namespace Linea::UI {
 
@@ -202,10 +204,12 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
 
     // Create left and right panels
     _leftPanel = new LeftPanel(_canvasContainer);
-    _overlayLayout->setPanelPosition(_leftPanel, OverlayLayout::Position::Left, QSize(300, 400), true, {PANEL_MARGIN, 0, PANEL_MARGIN, PANEL_MARGIN});
+    _leftPanel->setMaximumWidth(LEFT_PANEL_WIDTH);
+    _overlayLayout->setPanelPosition(_leftPanel, OverlayLayout::Position::Left, QSize(250, 400), true, {PANEL_MARGIN, 0, PANEL_MARGIN, PANEL_MARGIN});
 
     _rightPanel = new RightPanel(_canvasContainer);
-    _overlayLayout->setPanelPosition(_rightPanel, OverlayLayout::Position::Right, QSize(300, 400), true,
+    _rightPanel->setMaximumWidth(RIGHT_PANEL_WIDTH);
+    _overlayLayout->setPanelPosition(_rightPanel, OverlayLayout::Position::Right, QSize(250, 400), true,
                                      {0, PANEL_MARGIN, PANEL_MARGIN, PANEL_MARGIN});
 
     // Connect resize signals to update layout

@@ -22,12 +22,14 @@
 
 #include "document.h"
 #include "inkscape.h"
+#include "object/sp-desc.h"
 #include "object/sp-flowdiv.h"
 #include "object/sp-flowregion.h"
 #include "object/sp-flowtext.h"
 #include "object/sp-item-group.h"
 #include "object/sp-path.h"
 #include "object/sp-textpath.h"
+#include "object/sp-title.h"
 #include "object/sp-tref.h"
 #include "object/sp-tspan.h"
 #include "style.h"
@@ -979,7 +981,8 @@ sp_te_set_repr_text_multiline(SPItem *text, gchar const *str)
 
     repr->setContent("");
     for (auto& child: object->childList(false)) {
-        if (!is<SPFlowregion>(child) && !is<SPFlowregionExclude>(child)) {
+        if (!is<SPFlowregion>(child) && !is<SPFlowregionExclude>(child) &&
+            !is<SPTitle>(child) && !is<SPDesc>(child)) {
             repr->removeChild(child->getRepr());
         }
     }

@@ -63,6 +63,9 @@ target_sources(linea_base PRIVATE
     ui/xml-tree-view.cpp
     ui/syntax.cpp
     ui/syntax.h
+    ui/script-editor-panel.cpp
+    ui/script-editor-panel.h
+    ui/script-editor-panel.ui
     ui/theme.cpp
     ui/theme.h
     ui/attribute-edit-widget.cpp

@@ -92,6 +92,15 @@ QLineEdit, QTextEdit, QPlainTextEdit {
     color: palette(window-text);
 }
 
+QWidget#LineNumberArea {
+    background-color: palette(window);
+    border-left: 1px solid palette(midlight);
+    border-top: 1px solid palette(midlight);
+    border-bottom: 1px solid palette(midlight);
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
 QLineEdit[frame="false"] {
     border: none;
 }

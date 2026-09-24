@@ -13,15 +13,18 @@
 
 #include "desktop.h"
 #include "document.h"
-#include "file.h"               // ink_file_new
-#include "inkscape.h"           // Inkscape::Application (INKSCAPE macro)
-#include "io/file.h"            // ink_file_open buffer overload
+#include "file.h"     // ink_file_new
+#include "inkscape.h" // Inkscape::Application (INKSCAPE macro)
+#include "io/file.h"  // ink_file_open buffer overload
 #include "io/recent-files.h"
-#include "io/resource.h"        // TEMPLATES
+#include "io/resource.h" // TEMPLATES
 #include "linea-window.h"
 #include "object/sp-root.h"
-#include "ui/desktop/document-check.h" // document_check_for_data_loss
+#include "script/script-engine.h"
+#include "script/script-registry.h"
+#include "script/test-script.h"
 #include "ui/desktop/desktop-widget.h"
+#include "ui/desktop/document-check.h" // document_check_for_data_loss
 #include "ui/util.h"
 
 // ---------------------------------------------------------------------------
@@ -49,6 +52,21 @@ LineaApplication& LineaApplication::instance() {
 
 LineaApplication::LineaApplication() {
     _settings = new QSettings(QSettings::UserScope, "Linea", "LineaDraw", this);
+    _script_registry = std::make_unique<Linea::Script::Registry>();
+    _script_registry->registerScript("test", Linea::Script::test_script);
+    _script_registry->registerScript("flower", Linea::Script::flower_script);
+    _script_registry->registerScript("mandala", Linea::Script::mandala_script);
+    _script_engine = std::make_unique<Linea::Script::Engine>(this);
+}
+
+LineaApplication::~LineaApplication() = default;
+
+Linea::Script::Engine& LineaApplication::scriptEngine() {
+    return *_script_engine;
+}
+
+Linea::Script::Registry& LineaApplication::scriptRegistry() {
+    return *_script_registry;
 }
 
 // ---------------------------------------------------------------------------
@@ -71,15 +89,13 @@ void LineaApplication::set_active_desktop(SPDesktop* desktop) {
 bool LineaApplication::createNewDocument(int templateIndex) {
     UI::OverrideCursor wait(Qt::WaitCursor);
 
-    //TODO: configurable templates -------
+    // TODO: configurable templates -------
     auto fname = "default.svg";
     if (templateIndex == 2) {
         fname = "default-wide.svg";
-    }
-    else if (templateIndex == 3) {
+    } else if (templateIndex == 3) {
         fname = "default-a4.svg";
-    }
-    else if (templateIndex == 4) {
+    } else if (templateIndex == 4) {
         fname = "default-us-letter.svg";
     }
     auto def = Inkscape::IO::Resource::get_filename(Inkscape::IO::Resource::TEMPLATES, fname, true);
@@ -297,8 +313,7 @@ void LineaApplication::document_close(SPDocument* document) {
  * Gtk::Application.  sp_file_convert_dpi opens a Gtk::Dialog.  Neither is
  * usable in the Qt-only path yet.  Re-enable once Qt-native equivalents exist.
  */
-void LineaApplication::document_fix([[maybe_unused]] SPDesktop *desktop)
-{
+void LineaApplication::document_fix([[maybe_unused]] SPDesktop* desktop) {
     // QT TODO: Inkscape::fixBrokenLinks(document)  — needs GtkRecentManager
     // QT TODO: sp_file_convert_dpi(document)       — needs Gtk::Dialog
     // QT TODO: sp_file_fix_lpe(document)           — safe, enable when above are resolved
@@ -339,8 +354,8 @@ SPDesktop* LineaApplication::desktopOpen(SPDocument* document, bool new_window) 
     } else {
         // Set active context before constructing the window so that any
         // callbacks triggered during construction see a consistent state.
-        _active_document  = document;
-        _active_desktop   = desktop;
+        _active_document = document;
+        _active_desktop = desktop;
         // _active_selection = desktop->getSelection();
 
         auto win = createWindow();
@@ -417,7 +432,6 @@ LineaWindow* LineaApplication::createWindow() {
     return win;
 }
 
-
 /**
  * Open a file and show it in a window.
  */
@@ -432,11 +446,10 @@ void LineaApplication::openDocument(const Glib::RefPtr<Gio::File>& file) {
     auto [document, error] = document_open(file);
     if (!document) {
         if (!error.cancelled()) {
-            //todo: notification bar
+            // todo: notification bar
             if (_active_window) {
                 _active_window->getDesktopWidget()->showError(
-                    tr("Cannot open file"), QString::fromStdString(file->get_basename()),
-                    error.error());
+                    tr("Cannot open file"), QString::fromStdString(file->get_basename()), error.error());
             }
             std::cerr << "LineaApplication::createWindow: Failed to load: " << file->get_parse_name().raw()
                       << std::endl;
@@ -576,18 +589,17 @@ bool LineaApplication::destroy_all() {
  * the caller (aboutToQuit) is responsible for ensuring the user has already
  * had the chance to save.
  */
-void LineaApplication::shutdown()
-{
+void LineaApplication::shutdown() {
     // Close every desktop via the normal low-level path so that INKSCAPE's
     // desktop tracking and widget linkage are cleaned up properly.
-    for (auto &[doc, desktops] : _documents) {
+    for (auto& [doc, desktops] : _documents) {
         // Collect raw pointers first — desktopClose mutates the vector.
-        std::vector<SPDesktop *> dts;
-        for (auto &dt : desktops) {
+        std::vector<SPDesktop*> dts;
+        for (auto& dt : desktops) {
             dts.push_back(dt.get());
         }
-        for (auto *dt : dts) {
-            auto *win = dt->getLineaWindow();
+        for (auto* dt : dts) {
+            auto* win = dt->getLineaWindow();
             if (win) {
                 win->getDesktopWidget()->removeDesktop(dt);
             }
@@ -597,7 +609,7 @@ void LineaApplication::shutdown()
     }
 
     // Close all documents (unique_ptrs destroyed here).
-    for (auto &[doc, _] : _documents) {
+    for (auto& [doc, _] : _documents) {
         INKSCAPE.remove_document(doc.get());
     }
     _documents.clear();
@@ -605,10 +617,10 @@ void LineaApplication::shutdown()
     // Destroy all windows (Qt widgets) while QApplication is still alive.
     _windows.clear();
 
-    _active_document  = nullptr;
+    _active_document = nullptr;
     // _active_selection = nullptr;
-    _active_desktop   = nullptr;
-    _active_window    = nullptr;
+    _active_desktop = nullptr;
+    _active_window = nullptr;
 }
 
 int LineaApplication::get_number_of_windows() const {

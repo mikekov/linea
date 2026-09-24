@@ -261,6 +261,17 @@ std::vector<Rule> makeJsRules(const ColorTheme& t) {
     return rules;
 }
 
+std::vector<Rule> makeLuaRules(const ColorTheme& t) {
+    std::vector<Rule> rules;
+    rules.push_back({QRegularExpression(R"("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')"), makeFormat(t.string)});
+    rules.push_back({QRegularExpression(R"(\b(?:and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b)"), makeFormat(t.keyword, true)});
+    rules.push_back({QRegularExpression(R"(\b\d+(?:\.\d+)?\b)"), makeFormat(t.number)});
+    rules.push_back({QRegularExpression(R"(\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\())"), makeFormat(t.value)});
+    // Apply comments last so keywords and numbers inside comments keep comment styling.
+    rules.push_back({QRegularExpression("--.*"), makeFormat(t.comment)});
+    return rules;
+}
+
 QString prettifyCss(const QString& css) {
     QString out = css;
     QRegularExpression re1(":([^\\s/])");
@@ -411,6 +422,8 @@ std::unique_ptr<TextEditView> TextEditView::create(SyntaxMode mode) {
             return std::make_unique<HighlightingEditView>(makeSvgPointsRules, noReformat(), noReformat());
         case SyntaxMode::JavaScript:
             return std::make_unique<HighlightingEditView>(makeJsRules, noReformat(), noReformat());
+        case SyntaxMode::Lua:
+            return std::make_unique<HighlightingEditView>(makeLuaRules, noReformat(), noReformat());
         default:
             throw std::runtime_error("Missing case in TextEditView::create()");
     }

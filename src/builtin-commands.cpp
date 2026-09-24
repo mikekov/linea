@@ -14,7 +14,6 @@
 #include <QDir>
 #include <giomm/file.h>
 #include <format>
-#include <numbers>
 
 #include <2geom/svg-path-parser.h>
 #include <2geom/transforms.h>
@@ -23,12 +22,15 @@
 #include "desktop.h"
 #include "desktop-style.h"
 #include "document-undo.h"
+#include "document-undo.h"
 #include "interpreter.h"
 #include "layer-manager.h"
 #include "linea-application.h"
 #include "selection-chemistry.h"
 #include "selection.h"
 #include "document.h"
+#include "script/script-engine.h"
+#include "script/script-registry.h"
 #include "object/sp-item.h"
 #include "object/sp-item-group.h"
 #include "object/sp-object.h"
@@ -283,17 +285,12 @@ void cmdPolygon(Interpreter& interp, const ParsedArgs& args, LineaApplication* a
         return;
     }
     const Geom::Point c = origin(interp, args);
-    // circumscribed-circle radius for side length `size`
-    const double r = args.num("size") / (2 * std::sin(std::numbers::pi / sides));
     createElement(interp, app, "polygon", "svg:path", "/tools/shapes/star", args,
                   {{"sodipodi:type", "star"}}, "Create polygon",
-                  [c, r, sides](SPItem* item) {
+                  [c, sides, size = args.num("size")](SPItem* item) {
                       if (auto star = cast<SPStar>(item)) {
                           const Geom::Point center = c * item->transform;
-                          sp_star_position_set(star, sides, center, r, r,
-                                               -std::numbers::pi / 2,
-                                               -std::numbers::pi / 2 + std::numbers::pi / sides,
-                                               /*isflat*/ true, /*rounded*/ 0, /*randomized*/ 0);
+                          sp_star_set_regular_polygon(star, sides, center, size);
                       }
                   });
 }
@@ -321,6 +318,39 @@ void cmdLocation(Interpreter& interp, const ParsedArgs& args, LineaApplication* 
     }
     const Geom::Point p = interp.location();
     interp.printOut(std::format("{} {}\n", p.x(), p.y()));
+}
+
+void cmdRun(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
+    std::optional<Script::Source> source;
+    if (args.has("name")) {
+        source = app->scriptRegistry().find(args.str("name"));
+        if (!source) {
+            interp.printErr(std::format("run: unknown script: {}\n", args.str("name")));
+            return;
+        }
+    } else {
+        source = app->scriptRegistry().current();
+        if (!source) {
+            interp.printErr("run: no current script\n");
+            return;
+        }
+    }
+
+    auto const error = app->scriptEngine().evaluate(
+        *source,
+        [&interp](std::string_view text) { interp.printOut(text); });
+    if (!error.message.empty()) {
+        if (error.line > 0) {
+            interp.printErr(std::format("run: {}:{}: {}\n", source->name, error.line, error.message));
+        } else {
+            interp.printErr(std::format("run: {}\n", error.message));
+        }
+        return;
+    }
+
+    if (app->scriptEngine().modified() && app->get_active_document()) {
+        Inkscape::DocumentUndo::done(app->get_active_document(), RC_("Undo", "Run script"), "");
+    }
 }
 
 void cmdTranslate(Interpreter& interp, const ParsedArgs& args, LineaApplication* app) {
@@ -502,6 +532,8 @@ CompletionResult completeSelectArgs(std::string_view input, LineaApplication* /*
 const Interpreter::CommandDef kCommands[] = {
     {"actions", R"(@b{actions} — list registered actions, optionally filtered)", &cmdActions},
     {"help", R"(@b{help} [command] — list commands or describe one)", &cmdHelp},
+    {"run", R"(@b{run} [name] — run the current or named script)", &cmdRun,
+     spec(-str("name"))},
     {"echo", R"(@b{echo} — print arguments; -e decodes escapes (\e \xNN \n \t))", &cmdEcho},
     {"new", R"(@b{new} — create a new document [template-index])", &cmdNew, spec(-integer("index"))},
     {"open", R"(@b{open} — <file>)", &cmdOpen, spec(filearg("path")),

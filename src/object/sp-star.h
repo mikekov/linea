@@ -56,6 +56,7 @@ public:
 };
 
 void sp_star_position_set (SPStar *star, int sides, Geom::Point center, double r1, double r2, double arg1, double arg2, bool isflat, double rounded, double randomized);
+void sp_star_set_regular_polygon(SPStar* star, int sides, Geom::Point center, double side_length);
 
 Geom::Point sp_star_get_xy (SPStar const *star, SPStarPoint point, int index, bool randomized = false);
 

@@ -109,7 +109,6 @@ LeftPanel::LeftPanel(QWidget* parent)
     setResizableEdge(Qt::RightEdge);
     setContentMargins(6, 0, 6, 6);
     setMinimumWidth(210);
-    setMaximumWidth(400);
 
     buildUi();
     connectSignals();
