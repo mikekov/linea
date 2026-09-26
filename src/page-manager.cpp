@@ -19,6 +19,7 @@
 #include "object/object-set.h"
 #include "object/sp-item.h"
 #include "object/sp-defs.h"
+#include "object/sp-guide.h"
 #include "object/sp-namedview.h"
 #include "object/sp-page.h"
 #include "object/sp-root.h"
@@ -26,6 +27,7 @@
 #include "selection-chemistry.h"
 #include "util/parse-int-range.h"
 #include "util/numeric/converters.h"
+#include "util/units.h"
 
 namespace Inkscape {
 
@@ -616,6 +618,39 @@ void PageManager::resizePage(SPPage *page, double width, double height)
             page->setSize(width, height);
         }
     }
+}
+
+/**
+ * Resize the document itself — the svg root's page — to width x height in the
+ * given unit, keeping the lower-left origin stationary. Callers own undo.
+ */
+void PageManager::resizeDocument(double width, double height, const Util::Unit* unit)
+{
+    if (!unit) return;
+
+    auto new_w = Inkscape::Util::Quantity(width, unit);
+    auto new_h = Inkscape::Util::Quantity(height, unit);
+    auto rect = Geom::Rect(Geom::Point(0, 0), Geom::Point(new_w.value("px"), new_h.value("px")));
+    auto const old_height_q = _document->getHeight();
+    _document->fitToRect(rect, false);
+
+    // The origin for the user is in the lower left corner; this point should remain stationary when
+    // changing the page size. The SVG's origin however is in the upper left corner, so we must compensate.
+    if (!_document->yaxisdown()) {
+        auto const vert_offset = Geom::Translate(Geom::Point(0, old_height_q.value("px") - new_h.value("px")));
+        _document->getRoot()->translateChildItems(vert_offset);
+    } else {
+        // When yaxisdown is true, we need to translate just the guides.
+        // See https://gitlab.com/inkscape/inkscape/-/issues/1230
+        if (auto nv = _document->getNamedView()) {
+            for (auto guide : nv->guides) {
+                guide->moveto(guide->getPoint() * Geom::Translate(0, 0), true);
+            }
+        }
+    }
+
+    // Set width/height with the new units so the SVG attributes reflect the chosen unit (e.g., mm for A4).
+    _document->setWidthAndHeight(new_w, new_h, true);
 }
 
 /**

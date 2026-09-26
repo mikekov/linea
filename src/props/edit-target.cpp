@@ -2,13 +2,32 @@
 
 #include "props/edit-target.h"
 
+#include "object/sp-item.h"
+#include "object/sp-root.h"
 #include "text-editing.h"     // sp_te_apply_style
+#include "util/cast.h"
 #include "util/paint-item-ops.h"  // set_item_style
 
 namespace Linea::Props {
 
+EditTarget::EditTarget(SPItem* item)
+    : _item(item), _object(item), _isTextRange(false) { assert(item); }
+
+EditTarget::EditTarget(SPItem* text, Inkscape::Text::Layout::iterator start,
+                       Inkscape::Text::Layout::iterator end)
+    : _item(text), _object(text), _isTextRange(true), _start(start), _end(end) {
+    assert(text);
+}
+
+EditTarget::EditTarget(SPObject* object)
+    : _item(is<SPRoot>(object) ? nullptr : cast<SPItem>(object))
+    , _object(object)
+    , _isTextRange(false) {
+    assert(object);
+}
+
 void EditTarget::applyCss(SPCSSAttr* css) const {
-    if (!css) return;
+    if (!css || !_item) return;
 
     if (!_isTextRange) {
         Util::set_item_style(_item, css);

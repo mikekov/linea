@@ -230,10 +230,10 @@ void apply_star_randomized(const EditTarget& target, const double& randomized);
 // --- Generic element properties (title, description, locked) -------------
 std::optional<std::string> read_id(SPObject* object);
 
-std::optional<std::string> read_title(SPItem* item);
+std::optional<std::string> read_title(SPObject* object);
 void apply_title(const EditTarget& target, const std::string& title);
 
-std::optional<std::string> read_description(SPItem* item);
+std::optional<std::string> read_description(SPObject* object);
 void apply_description(const EditTarget& target, const std::string& description);
 
 std::optional<bool> read_locked(SPItem* item);
@@ -310,6 +310,34 @@ void apply_decoration_color(const EditTarget& target, const DecorationColor& col
 
 std::optional<DecorationThicknessState> read_decoration_thickness(SPItem* item);
 void apply_decoration_thickness(const EditTarget& target, const DecorationThicknessState& thickness);
+
+// ---------------------------------------------------------------------------
+// Object-level properties (object-props.def)
+//
+// Readers take SPObject* and run for every selected object — non-item objects
+// (SPPage) included. Object-property appliers use target.object(); item() is
+// null for non-item targets.
+// ---------------------------------------------------------------------------
+
+// Page size in the document's display unit (inkscape:document-units): the
+// SPPage's own size, or the document size when the svg root is selected.
+std::optional<double> read_page_width(SPObject* object);
+std::optional<double> read_page_height(SPObject* object);
+void apply_page_width(const EditTarget& target, const double& width);
+void apply_page_height(const EditTarget& target, const double& height);
+
+// Page margins/bleed in the display unit: the SPPage's own box, or for the
+// svg root the selected/first page (writing enables pages if none exist).
+std::optional<double> read_page_margin_top(SPObject* object);
+std::optional<double> read_page_margin_right(SPObject* object);
+std::optional<double> read_page_margin_bottom(SPObject* object);
+std::optional<double> read_page_margin_left(SPObject* object);
+std::optional<double> read_page_bleed(SPObject* object);
+void apply_page_margin_top(const EditTarget& target, const double& v);
+void apply_page_margin_right(const EditTarget& target, const double& v);
+void apply_page_margin_bottom(const EditTarget& target, const double& v);
+void apply_page_margin_left(const EditTarget& target, const double& v);
+void apply_page_bleed(const EditTarget& target, const double& value);
 
 } // namespace Linea::Props
 

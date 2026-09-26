@@ -135,6 +135,7 @@ private:
     // -----------------------------------------
     // document object properties
     DynamicSizeStackedWidget* _toolWidgetStack = nullptr;
+    Separator* _toolStackSeparator = nullptr;
     NodeWidget* _nodeWidget = nullptr;
     PenWidget* _penWidget = nullptr;
     PencilWidget* _pencilWidget = nullptr;

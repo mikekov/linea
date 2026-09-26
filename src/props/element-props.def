@@ -132,19 +132,6 @@ LINEA_PROP(double, star_randomized,
 // Title and description are SVG <title>/<desc> child elements, not CSS
 // attributes; they use SPObject::title()/setTitle() and desc()/setDesc().
 // Locked toggles the sodipodi:insensitive attribute via SPItem::setLocked().
-// ID is read-only here (the Set button handles the write with validation).
-
-LINEA_PROP_RO(std::string, id, (read_id))
-
-LINEA_PROP(std::string, title,
-           (read_title),
-           (apply_title),
-           "object-title", RC_("Undo", "Set title"))
-
-LINEA_PROP(std::string, description,
-           (read_description),
-           (apply_description),
-           "object-description", RC_("Undo", "Set description"))
 
 LINEA_PROP(bool, locked,
            (read_locked),

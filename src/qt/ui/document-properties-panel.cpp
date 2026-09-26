@@ -59,7 +59,7 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
     _containerWidget->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::MinimumExpanding);
     auto vbox = new QVBoxLayout();
     vbox->setContentsMargins(0, 0, 0, 0);
-    vbox->setSpacing(0);
+    vbox->setSpacing(4);
     _containerWidget->setLayout(vbox);
 
     _selectWidget = new SelectWidget(this);
@@ -91,17 +91,21 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
     _toolWidgetStack->addWidget(_nodeWidget);
     vbox->addWidget(_toolWidgetStack);
 
-    auto toolGap = new QWidget(this);
-    toolGap->setFixedHeight(4);
-    toolGap->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
-    vbox->addWidget(toolGap);
+    // auto toolGap = new QWidget(this);
+    // toolGap->setFixedHeight(4);
+    // toolGap->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    // vbox->addWidget(toolGap);
+
+    _toolStackSeparator = new Separator(this);
+    vbox->addWidget(_toolStackSeparator);
+    syncVisibility(_toolStackSeparator, _toolWidgetStack);
 
     _appearancePanel = new AppearancePanel(this, paddingLeft, paddingRight);
     vbox->addWidget(_appearancePanel);
 
     _exportSeparator = new Separator(this);
     _exportWidget = new ExportWidget(this);
-    _exportWidget->layout()->setContentsMargins(paddingLeft, 4, paddingRight, 0);
+    _exportWidget->layout()->setContentsMargins(paddingLeft, 0, paddingRight, 0);
     vbox->addWidget(_exportSeparator);
     vbox->addWidget(_exportWidget);
 

@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// Property table: object-level properties (readers see SPObject*, not SPItem*).
+//
+// Same generation pipeline as element-props.def: this file is included
+// multiple times with LINEA_PROP / LINEA_PROP_RO defined, generating in turn:
+//   - the ObjectState struct fields    (selection-state.h)
+//   - the Field enum entries           (selection-state.h)
+//   - the delta diff                   (selection-state.h)
+//   - the per-object merge code        (selection-state.h)
+//   - the Props:: property definitions (property-def.h)
+//
+// Row grammar:
+//   LINEA_PROP(type, name, (reader), (applier), undo_key, RC_("Undo", label))
+//   LINEA_PROP_RO(type, name, (reader))                      // query-only field
+//
+//   reader:  callable  SPObject*                        -> std::optional<type>
+//   applier: callable  (const EditTarget&, const type&) -> void
+//            Use target.object() — target.item() is null for non-item
+//            objects such as SPPage (and for the svg root).
+//
+// Readers here run for EVERY selected object, items included (see merge_item);
+// non-item objects reach no other property table.
+// no include guard: intentionally re-includable
+
+// --- generic ---------------------------------------------------------------
+
+// Read-only id (the Set button handles the write with validation).
+LINEA_PROP_RO(std::string, id, (read_id))
+
+LINEA_PROP(std::string, title,
+           (read_title),
+           (apply_title),
+           "object-title", RC_("Undo", "Set title"))
+
+LINEA_PROP(std::string, description,
+           (read_description),
+           (apply_description),
+           "object-description", RC_("Undo", "Set description"))
+
+// --- page size ---------------------------------------------------------------
+// Page width/height in the document's display unit (inkscape:document-units):
+// the SPPage's own size, or the document size when the svg root is selected.
+// Appliers resize through PageManager, converting display unit <-> px like
+// upstream's page toolbar, so viewport pages, origin compensation and the
+// declared unit match the document properties panel.
+LINEA_PROP(double, page_width,
+           (read_page_width),
+           (apply_page_width),
+           "page-size", RC_("Undo", "Set page size"))
+
+LINEA_PROP(double, page_height,
+           (read_page_height),
+           (apply_page_height),
+           "page-size", RC_("Undo", "Set page size"))
+
+// --- page margins / bleed ----------------------------------------------------
+// Margin sides and bleed in the display unit. They live on <inkscape:page>
+// elements: for the svg root the selected/first page supplies the value, and
+// a write enables pages (materializes one) if none exist — matching upstream's
+// marginsEdited/bleedsEdited. The four margin rows share an undo key.
+LINEA_PROP(double, page_margin_top,
+           (read_page_margin_top),
+           (apply_page_margin_top),
+           "page-margin", RC_("Undo", "Edit page margin"))
+LINEA_PROP(double, page_margin_right,
+           (read_page_margin_right),
+           (apply_page_margin_right),
+           "page-margin", RC_("Undo", "Edit page margin"))
+LINEA_PROP(double, page_margin_bottom,
+           (read_page_margin_bottom),
+           (apply_page_margin_bottom),
+           "page-margin", RC_("Undo", "Edit page margin"))
+LINEA_PROP(double, page_margin_left,
+           (read_page_margin_left),
+           (apply_page_margin_left),
+           "page-margin", RC_("Undo", "Edit page margin"))
+
+LINEA_PROP(double, page_bleed,
+           (read_page_bleed),
+           (apply_page_bleed),
+           "page-bleed", RC_("Undo", "Edit page bleed"))

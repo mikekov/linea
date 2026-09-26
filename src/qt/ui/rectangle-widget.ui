@@ -29,8 +29,19 @@
       <property name="spacing">
         <number>4</number>
       </property>
-      <!-- Row 0: Corners label -->
+      <!-- Row 0: Heading label -->
       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="shapeLabel">
+          <property name="text">
+            <string>Rectangle</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-heading</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 1: Corners label -->
+      <item row="1" column="0" colspan="2">
         <widget class="QLabel" name="label">
           <property name="text">
             <string>Corners</string>
@@ -40,8 +51,8 @@
           </property>
         </widget>
       </item>
-      <!-- Row 1: Rx, Ry -->
-      <item row="1" column="0">
+      <!-- Row 2: Rx, Ry -->
+      <item row="2" column="0">
         <widget class="Linea::UI::NumberEdit" name="rxEdit">
           <property name="minimum">
             <double>0.000000</double>
@@ -63,7 +74,7 @@
           </property>
         </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
         <widget class="Linea::UI::NumberEdit" name="ryEdit">
           <property name="minimum">
             <double>0.000000</double>
@@ -85,7 +96,7 @@
           </property>
         </widget>
       </item>
-      <item row="1" column="2">
+      <item row="2" column="2">
         <widget class="QPushButton" name="resetButton">
           <property name="icon">
             <iconset>
@@ -97,8 +108,8 @@
           </property>
         </widget>
       </item>
-      <!-- Row 2: Sharp/rounded buttons -->
-      <item row="2" column="0">
+      <!-- Row 3: Sharp/rounded buttons -->
+      <item row="3" column="0">
         <layout class="QHBoxLayout" name="buttonsBox">
           <property name="spacing">
             <number>4</number>

@@ -66,6 +66,7 @@ void StarWidget::bind(Props::Binder& binder) {
         _ui->spokeEdit->setVisible(visible);
         // _ui->spokeEdit->setEnabled(!is_flat);
         _ui->alignButton->setIcon(QIcon(polygon ? ":/icons/object-level" : ":/icons/object-star-level"));
+        _ui->shapeLabel->setText(polygon ? tr("Polygon") : tr("Star"));
     });
 
     // Shown when the selection consists solely of stars or polygons.

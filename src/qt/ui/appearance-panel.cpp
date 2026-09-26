@@ -59,13 +59,15 @@ void AppearancePanel::setupUi() {
     _sizeWidget = new SizeWidget(this);
     _layout->addWidget(_sizeWidget, row++, 0, 1, 3);
 
-    _pageWidget = new PageWidget();
-    _layout->addWidget(_pageWidget, row++, 0, 1, 3);
-
     // Create style panel
     _stylePanel = new StylePanel(TAG);
     // _stylePanel->setDelegate(std::make_unique<Util::ElementEdit>(TAG));
     _layout->addWidget(_stylePanel, row++, 0, 1, 3);
+    // _elementSeparator = new Separator(this);
+    // _layout->addWidget(_elementSeparator, row++, 0, 1, 3);
+
+    _pageWidget = new PageWidget();
+    _layout->addWidget(_pageWidget, row++, 0, 1, 3);
 
     _rectangleWidget = new RectangleWidget();
     _layout->addWidget(_rectangleWidget, row++, 0, 1, 3);
@@ -76,16 +78,12 @@ void AppearancePanel::setupUi() {
     _starWidget = new StarWidget();
     _layout->addWidget(_starWidget, row++, 0, 1, 3);
 
-    _textSeparator = new Separator(this);
-    _layout->addWidget(_textSeparator, row++, 0, 1, 3);
     _textPanel = new TextPanel();
     _layout->addWidget(_textPanel, row++, 0, 1, 3);
 
     _imageWidget = new ImageWidget();
     _layout->addWidget(_imageWidget, row++, 0, 1, 3);
 
-    _pathSeparator = new Separator(this);
-    _layout->addWidget(_pathSeparator, row++, 0, 1, 3);
     _pathWidget = new PathWidget();
     _layout->addWidget(_pathWidget, row++, 0, 1, 3);
 
@@ -111,10 +109,9 @@ void AppearancePanel::setupUi() {
 
     // Separators above the filter, LPE, and path widgets mirror their visibility,
     // so they disappear when the widget they introduce is hidden by the Binder.
-    syncVisibility(_textSeparator, _textPanel);
+    // syncVisibility(_elementSeparator, _stylePanel);
     syncVisibility(_filterSeparator, _filterWidget);
     syncVisibility(_lpeSeparator, _lpeWidget);
-    syncVisibility(_pathSeparator, _pathWidget);
 
     // Prevent horizontal stretching
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);

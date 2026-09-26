@@ -80,6 +80,20 @@ struct PropertyDef {
 #undef LINEA_PROP
 #undef LINEA_PROP_RO
 
+#define LINEA_PROP(type, name, reader, applier, key, label)                       \
+    inline constexpr PropertyDef<type> name{                                      \
+        Field::name,                                                              \
+        [](const SelectionState& s) -> const mixed_property<type>& {              \
+            return s.object.name;                                                 \
+        },                                                                        \
+        LINEA_STRIP(applier),                                                     \
+        key,                                                                      \
+        [] { return label; }};
+#define LINEA_PROP_RO(type, name, reader)
+#include "props/object-props.def"
+#undef LINEA_PROP
+#undef LINEA_PROP_RO
+
 } // namespace Linea::Props
 
 #endif // LINEA_PROPS_PROPERTY_DEF_H

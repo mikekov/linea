@@ -86,6 +86,9 @@ target_sources(linea_base PRIVATE
     ui/page-widget.cpp
     ui/page-widget.h
     ui/page-widget.ui
+    ui/page-popup.cpp
+    ui/page-popup.h
+    ui/page-popup.ui
     ui/document-widget.cpp
     ui/document-widget.h
     ui/display-widget.cpp

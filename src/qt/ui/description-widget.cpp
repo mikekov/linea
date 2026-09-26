@@ -65,10 +65,10 @@ void DescriptionWidget::bind(Props::Binder& binder) {
     // ID is read-only via the property system; the Set button handles the
     // write with validation. Track the selected item for the write path.
     binder.bindField(Props::Field::id, [this, desktop](const Props::SelectionState& s) {
-        _item = desktop->getSelection()->singleItem();
+        _item = desktop->getSelection()->single();
         auto scoped = _update.block();
-        if (s.element.id.is_single()) {
-            _ui->idEdit->setText(QString::fromStdString(s.element.id.value()));
+        if (s.object.id.is_single()) {
+            _ui->idEdit->setText(QString::fromStdString(s.object.id.value()));
         } else {
             _ui->idEdit->clear();
         }

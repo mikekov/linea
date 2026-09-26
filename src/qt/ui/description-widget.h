@@ -12,7 +12,7 @@
 #include "ui/operation-blocker.h"
 
 class SPDocument;
-class SPItem;
+class SPObject;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -57,7 +57,7 @@ private:
     OperationBlocker _update;
     Props::Editor* _editor = nullptr;
     SPDocument* _document = nullptr;
-    SPItem* _item = nullptr;
+    SPObject* _item = nullptr;
 };
 
 } // namespace UI

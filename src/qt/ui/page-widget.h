@@ -20,6 +20,9 @@ class Binder;
 
 namespace Linea::UI {
 
+class PagePopup;
+class PopupMenu;
+
 class PageWidget : public QWidget {
     Q_OBJECT
 
@@ -30,7 +33,11 @@ public:
     void bind(Props::Binder& binder);
 
 private:
+    void onMarginsClicked();
+
     std::unique_ptr<Ui::PageWidget> _ui;
+    PopupMenu* _popup = nullptr;
+    PagePopup* _pagePopup = nullptr;
 };
 
 } // namespace Linea::UI

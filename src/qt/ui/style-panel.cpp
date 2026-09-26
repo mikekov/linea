@@ -381,16 +381,14 @@ StylePanel::StylePanel(unsigned int tag, QWidget* parent)
     , _tag(tag) {
     _ui->setupUi(this);
 
-    // Keep the reset buttons' grid cells from collapsing when the buttons
-    // are hidden by visibility rules — otherwise the adjacent controls
-    // widen to fill the gap.
-    auto retain = [](QWidget* w) {
-        auto sp = w->sizePolicy();
-        sp.setRetainSizeWhenHidden(true);
-        w->setSizePolicy(sp);
-    };
-    retain(_ui->resetOpacity);
-    retain(_ui->resetBlendBtn);
+    // Keep column 2 at least a reset-button wide even when the buttons are
+    // hidden by visibility rules — otherwise the adjacent controls widen to
+    // fill the gap. setColumnMinimumWidth holds the column without retaining
+    // the hidden widgets' height (RetainSizeWhenHidden kept the rows from
+    // collapsing when everything was hidden).
+    if (auto grid = qobject_cast<QGridLayout*>(layout())) {
+        grid->setColumnMinimumWidth(2, _ui->resetOpacity->sizeHint().width());
+    }
 
     construct();
 }

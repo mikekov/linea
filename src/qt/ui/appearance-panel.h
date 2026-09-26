@@ -95,8 +95,6 @@ private:
     PathOperations* _pathOperations = nullptr;
     Separator* _filterSeparator = nullptr;
     Separator* _lpeSeparator = nullptr;
-    Separator* _pathSeparator = nullptr;
-    Separator* _textSeparator = nullptr;
 
     // Property system (per-desktop); widgets are re-bound on desktop change.
     // non-owning observing pointers

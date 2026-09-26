@@ -36,10 +36,7 @@
             <string>Shape</string>
           </property>
           <property name="class" stdset="0">
-            <string>panel-label</string>
-          </property>
-          <property name="visible">
-            <bool>false</bool>
+            <string>panel-heading</string>
           </property>
         </widget>
       </item>

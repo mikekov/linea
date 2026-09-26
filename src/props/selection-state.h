@@ -5,7 +5,8 @@
 //
 // The struct fields, the Field enum, the delta diff and the per-item merge
 // are all generated from the property tables (element-props.def,
-// presentation-props.def), so the read side can never drift from the tables.
+// presentation-props.def, typography-props.def, object-props.def), so the
+// read side can never drift from the tables.
 
 #ifndef LINEA_PROPS_SELECTION_STATE_H
 #define LINEA_PROPS_SELECTION_STATE_H
@@ -35,6 +36,7 @@ enum class Field : uint16_t {
 #include "props/element-props.def"
 #include "props/presentation-props.def"
 #include "props/typography-props.def"
+#include "props/object-props.def"
 #undef LINEA_PROP
 #undef LINEA_PROP_RO
     counts,   // selection composition changed (drives panel visibility)
@@ -57,6 +59,7 @@ bool equal(const mixed_property<T>& a, const mixed_property<T>& b) {
 // --- Selection composition ----------------------------------------------------
 
 struct Counts {
+    int objects = 0;
     int items = 0;
     int rectangles = 0;
     int ellipses = 0;
@@ -111,16 +114,30 @@ struct TypographyState {
 #undef LINEA_PROP_RO
 };
 
+// ObjectState is filled for every selected object — unlike the item tables,
+// its readers take SPObject* and so also fire for non-item objects (SPPage,
+// the svg root).
+struct ObjectState {
+#define LINEA_PROP(type, name, ...) mixed_property<type> name;
+#define LINEA_PROP_RO(type, name, ...) mixed_property<type> name;
+#include "props/object-props.def"
+#undef LINEA_PROP
+#undef LINEA_PROP_RO
+};
+
 struct SelectionState {
-    bool empty() const { return element.count.items == 0; }
+    bool empty() const { return element.count.objects == 0; }
+    bool someItems() const { return element.count.items > 0; }
     bool pageSelection() const {
         const auto& count = element.count;
         // Note: currently it is not possible to select more than one page
-        return count.items == 1 && count.pages + count.svgs == 1;
+        return count.objects == 1 && count.pages == 1 ||
+               count.items == 1   && count.svgs == 1;
     }
     ElementState element;
     PresentationState style;
     TypographyState typography;
+    ObjectState object;
     Geom::OptRect bbox;  // selection bounding box in px (visual or geometric per preference)
     uint64_t revision = 0;
 };
@@ -130,12 +147,18 @@ struct SelectionState {
 inline void merge_item(SelectionState& state, SPObject* object) {
     merge_counts(state.element.count, object);
 
+    // Object-level readers run for every selected object, items included;
+    // non-item objects (SPPages are object-based) get no other properties.
+#define LINEA_PROP(type, name, reader, ...) \
+    if (auto v = LINEA_STRIP(reader)(object)) state.object.name.merge(std::move(*v));
+#define LINEA_PROP_RO(type, name, reader) \
+    if (auto v = LINEA_STRIP(reader)(object)) state.object.name.merge(std::move(*v));
+#include "props/object-props.def"
+#undef LINEA_PROP
+#undef LINEA_PROP_RO
+
     auto item = cast<SPItem>(object);
-    if (!item) {
-        // there's only one object-based property currently, it is handled here; SPPages are object-based
-        if (auto id = read_id(object)) state.element.id.merge(std::move(*id));
-        return;
-    }
+    if (!item) return;
 
 #define LINEA_PROP(type, name, reader, ...) \
     if (auto v = LINEA_STRIP(reader)(item)) state.element.name.merge(std::move(*v));
@@ -187,6 +210,14 @@ inline SelectionDelta diff(const SelectionState& a, const SelectionState& b) {
 #define LINEA_PROP_RO(type, name, ...) \
     if (!equal(a.typography.name, b.typography.name)) d.set(static_cast<size_t>(Field::name));
 #include "props/typography-props.def"
+#undef LINEA_PROP
+#undef LINEA_PROP_RO
+
+#define LINEA_PROP(type, name, ...) \
+    if (!equal(a.object.name, b.object.name)) d.set(static_cast<size_t>(Field::name));
+#define LINEA_PROP_RO(type, name, ...) \
+    if (!equal(a.object.name, b.object.name)) d.set(static_cast<size_t>(Field::name));
+#include "props/object-props.def"
 #undef LINEA_PROP
 #undef LINEA_PROP_RO
 

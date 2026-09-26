@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>PagePopup</class>
+  <widget class="QWidget" name="PagePopup">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>320</width>
+        <height>140</height>
+      </rect>
+    </property>
+    <property name="minimumSize">
+      <size>
+        <width>280</width>
+        <height>0</height>
+      </size>
+    </property>
+    <property name="maximumSize">
+      <size>
+        <width>280</width>
+        <height>16777215</height>
+      </size>
+    </property>
+    <layout class="QGridLayout" name="popupGrid" columnstretch="1,1,1">
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+
+      <!-- margin label -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="marginsLabel">
+          <property name="text">
+            <string>Margins</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Top margin -->
+      <item row="1" column="1">
+        <widget class="Linea::UI::NumberEdit" name="marginTop">
+          <property name="label">
+            <string>T</string>
+          </property>
+          <property name="toolTip">
+            <string>Top margin</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Left margin -->
+      <item row="2" column="0">
+        <widget class="Linea::UI::NumberEdit" name="marginLeft">
+          <property name="label">
+            <string>L</string>
+          </property>
+          <property name="toolTip">
+            <string>Left margin</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Right margin -->
+      <item row="2" column="2">
+        <widget class="Linea::UI::NumberEdit" name="marginRight">
+          <property name="label">
+            <string>R</string>
+          </property>
+          <property name="toolTip">
+            <string>Right margin</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Bottom margin -->
+      <item row="3" column="1">
+        <widget class="Linea::UI::NumberEdit" name="marginBottom">
+          <property name="label">
+            <string>B</string>
+          </property>
+          <property name="toolTip">
+            <string>Bottom margin</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Bleed: applied uniformly to all four sides -->
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="bleedLabel">
+          <property name="text">
+            <string>Bleed</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <item row="5" column="1" colspan="1">
+        <widget class="Linea::UI::NumberEdit" name="bleedEdit">
+          <property name="toolTip">
+            <string>Bleed size, applied to all sides</string>
+          </property>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

@@ -18,6 +18,7 @@
 
 class SPCSSAttr;
 class SPItem;
+class SPObject;
 
 namespace Linea::Props {
 
@@ -26,19 +27,28 @@ public:
     EditTarget() = delete;
 
     // Plain item target: CSS lands on the item via Util::set_item_style.
-    explicit EditTarget(SPItem* item)
-        : _item(item), _isTextRange(false) { assert(item); }
+    explicit EditTarget(SPItem* item);
 
     // Text-range target: CSS is applied via sp_te_apply_style(text, start, end, css),
     // which splits tspans to match the range. \p text is the root <text>/<flowRoot>.
     EditTarget(SPItem* text, Inkscape::Text::Layout::iterator start,
-               Inkscape::Text::Layout::iterator end)
-        : _item(text), _isTextRange(true), _start(start), _end(end) { assert(text); }
+               Inkscape::Text::Layout::iterator end);
+
+    // Object target: for SPObject-level properties (pages, the svg root).
+    // item() is null for non-item objects — and for SPRoot, matching the
+    // ObjectSet::items() exclusion so object targets never widen the set of
+    // items an item-property applier can see.
+    explicit EditTarget(SPObject* object);
 
     // The item: for a plain target, the item itself; for a text range, the
     // text root. Readers and non-CSS appliers use this (cast<> returns null
     // for shape types on a text root, so geometry appliers no-op correctly).
+    // Null when the target is a non-item object.
     SPItem* item() const { return _item; }
+
+    // The selected object itself: the item for item targets, the page/root
+    // for object targets. Object-property appliers should read this.
+    SPObject* object() const { return _object; }
 
     bool isTextRange() const { return _isTextRange; }
 
@@ -50,6 +60,7 @@ public:
 
 private:
     SPItem* _item = nullptr;
+    SPObject* _object = nullptr;
     bool _isTextRange = false;
     Inkscape::Text::Layout::iterator _start;
     Inkscape::Text::Layout::iterator _end;

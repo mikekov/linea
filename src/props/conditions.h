@@ -41,20 +41,26 @@ concept Condition = requires(const T& t, const SelectionState& s) {
 
 // --- Count / composition primitives (empty structs, zero storage) ----------
 
-// Selection is non-empty. Hack: exclude page/svgs from the count, as almost nothing can handle it.
+// Selection is non-empty. We only take SPItems into account here and exclude pages,
+// as this is what most of the UI elements care about and can handle.
 struct HasSelection {
-    bool operator()(const SelectionState& s) const { return !s.empty() && !s.pageSelection(); }
+    bool operator () (const SelectionState& s) const { return s.someItems() && !s.pageSelection(); }
 };
 inline constexpr HasSelection hasSelection{};
 
+struct HasAnySelection {
+    bool operator () (const SelectionState& s) const { return !s.empty() && !s.pageSelection(); }
+};
+inline constexpr HasAnySelection hasAnySelection{};
+
 struct HasPageSelection {
-    bool operator()(const SelectionState& s) const { return s.pageSelection(); }
+    bool operator () (const SelectionState& s) const { return s.pageSelection(); }
 };
 inline constexpr HasPageSelection hasPageSelection{};
 
-// Exactly one item selected. Hack: exclude page/svgs from the count, as almost nothing can handle it.
+// Exactly one item selected.
 struct HasSingleSelection {
-    bool operator()(const SelectionState& s) const { return s.element.count.items == 1 && !s.pageSelection(); }
+    bool operator () (const SelectionState& s) const { return s.element.count.items == 1; }
 };
 inline constexpr HasSingleSelection singleSelection{};
 
@@ -62,7 +68,7 @@ inline constexpr HasSingleSelection singleSelection{};
 //   Cond::allOf<&Counts::rectangles>  -> "only rectangles selected"
 template <int Counts::* Member>
 struct AllOf {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         const auto& c = s.element.count;
         return c.*Member > 0 && c.*Member == c.items;
     }
@@ -90,7 +96,7 @@ inline constexpr Single<Members...> single{};
 //   Cond::hasType<&Counts::images>  -> "has an image"
 template <int Counts::* Member>
 struct HasType {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return s.element.count.*Member > 0;
     }
 };
@@ -102,7 +108,7 @@ inline constexpr HasType<Member> hasType{};
 template <int Counts::*... Members>
     requires (sizeof...(Members) >= 2)
 struct AllOfSum {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         const auto& c = s.element.count;
         int sum = 0;
         ((sum += c.*Members), ...);
@@ -117,7 +123,7 @@ inline constexpr AllOfSum<Members...> allOfSum{};
 //   Cond::hasOtherThan<&Counts::images>  -> "has at least one non-image"
 template <int Counts::* Member>
 struct HasOtherThan {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         const auto& c = s.element.count;
         return c.items > 0 && !s.pageSelection() && c.*Member < c.items;
     }
@@ -127,7 +133,7 @@ inline constexpr HasOtherThan<Member> hasOtherThan{};
 
 // Text tool has no active span subselection (object-level edits are valid).
 struct NoTextSubselection {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return !s.element.count.has_text_subselection;
     }
 };
@@ -135,7 +141,7 @@ inline constexpr NoTextSubselection noTextSubselection{};
 
 // Text tool is the current tool.
 struct TextToolActive {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return s.element.count.text_tool_active;
     }
 };
@@ -147,7 +153,7 @@ inline constexpr TextToolActive textToolActive{};
 //   Cond::toolIs<TOOLS_SHAPES_RECT> || Cond::toolIs<TOOLS_SHAPES_ELLIPSE>
 template <tools_enum Tool>
 struct ToolIs {
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return s.element.count.activeTool == Tool;
     }
 };
@@ -160,7 +166,7 @@ inline constexpr ToolIs<Tool> toolIs{};
 template <typename T>
 struct Present {
     const PropertyDef<T>* def;
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return !def->get(s).is_unset();
     }
 };
@@ -169,7 +175,7 @@ struct Present {
 template <typename T>
 struct Uniform {
     const PropertyDef<T>* def;
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return def->get(s).is_single();
     }
 };
@@ -178,7 +184,7 @@ struct Uniform {
 template <typename T>
 struct Mixed {
     const PropertyDef<T>* def;
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         return def->get(s).is_mixed();
     }
 };
@@ -189,7 +195,7 @@ template <typename T, typename U = T>
 struct UniformEquals {
     const PropertyDef<T>* def;
     U value;
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         const auto& p = def->get(s);
         return p.is_single() && p.value() == value;
     }
@@ -202,7 +208,7 @@ template <typename T, typename U = T>
 struct DiffersFrom {
     const PropertyDef<T>* def;
     U value;
-    bool operator()(const SelectionState& s) const {
+    bool operator () (const SelectionState& s) const {
         const auto& p = def->get(s);
         if (p.is_unset()) return false;
         if (p.is_mixed()) return true;
@@ -215,35 +221,35 @@ struct DiffersFrom {
 template <Condition A, Condition B>
 struct And {
     A a; B b;
-    bool operator()(const SelectionState& s) const { return a(s) && b(s); }
+    bool operator () (const SelectionState& s) const { return a(s) && b(s); }
 };
 
 template <Condition A, Condition B>
 struct Or {
     A a; B b;
-    bool operator()(const SelectionState& s) const { return a(s) || b(s); }
+    bool operator () (const SelectionState& s) const { return a(s) || b(s); }
 };
 
 template <Condition A>
 struct Not {
     A a;
-    bool operator()(const SelectionState& s) const { return !a(s); }
+    bool operator () (const SelectionState& s) const { return !a(s); }
 };
 
 // --- Operators: build composite types, not runtime trees -------------------
 
 template <Condition A, Condition B>
-constexpr And<std::decay_t<A>, std::decay_t<B>> operator&&(A&& a, B&& b) {
+constexpr And<std::decay_t<A>, std::decay_t<B>> operator && (A&& a, B&& b) {
     return {std::forward<A>(a), std::forward<B>(b)};
 }
 
 template <Condition A, Condition B>
-constexpr Or<std::decay_t<A>, std::decay_t<B>> operator||(A&& a, B&& b) {
+constexpr Or<std::decay_t<A>, std::decay_t<B>> operator || (A&& a, B&& b) {
     return {std::forward<A>(a), std::forward<B>(b)};
 }
 
 template <Condition A>
-constexpr Not<std::decay_t<A>> operator!(A&& a) {
+constexpr Not<std::decay_t<A>> operator ! (A&& a) {
     return {std::forward<A>(a)};
 }
 

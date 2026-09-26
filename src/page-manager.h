@@ -33,6 +33,9 @@ class DocumentProperties;
 namespace Colors {
 class Color;
 }
+namespace Util {
+class Unit;
+}
 
 class PageManager
 {
@@ -97,8 +100,14 @@ public:
     SPPage *newDocumentPage(Geom::Rect rect, bool first_page = false);
     void deletePage(SPPage *page, bool contents = false);
     void deletePage(bool contents = false);
+    // Resize a page to width x height in px (the SPPage::getDocumentRect
+    // space both branches share: setSize uses setDocumentRect internally).
     void resizePage(double width, double height);
     void resizePage(SPPage *page, double width, double height);
+    // Resize the document itself (the svg root's page) to width x height in the
+    // given unit, keeping the lower-left origin stationary. No undo is
+    // recorded — callers own undo.
+    void resizeDocument(double width, double height, const Util::Unit* unit);
     void scalePages(Geom::Scale const &scale);
     void rotatePage(int turns);
     void changeOrientation();

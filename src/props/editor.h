@@ -80,9 +80,13 @@ private:
                 return;
             }
         }
-        for (auto item : _desktop->getSelection()->items()) {
-            if (item) {
-                fn(EditTarget{item});
+        // Iterate objects(), not items(): non-item objects (pages, the svg
+        // root) are needed by object-property appliers. Item-property
+        // appliers still see only items — EditTarget::item() is null for
+        // non-items, so their cast<>-guarded writes no-op as before.
+        for (auto object : _desktop->getSelection()->objects()) {
+            if (object) {
+                fn(EditTarget{object});
             }
         }
     }

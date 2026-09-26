@@ -208,12 +208,13 @@ void FilterWidget::bind(Linea::Props::Binder& binder) {
     // filter style field — fires when the filter URL or its primitives change.
     binder.bindField(Linea::Props::Field::filter, [this](const Linea::Props::SelectionState&) { refreshFilters(); });
 
-    // Visible only for a single selection — filters apply per item.
-    binder.visibleWhen(this, Linea::Props::Cond::singleSelection);
+    // Visible only for a single item selection — filters apply per item.
+    binder.visibleWhen(this, Linea::Props::Cond::singleSelection && !Linea::Props::Cond::hasPageSelection);
 }
 
 void FilterWidget::refreshFilters() {
     if (_update.pending()) return;
+
     auto scoped = _update.block();
 
     auto info = get_filter_display_info(_object);

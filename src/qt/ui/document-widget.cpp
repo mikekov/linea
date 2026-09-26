@@ -40,35 +40,6 @@ void set_namedview_bool(SPNamedView* nv, Inkscape::Util::Internal::ContextString
     DocumentUndo::done(nv->document, operation, "");
 }
 
-void set_document_dimensions(SPDocument* doc, double width, double height, const Unit* unit) {
-    if (!doc) return;
-    auto new_w = Quantity(width, unit);
-    auto new_h = Quantity(height, unit);
-    auto rect = Geom::Rect(Geom::Point(0, 0), Geom::Point(new_w.value("px"), new_h.value("px")));
-    auto const old_height_q = doc->getHeight();
-    doc->fitToRect(rect, false);
-
-    // The origin for the user is in the lower left corner; this point should remain stationary when
-    // changing the page size. The SVG's origin however is in the upper left corner, so we must compensate.
-    if (!doc->yaxisdown()) {
-        auto const vert_offset = Geom::Translate(Geom::Point(0, old_height_q.value("px") - new_h.value("px")));
-        doc->getRoot()->translateChildItems(vert_offset);
-    } else {
-        // When yaxisdown is true, we need to translate just the guides.
-        // See https://gitlab.com/inkscape/inkscape/-/issues/1230
-        if (auto nv = doc->getNamedView()) {
-            for (auto guide : nv->guides) {
-                guide->moveto(guide->getPoint() * Geom::Translate(0, 0), true);
-            }
-        }
-    }
-
-    // Set width/height with the new units so the SVG attributes reflect the chosen unit (e.g., mm for A4).
-    doc->setWidthAndHeight(new_w, new_h, true);
-
-    DocumentUndo::done(doc, RC_("Undo", "Set page size"), "");
-}
-
 void set_document_viewbox_pos(SPDocument* doc, double x, double y) {
     if (!doc) return;
 
@@ -182,7 +153,8 @@ void DocumentWidget::onDimensionChanged(double x, double y, const Unit* unit, Pa
     switch (element) {
         case PageProperties::Dimension::PageTemplate:
         case PageProperties::Dimension::PageSize:
-            set_document_dimensions(_document, x, y, unit);
+            _document->getPageManager().resizeDocument(x, y, unit);
+            DocumentUndo::done(_document, RC_("Undo", "Set page size"), "");
             updateViewboxUi(_document);
             break;
         case PageProperties::Dimension::ViewboxSize:

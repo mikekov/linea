@@ -23,9 +23,12 @@
 #include "object/sp-page.h"
 #include "object/sp-star.h"
 #include "object/sp-text.h"
+#include "page-manager.h"
+#include "svg/svg-box.h"
 #include "util/font-discovery.h"
 #include "util/numeric/converters.h"
 #include "util/text-utils.h"
+#include "util/units.h"
 #include "util-string/ustring-format.h"
 #include "svg/css-ostringstream.h"
 #include "xml/href-attribute-helper.h"
@@ -392,7 +395,11 @@ void apply_star_randomized(const EditTarget& target, const double& randomized) {
 void merge_counts(Counts& counts, SPObject* item) {
     if (!item) return;
 
-    counts.items++;
+    counts.objects++;
+
+    if (is<SPItem>(item)) {
+        counts.items++;
+    }
 
     if (is<SPRect>(item)) {
         counts.rectangles++;
@@ -442,7 +449,174 @@ std::optional<std::string> read_id(SPObject* object) {
     return id ? std::optional<std::string>(id) : std::nullopt;
 }
 
-std::optional<std::string> read_title(SPItem* item) {
+// --- Object-level properties (page size) -------------------------------------
+
+// Width/height in the document's display unit (inkscape:document-units — the
+// unit users see), whether the target is an SPPage or the svg root. Internally
+// PageManager::resizePage works in px (SPPage::getDocumentRect space, same as
+// upstream's page toolbar) and resizeDocument takes any unit, so we convert
+// display unit <-> px at the boundary, like page-toolbar's _unit_to_size.
+std::optional<double> read_page_width(SPObject* object) {
+    if (!object || !object->document) return std::nullopt;
+
+    auto doc = object->document;
+    auto unit = doc->getDisplayUnit();
+    auto px = Inkscape::Util::UnitTable::get().getUnit("px");
+    if (auto page = cast<SPPage>(object)) {
+        return Inkscape::Util::Quantity::convert(page->getDocumentRect().width(), px, unit);
+    }
+    if (is<SPRoot>(object)) {
+        return doc->getWidth().value(unit);
+    }
+    return std::nullopt;
+}
+
+std::optional<double> read_page_height(SPObject* object) {
+    if (!object || !object->document) return std::nullopt;
+
+    auto doc = object->document;
+    auto unit = doc->getDisplayUnit();
+    auto px = Inkscape::Util::UnitTable::get().getUnit("px");
+    if (auto page = cast<SPPage>(object)) {
+        return Inkscape::Util::Quantity::convert(page->getDocumentRect().height(), px, unit);
+    }
+    if (is<SPRoot>(object)) {
+        return doc->getHeight().value(unit);
+    }
+    return std::nullopt;
+}
+
+void apply_page_width(const EditTarget& target, const double& width) {
+    auto object = target.object();
+    if (!object || !object->document || width <= 0) return;
+
+    auto doc = object->document;
+    auto unit = doc->getDisplayUnit();
+    auto px = Inkscape::Util::UnitTable::get().getUnit("px");
+
+    if (auto page = cast<SPPage>(object)) {
+        doc->getPageManager().resizePage(page,
+            Inkscape::Util::Quantity::convert(width, unit, px),
+            page->getDocumentRect().height());
+        return;
+    }
+    if (is<SPRoot>(object)) {
+        doc->getPageManager().resizeDocument(width, doc->getHeight().value(unit), unit);
+    }
+}
+
+void apply_page_height(const EditTarget& target, const double& height) {
+    auto object = target.object();
+    if (!object || !object->document || height <= 0) return;
+
+    auto doc = object->document;
+    auto unit = doc->getDisplayUnit();
+    auto px = Inkscape::Util::UnitTable::get().getUnit("px");
+
+    if (auto page = cast<SPPage>(object)) {
+        doc->getPageManager().resizePage(page,
+            page->getDocumentRect().width(),
+            Inkscape::Util::Quantity::convert(height, unit, px));
+        return;
+    }
+    if (is<SPRoot>(object)) {
+        doc->getPageManager().resizeDocument(doc->getWidth().value(unit), height, unit);
+    }
+}
+
+// --- Object-level properties (page margins/bleed) ----------------------------
+
+namespace {
+
+// The page a margin/bleed property reflects: the SPPage itself, or for the
+// svg root the selected (otherwise first) page — margins and bleed live on
+// <inkscape:page> elements, so the document defers to its current page.
+SPPage* page_for_margin(SPObject* object) {
+    if (auto page = cast<SPPage>(object)) {
+        return page;
+    }
+    if (is<SPRoot>(object) && object->document) {
+        auto& pm = object->document->getPageManager();
+        if (auto page = pm.getSelected()) {
+            return page;
+        }
+        return pm.hasPages() ? pm.getFirstPage() : nullptr;
+    }
+    return nullptr;
+}
+
+// On write, a document without pages gets one covering the viewBox — same as
+// upstream's marginsEdited/bleedsEdited calling enablePages() first.
+SPPage* page_for_margin_write(SPObject* object) {
+    if (auto page = cast<SPPage>(object)) {
+        return page;
+    }
+    if (is<SPRoot>(object) && object->document) {
+        auto& pm = object->document->getPageManager();
+        pm.enablePages();
+        return pm.getSelected();
+    }
+    return nullptr;
+}
+
+SVGLength box_side(const SVGBox& box, BoxSide side) {
+    switch (side) {
+        case BOX_RIGHT:  return box.right();
+        case BOX_BOTTOM: return box.bottom();
+        case BOX_LEFT:   return box.left();
+        default:         return box.top();
+    }
+}
+
+// Display-unit value of one side of a page's margin or bleed box. SVGBox
+// stores user units, so convert computed->unit then scale back, the same
+// formula upstream's margin popover uses.
+std::optional<double> read_page_box_side(SPObject* object, BoxSide side, bool bleed) {
+    auto page = page_for_margin(object);
+    if (!page || !page->document) return 0.0; // a lie, b/c svg may not have any views yet (aka pages)
+
+    auto doc = page->document;
+    auto unit = doc->getDisplayUnit()->abbr;
+    auto scale = doc->getDocumentScale();
+    auto const& box = bleed ? page->getBleedBox() : page->getMarginBox();
+    return box_side(box, side).toValue(unit) * scale[SVGBox::get_scale_axis(side)];
+}
+
+void apply_page_margin_side(const EditTarget& target, BoxSide side, double value) {
+    auto object = target.object();
+    if (!object || value < 0) return;
+
+    auto page = page_for_margin_write(object);
+    if (!page) return;
+    page->setMarginSide(side, Inkscape::Util::format_number(value, 4), false);
+}
+
+} // namespace
+
+std::optional<double> read_page_margin_top(SPObject* object)    { return read_page_box_side(object, BOX_TOP,    false); }
+std::optional<double> read_page_margin_right(SPObject* object)  { return read_page_box_side(object, BOX_RIGHT,  false); }
+std::optional<double> read_page_margin_bottom(SPObject* object) { return read_page_box_side(object, BOX_BOTTOM, false); }
+std::optional<double> read_page_margin_left(SPObject* object)   { return read_page_box_side(object, BOX_LEFT,   false); }
+
+// Bleed is exposed uniformly: read the top side, writes cascade to all four
+// via SVGBox's fallback chain.
+std::optional<double> read_page_bleed(SPObject* object)         { return read_page_box_side(object, BOX_TOP,    true); }
+
+void apply_page_margin_top(const EditTarget& target, const double& v)    { apply_page_margin_side(target, BOX_TOP,    v); }
+void apply_page_margin_right(const EditTarget& target, const double& v)  { apply_page_margin_side(target, BOX_RIGHT,  v); }
+void apply_page_margin_bottom(const EditTarget& target, const double& v) { apply_page_margin_side(target, BOX_BOTTOM, v); }
+void apply_page_margin_left(const EditTarget& target, const double& v)   { apply_page_margin_side(target, BOX_LEFT,   v); }
+
+void apply_page_bleed(const EditTarget& target, const double& value) {
+    auto object = target.object();
+    if (!object || value < 0) return;
+
+    auto page = page_for_margin_write(object);
+    if (!page) return;
+    page->setBleed(Inkscape::Util::format_number(value, 4));
+}
+
+std::optional<std::string> read_title(SPObject* item) {
     if (!item) return std::nullopt;
     auto t = item->title();
     std::string result = t ? std::string(t) : std::string();
@@ -451,10 +625,11 @@ std::optional<std::string> read_title(SPItem* item) {
 }
 
 void apply_title(const EditTarget& target, const std::string& title) {
-    target.item()->setTitle(title.empty() ? nullptr : title.c_str());
+    if (!target.object()) return;
+    target.object()->setTitle(title.empty() ? nullptr : title.c_str());
 }
 
-std::optional<std::string> read_description(SPItem* item) {
+std::optional<std::string> read_description(SPObject* item) {
     if (!item) return std::nullopt;
     auto d = item->desc();
     std::string result = d ? std::string(d) : std::string();
@@ -463,7 +638,8 @@ std::optional<std::string> read_description(SPItem* item) {
 }
 
 void apply_description(const EditTarget& target, const std::string& description) {
-    target.item()->setDesc(description.empty() ? nullptr : description.c_str());
+    if (!target.object()) return;
+    target.object()->setDesc(description.empty() ? nullptr : description.c_str());
 }
 
 std::optional<bool> read_locked(SPItem* item) {

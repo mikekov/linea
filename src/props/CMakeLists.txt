@@ -23,4 +23,5 @@ target_sources(linea_base PRIVATE
     element-props.def
     presentation-props.def
     typography-props.def
+    object-props.def
 )
