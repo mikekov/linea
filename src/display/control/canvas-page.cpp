@@ -168,7 +168,7 @@ void CanvasPage::update(Geom::Rect size, Geom::OptRect margin, Geom::OptRect ble
             // This will put the border on the background OR foreground layer as needed.
             if (is_foreground == border_on_top) {
                 rect->set_visible(true);
-                rect->set_stroke(is_selected ? select_color : border_color);
+                rect->set_stroke(border_color);
             } else {
                 rect->set_visible(false);
                 rect->set_stroke(0x0);
@@ -204,13 +204,14 @@ void CanvasPage::update(Geom::Rect size, Geom::OptRect margin, Geom::OptRect ble
 void CanvasPage::_updateTextItem(CanvasItemText *label, Geom::Rect page, std::string txt, bool is_yaxisdown)
 {
     // Default style for the label
-    int fontsize = 10.0;
+    int fontsize = 11.0;
     uint32_t foreground = 0xffffffff;
     uint32_t background = 0x00000099;
     uint32_t selected = 0x0e5bf199;
-    Geom::Point anchor(0.0, 1.0);
+    Geom::Point anchor(0.0, 1.20);
     Geom::Point coord = page.corner(0);
     double radius = 0.2;
+    double border = 2.0;
 
     // Change the colors for whiter/lighter backgrounds
     if (Colors::get_perceptual_lightness(_canvas_color) < 0.5) {
@@ -221,7 +222,8 @@ void CanvasPage::_updateTextItem(CanvasItemText *label, Geom::Rect page, std::st
 
     if (_label_style == "below") {
         radius = 1.0;
-        fontsize = 14.0;
+        fontsize = 13.0;
+        border = 0.0;
         anchor = Geom::Point(0.5, -0.2);
         coord = Geom::Point(page.midpoint().x(), is_yaxisdown ? page.bottom() : page.top());
 
@@ -239,7 +241,7 @@ void CanvasPage::_updateTextItem(CanvasItemText *label, Geom::Rect page, std::st
     label->set_coord(coord);
     label->set_visible(!txt.empty());
     label->set_text(std::move(txt));
-    label->set_border(4.0);
+    label->set_border(border);
 }
 
 bool CanvasPage::setOnTop(bool on_top)

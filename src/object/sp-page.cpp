@@ -22,8 +22,6 @@
 #include "object/object-set.h"
 #include "util/units.h"
 
-using Inkscape::DocumentUndo;
-
 SPPage::SPPage()
     : SPObject()
 {
@@ -444,7 +442,11 @@ bool SPPage::setDefaultAttributes()
  */
 void SPPage::setSelected(bool sel)
 {
-    this->_canvas_item->is_selected = sel;
+    // _canvas_item may be gone when called during page destruction.
+    if (!_canvas_item || _canvas_item->is_selected == sel) {
+        return;
+    }
+    _canvas_item->is_selected = sel;
     this->requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
 }
 

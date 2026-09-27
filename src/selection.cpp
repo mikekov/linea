@@ -89,7 +89,9 @@ void Selection::_emitModified(guint flags)
     auto& pm = _document->getPageManager();
 
     // If the selected items have been moved to a new page...
-    if (auto item = singleItem()) {
+    if (auto page = cast<SPPage>(single())) {
+        pm.selectPage(page);
+    } else if (auto item = singleItem()) {
         pm.selectPage(item, false);
     } else {
         SPPage *page = pm.getPageFor(firstItem(), true);
@@ -133,6 +135,13 @@ void Selection::_emitChanged(bool persist_selection_context)
             if (_change_page) {
                 // This could be more complex if we want to be smarter.
                 _document->getPageManager().selectPage(item, false);
+            }
+        } else if (_change_page) {
+            // A directly selected page is not an SPItem; route it through
+            // selectPage so connectPageSelected consumers (PagesTool's
+            // canvas highlight, the pages panel) update as upstream does.
+            if (auto page = cast<SPPage>(single())) {
+                _document->getPageManager().selectPage(page);
             }
         }
         DocumentUndo::resetKey(_document);

@@ -375,6 +375,16 @@ void PageManager::pagesChanged(SPPage *new_page)
 bool PageManager::selectPage(SPPage *page)
 {
     if (!page || getPageIndex(page) >= 0) {
+        // Flag the canvas item here rather than relying on connectPageSelected
+        // listeners: PagesTool (which owns the highlight upstream) is only
+        // constructed lazily, so its listener may not exist yet, and the
+        // signal doesn't emit when the selection didn't change.
+        if (_selected_page && _selected_page != page) {
+            _selected_page->setSelected(false);
+        }
+        if (page) {
+            page->setSelected(true);
+        }
         if (_selected_page != page) {
             _selected_page = page;
             _page_selected_signal.emit(_selected_page);
