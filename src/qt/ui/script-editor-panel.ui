@@ -27,7 +27,7 @@
         <number>4</number>
       </property>
 
-      <item row="0" column="0" colspan="2">
+      <!-- <item row="0" column="0" colspan="2">
         <widget class="QLabel" name="scriptLabel">
           <property name="text">
             <string>Script</string>
@@ -36,10 +36,22 @@
             <string>panel-label</string>
           </property>
         </widget>
-      </item>
+      </item> -->
 
       <item row="1" column="0" colspan="2">
         <layout class="QHBoxLayout" name="controlsLayout" stretch="0,1">
+          <property name="leftMargin">
+            <number>5</number>
+          </property>
+          <property name="topMargin">
+            <number>5</number>
+          </property>
+          <property name="rightMargin">
+            <number>5</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
           <property name="spacing">
             <number>4</number>
           </property>
@@ -68,19 +80,20 @@
               </property>
             </widget>
           </item>
+          <item>
+            <widget class="QPushButton" name="deleteButton">
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/minus</normaloff>
+                </iconset>
+              </property>
+              <property name="toolTip">
+                <string>Delete the selected script</string>
+              </property>
+            </widget>
+          </item>
+
         </layout>
-      </item>
-      <item row="1" column="2">
-        <widget class="QPushButton" name="deleteButton">
-          <property name="icon">
-            <iconset>
-              <normaloff>:/icons/minus</normaloff>
-            </iconset>
-          </property>
-          <property name="toolTip">
-            <string>Delete the selected script</string>
-          </property>
-        </widget>
       </item>
 
       <item row="2" column="0" colspan="3">
@@ -146,6 +159,9 @@
           </property>
           <property name="readOnly">
             <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+            <string notr="true">QPlainTextEdit { padding-left: 5px; padding-right: 5px; }</string>
           </property>
         </widget>
       </item>

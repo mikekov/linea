@@ -21,7 +21,6 @@ class SymbolsWidget;
 class StockSymbolsSource;
 class NumberEdit;
 class PanelSwitch;
-class ScriptEditorPanel;
 
 class RightPanel : public CollapsiblePanel {
     Q_OBJECT
@@ -68,7 +67,6 @@ private:
     NumberEdit* _zoomEdit = nullptr;
     QToolButton* _rotationButton = nullptr;
     NumberEdit* _rotationEdit = nullptr;
-    ScriptEditorPanel* _scriptEditorPanel = nullptr;
 };
 
 } // namespace Linea::UI

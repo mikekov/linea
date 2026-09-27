@@ -23,6 +23,7 @@
 #include "linea-application.h"
 #include "linea-window.h"
 #include "qt/ui/about-widget.h"
+#include "qt/ui/dialog/scripting-dialog.h"
 #include "qt/ui/filter/filter-editor.h"
 
 #if 0 // GTK action definitions — kept for reference, replaced by Qt table below
@@ -205,6 +206,23 @@ static void open_filter_editor(LineaWindow* win) {
     dialog->show();
 }
 
+static QPointer<Linea::UI::ScriptingDialog> scripting_dialog;
+
+static void open_scripting(LineaWindow* win) {
+    if (!win) return;
+    if (scripting_dialog) {
+        scripting_dialog->show();
+        scripting_dialog->raise();
+        scripting_dialog->activateWindow();
+        return;
+    }
+
+    auto dialog = new Linea::UI::ScriptingDialog(LINEA_APP, win);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    scripting_dialog = dialog;
+    dialog->show();
+}
+
 static void open_extension_gallery(LineaWindow* /*win*/) {}
 static void toggle_dialogs(LineaWindow* wnd) { wnd->toggleDialogs(); }
 
@@ -241,6 +259,9 @@ static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
     {"dialog-open-extension-gallery", N_("Open Extension Gallery"), SECTION,
      N_("Show and run available extensions"), "dialog-extensions",
      [](LineaWindow* win) { open_extension_gallery(win); }},
+    {"dialog-open-scripting", N_("Open Script Editor"), SECTION,
+     N_("Edit and run scripts"), "dialog-scripts",
+     [](LineaWindow* win) { open_scripting(win); }},
     {"toggle-panel-docking", N_("Toggle All Dialogs"), SECTION,
      N_("Dock or collapse all dialogs"), "panel-left",
      [](LineaWindow* win) { toggle_dialogs(win); }},

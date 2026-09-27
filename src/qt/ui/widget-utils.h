@@ -7,6 +7,8 @@
 #ifndef LINEA_UI_WIDGET_UTILS_H
 #define LINEA_UI_WIDGET_UTILS_H
 
+#include <QSize>
+
 class QWidget;
 class QLayout;
 
@@ -28,6 +30,21 @@ void applyHorizontalPadding(QWidget* widget, int left, int right);
  * The filter object is parented to `follower`, so it is destroyed with it.
  */
 void syncVisibility(QWidget* follower, QWidget* leader);
+
+/**
+ * Restore `window`'s position and size from preferences under `prefsPath`
+ * (keys x, y, width, height) and persist them on subsequent move, resize,
+ * and close. If the saved position lands on a display that is not
+ * connected — or leaves the title bar off-screen — the window is moved
+ * back onto a visible screen (largest overlap, else the parent's screen).
+ *
+ * `defaultSize` is used when no usable size was stored yet; pass an
+ * invalid QSize to keep the widget's own default.
+ *
+ * An event filter is installed on `window`, parented to it, so the
+ * tracking dies with the window.
+ */
+void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize = {});
 
 } // namespace Linea::UI
 

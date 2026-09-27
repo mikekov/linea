@@ -193,6 +193,8 @@ target_sources(linea_base PRIVATE
     ui/dash-selector.ui
     ui/dialog/choose-file.cpp
     ui/dialog/choose-file.h
+    ui/dialog/scripting-dialog.cpp
+    ui/dialog/scripting-dialog.h
     ui/dialog/crash-dialog.cpp
     ui/dialog/crash-dialog.h
     ui/dialog/crash-dialog.ui

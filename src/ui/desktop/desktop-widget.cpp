@@ -60,7 +60,7 @@
 
 constexpr int PANEL_MARGIN = 10;
 constexpr int LEFT_PANEL_WIDTH = 400;
-constexpr int RIGHT_PANEL_WIDTH = 600;
+constexpr int RIGHT_PANEL_WIDTH = 400;
 
 namespace Linea::UI {
 

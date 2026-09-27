@@ -254,6 +254,8 @@ void createMainMenu(QMenuBar* bar) {
         {},
         {"dialog-open-filter-gallery"},
         {"dialog-open-filter-editor"},
+        {},
+        {"dialog-open-scripting"},
     };
 
     build(bar->addMenu("&Plug-ins"), plugins_menu);
