@@ -10,6 +10,7 @@
 #include <QWidget>
 #include <memory>
 #include <sigc++/connection.h>
+#include <sigc++/scoped_connection.h>
 
 class SPDesktop;
 class SPDocument;
@@ -88,12 +89,12 @@ private:
     SPFilter* _selectedFilter = nullptr;
     SPFilterPrimitive* _selectedPrimitive = nullptr;
     bool _updating = false;
-    sigc::connection _resourceChanged;
-    sigc::connection _documentDestroyed;
-    sigc::connection _filterModified;
-    sigc::connection _primitiveModified;
-    sigc::connection _selectionChanged;
-    sigc::connection _selectionModified;
+    sigc::scoped_connection _resourceChanged;
+    sigc::scoped_connection _documentDestroyed;
+    sigc::scoped_connection _filterModified;
+    sigc::scoped_connection _primitiveModified;
+    sigc::scoped_connection _selectionChanged;
+    sigc::scoped_connection _selectionModified;
     PrimitiveSettingsWidget* _settingsWidget = nullptr;
     ComponentTransferSettingsWidget* _componentTransferWidget = nullptr;
     LightSourceSettingsWidget* _lightSourceWidget = nullptr;
