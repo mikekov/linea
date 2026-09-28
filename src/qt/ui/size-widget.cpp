@@ -36,10 +36,6 @@ SizeWidget::SizeWidget(QWidget* parent)
     // Prevent horizontal stretching
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-    // Set CSS class property for labels
-    _ui->dimensionsLabel->setProperty("class", "panel-label");
-    _ui->positionLabel->setProperty("class", "panel-label");
-
     _ui->xEdit->setRange(NumberRange::minimum, NumberRange::maximum);
     _ui->xEdit->setDecimals(NumberRange::decimals);
     _ui->yEdit->setRange(NumberRange::minimum, NumberRange::maximum);

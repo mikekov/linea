@@ -563,6 +563,15 @@ QPushButton {
     min-width: 22px;
     min-height: 22px;
     border-radius: 4px;
+    padding: 0;
+}
+QPushButton[text] {
+    /* add horizontal padding for buttons with text label */
+    padding: 0 5px 0 5px;
+}
+QPushButton.padded {
+    /* extra padding on demand */
+    padding: 0 5px 0 5px;
 }
 QPushButton:disabled {
     color: palette(disabled-text);
@@ -600,7 +609,15 @@ QToolButton[popupMode="InstantPopup"][class="popup-button"] {
     padding-right: 0;
 }
 
-QPushButton.no-menu-arrow::menu-indicator,
+QPushButton.no-menu-arrow::menu-indicator {
+    image: none;
+    width: 0px;
+}
+QPushButton.no-menu-arrow {
+    padding: 0;
+    /* max-width: 22px; */
+}
+
 QToolButton.no-menu-arrow::menu-indicator {
     image: none;
     width: 0px;
