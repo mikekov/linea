@@ -70,12 +70,7 @@ GradientEditor::~GradientEditor() = default;
 void GradientEditor::setupCustomWidgets(Inkscape::Colors::Space::Type space, bool showTypeSelector, bool showColorwheelExpander) {
     // Create gradient image widget and add to placeholder
     _gradientImage = std::make_unique<GradientWithStops>();
-    if (_ui->gradientWidgetPlaceholder) {
-        auto layout = new QVBoxLayout(_ui->gradientWidgetPlaceholder);
-        layout->setContentsMargins(0, 0, 0, 0);
-        layout->addWidget(_gradientImage.get());
-    }
-
+    _ui->gradientWidgetLayout->addWidget(_gradientImage.get());
     // Create repeat mode menu using resource icons
     _repeatMenu = std::make_unique<QMenu>(this);
     for (auto [mode, text, icon] : spGetSpreadRepeats()) {

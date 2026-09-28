@@ -35,6 +35,8 @@ QT_END_NAMESPACE
 
 namespace Linea::UI {
 
+class PopupMenu;
+
 /**
  * Pattern editor widget providing pattern selection (stock and document),
  * tile preview, and property editing (scale, rotation, offset, gap/pitch/stroke).
@@ -148,6 +150,9 @@ private:
 
     int _docSelected   = -1;
     int _stockSelected = -1;
+
+    // Options popup shown below the gear button
+    PopupMenu* _optionsPopup = nullptr;
 };
 
 } // namespace Linea::UI

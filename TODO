@@ -12,7 +12,7 @@ x pixel perfect icons: disabled and x2 checked together
 - cmd+a selects all objects even if i'm in a popup with line edit
 - navigating virtual nodes - something is stealing focus
 - Align buttons do not work
-- page labels are not visible / not showing up
+x page labels are not visible / not showing up
 - add 'quit instantly' action
 - add spell checker (including in context menu)
 - expose this recolor functionality when selection is > 1
@@ -30,11 +30,13 @@ x dropper icon is low res
 x closing the last doc may leave left panel expanded, if there was a seleciton active before doc close
 - TextPanel is a work in progress, remove current item
 - add Blender-like shortcuts (for object manipulation)
+- implement add/remove scripts, read them from local files
 
 ## Missing features
 
-- path panel with d data
+x path panel with d data
 x obj to bitmap command
+- recolor panel
 
 ## UI Panels & Dialogs, widgets
 
@@ -53,7 +55,6 @@ x add layer selector above/below obj tree view
 - tabstrip port sucks - make tabitems draw themselves and style them
 x list individual pages in object tree view, add export option to them?
 x add export strip in obj properties?
-- add dedicated 'export' panel dialog instead
 - add btn to round up coordinates of position
 x add notification bar for showing errors
 x add a way to show notifications?
@@ -111,7 +112,7 @@ x add a way to show notifications?
 - impl extension run btn
 - add missing extension icons
 - make pref dialog use PopupMenu instead of or in addition to dialog window
-- marker transparency, direction, etc not reflected in preview
+x marker transparency, direction, etc not reflected in preview
 - click on marker clear when none is assigned, and the list of markers disappears
 - 'corners' lpe in rect panel doesn't work
 - triangle knot is not pixel aligned (the one used in 'corners' lpe)
@@ -126,7 +127,7 @@ x add a way to show notifications?
 
 ## Canvas & Rendering
 
-- add context menu to canvas
+x add context menu to canvas
 
 ## App & Platform
 
@@ -141,6 +142,7 @@ x missing 'About' dialog
 - blend mode combo -> add separators betwen items to group them
 - fix multiline edit rounded corners
 x use inkscape-window-* and zoom/position attributes to position loaded doc
+- page tool - wrong page is being adjusted after switching to "Pages"
 
 ## Feature requests
 

@@ -10,10 +10,10 @@
 
 #include <algorithm>
 
+#include <QCheckBox>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
-#include <QMenu>
 #include <QPainter>
 #include <QPen>
 #include <QShowEvent>
@@ -22,7 +22,7 @@
 #include <QScreen>
 #include <QSplitter>
 #include <QPushButton>
-#include <QWidgetAction>
+#include <QVBoxLayout>
 
 #include "colors/color.h"
 #include "document.h"
@@ -34,6 +34,7 @@
 #include "util-string/string-compare.h"
 
 #include "qt/ui/number-edit.h"
+#include "qt/ui/popup-menu.h"
 #include "qt/ui/resizing-separator.h"
 #include "qt/ui/simple-grid.h"
 
@@ -70,7 +71,7 @@ PatternEditor::PatternEditor(const char* prefs, Inkscape::PatternManager& manage
 {
     _ui->setupUi(this);
 
-    auto* p = Inkscape::Preferences::get();
+    auto p = Inkscape::Preferences::get();
     _tileSize  = p->getIntLimited((_prefs + "/tileSize").c_str(),   ITEM_WIDTH, 30, 1000);
     _showNames = p->getBool      ((_prefs + "/showLabels").c_str(), false);
 
@@ -103,12 +104,15 @@ void PatternEditor::setupCustomWidgets() {
     _ui->colorPicker->setUseTransparency(false);
 
     // --- Options popup menu on the gear/options button ---
-    auto* optMenu = new QMenu(this);
+    auto optContent = new QWidget;
+    auto optLayout = new QVBoxLayout(optContent);
+    optLayout->setContentsMargins(0, 0, 0, 0);
+    optLayout->setSpacing(4);
 
-    auto* showNamesAct = optMenu->addAction(tr("Show names"));
-    showNamesAct->setCheckable(true);
-    showNamesAct->setChecked(_showNames);
-    connect(showNamesAct, &QAction::toggled, this, [this](bool checked) {
+    auto showNamesCheck = new QCheckBox(tr("Show names"), optContent);
+    showNamesCheck->setChecked(_showNames);
+    optLayout->addWidget(showNamesCheck);
+    connect(showNamesCheck, &QCheckBox::toggled, this, [this](bool checked) {
         _showNames = checked;
         Inkscape::Preferences::get()->setBool((_prefs + "/showLabels").c_str(), checked);
         const int h = _tileSize + (checked ? 20 : 4);
@@ -117,18 +121,16 @@ void PatternEditor::setupCustomWidgets() {
         rebuildGalleryCallbacks();
     });
 
-    // Tile-size slider embedded in the menu
-    auto* sliderWidget = new QWidget;
-    auto* sliderLayout = new QHBoxLayout(sliderWidget);
-    sliderLayout->setContentsMargins(6, 2, 6, 2);
+    // Tile-size slider embedded in the popup
+    auto sliderWidget = new QWidget(optContent);
+    auto sliderLayout = new QHBoxLayout(sliderWidget);
+    sliderLayout->setContentsMargins(0, 0, 0, 0);
     sliderLayout->addWidget(new QLabel(tr("Tile size:"), sliderWidget));
-    auto* tileSlider = new QSlider(Qt::Horizontal, sliderWidget);
+    auto tileSlider = new QSlider(Qt::Horizontal, sliderWidget);
     tileSlider->setRange(0, 20);
     tileSlider->setValue(tileToSlider(_tileSize));
     sliderLayout->addWidget(tileSlider);
-    auto* sliderAction = new QWidgetAction(optMenu);
-    sliderAction->setDefaultWidget(sliderWidget);
-    optMenu->addAction(sliderAction);
+    optLayout->addWidget(sliderWidget);
     connect(tileSlider, &QSlider::valueChanged, this, [this](int v) {
         const int newSize = sliderToTile(v);
         if (newSize == _tileSize) return;
@@ -140,7 +142,10 @@ void PatternEditor::setupCustomWidgets() {
         updateTileImages();
     });
 
-    _ui->optionsButton->setMenu(optMenu);
+    _optionsPopup = new PopupMenu(this);
+    _optionsPopup->setContent(optContent);
+    connect(_ui->optionsButton, &QPushButton::clicked, this,
+            [this] { _optionsPopup->showBelowWidget(_ui->optionsButton); });
 
     // --- Link-scale button (toggle) ---
     _ui->linkScaleButton->setCheckable(true);
@@ -399,7 +404,7 @@ PatternEditor::updateDocPatternList(SPDocument* document) {
     // Build items without generating preview images (cheap)
     std::vector<PatternItemPtr> patterns;
     patterns.reserve(psList.size());
-    for (auto* ps : psList) {
+    for (auto ps : psList) {
         if (auto item = _manager.get_item(ps)) {
             patterns.push_back(std::move(item));
         }
@@ -414,7 +419,7 @@ PatternEditor::updateDocPatternList(SPDocument* document) {
             if (item->pix.isNull()) {
                 // Generate preview for a newly added pattern
                 if (document) {
-                    auto* ps = cast<SPPaintServer>(document->getObjectById(item->id));
+                    auto ps = cast<SPPaintServer>(document->getObjectById(item->id));
                     item->pix = _manager.get_image(ps, _tileSize, _tileSize, ds);
                 }
             }
@@ -435,7 +440,7 @@ void PatternEditor::setStockPatterns(const std::vector<SPPaintServer*>& patterns
 
     _stockItems.clear();
     _stockItems.reserve(patterns.size());
-    for (auto* ps : patterns) {
+    for (auto ps : patterns) {
         if (auto item = _manager.get_item(ps)) {
             item->pix = _manager.get_image(ps, _tileSize, _tileSize, ds);
             _stockItems.push_back(std::move(item));
@@ -468,8 +473,8 @@ void PatternEditor::updateTileImages() {
 
     auto regenerate = [&](std::vector<PatternItemPtr>& items, SPDocument* doc) {
         for (auto& item : items) {
-            auto* d   = item->collection ? item->collection : doc;
-            auto* ps  = d ? cast<SPPaintServer>(d->getObjectById(item->id)) : nullptr;
+            auto d   = item->collection ? item->collection : doc;
+            auto ps  = d ? cast<SPPaintServer>(d->getObjectById(item->id)) : nullptr;
             if (!ps) continue;
             item->pix = _manager.get_image(ps, _tileSize, _tileSize, ds);
         }
@@ -557,9 +562,9 @@ void PatternEditor::setInitialSelection() {
     if (id.empty()) return;
 
     auto scoped(_update.block());
-    auto* d       = doc ? doc : _currentDocument;
-    auto* element = d ? d->getObjectById(id) : nullptr;
-    if (auto* ps = cast<SPPaintServer>(element)) {
+    auto d       = doc ? doc : _currentDocument;
+    auto element = d ? d->getObjectById(id) : nullptr;
+    if (auto ps = cast<SPPaintServer>(element)) {
         auto item = _manager.get_item(ps);
         updateWidgetsFromPattern(item);
     }
@@ -695,7 +700,7 @@ void PatternEditor::updateScaleLinkIcon() {
 void PatternEditor::drawPreview(QPainter* painter, const QRect& rect) {
     if (_currentPattern.linkId.empty() || !_currentDocument) return;
 
-    auto* linkPattern = cast<SPPaintServer>(
+    auto linkPattern = cast<SPPaintServer>(
         _currentDocument->getObjectById(_currentPattern.linkId));
     if (!linkPattern) return;
 
