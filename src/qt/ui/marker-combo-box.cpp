@@ -103,7 +103,7 @@ MarkerComboBox::MarkerComboBox(const std::string& id, int loc, QWidget* parent)
 MarkerComboBox::~MarkerComboBox() = default;
 
 void MarkerComboBox::construct() {
-    auto* layout = new QHBoxLayout(this);
+    auto layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
@@ -146,6 +146,7 @@ void MarkerComboBox::buildPopup() {
     _popupUi = std::make_unique<Ui::MarkerPopup>();
     _popupContent = new QWidget();
     _popupUi->setupUi(_popupContent);
+    _popupUi->opacity->setFactor(100);
 
     _markerGrid = _popupUi->markerGrid;
     _markerGrid->setCellSize(ITEM_WIDTH, ITEM_HEIGHT);
@@ -224,7 +225,7 @@ void MarkerComboBox::connectSignals() {
 
     // Clear marker
     connect(_popupUi->clearButton, &QPushButton::clicked, this, [this]() {
-        _markerGrid->clear();
+        _markerGrid->setSelectedCell(-1);
         _currentMarkerId.clear();
         updateButtonPreview();
         updatePreview();
@@ -343,6 +344,12 @@ void MarkerComboBox::setDocument(SPDocument* doc) {
         _modifiedConnection = _document->getDefs()->connectModified(
             [this](SPObject*, unsigned int) {
                 _isUpToDate = false;
+                if (_popup->isVisible()) {
+                    updateButtonPreview();
+                    updatePreview();
+                } else {
+                    updateButtonPreview();
+                }
             });
     }
 
@@ -361,6 +368,7 @@ void MarkerComboBox::setCurrent(SPObject* marker) {
         auto* sp_marker = cast<SPMarker>(marker);
         auto scoped(_update.block());
         updateWidgetsFromMarker(sp_marker);
+        updatePreview();
         int idx = findMarkerIndex(sp_marker);
         if (idx >= 0) {
             _markerGrid->setSelectedCell(idx);
