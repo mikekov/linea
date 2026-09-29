@@ -826,7 +826,7 @@
                 <item>
                   <widget class="QCheckBox" name="pageLabelStyleButton">
                     <property name="text">
-                      <string>Page big labels</string>
+                      <string>Page labels</string>
                     </property>
                     <property name="icon">
                       <iconset>

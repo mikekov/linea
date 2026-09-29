@@ -47,8 +47,8 @@ bool ConsolePanel::eventFilter(QObject* watched, QEvent* event) {
 }
 
 void ConsolePanel::updateResizeStep() {
-    const QFontMetrics fm = _ui->console->fontMetrics();
-    setResizeStep(QSize(qMax(1, fm.horizontalAdvance(u'M')), qMax(1, _ui->console->lineHeight())));
+    const QFontMetricsF fm(_ui->console->font());
+    setResizeStep(QSize(fm.horizontalAdvance(u'M'), _ui->console->lineHeight()));
     updateMaxHeight();
 }
 
@@ -75,7 +75,7 @@ QSize ConsolePanel::innerSize(QSize panelSize) const {
     // never smaller than one row tall or minColumns() wide
     const QFontMetrics fm = _ui->console->fontMetrics();
     inner.setWidth(qMax(inner.width(), _minColumns * fm.horizontalAdvance(u'M')));
-    inner.setHeight(qMax(inner.height(), _ui->console->lineHeight()));
+    inner.setHeight(qMax(inner.height(), qCeil(_ui->console->lineHeight())));
     return inner;
 }
 
@@ -98,7 +98,7 @@ void ConsolePanel::updateMaxHeight() {
         setMaximumHeight(QWIDGETSIZE_MAX);
         return;
     }
-    const int h = _maxLines * _ui->console->lineHeight() + chromeSize().height();
+    const int h = qCeil(_maxLines * _ui->console->lineHeight()) + chromeSize().height();
     setMaximumHeight(h);
 }
 

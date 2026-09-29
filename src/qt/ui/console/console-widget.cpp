@@ -143,24 +143,8 @@ void ConsoleWidget::resizeEvent(QResizeEvent* event) {
 }
 
 int ConsoleWidget::lineHeight() const {
-    const QTextBlock first = document()->firstBlock();
-    // pitch between consecutive visual rows: a block is a paragraph and may
-    // wrap into many rows, so measure layout lines within a wrapped block,
-    // and block tops only when the first block is a single row
-    if (first.layout()->lineCount() > 1) {
-        const qreal pitch = first.layout()->lineAt(1).y() - first.layout()->lineAt(0).y();
-        if (pitch > 0) {
-            return qRound(pitch);
-        }
-    }
-    const QTextBlock second = first.next();
-    if (first.lineCount() == 1 && second.isValid()) {
-        const qreal pitch = blockBoundingGeometry(second).top() - blockBoundingGeometry(first).top();
-        if (pitch > 0) {
-            return qRound(pitch);
-        }
-    }
-    return qMax(1, fontMetrics().lineSpacing());
+    const auto block = document()->firstBlock();
+    return qMax(15, static_cast<int>(document()->documentLayout()->blockBoundingRect(block).height()));
 }
 
 QString ConsoleWidget::commandLine() const {

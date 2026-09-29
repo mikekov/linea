@@ -10,17 +10,18 @@ x pixel perfect icons: disabled and x2 checked together
 - obj tree model is still fubar. create text by typing with text tool and two copies show up in the tree
 - doc modified and save notification is ugly
 - cmd+a selects all objects even if i'm in a popup with line edit
+- Enter should go to focus number edit first, active text frame next
 - navigating virtual nodes - something is stealing focus
 - Align buttons do not work
 x page labels are not visible / not showing up
 - add 'quit instantly' action
 - add spell checker (including in context menu)
-- expose this recolor functionality when selection is > 1
+- expose recolor functionality when selection is > 1
 - have modes of operation? so the main toolbar can adjust automatically
-- support page editing in DescriptionWidget
+x support page editing in DescriptionWidget
 - node tool buttons operate on paths but ignore other 'nodes' in shapes; add enableWhen rule to them
 - separate tools ui from object ui somehow, label maybe, like Appearance
-- allow closing last doc, show background page with recent files, templates, crash docs/recovery
+x allow closing last doc, show background page with recent files, templates, crash docs/recovery
 - spray tool - add reset to defaults btn
 x text subselection doesn't update font!
 x dropper icon is low res

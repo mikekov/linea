@@ -237,7 +237,7 @@
             <widget class="QWidget" name="orientBox" native="true">
               <layout class="QHBoxLayout" name="orientLayout">
                 <property name="spacing">
-                  <number>0</number>
+                  <number>2</number>
                 </property>
                 <property name="leftMargin">
                   <number>0</number>

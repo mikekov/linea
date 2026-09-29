@@ -244,7 +244,7 @@ public:
         if (_update.pending()) return;
 
         auto scoped = _update.block();
-        auto* vector = gradient ? gradient->getVector() : nullptr;
+        auto vector = gradient ? gradient->getVector() : nullptr;
         Q_EMIT gradientChanged(vector, _gradient.getType());
     }
     void fire_swatch_changed(SPGradient* swatch, EditOperation action, SPGradient* replacement,
@@ -309,13 +309,13 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
     auto types_layout = qobject_cast<QHBoxLayout*>(_ui.typesWidget->layout());
 
     // add buttons switching paint mode
-    auto* mode_group = new QButtonGroup(this);
+    auto mode_group = new QButtonGroup(this);
     mode_group->setExclusive(true);
     _mode_group = mode_group;
     for (auto& i : paint_modes) {
         if (i.mode == PaintMode::None && !support_no_paint) continue;
 
-        auto* btn = new QToolButton(this);
+        auto btn = new QToolButton(this);
         btn->setIcon(QIcon::fromTheme(i.icon, QIcon(QString(":/icons/") + i.icon)));
         btn->setToolTip(tr(i.tip));
         btn->setCheckable(true);
@@ -337,6 +337,9 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
         _ui.menuButton->show();
         _menu_popover = std::make_unique<QMenu>(this);
         _ui.menuButton->setMenu(_menu_popover.get());
+        auto menuButtonPolicy = _ui.menuButton->sizePolicy();
+        menuButtonPolicy.setRetainSizeWhenHidden(true);
+        _ui.menuButton->setSizePolicy(menuButtonPolicy);
     } else {
         _ui.menuButton->hide();
         _ui.pickersWidget->show();
@@ -355,11 +358,11 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
 
     QToolButton* plate_btns[] = {_ui.rectButton, _ui.circleButton, _ui.inputButton};
 
-    auto* plate_group = new QButtonGroup(this);
+    auto plate_group = new QButtonGroup(this);
     plate_group->setExclusive(true);
     for (int idx = 0; idx < 3; ++idx) {
         const auto& p = pickers[idx];
-        auto* pb = plate_btns[idx];
+        auto pb = plate_btns[idx];
         pb->setIcon(QIcon::fromTheme(p.icon, QIcon(QString(":/icons/") + p.icon)));
         pb->setToolTip(tr(p.tooltip));
         pb->setCheckable(true);
@@ -369,7 +372,7 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
         _plate_buttons[p.type] = pb;
 
         if (_use_compact_mode) {
-            auto* action = _menu_popover->addAction(
+            auto action = _menu_popover->addAction(
                 QIcon::fromTheme(p.icon, QIcon(QString(":/icons/") + p.icon)),
                 tr(p.label));
             action->setToolTip(tr(p.tooltip));
@@ -542,6 +545,7 @@ void PaintSelectorImpl::_set_mode(PaintMode mode) {
     _ui.pickersWidget->setEnabled(has_color_picker);
     if (_use_compact_mode) {
         _ui.menuButton->setEnabled(has_color_picker);
+        _ui.menuButton->setVisible(has_color_picker);
     }
 
     // Notify parent layouts that our size may have changed (AdaptiveStack
@@ -596,25 +600,25 @@ void PaintSelectorImpl::set_gradient(SPGradient* gradient, SPStop* selected_stop
 void PaintSelectorImpl::updateFromPaint(const SPIPaint& paint) {
     auto scoped = _update.block();
 
-    if (auto* server = paint.isPaintserver() ? paint.href->getObject() : nullptr) {
+    if (auto server = paint.isPaintserver() ? paint.href->getObject() : nullptr) {
         if (is<SPGradient>(server) && cast<SPGradient>(server)->getVector()->isSwatch()) {
             // swatch color
             // auto vector = cast<SPGradient>(server)->getVector();
             // _swatch.select_vector(vector);
-            auto* gradient = cast<SPGradient>(server);
-            auto* stop = cast<SPStop>(const_cast<SPIPaint&>(paint).getTag());
+            auto gradient = cast<SPGradient>(server);
+            auto stop = cast<SPStop>(const_cast<SPIPaint&>(paint).getTag());
             set_gradient(gradient, stop);
         }
         else if (is<SPLinearGradient>(server) || is<SPRadialGradient>(server)) {
             // normal gradient
-            auto* gradient = cast<SPGradient>(server);
-            auto* stop = cast<SPStop>(const_cast<SPIPaint&>(paint).getTag());
+            auto gradient = cast<SPGradient>(server);
+            auto stop = cast<SPStop>(const_cast<SPIPaint&>(paint).getTag());
             set_gradient(gradient, stop);
         }
 #ifdef WITH_MESH
         else if (is<SPMeshGradient>(server)) {
             // mesh
-            auto* array = cast<SPGradient>(server)->getArray();
+            auto array = cast<SPGradient>(server)->getArray();
             _mesh.setSelectedMesh(array);
         }
 #endif
