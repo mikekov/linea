@@ -75,7 +75,11 @@ struct OptGLArea::GLState
 };
 
 OptGLArea::OptGLArea() = default;
-OptGLArea::~OptGLArea() = default;
+
+OptGLArea::~OptGLArea() {
+    // The context is destroyed later, by ~QOpenGLWidget; stop it from calling back into a destroyed object.
+    disconnect(_context_destroyed);
+}
 
 void OptGLArea::on_realize()
 {
@@ -107,7 +111,13 @@ void OptGLArea::init_opengl()
 
     // context->makeCurrent();
     makeCurrent();
-    setUpdateBehavior(QOpenGLWidget::PartialUpdate);
+    // NoPartialUpdate (the modern Qt >= 5.5 default) is correct here: paintGL() always fully
+    // clears and redraws the entire widget from scratch every call (see GLGraphics::paint_widget,
+    // which does a full glClear + full-view composite), so we never rely on content being
+    // preserved between frames. PartialUpdate forces Qt to avoid invalidating the framebuffer
+    // between frames, which can force a slower internal compositing path on some backends
+    // (observed as ~30Hz-capped stalls on the main thread between generations) for no benefit.
+    setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
     gl = std::make_shared<GLState>(this, context);
     // Gdk::GLContext::clear_current();
 }
@@ -124,6 +134,7 @@ void OptGLArea::make_current()
 {
     assert(gl);
     makeCurrent();
+    on_made_current();
     // gl->context->make_current();
 }
 
@@ -137,8 +148,50 @@ void OptGLArea::bind_framebuffer()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gl->stencilbuffer);
 }
 
+void OptGLArea::unrealize_gl() {
+    if (!_ready) return;
+
+    makeCurrent();
+    on_unrealize();
+    _ready = false;
+    doneCurrent();
+}
+
+void OptGLArea::restore_default_gl_state() {
+    if (!get_realized()) return;
+
+    makeCurrent();
+
+    // Most importantly, a bound unpack buffer turns Qt's glTexImage2D(..., nullptr) into a read from that buffer.
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+    glBindVertexArray(0);
+    glUseProgram(0);
+    for (int i = 3; i >= 0; i--) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_STENCIL_TEST);
+
+    // Our graphics backend must not rely on any of the state just reset.
+    on_made_current();
+}
+
 void OptGLArea::initializeGL() {
     initializeOpenGLFunctions();
+
+    // Each (re)initialisation comes with a new context; tear down on its destruction, before Qt creates the next one.
+    disconnect(_context_destroyed);
+    _context_destroyed = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [this] { unrealize_gl(); }, Qt::DirectConnection);
 
     // Enable blending for transparency
     glEnable(GL_BLEND);
@@ -171,13 +224,15 @@ void OptGLArea::resizeGL(int w, int h) {
 
 void OptGLArea::paintGL()
 {
-    if (!_ready || !gl) return;
+    if (!_ready) return;
 
 // std::cout << "DEBUG: paintGL() called" << std::endl;
     auto const size = Geom::IntPoint(width(), height()) * get_scale_factor();
     if (size.x() == 0 || size.y() == 0) return;
 
-    if (cairo_renderer) {
+    glDisable(GL_SCISSOR_TEST);
+
+    if (!opengl_enabled) {
         if (!_surface || _surface->get_width() != size.x() || _surface->get_height() != size.y()) {
             _surface = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, size.x(), size.y());
             _surface->set_device_scale(get_scale_factor(), get_scale_factor());
@@ -224,6 +279,9 @@ void OptGLArea::paintGL()
     }
 
     // QOpenGLWidget has already made its context current before calling paintGL().
+    if (!gl) return;
+
+    on_made_current();
 
     // Check if the size has changed.
     if (size != gl->size) {

@@ -427,9 +427,7 @@ Canvas::Canvas()
         if (get_realized()) {
             d->deactivate();
             d->deactivate_graphics();
-            /* GTK-specific start
             set_opengl_enabled(d->prefs.request_opengl);
-            GTK-specific end */
             d->updater->reset();
             d->activate_graphics();
             d->activate();
@@ -482,7 +480,9 @@ Canvas::Canvas()
     // Note: do NOT set WA_AcceptTouchEvents — it suppresses QNativeGestureEvent
     // (pinch zoom) on macOS by consuming the raw touch sequence instead.
     // Qt: HiDPI handling done via devicePixelRatio()
-    // Qt canvas always uses OpenGL
+
+    // OpenGL switch.
+    set_opengl_enabled(d->prefs.request_opengl);
     /* QT-specific end */
 
     // Async redraw process.
@@ -1540,6 +1540,16 @@ bool Canvas::event(QEvent* event) {
             }
             return QOpenGLWidget::event(event);
         }
+        case QEvent::Paint:
+        case QEvent::UpdateRequest:
+        case QEvent::Resize:
+        case QEvent::Show:
+        case QEvent::WindowChangeInternal:
+        case QEvent::ScreenChangeInternal:
+        case QEvent::DevicePixelRatioChange:
+            // QOpenGLWidget does its own GL work in our context while handling these (FBO (re)creation, clearing).
+            restore_default_gl_state();
+            return QOpenGLWidget::event(event);
         case QEvent::Enter: {
             auto enterEvent = static_cast<QEnterEvent*>(event);
             on_enter(enterEvent->position().x(), enterEvent->position().y(), _state);
@@ -1555,7 +1565,7 @@ bool Canvas::event(QEvent* event) {
                 // on_realize();
             } else if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
                 // on_unrealize equivalent
-                on_unrealize();
+                unrealize_gl();
             }
             return QOpenGLWidget::event(event);
         }
@@ -2215,9 +2225,9 @@ const Geom::Affine &Canvas::get_geom_affine() const
 
 void CanvasPrivate::queue_draw_area(const Geom::IntRect &rect)
 {
-    // q->queue_draw();
+    q->queue_draw();
     // Todo: Use the following if/when gtk supports partial invalidations again.
-    q->queue_draw_area(rect.left(), rect.top(), rect.width(), rect.height());
+    // q->queue_draw_area(rect.left(), rect.top(), rect.width(), rect.height());
 }
 
 /**
@@ -2584,14 +2594,20 @@ void Canvas::size_allocate(int const width, int const height)
 /* QT-specific end */
 
 /* QT-specific start */
-void Canvas::resizeEvent(QResizeEvent *event)
-{
+void Canvas::resizeEvent(QResizeEvent* event) {
     QOpenGLWidget::resizeEvent(event);
     size_allocate(event->size().width(), event->size().height());
 }
 
 QOpenGLContext* Canvas::create_context() {
     return context();
+}
+
+void Canvas::on_made_current() {
+    // Qt has rebound its own framebuffer, so the pipeline state cached by the graphics backend is stale.
+    if (d->graphics) {
+        d->graphics->invalidated_glstate();
+    }
 }
 /* QT-specific end */
 
@@ -2664,10 +2680,9 @@ bool Canvas::paint_widget(const QOpenGLContext& context, Cairo::RefPtr<Cairo::Co
     // Commit pending tiles in case GTK called on_draw even though after_redraw() is scheduled at higher priority.
     d->commit_tiles();
 
-    // TODO: Handle OpenGL context
-    //     if (get_opengl_enabled()) {
-    //    bind_framebuffer();
-    //    }
+    if (get_opengl_enabled()) {
+        bind_framebuffer();
+    }
 
     Graphics::PaintArgs args;
     args.mouse = d->last_mouse;

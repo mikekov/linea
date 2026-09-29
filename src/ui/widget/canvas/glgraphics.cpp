@@ -372,12 +372,12 @@ void GLGraphics::set_outlines_enabled(bool enabled)
 
 void GLGraphics::setup_stores_pipeline()
 {
-    glDisable(GL_SCISSOR_TEST);
+    // glDisable(GL_SCISSOR_TEST);
     if (state == State::Stores) return;
     state = State::Stores;
 
     glDisable(GL_BLEND);
-    glDisable(GL_STENCIL_TEST);
+    // glDisable(GL_STENCIL_TEST);
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
     GLuint constexpr attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};

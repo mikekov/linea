@@ -244,7 +244,6 @@ GTK-specific end */
     void enable_autoscroll();
 
     // Additional methods required by desktop.cpp
-    bool get_opengl_enabled() const { return false; } // Qt canvas always uses OpenGL for output
 
 /* GTK-specific start
     void set_cursor(Glib::RefPtr<Gdk::Cursor> const &cursor);
@@ -330,6 +329,7 @@ GTK-specific end */
 
     // OpenGL context
     QOpenGLContext* create_context() final;
+    void on_made_current() final;
     void ensureWidgetFbo(int w, int h);
 
     // Size allocation

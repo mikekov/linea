@@ -26,37 +26,10 @@ static char const preferences_skeleton[] =
     R"=====(
 <inkscape version="1">
   <group id="window">
-    <group id="menu"        state="1"/>
-    <group id="commands"    state="1"/>
-    <group id="snaptoolbox" state="1"/>
-    <group id="toppanel"    state="1"/>
-    <group id="toolbox"     state="1"/>
-    <group id="statusbar"   state="1"/>
-    <group id="panels"      state="1"/>
-    <group id="rulers"      state="1"/>
-    <group id="scrollbars"  state="1"/>
   </group>
   <group id="fullscreen">
-    <group id="menu"        state="1"/>
-    <group id="commands"    state="1"/>
-    <group id="snaptoolbox" state="1"/>
-    <group id="toppanel"    state="1"/>
-    <group id="toolbox"     state="1"/>
-    <group id="statusbar"   state="1"/>
-    <group id="panels"      state="1"/>
-    <group id="rulers"      state="1"/>
-    <group id="scrollbars"  state="1"/>
   </group>
   <group id="focus">
-    <group id="menu"        state="0"/>
-    <group id="commands"    state="0"/>
-    <group id="snaptoolbox" state="0"/>
-    <group id="toppanel"    state="0"/>
-    <group id="toolbox"     state="0"/>
-    <group id="statusbar"   state="0"/>
-    <group id="panels"      state="0"/>
-    <group id="rulers"      state="0"/>
-    <group id="scrollbars"  state="0"/>
   </group>
 
   <group id="template">
@@ -78,14 +51,6 @@ static char const preferences_skeleton[] =
 
     <group id="shapes" style="fill-rule:evenodd;" selcue="1" gradientdrag="1">
       <eventcontext id="rect" style="fill:blue;" usecurrent="rect"/>
-      <eventcontext id="3dbox" style="stroke:none;stroke-linejoin:round;stroke-width:0" usecurrent="3dbox">
-        <side id="XYfront"  style="fill:#8686bf;stroke:none;stroke-linejoin:round;"/>
-        <side id="XYrear"   style="fill:#e9e9ff;stroke:none;stroke-linejoin:round;"/>
-        <side id="XZtop"    style="fill:#4d4d9f;stroke:none;stroke-linejoin:round;"/>
-        <side id="XZbottom" style="fill:#afafde;stroke:none;stroke-linejoin:round;"/>
-        <side id="YZright"  style="fill:#353564;stroke:none;stroke-linejoin:round;"/>
-        <side id="YZleft"   style="fill:#d7d7ff;stroke:none;stroke-linejoin:round;"/>
-      </eventcontext>
       <eventcontext id="arc" style="fill:red;" end="0" start="0" usecurrent="arc"/>
       <eventcontext id="star" magnitude="5" style="fill:yellow;" usecurrent="star"/>
       <eventcontext id="polygon" magnitude="5" style="fill:orange;" usecurrent="polygon"/>
@@ -266,6 +231,8 @@ static char const preferences_skeleton[] =
   <group id="options"
      rotationlock="1">
     <group id="renderingcache" size="512" />
+    <group id="rendering" request_opengl="1"  />
+    <group id="threading" numthreads="0"  />
     <group id="useoldpdfexporter" value="0" />
     <group id="highlightoriginal" value="1" />
     <group id="relinkclonesonduplicate" value="0" />
@@ -417,21 +384,6 @@ static char const preferences_skeleton[] =
        maximized="1"
        fullscreen="0"
        id="geometry" />
-    <group
-       id="XYfront" />
-    <group
-       id="XYrear" />
-    <group
-       id="XZtop" />
-    <group
-       id="XZbottom" />
-    <group
-       id="YZleft" />
-    <group
-       id="YZright" />
-  </group>
-
-  <group id="devices">
   </group>
 
   <group
@@ -440,106 +392,21 @@ static char const preferences_skeleton[] =
      secondary="1"
      small="1">
     <!--  simplesnap="1" commented out to let initial setup run -->
-    <group
-       id="tools"
-       icononly="1"
-       small="0"
-       iconsize="16">
-      <group
-         id="buttons"
-         showLPETool="0"/>
-    </group>
-    <group
-       id="controlbars"
-       iconsize="16" />
   </group>
 
-  <group
-     id="statusbar">
-    <group
-       id="visibility" />
-  </group>
-
-  <group
-     id="iconpreview"
-     autoRefresh="1"
-     pack="1"
-     selectionHold="1"
-     showFrames="1"
-     selectionOnly="0">
-    <group
-       id="sizes">
-      <group
-         id="default">
-        <group
-           value="16"
-           show="1"
-           id="size16" />
-        <group
-           value="22"
-           show="0"
-           id="size22" />
-        <group
-           value="24"
-           show="1"
-           id="size24" />
-        <group
-           value="32"
-           show="1"
-           id="size32" />
-        <group
-           value="48"
-           show="1"
-           id="size48" />
-        <group
-           value="50"
-           show="0"
-           id="size50" />
-        <group
-           value="64"
-           show="0"
-           id="size64" />
-        <group
-           value="72"
-           show="0"
-           id="size72" />
-        <group
-           value="80"
-           show="0"
-           id="size80" />
-        <group
-           value="96"
-           show="0"
-           id="size96" />
-        <group
-           value="128"
-           show="1"
-           id="size128" />
-        <group
-           value="256"
-           show="0"
-           id="size256" />
-      </group>
-    </group>
-  </group>
   <group id="debug">
   </group>
+
   <group id="ui"
     language=""/>
+
   <group
      id="live_effects"
      flattening="0" />
+
   <group
-     id="theme"
-     defaultPreferDarkTheme="1"
-     defaultIconTheme="multicolor"
-     defaultGtkTheme="Adwaita"
-     narrowSpinButton="1"
-     preferDarkTheme="1"
-     darkTheme="1"
-     symbolicIcons="1"
-     symbolicDefaultBaseColors="1"
-     symbolicDefaultHighColors="0"/>
+     id="theme" />
+
 </inkscape>
 )=====";
 

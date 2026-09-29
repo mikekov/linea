@@ -32,6 +32,7 @@ x closing the last doc may leave left panel expanded, if there was a seleciton a
 - TextPanel is a work in progress, remove current item
 - add Blender-like shortcuts (for object manipulation)
 - implement add/remove scripts, read them from local files
+- undo/redo is buggy
 
 ## Missing features
 

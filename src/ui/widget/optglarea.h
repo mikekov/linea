@@ -70,6 +70,28 @@ protected:
     virtual bool paint_widget(const QOpenGLContext&, Cairo::RefPtr<Cairo::Context>& ctx) { return false; }
 
     /* QT-specific start */
+    /**
+     * Called after make_current(). Unlike a private GTK GL context, QOpenGLWidget::makeCurrent() rebinds
+     * the widget's own framebuffer, so reimplement to discard any cached OpenGL state.
+     */
+    virtual void on_made_current() {}
+
+    /**
+     * Release all OpenGL resources while the current context is still alive (GTK's unrealize).
+     * Qt destroys and recreates the context, then calls initializeGL() again, whenever the widget
+     * moves to a different window or the window's compositing is reconfigured.
+     */
+    void unrealize_gl();
+
+    /**
+     * Reset the GL state our rendering leaves behind to the defaults. Unlike GTK's private context,
+     * QOpenGLWidget does its own GL work (FBO (re)creation, clearing) in this context, and relies on
+     * default state; call before letting it do so.
+     */
+    void restore_default_gl_state();
+    /* QT-specific end */
+
+    /* QT-specific start */
     // GTK compatibility stubs
     bool get_realized() const { return _ready; }
     int get_width() const { return width(); }
@@ -81,12 +103,12 @@ protected:
     /* QT-specific end */
 private:
     bool opengl_enabled = true;
-    bool cairo_renderer = true; // Cairo renders entire scene
     bool _ready = false;
 
     struct GLState;
     Cairo::RefPtr<Cairo::ImageSurface> _surface;
     std::shared_ptr<GLState> gl;
+    QMetaObject::Connection _context_destroyed;
 
     void init_opengl();
     void uninit_opengl();
