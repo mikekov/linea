@@ -216,6 +216,39 @@ double slider_to_value(int slider, double min, double max) {
     return min + (max - min) * slider / 1000.0;
 }
 
+// Fold the resolved style's weight/stretch/slant into axis values.
+// Named instances ("Thin", "Bold", ...) encode their axis values in the
+// Pango font description rather than in font-variation-settings.
+void apply_description_axes(std::map<Glib::ustring, OTVarAxis>& axes, PangoFontDescription* descr) {
+    if (!descr) return;
+
+    auto set_axis = [&axes](const char* tag, double value) {
+        auto it = std::find_if(axes.begin(), axes.end(),
+                               [tag](const auto& kv) { return kv.second.tag == tag; });
+        if (it != axes.end()) {
+            it->second.set_val = std::clamp(value, it->second.minimum, it->second.maximum);
+        }
+    };
+
+    // Pango weight values already match the wght scale (100..900).
+    set_axis("wght", pango_font_description_get_weight(descr));
+
+    // PangoStretch maps onto the wdth percentage scale.
+    static const double stretch_pct[] = {50, 62.5, 75, 87.5, 100, 112.5, 125, 150, 200};
+    int stretch = pango_font_description_get_stretch(descr);
+    if (stretch >= PANGO_STRETCH_ULTRA_CONDENSED && stretch <= PANGO_STRETCH_ULTRA_EXPANDED) {
+        set_axis("wdth", stretch_pct[stretch]);
+    }
+
+    // Italic/oblique styles map onto the ital/slnt axes.
+    auto style = pango_font_description_get_style(descr);
+    if (style == PANGO_STYLE_ITALIC) {
+        set_axis("ital", 1);
+    } else if (style == PANGO_STYLE_OBLIQUE) {
+        set_axis("slnt", -14); // CSS oblique default angle
+    }
+}
+
 } // namespace
 
 FontVariations::FontVariations(QWidget* parent)
@@ -232,21 +265,21 @@ FontVariations::~FontVariations() = default;
 
 void FontVariations::update(const Glib::ustring& font_spec, const SPIFontVariationSettings* variations) {
     auto res = ::FontFactory::get().FaceFromFontSpecification(font_spec.c_str());
-    const auto& axes = res ? res->get_opentype_varaxes() : std::map<Glib::ustring, OTVarAxis>();
+    auto axes = res ? res->get_opentype_varaxes() : std::map<Glib::ustring, OTVarAxis>();
 
+    if (res && !axes.empty()) {
+        apply_description_axes(axes, res->get_descr());
+    }
     if (variations) {
-        auto copy = axes;
         for (const auto& [name, value] : variations->axes) {
             auto it =
-                std::find_if(copy.begin(), copy.end(), [name](const auto& kv) { return kv.second.tag == name.raw(); });
-            if (it != copy.end()) {
-                it->second.set_val = std::min(it->second.maximum, std::max(it->second.minimum, (double)value));
+                std::find_if(axes.begin(), axes.end(), [name](const auto& kv) { return kv.second.tag == name.raw(); });
+            if (it != axes.end()) {
+                it->second.set_val = std::clamp(static_cast<double>(value), it->second.minimum, it->second.maximum);
             }
         }
-        update_axes(copy);
-    } else {
-        update_axes(axes);
     }
+    update_axes(axes);
 }
 
 void FontVariations::update_axes(const std::map<Glib::ustring, OTVarAxis>& axes) {

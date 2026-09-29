@@ -25,6 +25,7 @@ class SPItem;
 class SPObject;
 class SPText;
 class SPCSSAttr;
+class SPIFontVariationSettings;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TextPanel; }
@@ -33,7 +34,7 @@ QT_END_NAMESPACE
 namespace Inkscape::Util { class Unit; }
 namespace Inkscape::UI::Tools { class TextTool; }
 
-namespace Linea::Props { class Binder; }
+namespace Linea::Props { class Binder; struct SelectionState; }
 
 namespace Linea::UI {
 
@@ -81,7 +82,10 @@ private:
     // font helpers
     void populateFamilies();
     void populateStyles(int family_data_index);
-    void updateFontVariants(const Inkscape::FontInfo* font);
+    void syncFontFamily(const Props::SelectionState& s);
+    void syncFontStyle(const Props::SelectionState& s);
+    void syncFontVariations(const Props::SelectionState& s);
+    void updateFontVariants(const Glib::ustring& fontspec, const SPIFontVariationSettings* variations = nullptr);
     int findFamilyIndex(const Glib::ustring& name) const;
     int findStyleIndex(const Glib::ustring& name) const;
     const Inkscape::FontInfo* getSelectedFont() const;
@@ -92,7 +96,7 @@ private:
     std::unique_ptr<Ui::TextPanel> _ui;
     UnitTracker* _tracker_fs = nullptr;
     UnitTracker* _tracker_lh = nullptr;
-
+    Props::Binder* _binder = nullptr;
     SPDocument* _document = nullptr;
     SPDesktop* _desktop = nullptr;
     SPItem* _current_item = nullptr;

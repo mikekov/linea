@@ -109,6 +109,8 @@ public:
     };
     void switchTo(QStackedWidget* stack, std::vector<SwitchCase> cases);
 
+    const SelectionState* currentState() const { return &_model->state(); }
+
 private:
     struct Binding {
         Field field;

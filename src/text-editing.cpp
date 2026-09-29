@@ -2119,7 +2119,6 @@ void sp_te_apply_style(SPItem *text, Text::Layout::iterator start, Text::Layout:
     {
         Geom::Affine const local(cast<SPItem>(common_ancestor)->i2doc_affine());
         double const ex(local.descrim());
-printf("descr: %f\n", ex);
         if ( ( ex != 0. )
              && ( ex != 1. ) ) {
             sp_css_attr_scale(css_set, 1/ex);

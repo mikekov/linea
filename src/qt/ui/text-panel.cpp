@@ -186,7 +186,7 @@ void TextPanel::setupConnections() {
     // Font browser popup
     connect(_ui->fontBrowserBtn, &QPushButton::clicked, [this]() {
         _fontList->setFonts(_font_families);
-        if (auto* font = getSelectedFont()) {
+        if (auto font = getSelectedFont()) {
             auto family = font->ff->get_name();
             auto face = font->face ? Inkscape::get_face_style(font->face->describe()) : Glib::ustring();
             auto spec = Inkscape::get_fontspec(family, face);
@@ -270,6 +270,8 @@ void TextPanel::setupFontDiscovery() {
 // --- Declarative binding (property system) -----------------------------------
 
 void TextPanel::bind(Props::Binder& binder) {
+    _binder = &binder;
+
     // Font size — model is px, convert to/from display unit
     binder.bind(Props::font_size,
                 Props::UnitEdit{_ui->fontSize, _tracker_fs, Props::UnitStrategy::ConvertFromPx});
@@ -309,29 +311,25 @@ void TextPanel::bind(Props::Binder& binder) {
     _decorationOptions->bind(binder);
 
     // Font family — push via bindField (maps family name to combo index).
-    // The refresh runs under _update.block() so setCurrentIndex doesn't
-    // re-trigger the write handlers below.
+    // Family changes rebuild the style combo, so the style index and the
+    // variations must be re-synced as well even when their fields are clean.
     binder.bindField(Props::Field::font_family, [this](const Props::SelectionState& s) {
-        auto scoped = _update.block();
-        if (s.typography.font_family.is_mixed()) {
-            _ui->fontFamily->setCurrentIndex(-1);
-            populateStyles(-1);
-        } else if (s.typography.font_family.is_single()) {
-            int idx = findFamilyIndex(s.typography.font_family.value());
-            _ui->fontFamily->setCurrentIndex(idx);
-            populateStyles(idx);
-        }
+        syncFontFamily(s);
+        syncFontStyle(s);
+        syncFontVariations(s);
     });
 
     // Font style — push via bindField (maps style name to combo index).
+    // The style encodes variable-font axis values (e.g. "Thin", "Bold"), so
+    // the variations must refresh on style changes too.
     binder.bindField(Props::Field::font_style, [this](const Props::SelectionState& s) {
-        auto scoped = _update.block();
-        if (s.typography.font_style.is_mixed()) {
-            _ui->fontStyle->setCurrentIndex(-1);
-        } else if (s.typography.font_style.is_single()) {
-            int idx = findStyleIndex(s.typography.font_style.value());
-            if (idx >= 0) _ui->fontStyle->setCurrentIndex(idx);
-        }
+        syncFontStyle(s);
+        syncFontVariations(s);
+    });
+
+    // Font variations — push via bindField.
+    binder.bindField(Props::Field::font_variation, [this](const Props::SelectionState& s) {
+        syncFontVariations(s);
     });
 
     // Font family — write side. apply_font_family resolves the family in the
@@ -348,30 +346,6 @@ void TextPanel::bind(Props::Binder& binder) {
                 editor->set(Props::font_family, family);
             }
         }));
-
-    // Font variations — push via bindField.
-    // The variations widget depends on both the font family (which axes exist)
-    // and the font-variation-settings (the axis values). A variable font using
-    // default axes has no font-variation-settings in its style, so switching
-    // family to such a font leaves Field::font_variation unchanged — the
-    // refresh must also fire on Field::font_family. Registration order matters:
-    // the family bindField above runs first and updates the combo, so
-    // getSelectedFont() here reads the already-correct family.
-    auto refreshVariations = [this](const Props::SelectionState& s) {
-        if (s.typography.font_variation.is_mixed() || s.typography.font_family.is_mixed()) {
-            updateFontVariants(nullptr);
-        } else if (s.typography.font_variation.is_single()) {
-            const auto& fontspec = s.typography.font_family.value();
-            if (s.typography.font_variation.value().axes.empty()) {
-                updateFontVariants(getSelectedFont());
-            } else {
-                _ui->fontVariations->update(fontspec, &s.typography.font_variation.value());
-            }
-            _ui->fontVariationsScroll->setVisible(_ui->fontVariations->variationsPresent());
-        }
-    };
-    binder.bindField(Props::Field::font_variation, refreshVariations);
-    binder.bindField(Props::Field::font_family, refreshVariations);
 
     // Font variations — write side. User edits to axis sliders/spins are
     // read back via get_variations() and pushed through the editor.
@@ -496,6 +470,16 @@ void TextPanel::populateFamilies() {
         _family_names.push_back(name);
         _ui->fontFamily->addItem(QString::fromUtf8(name.c_str()));
     }
+
+    // The font database arrives asynchronously; any pushes that ran before it
+    // finished resolved against an empty family list. Replay the font sync so
+    // combos and variations reflect the current selection.
+    if (_binder && _binder->currentState()) {
+        auto& state = *_binder->currentState();
+        syncFontFamily(state);
+        syncFontStyle(state);
+        syncFontVariations(state);
+    }
 }
 
 void TextPanel::populateStyles(int family_data_index) {
@@ -524,18 +508,60 @@ void TextPanel::populateStyles(int family_data_index) {
     }
 }
 
-void TextPanel::updateFontVariants(const FontInfo* font) {
-    if (!font) {
+void TextPanel::syncFontFamily(const Props::SelectionState& s) {
+    auto scoped = _update.block();
+    if (s.typography.font_family.is_mixed()) {
+        _ui->fontFamily->setCurrentIndex(-1);
+        populateStyles(-1);
+    } else if (s.typography.font_family.is_single()) {
+        int idx = findFamilyIndex(s.typography.font_family.value());
+        _ui->fontFamily->setCurrentIndex(idx);
+        populateStyles(idx);
+    }
+}
+
+void TextPanel::syncFontStyle(const Props::SelectionState& s) {
+    auto scoped = _update.block();
+    if (s.typography.font_style.is_mixed()) {
+        _ui->fontStyle->setCurrentIndex(-1);
+    } else if (s.typography.font_style.is_single()) {
+        int idx = findStyleIndex(s.typography.font_style.value());
+        if (idx >= 0) _ui->fontStyle->setCurrentIndex(idx);
+    }
+}
+
+// The variations widget depends on the resolved font face (which axes exist
+// and which values the style variant encodes) and on font-variation-settings
+// (explicit axis values). A variable font using default axes has no
+// font-variation-settings in its style, so this must run on family and style
+// changes too — the callers ensure the combos are already up to date.
+void TextPanel::syncFontVariations(const Props::SelectionState& s) {
+    if (s.typography.font_variation.is_mixed() || s.typography.font_family.is_mixed()) {
+        updateFontVariants({});
+        return;
+    }
+    const SPIFontVariationSettings* vars =
+        s.typography.font_variation.is_single() ? &s.typography.font_variation.value() : nullptr;
+    auto font = getSelectedFont();
+    // Fall back to the raw family name when the font is not in the discovery
+    // database; FaceFromFontSpecification may still resolve it.
+    auto fontspec = font ? Inkscape::get_inkscape_fontspec(font->ff, font->face, Glib::ustring())
+                         : (s.typography.font_family.is_single() ? s.typography.font_family.value()
+                                                                 : Glib::ustring());
+    updateFontVariants(fontspec, vars);
+}
+
+void TextPanel::updateFontVariants(const Glib::ustring& fontspec, const SPIFontVariationSettings* variations) {
+    if (fontspec.empty()) {
         _ui->fontVariations->update({});
         _ui->fontVariationsScroll->setVisible(false);
-    } else {
-        auto fontspec = Inkscape::get_inkscape_fontspec(font->ff, font->face, Glib::ustring());
-        _ui->fontVariations->update(fontspec);
-        int content = _ui->fontVariations->measureHeight();
-        int cap = _variableFontsMaxHeight;
-        _ui->fontVariationsScroll->setFixedHeight(std::min(content, cap));
-        _ui->fontVariationsScroll->setVisible(_ui->fontVariations->variationsPresent());
+        return;
     }
+    _ui->fontVariations->update(fontspec, variations);
+    int content = _ui->fontVariations->measureHeight();
+    int cap = _variableFontsMaxHeight;
+    _ui->fontVariationsScroll->setFixedHeight(std::min(content, cap));
+    _ui->fontVariationsScroll->setVisible(_ui->fontVariations->variationsPresent());
 }
 
 int TextPanel::findFamilyIndex(const Glib::ustring& name) const {
@@ -562,7 +588,7 @@ const FontInfo* TextPanel::findFontByStyle(const Glib::ustring& style_name) cons
     auto index = _ui->fontFamily->currentIndex();
     if (index >= 0 && index < static_cast<int>(_font_families.size())) {
         auto& family = _font_families[index];
-        if (auto* font = Inkscape::find_font_face(family, style_name)) {
+        if (auto font = Inkscape::find_font_face(family, style_name)) {
             return font;
         }
         return &Inkscape::get_family_font(family);
