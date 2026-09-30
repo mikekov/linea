@@ -20,6 +20,13 @@ class QString;
 
 namespace Inkscape {
 
+/**
+ * True while a choose_file_* dialog is open. Native platform dialogs do not
+ * register as Qt modal widgets, so this is the only way to detect them —
+ * used to veto quit while one is running (see LineaWindow::closeEvent).
+ */
+[[nodiscard]] bool file_dialog_open();
+
 namespace UI::Dialog {
 
 /**

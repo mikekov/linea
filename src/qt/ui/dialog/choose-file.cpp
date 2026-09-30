@@ -28,6 +28,17 @@ namespace Inkscape {
 
 namespace {
 
+// Counts choose_file_* calls in progress. Native dialogs (the macOS
+// open/save panels) never become Qt modal widgets, so
+// QApplication::activeModalWidget() cannot see them — this counter is how
+// closeEvent detects one and vetoes quit.
+int g_file_dialogs_open = 0;
+
+struct FileDialogGuard {
+    FileDialogGuard() { ++g_file_dialogs_open; }
+    ~FileDialogGuard() { --g_file_dialogs_open; }
+};
+
 /**
  * Build a Qt filter string from all registered Inkscape input extensions.
  *
@@ -135,9 +146,15 @@ QString create_export_filters(bool for_save) {
 
 } // namespace UI::Dialog
 
+bool file_dialog_open() {
+    return g_file_dialogs_open > 0;
+}
+
 std::vector<Glib::RefPtr<Gio::File>> choose_file_open_images(const Glib::ustring& title, LineaWindow* parent,
                                                              const std::string& pref_path,
                                                              const Glib::ustring& accept) {
+    const FileDialogGuard guard;
+
     // Resolve starting directory: check prefs, fall back to Documents then home.
     std::string start_dir = Inkscape::Preferences::get()->getString(pref_path);
     if (!start_dir.empty() && !Glib::file_test(start_dir, Glib::FileTest::EXISTS)) {
@@ -212,6 +229,7 @@ Glib::RefPtr<Gio::File> choose_file_save(const Glib::ustring& title, LineaWindow
         return {};
     }
 
+    const FileDialogGuard guard;
     const std::string start_dir = ensure_dir(current_folder);
     const QDir dir(QString::fromStdString(start_dir));
     const QString initial_path = dir.filePath(QString::fromStdString(file_name));

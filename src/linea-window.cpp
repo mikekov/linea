@@ -52,6 +52,7 @@
 #include "document.h"
 #include "linea-application.h"
 #include "main-menu.h"
+#include "qt/ui/dialog/choose-file.h"
 #include "ui/desktop/desktop-widget.h"
 #include "ui/shortcut-manager.h"
 #include "ui/widget/canvas.h"
@@ -151,6 +152,22 @@ void LineaWindow::updateTitle() {
 }
 
 void LineaWindow::closeEvent(QCloseEvent* event) {
+    // A modal dialog runs a nested event loop on the stack above this close
+    // — quitting here would tear down widgets that loop still unwinds
+    // through. Dismiss it and veto the quit instead; the next Cmd+Q quits.
+    if (auto modal = QApplication::activeModalWidget()) {
+        modal->close();
+        event->ignore();
+        return;
+    }
+    // Native file dialogs (macOS open/save panels) never register as Qt
+    // modal widgets and can't be dismissed programmatically — veto while
+    // one is up (the delegate emits into torn-down objects otherwise).
+    if (Inkscape::file_dialog_open()) {
+        event->ignore();
+        return;
+    }
+
     saveSettings();
     if (_desktop_widget) {
         _desktop_widget->saveSettings();
