@@ -87,19 +87,25 @@ std::vector<std::pair<LivePathEffect::Effect*, int>> get_applied_lpes(SPObject* 
     return result;
 }
 
-/// Get the Effect at the given index, or nullptr.
-LivePathEffect::Effect* get_effect_at_index(SPObject* object, int index) {
+/// Get the PathEffectSharedPtr at the given index, or nullptr.
+PathEffectSharedPtr get_lperef_at_index(SPObject* object, int index) {
     auto lpe_item = cast<SPLPEItem>(object);
     if (!lpe_item || !lpe_item->path_effect_list) return nullptr;
 
     int i = 0;
     for (auto&& lpe : *lpe_item->path_effect_list) {
         if (i == index) {
-            return lpe->lpeobject ? lpe->lpeobject->get_lpe() : nullptr;
+            return lpe;
         }
         i++;
     }
     return nullptr;
+}
+
+/// Get the Effect at the given index, or nullptr.
+LivePathEffect::Effect* get_effect_at_index(SPObject* object, int index) {
+    auto lperef = get_lperef_at_index(object, index);
+    return lperef && lperef->lpeobject ? lperef->lpeobject->get_lpe() : nullptr;
 }
 
 } // anonymous namespace
@@ -192,6 +198,29 @@ void LpeWidget::refreshAppliedLpes() {
             showLpeParams(index, lpeBtn);
         });
         rowLayout->addWidget(lpeBtn, 1);
+
+        // Flatten button: bake the effect into the path geometry
+        auto flattenBtn = new QPushButton(row);
+        flattenBtn->setToolTip(QString::fromUtf8(_("Flatten path effect")));
+        flattenBtn->setIcon(QIcon(":/icons/flatten"));
+
+        connect(flattenBtn, &QPushButton::clicked, this, [this, index]() {
+            flattenLpe(index);
+        });
+
+        rowLayout->addWidget(flattenBtn);
+
+        // Visibility toggle button: show/hide the effect
+        auto visBtn = new QPushButton(row);
+        bool visible = effect->isVisible();
+        visBtn->setToolTip(QString::fromUtf8(visible ? _("Hide effect") : _("Show effect")));
+        visBtn->setIcon(QIcon(visible ? ":/icons/object-visible" : ":/icons/object-hidden"));
+
+        connect(visBtn, &QPushButton::clicked, this, [this, index]() {
+            toggleLpeVisibility(index);
+        });
+
+        rowLayout->addWidget(visBtn);
 
         // Remove button
         auto removeBtn = new QPushButton(row);
@@ -311,6 +340,43 @@ void LpeWidget::removeLpe(int index) {
     if (!_object) return;
 
     remove_lpeffect(_object, index);
+    refreshAppliedLpes();
+}
+
+void LpeWidget::flattenLpe(int index) {
+    auto lpe_item = cast<SPLPEItem>(_object);
+    auto lperef = get_lperef_at_index(_object, index);
+    if (!lpe_item || !lperef) return;
+
+    lpe_item->setCurrentPathEffect(lperef);
+    lpe_item = lpe_item->flattenCurrentPathEffect();
+    if (!lpe_item) return;
+    _object = lpe_item;
+
+    auto selection = _desktop ? _desktop->getSelection() : nullptr;
+    if (selection && selection->isEmpty()) {
+        selection->add(lpe_item);
+    }
+    DocumentUndo::done(_object->document, RC_("Undo", "Flatten path effect(s)"),
+                       INKSCAPE_ICON("dialog-path-effects"));
+    refreshAppliedLpes();
+}
+
+void LpeWidget::toggleLpeVisibility(int index) {
+    auto lpe_item = cast<SPLPEItem>(_object);
+    auto effect = get_effect_at_index(_object, index);
+    if (!lpe_item || !effect) return;
+
+    auto repr = effect->getRepr();
+    if (!repr) return;
+
+    bool visible = !effect->isVisible();
+    repr->setAttribute("is_visible", visible ? "true" : "false");
+    effect->doOnVisibilityToggled(lpe_item);
+    DocumentUndo::done(_object->document,
+                       visible ? RC_("Undo", "Activate path effect")
+                               : RC_("Undo", "Deactivate path effect"),
+                       INKSCAPE_ICON("dialog-path-effects"));
     refreshAppliedLpes();
 }
 

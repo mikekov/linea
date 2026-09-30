@@ -78,6 +78,8 @@ private:
     void populateAddPopup();
     void applyLpe(int lpeTypeInt);
     void removeLpe(int index);
+    void flattenLpe(int index);
+    void toggleLpeVisibility(int index);
     void showLpeParams(int index, QWidget* anchorWidget);
 
 protected:
