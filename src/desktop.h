@@ -278,7 +278,7 @@ public:
     unsigned dkey = 1;
 
     // Tool management
-    void setTool(const std::string& toolName);
+    void setTool(std::string toolName);
     Inkscape::UI::Tools::ToolBase* currentTool() const { return _currentTool.get(); }
     // Tool access (stub)
     Inkscape::UI::Tools::ToolBase* getTool() const { return currentTool(); }

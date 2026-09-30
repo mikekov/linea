@@ -313,7 +313,10 @@ void SPDesktop::updatePageInfo() {
                         toRGBA(pm.getBorderColor()));
 }
 
-void SPDesktop::setTool(const std::string& tool_name) {
+// By value: callers may pass a reference to a member of the tool being
+// replaced (e.g. setTool(getTool()->get_name())), which must not dangle
+// after _currentTool.reset().
+void SPDesktop::setTool(std::string tool_name) {
     _canvas->resetIM();
     _canvas->setAttribute(Qt::WA_InputMethodEnabled, false);
 
