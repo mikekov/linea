@@ -2,8 +2,10 @@
 # Configure CMake build directory.
 #
 # Usage:
-#   ./cmake-conf.sh          # Debug build in build/
-#   ./cmake-conf.sh -r       # Release build in build-release/
+#   ./configure.sh          # Debug build in build/
+#   ./configure.sh -r       # Release build in build-release/
+#   ./configure.sh -a       # Debug + AddressSanitizer build in build-asan/
+#   ./configure.sh -r -a    # Release + AddressSanitizer build in build-release-asan/
 #
 # To use command line tools instead of XCode:
 # sudo xcode-select -s /Library/Developer/CommandLineTools
@@ -16,13 +18,20 @@ if [ -z "$BREW_PREFIX" ]; then
 fi
 BUILD_TYPE=Debug
 BUILD_DIR="$ROOT_DIR/build"
+WITH_ASAN=OFF
 
-while getopts "r" opt; do
+while getopts "ra" opt; do
     case $opt in
         r) BUILD_TYPE=Release; BUILD_DIR="$ROOT_DIR/build-release" ;;
-        *) echo "Usage: $0 [-r]" >&2; exit 1 ;;
+        a) WITH_ASAN=ON ;;
+        *) echo "Usage: $0 [-r] [-a]" >&2; exit 1 ;;
     esac
 done
+
+# Keep ASan builds in a separate directory so they can coexist with a normal build.
+if [ "$WITH_ASAN" = "ON" ]; then
+    BUILD_DIR="$BUILD_DIR-asan"
+fi
 
 # Keep the compiler SDK aligned with Homebrew's pkg-config files.  Those files
 # may contain absolute SDK include paths, so selecting a different SDK through
@@ -65,5 +74,6 @@ cmake --fresh -S "$ROOT_DIR" \
     -G Ninja \
     ${CMAKE_OSX_SYSROOT:+-DCMAKE_OSX_SYSROOT="$CMAKE_OSX_SYSROOT"} \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+    -DWITH_ASAN="$WITH_ASAN" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/install"

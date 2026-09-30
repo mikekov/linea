@@ -3,6 +3,8 @@ doxygen/
 gtest/
 build
 build-release
+build-asan
+build-release-asan
 share/inkscape
 share/*/*.h
 src/3rdparty/cairo
