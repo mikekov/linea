@@ -6,6 +6,7 @@
 
 #include "widget-utils.h"
 
+#include <QCoreApplication>
 #include <QEvent>
 #include <QGuiApplication>
 #include <QLayout>
@@ -199,6 +200,21 @@ void syncVisibility(QWidget* follower, QWidget* leader) {
 void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize) {
     if (!window || !prefsPath) return;
     new GeometryPersistenceFilter(window, prefsPath, defaultSize);
+}
+
+void settleLayout(QWidget* widget) {
+    if (!widget) return;
+    if (auto parent = widget->parentWidget()) {
+        const auto descendants = parent->findChildren<QWidget*>();
+        for (auto d : descendants) {
+            QCoreApplication::sendPostedEvents(d, QEvent::Polish);
+            QCoreApplication::sendPostedEvents(d, QEvent::FontChange);
+            QCoreApplication::sendPostedEvents(d, QEvent::StyleChange);
+        }
+    }
+    for (auto a = widget; a; a = a->parentWidget()) {
+        QCoreApplication::sendPostedEvents(a, QEvent::LayoutRequest);
+    }
 }
 
 } // namespace Linea::UI

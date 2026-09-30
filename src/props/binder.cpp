@@ -2,6 +2,8 @@
 
 #include "props/binder.h"
 
+#include "qt/ui/widget-utils.h"
+
 namespace Linea::Props {
 
 Binder::Binder(SelectionStateModel* model, Editor* editor)
@@ -91,6 +93,25 @@ void Binder::onStateChanged(const SelectionState& state, const SelectionDelta& d
     }
     // Rules may depend on any field, so re-evaluate on every change.
     applyRules(state);
+
+    // To avoid panel flickering after child visibility changes:
+    // Settle the geometry implied by the visibility flips before the next
+    // paint can land on stale positions (see settleLayout for why the
+    // direct-delivery approach is needed).
+    for (auto& rule : _rules) {
+        std::visit(
+            [](const auto& r) {
+                using T = std::decay_t<decltype(r)>;
+                QWidget* w = nullptr;
+                if constexpr (std::is_same_v<T, SwitchRule>) {
+                    w = r.stack.data();
+                } else {
+                    w = r.target.data();
+                }
+                UI::settleLayout(w);
+            },
+            rule);
+    }
 
     if (own_echo) {
         // clear the echo field so we don't suppress future changes

@@ -46,6 +46,27 @@ void syncVisibility(QWidget* follower, QWidget* leader);
  */
 void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize = {});
 
+/**
+ * Settle `widget`'s layout geometry synchronously after visibility changes.
+ *
+ * setVisible() takes effect at the next paint, but the geometry it implies
+ * only settles when queued LayoutRequests are delivered on a later
+ * event-loop pass — a repaint landing in between shows widgets at their old
+ * positions with gaps where hidden rows were.
+ *
+ * Pending Polish/FontChange/StyleChange events are delivered to the parent
+ * subtree first — QLabel caches its sizeHint until FontChange, so a layout
+ * run before delivery computes stale geometry and re-runs (visibly) when
+ * the events finally arrive. Then LayoutRequests are delivered to the
+ * widget and each ancestor, innermost first — the same work the event loop
+ * would do a frame later. (layout->activate() alone is NOT equivalent: it
+ * does not re-assign widget sizes from updated sizeHints — the
+ * LayoutRequest path does; and a global sendPostedEvents(nullptr, ...)
+ * drains only the queue as-posted, while resizes during the flush post new
+ * requests.)
+ */
+void settleLayout(QWidget* widget);
+
 } // namespace Linea::UI
 
 #endif // LINEA_UI_WIDGET_UTILS_H
