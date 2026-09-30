@@ -8,16 +8,18 @@
 
 #include <2geom/affine.h>
 #include <sigc++/scoped_connection.h>
-#include "util/funclog.h"
+#include "util/snapshot-context.h"
 
 namespace Inkscape {
 
 namespace UI::Widget { class Canvas; }
 namespace Handles { class Css; }
 
+class CanvasItem;
 class CanvasItemGroup;
 
 class CanvasItemContext final
+    : public Util::SnapshotContext<CanvasItem>
 {
 public:
     CanvasItemContext(UI::Widget::Canvas *canvas);
@@ -39,14 +41,6 @@ public:
     // Control handle styling
     std::shared_ptr<Handles::Css const> const &handlesCss() const { return _handles_css; }
 
-    // Snapshotting
-    void snapshot();
-    void unsnapshot();
-    bool snapshotted() const { return _snapshotted; }
-
-    template<typename F>
-    void defer(F &&f) { _snapshotted ? _funclog.emplace(std::forward<F>(f)) : f(); }
-
 private:
     // Structure
     UI::Widget::Canvas *_canvas;
@@ -60,12 +54,6 @@ private:
     std::shared_ptr<Handles::Css const> _handles_css;
     sigc::scoped_connection _css_updated_conn;
     sigc::connection _device_scale_conn;
-
-    // Snapshotting
-    char _cacheline_separator[127];
-
-    bool _snapshotted = false;
-    Util::FuncLog _funclog;
 };
 
 } // namespace Inkscape

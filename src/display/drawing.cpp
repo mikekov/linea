@@ -63,6 +63,7 @@ Drawing::Drawing(Inkscape::CanvasItemDrawing *canvas_item_drawing)
 Drawing::~Drawing()
 {
     delete _root;
+    drain_obsolete();
 }
 
 void Drawing::setRoot(DrawingItem *root)
@@ -276,19 +277,6 @@ void Drawing::render(DrawingContext &dc, Geom::IntRect const &area, unsigned fla
 DrawingItem *Drawing::pick(Geom::Point const &p, double delta, unsigned flags)
 {
     return _root->pick(p * Geom::Scale(_canvas_scale), delta * _canvas_scale, flags);
-}
-
-void Drawing::snapshot()
-{
-    assert(!_snapshotted);
-    _snapshotted = true;
-}
-
-void Drawing::unsnapshot()
-{
-    assert(_snapshotted);
-    _snapshotted = false; // Unsnapshot before replaying log so further work is not deferred.
-    _funclog();
 }
 
 void Drawing::_pickItemsForCaching()

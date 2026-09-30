@@ -33,19 +33,7 @@ CanvasItemContext::~CanvasItemContext()
 {
     _device_scale_conn.disconnect(); // not using scoped connection to ensure disconnect happens before delete
     delete _root;
-}
-
-void CanvasItemContext::snapshot()
-{
-    assert(!_snapshotted);
-    _snapshotted = true;
-}
-
-void CanvasItemContext::unsnapshot()
-{
-    assert(_snapshotted);
-    _snapshotted = false;
-    _funclog();
+    drain_obsolete();
 }
 
 } // namespace Inkscape

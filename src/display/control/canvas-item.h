@@ -46,6 +46,7 @@ namespace Inkscape {
 inline constexpr uint32_t CANVAS_ITEM_COLORS[] = { 0x0000ff7f, 0xff00007f, 0xffff007f };
 
 namespace UI::Widget { class Canvas; }
+namespace Util { template <typename> class SnapshotContext; }
 class CanvasItemGroup;
 struct CanvasEvent;
 
@@ -121,6 +122,7 @@ public:
 protected:
     friend class CanvasItemGroup;
     friend class CanvasItemContext; // access to _invalidate_ctrl_handles
+    template <typename> friend class Util::SnapshotContext;
 
     virtual ~CanvasItem();
 

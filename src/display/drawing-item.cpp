@@ -216,7 +216,7 @@ void DrawingItem::clearChildren()
     defer([=, this] {
         if (_children.empty()) return;
         _markForRendering();
-        _children.clear_and_dispose([] (auto c) { delete c; });
+        _children.clear_and_dispose([this] (auto c) { _drawing.delete_item(c); });
         _markForUpdate(STATE_ALL, false);
     });
 }
@@ -390,7 +390,7 @@ void DrawingItem::setClip(DrawingItem *item)
 
     defer([=, this] {
         _markForRendering();
-        delete _clip;
+        _drawing.delete_item(_clip);
         _clip = item;
         _markForUpdate(STATE_ALL, true);
     });
@@ -406,7 +406,7 @@ void DrawingItem::setMask(DrawingItem *item)
 
     defer([=, this] {
         _markForRendering();
-        delete _mask;
+        _drawing.delete_item(_mask);
         _mask = item;
         _markForUpdate(STATE_ALL, true);
     });
@@ -422,7 +422,7 @@ void DrawingItem::setFillPattern(DrawingPattern *pattern)
 
     defer([=, this] {
         _markForRendering();
-        delete static_cast<DrawingItem*>(_fill_pattern);
+        _drawing.delete_item(static_cast<DrawingItem*>(_fill_pattern));
         _fill_pattern = pattern;
         _markForUpdate(STATE_ALL, false);
     });
@@ -438,7 +438,7 @@ void DrawingItem::setStrokePattern(DrawingPattern *pattern)
 
     defer([=, this] {
         _markForRendering();
-        delete static_cast<DrawingItem*>(_stroke_pattern);
+        _drawing.delete_item(static_cast<DrawingItem*>(_stroke_pattern));
         _stroke_pattern = pattern;
         _markForUpdate(STATE_ALL, false);
     });
@@ -1366,7 +1366,7 @@ void DrawingItem::unlink()
             _parent->_markForUpdate(STATE_ALL, propagate);
         }
 
-        delete this;
+        _drawing.delete_item(this);
     });
 }
 

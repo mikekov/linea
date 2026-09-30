@@ -63,7 +63,7 @@ void CanvasItem::unlink()
             if constexpr (DEBUG_LOGGING) std::cout << "CanvasItem: destroy root " << get_name() << std::endl;
         }
 
-        delete this;
+        _context->delete_item(this);
     });
 }
 

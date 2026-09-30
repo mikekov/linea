@@ -15,8 +15,6 @@
 
 #include <optional>
 #include <set>
-#include <cstdint>
-#include <vector>
 #include <boost/operators.hpp>
 #include <2geom/rect.h>
 #include <2geom/pathvector.h>
@@ -27,7 +25,7 @@
 #include "display/rendermode.h"
 #include "nr-filter-colormatrix.h"
 #include "preferences.h"
-#include "util/funclog.h"
+#include "util/snapshot-context.h"
 
 namespace Inkscape {
 
@@ -36,6 +34,7 @@ class CanvasItemDrawing;
 class DrawingContext;
 
 class Drawing
+    : public Util::SnapshotContext<DrawingItem>
 {
 public:
     Drawing(CanvasItemDrawing *drawing = nullptr);
@@ -89,10 +88,6 @@ public:
     void render(DrawingContext &dc, Geom::IntRect const &area, unsigned flags = 0) const;
     DrawingItem *pick(Geom::Point const &p, double delta, unsigned flags);
 
-    void snapshot();
-    void unsnapshot();
-    bool snapshotted() const { return _snapshotted; }
-
     // Convenience
     Colors::Color averageColor(Geom::IntRect const &area) const;
     Colors::Color averageColor(Geom::PathVector const &path, bool evenodd) const;
@@ -130,19 +125,6 @@ private:
 
     std::set<DrawingItem*> _cached_items; // modified by DrawingItem::_setCached()
     CacheSet _candidate_items;           // keep this list always sorted with std::greater
-
-    /*
-     * Simple cacheline separator compatible with x86 (64 bytes) and M* (128 bytes).
-     * Ideally alignas(std::hardware_destructive_interference_size) could be used instead,
-     * but this is extremely painful to make work across all supported platforms/compilers.
-     */
-    char cacheline_separator[127];
-
-    bool _snapshotted = false;
-    Util::FuncLog _funclog;
-
-    template<typename F>
-    void defer(F &&f) { _snapshotted ? _funclog.emplace(std::forward<F>(f)) : f(); }
 
     friend class DrawingItem;
 };

@@ -44,6 +44,7 @@ class DrawingPattern;
 class DrawingContext;
 
 namespace Filters { class Filter; }
+namespace Util { template <typename> class SnapshotContext; }
 
 enum class Antialiasing : unsigned char
 {
@@ -277,6 +278,7 @@ protected:
     }
 
     friend class Drawing;
+    template <typename> friend class Util::SnapshotContext;
 };
 
 /// Apply antialias setting to Cairo.
