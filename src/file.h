@@ -88,6 +88,9 @@ bool sp_file_save (LineaWindow& parentWindow, void* object, void* data);
  */
 bool sp_file_save_as (LineaWindow& parentWindow, void* object, void* data);
 
+// Export a document in selected format
+bool sp_file_export(LineaWindow& parentWindow, SPDocument* document);
+
 /**
  *  Saves a copy of the given document.  Displays a file select dialog
  *  to choose a name for the copy.

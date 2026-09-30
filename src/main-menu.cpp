@@ -46,6 +46,7 @@ void createMainMenu(QMenuBar* bar) {
         {},
         {"document-save"},
         {"document-save-as"},
+        {"document-export"},
         {},
         {"document-revert"},
         {"document-cleanup"},

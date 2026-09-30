@@ -59,6 +59,7 @@ This file is the default keymap for LineaDraw. User customizations are stored se
   <bind action="document-save-as"              keys="Cmd+Shift+S" />
   <bind action="document-save-copy"            keys="Cmd+Shift+Alt+S" />
   <bind action="document-import"               keys="Cmd+I" />
+  <bind action="document-export"               keys="Cmd+E" />
   <bind action="document-new-from-template-1"  keys="" />
   <bind action="document-new-from-template-2"  keys="" />
   <bind action="document-new-from-template-3"  keys="" />

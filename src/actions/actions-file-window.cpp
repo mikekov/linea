@@ -105,6 +105,12 @@ void document_import(LineaWindow* win) {
     }
 }
 
+void document_export(LineaWindow* wnd) {
+    if (wnd) {
+        sp_file_export(*wnd, wnd->get_document());
+    }
+}
+
 void
 document_print(LineaWindow* win)
 {
@@ -157,6 +163,7 @@ static auto file_window_action_defs = std::to_array<ActionSpec<LineaWindow>>({
     {"document-save-copy",        N_("Save a Copy"),       SECTION,   N_("Save a copy of the document under a new name"), nullptr, document_save_copy},
     {"document-save-template",    N_("Save Template"),     SECTION,   N_("Save a copy of the document as template"), nullptr, document_save_template},
     {"document-import",           N_("Import…"),            SECTION,   N_("Import a bitmap or SVG image into this document"), "document-import", document_import},
+    {"document-export",           N_("Export…"),            SECTION,   N_("Export a document in selected format"), "document-export", document_export},
     {"document-print",            N_("Print"),             SECTION,   N_("Print document"), "document-print", document_print},
     {"document-cleanup",          N_("Clean Up Document"), SECTION,   N_("Remove unused definitions (such as gradients or clipping paths) from the document"), "document-cleanup", document_cleanup},
     {"document-close",            N_("Close"),             SECTION,   N_("Close document (unless last document)"), nullptr, document_close},

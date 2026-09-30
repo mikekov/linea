@@ -501,7 +501,7 @@ get_file_save_extension (Inkscape::Extension::FileSaveMethod method) {
             extension = SP_MODULE_KEY_OUTPUT_SVG_INKSCAPE;
             break;
         case FILE_SAVE_METHOD_EXPORT:
-            /// \todo no default extension set for Export? defaults to SP_MODULE_KEY_OUTPUT_SVG_INKSCAPE is ok?
+            extension = prefs->getString("/dialogs/export/default");
             break;
     }
 
@@ -576,8 +576,10 @@ store_file_extension_in_prefs (Glib::ustring extension, FileSaveMethod method) {
             prefs->setString("/dialogs/save_copy/default", extension);
             break;
         case FILE_SAVE_METHOD_INKSCAPE_SVG:
-        case FILE_SAVE_METHOD_EXPORT:
             // do nothing
+            break;
+        case FILE_SAVE_METHOD_EXPORT:
+            prefs->setString("/dialogs/export/default", extension);
             break;
     }
 }

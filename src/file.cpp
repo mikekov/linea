@@ -256,7 +256,7 @@ file_save(LineaWindow& parentWindow,
  */
 bool sp_file_save_dialog(LineaWindow& parentWindow, SPDocument *doc, Inkscape::Extension::FileSaveMethod save_method)
 {
-    bool is_copy = (save_method == Inkscape::Extension::FILE_SAVE_METHOD_SAVE_COPY);
+    bool is_copy = save_method == Inkscape::Extension::FILE_SAVE_METHOD_SAVE_COPY || save_method == Inkscape::Extension::FILE_SAVE_METHOD_EXPORT;
 
     // Note: default_extension has the format "org.inkscape.output.svg.inkscape",
     //       whereas filename_extension only uses ".svg"
@@ -298,13 +298,21 @@ bool sp_file_save_dialog(LineaWindow& parentWindow, SPDocument *doc, Inkscape::E
     }
 
     // Show the SaveAs dialog.
-    const Glib::ustring dialog_title = is_copy ?
-        _("Select file to save a copy to") :
-        _("Select file to save to");
+    const Glib::ustring dialog_title =
+        save_method == Inkscape::Extension::FILE_SAVE_METHOD_EXPORT ? _("Select file and export type") :
+        is_copy ? _("Select file to save a copy to") :
+                  _("Select file to save to");
 
     // Note, there are currently multiple modules per filename extension (.svg, .dxf, .zip).
     // We cannot distinguish between them.
     std::string basename = Glib::path_get_basename(save_loc);
+    // For export the format — and thus the extension — is chosen in the
+    // dialog; present the file name without one.
+    if (save_method == Inkscape::Extension::FILE_SAVE_METHOD_EXPORT) {
+        if (auto pos = basename.rfind('.'); pos != std::string::npos && pos > 0) {
+            basename.erase(pos);
+        }
+    }
     std::string dirname = Glib::path_get_dirname(save_loc);
     // QT TODO: GTK file chooser not available in Qt port
     auto file = choose_file_save( dialog_title, &parentWindow,
@@ -414,6 +422,14 @@ sp_file_save_as(LineaWindow& parentWindow, gpointer /*object*/, gpointer /*data*
 
     sp_namedview_document_from_window(SP_ACTIVE_DESKTOP);
     return sp_file_save_dialog(parentWindow, SP_ACTIVE_DOCUMENT, Inkscape::Extension::FILE_SAVE_METHOD_SAVE_AS);
+}
+
+bool sp_file_export(LineaWindow& parentWindow, SPDocument* document) {
+    if (!document) {
+        return false;
+    }
+
+    return sp_file_save_dialog(parentWindow, document, Inkscape::Extension::FILE_SAVE_METHOD_EXPORT);
 }
 
 /**
