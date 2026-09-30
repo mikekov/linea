@@ -44,11 +44,6 @@ namespace {
 
 constexpr int SIDE_PADDING = 5;
 
-bool isRealLayer(const SPObject* object) {
-    auto group = cast<SPGroup>(object);
-    return group && group->layerMode() == SPGroup::LAYER;
-}
-
 void set_dt_select(Inkscape::XML::Node* repr, SPDesktop* desktop) {
     auto document = desktop->getDocument();
     if (!document) return;
@@ -61,11 +56,7 @@ void set_dt_select(Inkscape::XML::Node* repr, SPDesktop* desktop) {
         object = document->getObjectByRepr(repr);
     }
 
-    if (!object) {
-        // object not on canvas
-    } else if (isRealLayer(object)) {
-        desktop->layerManager().setCurrentLayer(object);
-    } else {
+    if (object) {
         desktop->getSelection()->set(object);
     }
 }
@@ -232,23 +223,31 @@ void LeftPanel::connectSignals() {
     });
 
     // Object tree selection
-    connect(_objectTreeView, &ObjectTreeView::objectsSelected, this, [this](std::vector<SPObject*> objects) {
+    connect(_objectTreeView, &ObjectTreeView::objectsSelected, this,
+            [this](std::vector<SPObject*> objects, Qt::KeyboardModifiers modifiers, bool reselected) {
         if (!_desktop || _syncObjectTree.pending()) return;
+
         auto guard = _syncObjectTree.block();
         _desktop->setSelectedVirtualNode(VirtualNodeType::None);
         if (objects.empty()) {
             _desktop->getSelection()->clear();
-        } else {
-            if (objects.size() == 1) {
-                if (auto layer = cast<SPGroup>(objects.front()); layer != nullptr && layer->isLayer()) {
-                    _desktop->layerManager().setCurrentLayer(layer);
-                }
-                _desktop->getSelection()->set(objects.front());
+        } else if (objects.size() == 1) {
+            auto obj = objects.front();
+            auto& lm = _desktop->layerManager();
+            bool const plainClick = !(modifiers & (Qt::ShiftModifier | Qt::ControlModifier));
+            if (auto layer = cast<SPGroup>(obj);
+                layer && layer->isLayer() && plainClick && !reselected) {
+                // First click on a layer row makes it current and clears the
+                // selection; clicking the row again selects it.
+                lm.setCurrentLayer(layer);
+                _desktop->getSelection()->clear();
             } else {
-                _desktop->getSelection()->setList(objects);
+                _desktop->getSelection()->set(obj);
             }
+        } else {
+            _desktop->getSelection()->setList(objects);
         }
-        Q_EMIT objectsSelected(objects);
+        Q_EMIT objectsSelected(objects, modifiers, reselected);
     });
 
     // Virtual node selection

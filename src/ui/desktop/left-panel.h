@@ -55,7 +55,8 @@ public:
     void restoreSettings(QSettings& settings);
 
 Q_SIGNALS:
-    void objectsSelected(std::vector<SPObject*> objects);
+    void objectsSelected(std::vector<SPObject*> objects, Qt::KeyboardModifiers modifiers,
+                         bool reselected);
     void virtualNodeSelected(int type);
     void xmlNodeSelected(Inkscape::XML::Node* node);
     void panelSwitchChanged(int index);

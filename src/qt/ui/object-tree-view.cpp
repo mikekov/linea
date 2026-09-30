@@ -9,6 +9,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QLineEdit>
 #include <QMouseEvent>
 #include <QMimeData>
@@ -32,10 +33,6 @@ public:
     explicit ObjectTreeDelegate(ObjectTreeView* view, QObject* parent = nullptr)
         : QStyledItemDelegate(parent)
         , _view(view) {}
-
-    void setCurrentLayer(SPObject* layer) {
-        _currentLayer = layer;
-    }
 
     void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override {
         if (index.column() != ObjectTreeModel::ColumnLabel) return;
@@ -78,7 +75,7 @@ public:
         bool isLayer = index.data(ObjectTreeModel::IsLayerRole).toBool();
         if (isLayer) {
             auto obj = index.data(ObjectTreeModel::ObjectRole).value<SPObject*>();
-            if (obj == _currentLayer) {
+            if (_view->isCurrentLayer(obj)) {
                 QFont font = opt.font;
                 font.setBold(true);
                 opt.font = font;
@@ -96,7 +93,6 @@ public:
 
 private:
     ObjectTreeView* _view;
-    SPObject* _currentLayer = nullptr;
 };
 
 ObjectTreeView::ObjectTreeView(QWidget* parent)
@@ -244,14 +240,23 @@ QString ObjectTreeView::filterText() const {
 }
 
 void ObjectTreeView::setCurrentLayer(SPObject* layer) {
-    auto delegate = static_cast<ObjectTreeDelegate*>(_delegate.get());
-    delegate->setCurrentLayer(layer);
+    auto id = layer ? layer->getId() : nullptr;
+    _currentLayerId = id ? id : "";
     viewport()->update();
 }
 
+bool ObjectTreeView::isCurrentLayer(SPObject* obj) const {
+    return obj && !_currentLayerId.empty() && obj->getId() && _currentLayerId == obj->getId();
+}
+
 void ObjectTreeView::mousePressEvent(QMouseEvent* event) {
+    QModelIndex index;
+    QModelIndexList before;
+    QModelIndex cursorBefore;
     if (event->button() == Qt::LeftButton) {
-        auto index = indexAt(event->pos());
+        before = selectionModel()->selectedRows();
+        cursorBefore = currentIndex();
+        index = indexAt(event->pos());
         if (index.isValid()) {
             const int col = index.column();
             auto vtype = static_cast<VirtualNodeType>(index.data(ObjectTreeModel::VirtualTypeRole).toInt());
@@ -286,9 +291,30 @@ void ObjectTreeView::mousePressEvent(QMouseEvent* event) {
                 viewport()->update();
                 return;
             }
+
         }
     }
+    // selectionChanged() is suppressed while the event is dispatched; the
+    // resulting selection is emitted here with the press's own modifiers.
+    // A re-click of the cursor row (currentIndex survives selection changes,
+    // like GTK's cursor row) emits with reselected=true even when the view's
+    // selection didn't change — e.g. a second click selects the current layer.
+    auto guard = _inputEvent.block();
     QTreeView::mousePressEvent(event);
+    bool const reclicked = index.isValid() && cursorBefore.isValid()
+        && index.row() == cursorBefore.row() && index.parent() == cursorBefore.parent();
+    if (reclicked || selectionModel()->selectedRows() != before) {
+        emitSelectionSignals(event->modifiers(), reclicked);
+    }
+}
+
+void ObjectTreeView::keyPressEvent(QKeyEvent* event) {
+    auto const before = selectionModel()->selectedRows();
+    auto guard = _inputEvent.block();
+    QTreeView::keyPressEvent(event);
+    if (selectionModel()->selectedRows() != before) {
+        emitSelectionSignals(event->modifiers());
+    }
 }
 
 void ObjectTreeView::contextMenuEvent(QContextMenuEvent* event) {
@@ -320,7 +346,7 @@ void ObjectTreeView::contextMenuEvent(QContextMenuEvent* event) {
     bool isLayer = item && Inkscape::LayerManager::asLayer(item);
     if (item && !isLayer && !selection->includes(object)) {
         selectObject(object);
-        Q_EMIT objectsSelected({object});
+        Q_EMIT objectsSelected({object}, event->modifiers(), false);
     }
 
     std::vector<SPItem*> items;
@@ -430,12 +456,14 @@ void ObjectTreeView::dropEvent(QDropEvent* event) {
 void ObjectTreeView::selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
     QTreeView::selectionChanged(selected, deselected);
 
-    if (_selectingProgrammatically.pending() || _modelMutationDepth > 0) return;
+    if (_selectingProgrammatically.pending() || _modelMutationDepth > 0 || _inputEvent.pending()) return;
 
+    // Selection changes not driven by an input event (programmatic selectAll,
+    // model-driven updates) are forwarded with no modifier context.
     emitSelectionSignals();
 }
 
-void ObjectTreeView::emitSelectionSignals() {
+void ObjectTreeView::emitSelectionSignals(Qt::KeyboardModifiers modifiers, bool reselected) {
     // Check if a single virtual node is selected
     auto selectedRows = selectionModel()->selectedRows();
     if (selectedRows.size() == 1) {
@@ -453,7 +481,7 @@ void ObjectTreeView::emitSelectionSignals() {
             objects.push_back(obj);
         }
     }
-    Q_EMIT objectsSelected(std::move(objects));
+    Q_EMIT objectsSelected(std::move(objects), modifiers, reselected);
 }
 
 void ObjectTreeView::drawRow(QPainter* painter, const QStyleOptionViewItem& options, const QModelIndex& index) const {

@@ -319,7 +319,7 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     });
 
     // Object tree → pages tool / restore tool
-    connect(_leftPanel, &LeftPanel::objectsSelected, this, [this](std::vector<SPObject*> objects) {
+    connect(_leftPanel, &LeftPanel::objectsSelected, this, [this](std::vector<SPObject*> objects, Qt::KeyboardModifiers modifiers) {
         if (!objects.empty()) _restorePreviousTool();
     });
     connect(_leftPanel, &LeftPanel::virtualNodeSelected, this, [this](int typeInt) {

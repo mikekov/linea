@@ -8,6 +8,7 @@
 
 #include <QTreeView>
 #include <memory>
+#include <string>
 #include <vector>
 #include "object/object-set.h"
 #include "ui/operation-blocker.h"
@@ -89,12 +90,17 @@ public:
     // Update the current layer for bold rendering
     void setCurrentLayer(SPObject* layer);
 
+    // Is this object the desktop's current layer? Compared by object id so
+    // the view never holds a pointer that could outlive the object.
+    bool isCurrentLayer(SPObject* obj) const;
+
     /// Collapse all nodes, then expand only the ancestors of \a layer so it
     /// is visible. Marks collapsed groups via the model's itemCollapsed.
     void collapseAllExcept(SPObject* layer);
 
 Q_SIGNALS:
-    void objectsSelected(std::vector<SPObject*> objects);
+    void objectsSelected(std::vector<SPObject*> objects, Qt::KeyboardModifiers modifiers,
+                         bool reselected);
     void virtualNodeSelected(Linea::UI::VirtualNodeType type);
 
     // Visibility/lock toggles are requested by the user; the client handles the
@@ -106,8 +112,9 @@ Q_SIGNALS:
     void virtualNodeLockRequested(Linea::UI::VirtualNodeType type, bool lock);
 
 protected:
-    // Mouse interaction
+    // Mouse/keyboard interaction
     void mousePressEvent(QMouseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
 
     // Drag and drop
@@ -125,10 +132,17 @@ protected:
 private:
     void onExpanded(const QModelIndex& index);
     void onCollapsed(const QModelIndex& index);
-    void emitSelectionSignals();
+    void emitSelectionSignals(Qt::KeyboardModifiers modifiers = Qt::NoModifier,
+                              bool reselected = false);
 
     SPDesktop* _desktop = nullptr;
     ObjectTreeModel* _model = nullptr;
+    std::string _currentLayerId;
+
+    // While an input event is being dispatched, selectionChanged() does not
+    // forward: the event handler emits objectsSelected itself afterwards,
+    // carrying the event's own modifiers.
+    OperationBlocker _inputEvent;
     std::unique_ptr<QStyledItemDelegate> _delegate;
     OperationBlocker _selectingProgrammatically;
 
