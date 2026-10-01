@@ -72,10 +72,13 @@ int main(int argc, char* argv[]) {
         Inkscape::AutoSave::getInstance().init(&LineaApplication::instance());
 
         auto setTheme = []{
-            int theme = LineaApplication::instance().settings().value("dark-theme", 0).toInt();
+            auto theme = static_cast<Linea::UI::ThemeMode>(
+                LineaApplication::instance().settings().value("dark-theme", 0).toInt());
             auto scheme = QGuiApplication::styleHints()->colorScheme();
-            bool followSystem = (theme == 0);
-            Linea::UI::setApplicationTheme(followSystem ? scheme == Qt::ColorScheme::Dark : (theme == 1), followSystem);
+            bool followSystem = (theme == Linea::UI::ThemeMode::System);
+            Linea::UI::setApplicationTheme(
+                followSystem ? scheme == Qt::ColorScheme::Dark : (theme == Linea::UI::ThemeMode::Dark),
+                followSystem);
         };
         QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
                          &app, [&setTheme](Qt::ColorScheme scheme) {

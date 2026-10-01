@@ -753,7 +753,7 @@ void TransformHandleSet::_updateVisibility(bool v)
 
         // Roughly estimate handle size.
         Inkscape::Preferences *prefs = Inkscape::Preferences::get();
-        int handle_index = prefs->getIntLimited("/options/grabsize/value", 3, 1, 15);
+        int handle_index = prefs->getIntLimited("/options/grabsize/value", 7, 3, 15);
         int handle_size = handle_index * 2 + 1; // Handle pixmaps are actually larger but that's to allow space when handle is rotated.
 
         Geom::Point bp = b.dimensions() * Geom::Scale(_desktop->current_zoom());

@@ -33,7 +33,7 @@ struct RenderParams
     float outline_width;
     float size;
     double angle;
-    int device_scale;
+    double device_scale;
     int size_parity; // -1 - disabled, 0, 1 desired parity in physical pixels
 
     auto operator<=>(RenderParams const &) const = default;

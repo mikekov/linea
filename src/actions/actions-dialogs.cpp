@@ -20,6 +20,7 @@
 
 #include "action-meta.h"
 #include "action-registry.h"
+#include "dialog/settings-dialog.h"
 #include "linea-application.h"
 #include "linea-window.h"
 #include "qt/ui/about-widget.h"
@@ -178,6 +179,8 @@ void add_actions_dialogs(LineaWindow *win)
 
 // Qt action definitions
 
+namespace {
+    
 const Glib::ustring SECTION = NC_("Action Section", "Dialog");
 
 static QPointer<QDialog> filter_editor_dialog;
@@ -245,30 +248,33 @@ static void show_about(LineaWindow* window) {
     about_widget->move(center - QPoint(about_widget->width() / 2, about_widget->height() / 2));
 }
 
+void open_settings(LineaWindow* wnd) {
+    Linea::UI::SettingsDialog dialog(wnd);
+    dialog.exec();
+}
+
 static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
     // clang-format off
     {"dialog-open-filter-gallery", N_("Open Filter Gallery"), SECTION,
-     N_("Show and apply available filters"), "color-filters",
-     [](LineaWindow* win) { open_filter_gallery(win); }},
+     N_("Show and apply available filters"), "color-filters", open_filter_gallery},
     {"dialog-open-filter-editor", N_("Open Filter Editor"), SECTION,
-     N_("Manage, edit, and apply SVG filters"), "dialog-filters",
-     [](LineaWindow* win) { open_filter_editor(win); }},
+     N_("Manage, edit, and apply SVG filters"), "dialog-filters", open_filter_editor},
     {"dialog-open-filter-effects", N_("Open Filter Effects"), SECTION,
-     N_("Manage, edit, and apply SVG filters"), "dialog-filters",
-     [](LineaWindow* win) { open_filter_editor(win); }},
+     N_("Manage, edit, and apply SVG filters"), "dialog-filters", open_filter_editor},
     {"dialog-open-extension-gallery", N_("Open Extension Gallery"), SECTION,
-     N_("Show and run available extensions"), "dialog-extensions",
-     [](LineaWindow* win) { open_extension_gallery(win); }},
+     N_("Show and run available extensions"), "dialog-extensions", open_extension_gallery},
     {"dialog-open-scripting", N_("Open Script Editor"), SECTION,
-     N_("Edit and run scripts"), "dialog-scripts",
-     [](LineaWindow* win) { open_scripting(win); }},
+     N_("Edit and run scripts"), "dialog-scripts", open_scripting},
     {"toggle-panel-docking", N_("Toggle All Dialogs"), SECTION,
-     N_("Dock or collapse all dialogs"), "panel-left",
-     [](LineaWindow* win) { toggle_dialogs(win); }},
+     N_("Dock or collapse all dialogs"), "panel-left", toggle_dialogs},
     {"about-linea", N_("About Linea"), ABOUT_SECTION,
      N_("Show information about Linea"), nullptr, show_about},
+    {"dialog-open-settings", N_("Open Settings"), SECTION,
+     N_("Open the settings dialog"), "settings", open_settings},
     // clang-format on
 });
+
+} // namespace
 
 void add_actions_dialogs(LineaApplication* app) {
     auto& registry = ActionRegistry::get();

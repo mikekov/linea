@@ -111,6 +111,8 @@ x add a way to show notifications?
 
 - support adding filters on top of existing filter (merging), not one at a time
 - ideally support editing filters (pref dialog is one way ticket, doesn't read existing filters)
+- host filter editor in a dialog, not popup
+- filter editor connection editing does not work
 - impl extension run btn
 - add missing extension icons
 - make pref dialog use PopupMenu instead of or in addition to dialog window

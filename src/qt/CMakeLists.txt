@@ -200,6 +200,11 @@ target_sources(linea_base PRIVATE
     ui/dialog/crash-dialog.ui
     ui/dialog/xml-settings-dialog.cpp
     ui/dialog/xml-settings-dialog.h
+    ui/dialog/settings-dialog.cpp
+    ui/dialog/settings-dialog.h
+    ui/dialog/settings-dialog.ui
+    ui/handle-preview.cpp
+    ui/handle-preview.h
     ui/dialog/pdf-preview-area.cpp
     ui/dialog/pdf-preview-area.h
     ui/dialog/pdf-import-dialog.cpp

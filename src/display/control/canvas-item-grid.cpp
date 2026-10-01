@@ -210,8 +210,8 @@ static std::pair<int, int> calculate_line_range(Geom::IntRect const &screen_rect
 }
 
 static std::optional<Geom::Line> get_grid_line(Geom::IntRect const &screen_rect, Geom::Point origin,
-                                               Geom::Point direction, Geom::Point normal, int index, int line_thickness,
-                                               int scale_factor)
+                                               Geom::Point direction, Geom::Point normal, int index, double line_thickness,
+                                               double scale_factor)
 {
     auto grid_line = Geom::Line::from_origin_and_vector(origin + index * normal, direction);
     auto segment = grid_line.clip(screen_rect);

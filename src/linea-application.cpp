@@ -598,8 +598,8 @@ void LineaApplication::shutdown() {
         for (auto& dt : desktops) {
             dts.push_back(dt.get());
         }
-        for (auto* dt : dts) {
-            auto* win = dt->getLineaWindow();
+        for (auto dt : dts) {
+            auto win = dt->getLineaWindow();
             if (win) {
                 win->getDesktopWidget()->removeDesktop(dt);
             }

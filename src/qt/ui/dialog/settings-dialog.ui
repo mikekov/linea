@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>SettingsDialog</class>
+  <widget class="QDialog" name="SettingsDialog">
+    <property name="windowTitle">
+      <string>Settings</string>
+    </property>
+    <property name="modal">
+      <bool>true</bool>
+    </property>
+    <property name="minimumSize">
+      <size>
+        <width>480</width>
+        <height>320</height>
+      </size>
+    </property>
+    <property name="maximumSize">
+      <size>
+        <width>480</width>
+        <height>16777215</height>
+      </size>
+    </property>
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>480</width>
+        <height>320</height>
+      </rect>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="spacing">
+        <number>6</number>
+      </property>
+      <property name="leftMargin">
+        <number>10</number>
+      </property>
+      <property name="topMargin">
+        <number>10</number>
+      </property>
+      <property name="rightMargin">
+        <number>10</number>
+      </property>
+      <property name="bottomMargin">
+        <number>10</number>
+      </property>
+
+      <item>
+        <layout class="QGridLayout" name="gridLayout" columnstretch="1,1">
+          <property name="spacing">
+            <number>6</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <property name="verticalSpacing">
+            <number>3</number>
+          </property>
+          <property name="horizontalSpacing">
+            <number>4</number>
+          </property>
+
+          <item row="0" column="0">
+            <widget class="QLabel" name="themeLabel">
+              <property name="text">
+                <string>Theme</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>settings-label</string>
+              </property>
+            </widget>
+          </item>
+          <item row="1" column="0" colspan="3">
+            <layout class="QHBoxLayout" name="themeRow">
+              <item>
+                <widget class="QRadioButton" name="lightRadio">
+                  <property name="text">
+                    <string>Light</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">themeGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <widget class="QRadioButton" name="darkRadio">
+                  <property name="text">
+                    <string>Dark</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">themeGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <widget class="QRadioButton" name="systemRadio">
+                  <property name="text">
+                    <string>Follow system</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">themeGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <spacer name="themeSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                  </property>
+                </spacer>
+              </item>
+            </layout>
+          </item>
+
+          <item row="2" column="0">
+            <widget class="QLabel" name="renderingLabel">
+              <property name="text">
+                <string>Rendering</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>settings-label</string>
+              </property>
+            </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="renderingRow">
+              <item>
+                <widget class="QRadioButton" name="softwareRadio">
+                  <property name="text">
+                    <string>Software</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">renderingGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <widget class="QRadioButton" name="gpuRadio">
+                  <property name="text">
+                    <string>GPU</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">renderingGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <spacer name="renderingSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                  </property>
+                </spacer>
+              </item>
+            </layout>
+          </item>
+
+          <item row="4" column="0">
+            <widget class="QLabel" name="handleSizeLabel">
+              <property name="text">
+                <string>Handle size</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>settings-label</string>
+              </property>
+            </widget>
+          </item>
+          <item row="5" column="0">
+            <layout class="QHBoxLayout" name="handleSizeRow">
+              <item>
+                <widget class="QSlider" name="handleSizeSlider">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="minimum">
+                    <number>3</number>
+                  </property>
+                  <property name="maximum">
+                    <number>15</number>
+                  </property>
+                  <property name="singleStep">
+                    <number>1</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>2</number>
+                  </property>
+                  <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="toolTip">
+                    <string>Set the relative size of node handles</string>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <widget class="QLabel" name="handleSizeValue">
+                  <property name="minimumSize">
+                    <size>
+                      <width>24</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignVCenter</set>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+
+          <item row="5" column="1">
+            <widget class="QLabel" name="handlePreview">
+              <property name="alignment">
+                <set>Qt::AlignHCenter|Qt::AlignVCenter</set>
+              </property>
+              <property name="minimumSize">
+                <size>
+                  <width>220</width>
+                  <height>25</height>
+                </size>
+              </property>
+            </widget>
+          </item>
+
+        </layout>
+      </item>
+
+      <item>
+        <spacer name="contentSpacer">
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+          </property>
+        </spacer>
+      </item>
+      <item>
+        <widget class="QDialogButtonBox" name="buttonBox">
+          <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="standardButtons">
+            <set>QDialogButtonBox::Close</set>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <buttongroups>
+    <buttongroup name="themeGroup"/>
+    <buttongroup name="renderingGroup"/>
+  </buttongroups>
+  <connections>
+    <connection>
+      <sender>buttonBox</sender>
+      <signal>rejected()</signal>
+      <receiver>SettingsDialog</receiver>
+      <slot>reject()</slot>
+    </connection>
+  </connections>
+</ui>

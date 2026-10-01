@@ -30,7 +30,7 @@ constexpr bool DUMP_HANDLES = false;
 constexpr bool DRAW_BOUNDS = true;
 
 // size range
-constexpr int MIN_INDEX = 1;
+constexpr int MIN_INDEX = 3;
 constexpr int MAX_INDEX = 15;
 
 namespace Inkscape {
@@ -242,7 +242,7 @@ void CanvasItemCtrl::_set_size(float size)
 }
 
 static int get_size_default() {
-    return Preferences::get()->getIntLimited("/options/grabsize/value", 3, MIN_INDEX, MAX_INDEX);
+    return Preferences::get()->getIntLimited("/options/grabsize/value", 7, MIN_INDEX, MAX_INDEX);
 }
 
 void CanvasItemCtrl::set_size(HandleSize rel_size) {
@@ -559,8 +559,9 @@ float CanvasItemCtrl::get_stroke_width() const {
 /**
  * Build object-specific cache.
  */
-void CanvasItemCtrl::build_cache(int device_scale) const
+void CanvasItemCtrl::build_cache(double device_scale_dbl) const
 {
+    int device_scale = static_cast<int>(device_scale_dbl + 0.5);
     auto width = get_width();
     if (width < 1) {
         return; // Nothing to render
@@ -591,7 +592,7 @@ void CanvasItemCtrl::build_cache(int device_scale) const
         .outline_width = outline_width,
         .size = size,
         .angle = _angle,
-        .device_scale = device_scale,
+        .device_scale = device_scale_dbl,
         .size_parity = preferred_parity
     });
 }

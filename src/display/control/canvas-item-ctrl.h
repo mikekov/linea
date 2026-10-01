@@ -73,7 +73,7 @@ protected:
     void _render(CanvasItemBuffer &buf) const override;
     void _invalidate_ctrl_handles() override;
 
-    void build_cache(int device_scale) const;
+    void build_cache(double device_scale) const;
     float get_width() const;
     float get_total_width() const;
 

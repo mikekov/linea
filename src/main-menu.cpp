@@ -51,9 +51,15 @@ void createMainMenu(QMenuBar* bar) {
         {"document-revert"},
         {"document-cleanup"},
         {"document-close"},
+        {},
+        {"dialog-open-settings"},
     };
 
     build(bar->addMenu("&File"), file_menu);
+
+    // Relocate into the application menu's "Settings…" slot on macOS;
+    // a no-op elsewhere, so it stays in the File menu above.
+    ActionRegistry::get().action("dialog-open-settings")->setMenuRole(QAction::PreferencesRole);
 
     static auto edit_menu = std::initializer_list<Item>{
         {"undo"},

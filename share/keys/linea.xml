@@ -188,5 +188,6 @@ This file is the default keymap for LineaDraw. User customizations are stored se
   <!-- temporary -->
   <bind action="open-settings"                 keys="Alt+S" />
   <bind action="dialog-open-scripting"         keys="Alt+Shift+S" />
+  <bind action="dialog-open-settings"          keys="Cmd+," />
   <!-- <bind action="window-crash"                  keys="Alt+X" /> -->
 </keys>

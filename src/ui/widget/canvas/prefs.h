@@ -20,7 +20,7 @@ public:
     Pref<int>    outline_overlay_opacity  = { "/options/rendering/outline-overlay-opacity", 50, 0, 100 };
     Pref<int>    update_strategy          = { "/options/rendering/update_strategy", 3, 1, 3 };
     Pref<bool>   request_opengl           = { "/options/rendering/request_opengl" };
-    Pref<int>    grabsize                 = { "/options/grabsize/value", 3, 1, 15 };
+    Pref<int>    grabsize                 = { "/options/grabsize/value", 7, 3, 15 };
     Pref<int>    numthreads               = { "/options/threading/numthreads", 0, 1, 256 };
 
     // Colour management

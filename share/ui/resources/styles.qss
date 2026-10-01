@@ -190,6 +190,15 @@ QTreeView::branch:open:has-children:has-siblings {
     text-transform: uppercase;
 }
 
+.settings-label {
+    margin-top: 6px;
+    margin-left: 0px;
+    font-size: 10px;
+    font-weight: 500;
+    color: palette(dark);
+    text-transform: uppercase;
+}
+
 .dim-text {
     color: palette(dark);
 }

@@ -279,7 +279,7 @@ public:
     PageInfo pi; // The list of page rectangles.
     std::optional<Geom::PathVector> calc_page_clip() const; // Union of the page rectangles if in clip-to-page mode, otherwise no clip.
 
-    int scale_factor = 1; // The device scale the stores are drawn at.
+    double scale_factor = 1; // The device scale the stores are drawn at; may be fractional.
 
     RenderMode render_mode = RenderMode::NORMAL;
     SplitMode  split_mode  = SplitMode::NORMAL;

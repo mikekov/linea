@@ -758,7 +758,9 @@ QImage cairo_surface_to_qimage(cairo_surface_t* surface) {
     QImage::Format qformat;
     switch (format) {
         case CAIRO_FORMAT_ARGB32:
-            qformat = QImage::Format_ARGB32;
+            // Cairo ARGB32 data is premultiplied; QImage::Format_ARGB32 expects
+            // straight alpha and would double-apply it on compositing.
+            qformat = QImage::Format_ARGB32_Premultiplied;
             break;
         case CAIRO_FORMAT_RGB24:
             qformat = QImage::Format_RGB32;

@@ -20,6 +20,15 @@
 
 namespace Linea::UI {
 
+/**
+ * UI theme selection, stored as the "dark-theme" application setting.
+ */
+enum class ThemeMode {
+    System = 0, ///< Follow the system color scheme
+    Dark   = 1,
+    Light  = 2
+};
+
 // Prepare/alter light/dark theme palettes
 void setLightThemePalette(QPalette& palette);
 void setDarkThemePalette(QPalette& palette);
