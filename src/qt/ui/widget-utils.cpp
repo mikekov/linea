@@ -10,12 +10,15 @@
 #include <QEvent>
 #include <QGuiApplication>
 #include <QLayout>
+#include <QLinearGradient>
+#include <QPainter>
 #include <QObject>
 #include <QPointer>
 #include <QScreen>
 #include <QTimer>
 #include <QWidget>
 #include <QWindow>
+#include <algorithm>
 #include <string>
 
 #include "preferences.h"
@@ -226,6 +229,29 @@ void ensurePopupOnScreen(QPoint& pos, QSize size) {
     } else if (pos.y() + size.height() > screenGeometry.bottom()) {
         pos.setY(screenGeometry.bottom() - size.height() - 8);
     }
+}
+
+void paintFadedText(QPainter& painter, const QRect& rect, const QString& text,
+                    const QColor& color, Qt::Alignment alignment) {
+    if (painter.fontMetrics().horizontalAdvance(text) <= rect.width()) {
+        painter.setPen(color);
+        painter.drawText(rect, alignment, text);
+        return;
+    }
+
+    const int fadeWidth = std::min(30, rect.width() / 3);
+    auto fadedColor = color;
+    fadedColor.setAlpha(0);
+
+    QLinearGradient gradient(rect.right() - fadeWidth, 0, rect.right(), 0);
+    gradient.setColorAt(0.0, color);
+    gradient.setColorAt(1.0, fadedColor);
+
+    painter.save();
+    painter.setClipRect(rect);
+    painter.setPen(QPen(QBrush(gradient), 1));
+    painter.drawText(rect, alignment, text);
+    painter.restore();
 }
 
 void settleLayout(QWidget* widget) {

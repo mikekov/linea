@@ -114,6 +114,8 @@ Q_SIGNALS:
 protected:
     // Mouse/keyboard interaction
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void leaveEvent(QEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
 
@@ -160,6 +162,10 @@ private:
     // the "begin" and "end" sides of a structural change arrive as two
     // separate signal-handler invocations
     int _modelMutationDepth = 0;
+
+    // Icon cell (visibility/lock) currently under the cursor; the delegate
+    // repaints its icon once more to brighten it as hover confirmation.
+    QPersistentModelIndex _hotIconIndex;
 
     friend class ObjectTreeDelegate;
 };

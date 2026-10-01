@@ -6,10 +6,10 @@
 
 #include "eliding-label.h"
 
-#include <QLinearGradient>
 #include <QPainter>
 #include <QResizeEvent>
-#include <algorithm>
+
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -68,19 +68,8 @@ void ElidingLabel::paintEvent(QPaintEvent* event) {
     // Draw the full text left-aligned and clipped to the label rect,
     // with a horizontal alpha gradient fading out the right edge.
     QPainter p(this);
-    p.setClipRect(rect());
-
-    int fadeWidth = std::min(30, width() / 3);
-    const auto textColor = palette().color(QPalette::WindowText);
-    auto fadedTextColor = textColor;
-    fadedTextColor.setAlpha(0);
-
-    QLinearGradient gradient(width() - fadeWidth, 0, width(), 0);
-    gradient.setColorAt(0.0, textColor);
-    gradient.setColorAt(1.0, fadedTextColor);
-
-    p.setPen(QPen(QBrush(gradient), 1));
-    p.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, _fullText);
+    paintFadedText(p, rect(), _fullText, palette().color(QPalette::WindowText),
+                   Qt::AlignLeft | Qt::AlignVCenter);
 }
 
 void ElidingLabel::updateElidedText() {

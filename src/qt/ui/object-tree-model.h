@@ -116,7 +116,9 @@ public:
         PlainTextRole,                 // Returns plain text label
         IsLayerRole,                   // Returns true if item is a layer
         IsHiddenRole,                  // Returns true if item is hidden
-        IsLockedRole                   // Returns true if item is locked
+        IsLockedRole,                  // Returns true if item is locked
+        AncestorHiddenRole,            // Returns true if any ancestor is hidden
+        AncestorLockedRole             // Returns true if any ancestor is locked
     };
 
     explicit ObjectTreeModel(QObject* parent = nullptr);

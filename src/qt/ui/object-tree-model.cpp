@@ -60,6 +60,18 @@ inline QIcon lockIcon(bool locked) {
                           locked ? 1.0 : iconOpacity);
 }
 
+/// Whether any ancestor item of \a obj is hidden (\a locked = false) or
+/// locked (\a locked = true).
+inline bool ancestorState(SPObject* obj, bool locked) {
+    for (auto parent = obj->parent; parent; parent = parent->parent) {
+        auto item = cast<SPItem>(parent);
+        if (item && (locked ? !item->isSensitive() : item->isHidden())) {
+            return true;
+        }
+    }
+    return false;
+}
+
 inline QIcon baseIconForType(const char* type) {
     if (!type) return {};
 
@@ -238,6 +250,10 @@ public:
 private:
     SPObject* getObject(Inkscape::XML::Node* node) const;
     void updateRow();
+    // Emit dataChanged for `item`'s row and, recursively, all materialized
+    // descendants — a hidden/locked parent changes its children's
+    // AncestorHiddenRole/AncestorLockedRole too.
+    void updateSubtreeRows(ObjectTreeItem* item);
 
     // Insert a brand new child (with its own subtree/dummy/watcher) at `row`.
     void insertChildAt(int row, Inkscape::XML::Node& childNode);
@@ -327,13 +343,22 @@ void ObjectNodeWatcher::rebuildChildren() {
 }
 
 void ObjectNodeWatcher::updateRow() {
-    auto index = _model->indexForItem(_item);
+    updateSubtreeRows(_item);
+}
+
+void ObjectNodeWatcher::updateSubtreeRows(ObjectTreeItem* item) {
+    auto index = _model->indexForItem(item);
     if (index.isValid()) {
         auto lastCol = _model->index(index.row(), ObjectTreeModel::ColumnCount - 1, index.parent());
         Q_EMIT _model->dataChanged(
             index, lastCol,
             {Qt::DisplayRole, Qt::DecorationRole, static_cast<int>(ObjectTreeModel::PlainTextRole),
-             static_cast<int>(ObjectTreeModel::IsHiddenRole), static_cast<int>(ObjectTreeModel::IsLockedRole)});
+             static_cast<int>(ObjectTreeModel::IsHiddenRole), static_cast<int>(ObjectTreeModel::IsLockedRole),
+             static_cast<int>(ObjectTreeModel::AncestorHiddenRole),
+             static_cast<int>(ObjectTreeModel::AncestorLockedRole)});
+    }
+    for (const auto& child : item->children()) {
+        updateSubtreeRows(child.get());
     }
 }
 
@@ -995,6 +1020,7 @@ QVariant ObjectTreeModel::data(const QModelIndex& index, int role) const {
             return visibilityIcon(hidden);
         }
         if (role == IsHiddenRole) return itemObj ? itemObj->isHidden() : false;
+        if (role == AncestorHiddenRole) return ancestorState(obj, false);
         return QVariant();
     }
 
@@ -1004,6 +1030,7 @@ QVariant ObjectTreeModel::data(const QModelIndex& index, int role) const {
             return lockIcon(locked);
         }
         if (role == IsLockedRole) return itemObj ? !itemObj->isSensitive() : false;
+        if (role == AncestorLockedRole) return ancestorState(obj, true);
         return QVariant();
     }
 

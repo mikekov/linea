@@ -5,15 +5,19 @@
 
 #include "object-tree-view.h"
 
+#include <QApplication>
 #include <QDebug>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QHeaderView>
+#include <QHelpEvent>
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QMouseEvent>
 #include <QMimeData>
+#include <QPainter>
 #include <QStyledItemDelegate>
+#include <QToolTip>
 
 #include "desktop.h"
 #include "ui/contextmenu.h"
@@ -22,8 +26,24 @@
 #include "object/sp-item.h"
 #include "qt/util/virtual-node-type.h"
 #include "selection.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
+
+// True when an eye/lock cell paints no icon for an un-raised row: neither
+// the item's own nor an ancestor's hidden/locked state is set, and the row
+// is not virtual (virtual icons always paint).
+static bool iconCellSuppressed(const QModelIndex& index) {
+    const int col = index.column();
+    if (col != ObjectTreeModel::ColumnVisible && col != ObjectTreeModel::ColumnLocked) return false;
+    if (index.data(ObjectTreeModel::VirtualTypeRole).toInt() != static_cast<int>(VirtualNodeType::None)) return false;
+    if (col == ObjectTreeModel::ColumnVisible) {
+        return !index.data(ObjectTreeModel::IsHiddenRole).toBool() &&
+               !index.data(ObjectTreeModel::AncestorHiddenRole).toBool();
+    }
+    return !index.data(ObjectTreeModel::IsLockedRole).toBool() &&
+           !index.data(ObjectTreeModel::AncestorLockedRole).toBool();
+}
 
 /**
  * Custom delegate for rendering object tree items.
@@ -60,27 +80,10 @@ public:
         QStyleOptionViewItem opt = option;
         initStyleOption(&opt, index);
 
-        // Check if virtual node
         auto role = static_cast<VirtualNodeType>(index.data(ObjectTreeModel::VirtualTypeRole).toInt());
         bool isVirtual = role != VirtualNodeType::None;
 
-        // Virtual nodes (apart from top Document) get italic styling, as they don't correspond to actual svg elements
-        if (isVirtual && role != VirtualNodeType::DocumentProps) {
-            QFont font = opt.font;
-            font.setItalic(true);
-            opt.font = font;
-        }
-
-        // Check if layer and if it's the current layer; show current layer in bold
-        bool isLayer = index.data(ObjectTreeModel::IsLayerRole).toBool();
-        if (isLayer) {
-            auto obj = index.data(ObjectTreeModel::ObjectRole).value<SPObject*>();
-            if (_view->isCurrentLayer(obj)) {
-                QFont font = opt.font;
-                font.setBold(true);
-                opt.font = font;
-            }
-        }
+        opt.font = labelFont(index, opt.font);
 
         // Check if hidden - render with strikethrough or grayed out
         bool isHidden = index.data(ObjectTreeModel::IsHiddenRole).toBool();
@@ -88,10 +91,127 @@ public:
             opt.palette.setBrush(QPalette::Text, opt.palette.color(QPalette::Disabled, QPalette::Text));
         }
 
-        QStyledItemDelegate::paint(painter, opt, index);
+        // The eye/lock icons only appear on hover or selection; the
+        // hidden/locked icons are always shown, as are faint icons on children
+        // of hidden/locked parents. Virtual nodes are exempt.
+        const int col = index.column();
+        const bool isIconColumn = !isVirtual &&
+            (col == ObjectTreeModel::ColumnVisible || col == ObjectTreeModel::ColumnLocked);
+        const bool ownState = isIconColumn &&
+            ((col == ObjectTreeModel::ColumnVisible && isHidden) ||
+             (col == ObjectTreeModel::ColumnLocked && index.data(ObjectTreeModel::IsLockedRole).toBool()));
+        const bool ancestorState = isIconColumn &&
+            index.data(col == ObjectTreeModel::ColumnVisible ? ObjectTreeModel::AncestorHiddenRole
+                                                            : ObjectTreeModel::AncestorLockedRole)
+                      .toBool();
+        const bool raised = opt.state & (QStyle::State_MouseOver | QStyle::State_Selected);
+        const bool gossamer = isIconColumn && ancestorState && !ownState && !raised;
+        if (!raised && iconCellSuppressed(index)) {
+            opt.icon = QIcon();
+            opt.features &= ~QStyleOptionViewItem::HasDecoration;
+        }
+
+        const auto style = opt.widget ? opt.widget->style() : QApplication::style();
+
+        // The label column fades overflowing text out at the right edge
+        // (like ElidingLabel) instead of eliding with "...". Clearing
+        // opt.text keeps the style from eliding it; it is drawn manually
+        // below. QStyledItemDelegate::paint() would re-run initStyleOption()
+        // and undo both modifications; draw the item directly instead.
+        const QString labelText = col == ObjectTreeModel::ColumnLabel ? opt.text : QString();
+        if (!labelText.isEmpty()) {
+            opt.text.clear();
+        }
+
+        painter->save();
+        if (gossamer) {
+            // Upstream paints ancestor-state icons at 0.2; the model's icon
+            // already bakes in 0.5, so 0.4 here gives ~0.2 net.
+            painter->setOpacity(0.4);
+        }
+        style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, opt.widget);
+        painter->restore();
+
+        // Hover confirmation over an icon cell: the model's
+        // visible/unlocked icons bake in 0.5 alpha, so a second pass
+        // brings the one under the cursor to ~0.75.
+        if (isIconColumn && !opt.icon.isNull() && _view->_hotIconIndex == index) {
+            auto iconRect = style->subElementRect(QStyle::SE_ItemViewItemDecoration, &opt, opt.widget);
+            opt.icon.paint(painter, iconRect);
+        }
+
+        if (!labelText.isEmpty()) {
+            painter->save();
+            painter->setFont(opt.font);
+            const auto colorRole = opt.state & QStyle::State_Selected ? QPalette::HighlightedText : QPalette::Text;
+            paintFadedText(*painter, labelTextRect(opt, index), labelText, opt.palette.color(colorRole),
+                           opt.displayAlignment | Qt::AlignVCenter);
+            painter->restore();
+        }
+    }
+
+    bool helpEvent(QHelpEvent* event, QAbstractItemView* view, const QStyleOptionViewItem& option,
+                   const QModelIndex& index) override {
+        if (index.column() != ObjectTreeModel::ColumnLabel) {
+            return QStyledItemDelegate::helpEvent(event, view, option, index);
+        }
+        auto opt = option;
+        initStyleOption(&opt, index);
+        // viewOptions() leaves option.rect empty; the measurement needs the
+        // item's actual cell rect.
+        opt.rect = view->visualRect(index);
+        if (opt.text.isEmpty()) return false;
+        opt.font = labelFont(index, opt.font);
+        const auto textWidth = QFontMetrics(opt.font).horizontalAdvance(opt.text);
+        // Too long even without icons (extension into icon cells allowed).
+        bool truncated = textWidth > labelTextRect(opt, index).width();
+        if (!truncated && view->selectionModel()->isSelected(index)) {
+            // Selected rows show icons, which takes label space back —
+            // remeasure against the raised-row rect.
+            opt.state |= QStyle::State_MouseOver;
+            truncated = textWidth > labelTextRect(opt, index).width();
+        }
+        if (!truncated) return false;
+        QToolTip::showText(event->globalPos(), opt.text, view->viewport());
+        return true;
     }
 
 private:
+    // Italic for virtual nodes (apart from top Document), as they don't
+    // correspond to actual svg elements; bold for the current layer.
+    QFont labelFont(const QModelIndex& index, QFont font) const {
+        auto vtype = static_cast<VirtualNodeType>(index.data(ObjectTreeModel::VirtualTypeRole).toInt());
+        if (vtype != VirtualNodeType::None && vtype != VirtualNodeType::DocumentProps) {
+            font.setItalic(true);
+        }
+        if (index.data(ObjectTreeModel::IsLayerRole).toBool()) {
+            auto obj = index.data(ObjectTreeModel::ObjectRole).value<SPObject*>();
+            if (_view->isCurrentLayer(obj)) {
+                font.setBold(true);
+            }
+        }
+        return font;
+    }
+
+    // Same rect and margin viewItemDrawText() uses for the label text.
+    // Overflowing labels may extend into icon cells that paint no icon; the
+    // eye column sits left of the lock column, so extension stops at the
+    // first painted icon — text can't cross it.
+    QRect labelTextRect(const QStyleOptionViewItem& opt, const QModelIndex& index) const {
+        const auto style = opt.widget ? opt.widget->style() : QApplication::style();
+        auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, opt.widget);
+        const int textMargin = style->pixelMetric(QStyle::PM_FocusFrameHMargin, &opt, opt.widget) + 1;
+        textRect.adjust(textMargin, 0, -textMargin, 0);
+        if (!(opt.state & (QStyle::State_MouseOver | QStyle::State_Selected))) {
+            for (const int iconCol : {ObjectTreeModel::ColumnVisible, ObjectTreeModel::ColumnLocked}) {
+                const auto iconIndex = index.siblingAtColumn(iconCol);
+                if (!iconIndex.isValid() || !iconCellSuppressed(iconIndex)) break;
+                textRect.setRight(_view->visualRect(iconIndex).right());
+            }
+        }
+        return textRect;
+    }
+
     ObjectTreeView* _view;
 };
 
@@ -301,15 +421,49 @@ void ObjectTreeView::mousePressEvent(QMouseEvent* event) {
     // selection didn't change — e.g. a second click selects the current layer.
     auto guard = _inputEvent.block();
     QTreeView::mousePressEvent(event);
-    bool const reclicked = index.isValid() && cursorBefore.isValid()
+    const bool reclicked = index.isValid() && cursorBefore.isValid()
         && index.row() == cursorBefore.row() && index.parent() == cursorBefore.parent();
     if (reclicked || selectionModel()->selectedRows() != before) {
         emitSelectionSignals(event->modifiers(), reclicked);
     }
 }
 
+void ObjectTreeView::mouseMoveEvent(QMouseEvent* event) {
+    auto index = indexAt(event->pos());
+    const int col = index.column();
+    // Same condition as the click handlers: the cell is only an actionable
+    // icon when the corresponding state role is present.
+    const bool isIcon = index.isValid() &&
+        ((col == ObjectTreeModel::ColumnVisible && !index.data(ObjectTreeModel::IsHiddenRole).isNull()) ||
+         (col == ObjectTreeModel::ColumnLocked && !index.data(ObjectTreeModel::IsLockedRole).isNull()));
+    const QPersistentModelIndex hot = isIcon ? index : QModelIndex();
+    if (hot != _hotIconIndex) {
+        const auto prev = _hotIconIndex;
+        _hotIconIndex = hot;
+        if (prev.isValid()) {
+            viewport()->update(visualRect(prev));
+        }
+        if (hot.isValid()) {
+            viewport()->update(visualRect(hot));
+        }
+    }
+    if (!event->buttons()) {
+        viewport()->setCursor(isIcon ? Qt::PointingHandCursor : Qt::ArrowCursor);
+    }
+    QTreeView::mouseMoveEvent(event);
+}
+
+void ObjectTreeView::leaveEvent(QEvent* event) {
+    if (_hotIconIndex.isValid()) {
+        viewport()->update(visualRect(_hotIconIndex));
+        _hotIconIndex = QPersistentModelIndex();
+    }
+    viewport()->unsetCursor();
+    QTreeView::leaveEvent(event);
+}
+
 void ObjectTreeView::keyPressEvent(QKeyEvent* event) {
-    auto const before = selectionModel()->selectedRows();
+    const auto before = selectionModel()->selectedRows();
     auto guard = _inputEvent.block();
     QTreeView::keyPressEvent(event);
     if (selectionModel()->selectedRows() != before) {

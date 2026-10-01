@@ -100,15 +100,15 @@ void RightPanel::buildHeader() {
 
     tb->addStretch();
 // temp --------------------------------
-    auto test = tb->addPushButton("x");
-    test->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    test->setFixedWidth(30);
-    connect(test, &QToolButton::clicked, this, []() {
-        static bool dark = false;
-        dark = !dark;
-        Linea::UI::setApplicationTheme(dark);
-    });
-    test->setFixedWidth(16);
+    // auto test = tb->addPushButton("x");
+    // test->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    // test->setFixedWidth(30);
+    // connect(test, &QToolButton::clicked, this, []() {
+    //     static bool dark = false;
+    //     dark = !dark;
+    //     Linea::UI::setApplicationTheme(dark);
+    // });
+    // test->setFixedWidth(16);
 // --------------------------------------
 
     static auto ids = std::to_array({

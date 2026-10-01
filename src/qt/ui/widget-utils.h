@@ -10,6 +10,10 @@
 #include <QPoint>
 #include <QSize>
 
+class QColor;
+class QPainter;
+class QRect;
+class QString;
 class QWidget;
 class QLayout;
 
@@ -53,6 +57,14 @@ void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize =
  * keeping a small margin from the screen edges.
  */
 void ensurePopupOnScreen(QPoint& pos, QSize size);
+
+/**
+ * Draw `text` in `color`, clipped to and aligned inside `rect`. If the text
+ * is wider than the rect, the right edge fades out via an alpha gradient
+ * instead of eliding with "..." (the painter's font must already be set).
+ */
+void paintFadedText(QPainter& painter, const QRect& rect, const QString& text,
+                    const QColor& color, Qt::Alignment alignment);
 
 /**
  * Settle `widget`'s layout geometry synchronously after visibility changes.
