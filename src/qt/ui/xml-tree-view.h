@@ -71,6 +71,9 @@ public:
     // Get the XML node at a specific index
     Inkscape::XML::Node* nodeAt(const QModelIndex& index) const;
 
+    // Use a monospaced font for the tree contents
+    void setMonoFont(bool enabled);
+
     // Set the syntax highlighting style
     void setStyle(const Linea::UI::Syntax::XMLStyles& newStyle);
 
@@ -92,6 +95,8 @@ protected:
 
     // Context menu
     void contextMenuEvent(QContextMenuEvent* event) override;
+
+    bool event(QEvent* event) override;
 
 private:
     SPDesktop* _desktop = nullptr;

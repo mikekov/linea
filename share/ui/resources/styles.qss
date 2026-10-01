@@ -109,6 +109,13 @@ QLineEdit[warning="true"] {
     border: 1px solid red;
 }
 
+/* In-cell editors must fit the row height, not the standalone-input minimum. */
+QLineEdit[class="cell-editor"] {
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+}
+
 QTreeView, QListView, QTableView {
     /* color: palette(text); messes up disabled text color */
     border: 1px solid palette(mid);

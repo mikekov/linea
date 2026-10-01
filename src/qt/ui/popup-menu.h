@@ -54,7 +54,6 @@ private:
     };
 
     void showAt(QWidget* widget, Placement placement);
-    void ensurePopupOnScreen(QPoint& pos);
 
     QVBoxLayout* _layout = nullptr;
     QWidget* _content = nullptr;

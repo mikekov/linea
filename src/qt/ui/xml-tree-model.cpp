@@ -309,6 +309,27 @@ void XmlTreeModel::buildTree(SPDocument* document) {
     endResetModel();
 }
 
+void XmlTreeModel::setStyles(const Syntax::XMLStyles& styles) {
+    _styles = styles;
+    emitMarkupChanged(_rootItem.get());
+}
+
+void XmlTreeModel::emitMarkupChanged(XmlTreeItem* item) {
+    if (!item) {
+        return;
+    }
+    const auto& children = item->children();
+    if (children.empty()) {
+        return;
+    }
+    Q_EMIT dataChanged(indexForItem(children.front().get()),
+                       indexForItem(children.back().get()),
+                       {static_cast<int>(MarkupRole)});
+    for (const auto& child : children) {
+        emitMarkupChanged(child.get());
+    }
+}
+
 Inkscape::XML::Node* XmlTreeModel::nodeForIndex(const QModelIndex& index) const {
     if (!index.isValid()) {
         return nullptr;
@@ -453,6 +474,7 @@ QVariant XmlTreeModel::data(const QModelIndex& index, int role) const {
     // Build display text
     QString plainText;
     QString markupText;
+    Syntax::XMLFormatter formatter(_styles);
 
     switch (node->type()) {
         case NodeType::ELEMENT_NODE: {
@@ -464,18 +486,19 @@ QVariant XmlTreeModel::data(const QModelIndex& index, int role) const {
             }
 
             plainText = "<" + name;
+            formatter.openTag(name);
 
             // Add id and label attributes
             if (auto* id = node->attribute("id")) {
                 plainText += " id=\"" + QString::fromUtf8(id) + "\"";
+                formatter.addAttribute("id", QString::fromUtf8(id));
             }
             if (auto* label = node->attribute("inkscape:label")) {
                 plainText += " inkscape:label=\"" + QString::fromUtf8(label) + "\"";
+                formatter.addAttribute("inkscape:label", QString::fromUtf8(label));
             }
             plainText += ">";
-
-            // For markup, we would use XMLFormatter, but for now use plain text
-            markupText = plainText;
+            markupText = formatter.finishTag();
             break;
         }
         case NodeType::TEXT_NODE:
@@ -506,7 +529,7 @@ QVariant XmlTreeModel::data(const QModelIndex& index, int role) const {
             }
 
             plainText = start + content + end;
-            markupText = plainText;
+            markupText = formatter.formatContent(plainText);
             break;
         }
         case NodeType::DOCUMENT_NODE:

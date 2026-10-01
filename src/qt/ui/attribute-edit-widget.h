@@ -43,6 +43,8 @@ public:
     void edit(const QString& attrName, const QString& value, const QPoint& pos);
     QString value() const;
 
+    void setMonoFont(bool enabled);
+
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void showEvent(QShowEvent* event) override;
@@ -56,6 +58,7 @@ private:
     QPushButton* _okButton = nullptr;
     QPushButton* _cancelButton = nullptr;
     std::unique_ptr<Linea::UI::Syntax::TextEditView> _editor;
+    bool _monoFont = false;
 };
 
 /**
@@ -75,6 +78,9 @@ public:
 
     void setRepr(Inkscape::XML::Node* repr);
 
+    // Use a monospaced font for the attribute list and content editor
+    void setMonoFont(bool enabled);
+
     QTreeView* treeView() const { return _treeView; }
 
 protected:
@@ -84,7 +90,7 @@ private Q_SLOTS:
     void onAddAttribute();
     void onDeleteAttribute();
     void onEditValue(const QModelIndex& index);
-    void onNameEdited(QStandardItem* item);
+    void onItemEdited(QStandardItem* item);
     void onPopupAccepted();
     void onPopupRejected();
 
@@ -103,6 +109,7 @@ private:
     QStackedWidget* _stack = nullptr;
     QWidget* _treePage = nullptr;
     QTreeView* _treeView = nullptr;
+    Linea::UI::Syntax::FixedFontDelegate* _attrDelegate = nullptr;
     QStandardItemModel* _model = nullptr;
     QToolButton* _addButton = nullptr;
     QToolButton* _deleteButton = nullptr;

@@ -7,14 +7,13 @@
 #include "popup-menu.h"
 
 #include <QEvent>
-#include <QScreen>
-#include <QGuiApplication>
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <glib/gi18n.h>
 
 #include "resizing-separator.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -147,33 +146,8 @@ void PopupMenu::showAt(QWidget* widget, Placement placement) {
         }
     }
 
-    ensurePopupOnScreen(popupPos);
+    ensurePopupOnScreen(popupPos, size());
     move(popupPos);
-}
-
-void PopupMenu::ensurePopupOnScreen(QPoint& pos) {
-    QScreen* screen = QGuiApplication::screenAt(pos);
-    if (!screen) {
-        screen = QGuiApplication::primaryScreen();
-    }
-
-    if (screen) {
-        QRect screenGeometry = screen->availableGeometry();
-
-        // Adjust horizontal position if off-screen
-        if (pos.x() < screenGeometry.left()) {
-            pos.setX(screenGeometry.left() + 8);
-        } else if (pos.x() + width() > screenGeometry.right()) {
-            pos.setX(screenGeometry.right() - width() - 8);
-        }
-
-        // Adjust vertical position if off-screen
-        if (pos.y() < screenGeometry.top()) {
-            pos.setY(screenGeometry.top() + 8);
-        } else if (pos.y() + height() > screenGeometry.bottom()) {
-            pos.setY(screenGeometry.bottom() - height() - 8);
-        }
-    }
 }
 
 bool PopupMenu::eventFilter(QObject* watched, QEvent* event) {

@@ -5,6 +5,7 @@
 
 #include "settings-dialog.h"
 
+#include <QCheckBox>
 #include <QGuiApplication>
 #include <QRadioButton>
 #include <QSlider>
@@ -72,6 +73,12 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         prefs->setInt(grabsize_pref, value);
         _ui->handleSizeValue->setText(QString::number(value));
         updatePreview();
+    });
+
+    constexpr auto mono_font_pref = "/dialogs/xml/mono-font";
+    _ui->monoFontCheck->setChecked(prefs->getBool(mono_font_pref, true));
+    connect(_ui->monoFontCheck, &QCheckBox::toggled, this, [prefs](bool checked) {
+        prefs->setBool(mono_font_pref, checked);
     });
 }
 

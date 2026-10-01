@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "syntax.h"
+
 QT_BEGIN_NAMESPACE
 class QMimeData;
 class QTreeView;
@@ -97,6 +99,9 @@ public:
     // Build the tree from a document
     void buildTree(SPDocument* document);
 
+    // Set the styles used to generate MarkupRole data; refreshes all rows
+    void setStyles(const Syntax::XMLStyles& styles);
+
     // Get the XML node for a model index
     Inkscape::XML::Node* nodeForIndex(const QModelIndex& index) const;
 
@@ -130,11 +135,13 @@ private:
 
     XmlTreeItem* itemForIndex(const QModelIndex& index) const;
     QModelIndex indexForItem(XmlTreeItem* item) const;
+    void emitMarkupChanged(XmlTreeItem* item);
 
     SPDocument* _document = nullptr;
     std::unique_ptr<XmlTreeItem> _rootItem;
     std::unique_ptr<NodeWatcher> _rootWatcher;
     std::unordered_map<Inkscape::XML::Node*, XmlTreeItem*> _nodeToItem;
+    Syntax::XMLStyles _styles;
 };
 
 } // namespace Linea::UI

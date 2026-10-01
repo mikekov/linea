@@ -7,6 +7,7 @@
 #ifndef LINEA_UI_WIDGET_UTILS_H
 #define LINEA_UI_WIDGET_UTILS_H
 
+#include <QPoint>
 #include <QSize>
 
 class QWidget;
@@ -45,6 +46,13 @@ void syncVisibility(QWidget* follower, QWidget* leader);
  * tracking dies with the window.
  */
 void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize = {});
+
+/**
+ * Clamp `pos` so a popup of `size` placed there stays inside the available
+ * geometry of the screen containing that point (primary screen if none),
+ * keeping a small margin from the screen edges.
+ */
+void ensurePopupOnScreen(QPoint& pos, QSize size);
 
 /**
  * Settle `widget`'s layout geometry synchronously after visibility changes.

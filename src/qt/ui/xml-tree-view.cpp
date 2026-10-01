@@ -12,10 +12,15 @@
 
 #include "xml-tree-view.h"
 
+#include <QAbstractTextDocumentLayout>
+#include <QApplication>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QFont>
 #include <QMimeData>
+#include <QPainter>
 #include <QStyledItemDelegate>
+#include <QTextDocument>
 
 #include "ui/contextmenu.h"
 #include "document.h"
@@ -31,28 +36,40 @@ namespace Linea::UI {
 /**
  * Custom delegate for rendering XML tree items with syntax highlighting.
  */
-class XmlTreeDelegate : public QStyledItemDelegate {
+class XmlTreeDelegate : public Syntax::FixedFontDelegate {
 public:
     explicit XmlTreeDelegate(QObject* parent = nullptr)
-        : QStyledItemDelegate(parent) {}
+        : Syntax::FixedFontDelegate(parent) {}
 
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override {
-        // Get the plain text for the item
-        QString text = index.data(Qt::DisplayRole).toString();
-
-        // Check if selected
-        bool selected = option.state & QStyle::State_Selected;
-
         QStyleOptionViewItem opt = option;
         initStyleOption(&opt, index);
 
-        // Use plain text when selected for better readability
-        if (selected) {
-            opt.text = text;
+        auto style = opt.widget ? opt.widget->style() : QApplication::style();
+
+        // Let the style paint the background, selection and focus state
+        opt.text.clear();
+        style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, opt.widget);
+
+        // Paint the syntax-highlighted markup
+        QTextDocument doc;
+        doc.setDocumentMargin(0);
+        doc.setDefaultFont(opt.font);
+        doc.setHtml(index.data(XmlTreeModel::MarkupRole).toString());
+
+        QAbstractTextDocumentLayout::PaintContext context;
+        context.palette = opt.palette;
+        if (opt.state & QStyle::State_Selected) {
+            context.palette.setColor(QPalette::Text, opt.palette.color(QPalette::HighlightedText));
         }
 
-        // Let the base class do the actual painting
-        QStyledItemDelegate::paint(painter, opt, index);
+        const QRect textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, opt.widget);
+        context.clip = QRectF(0, 0, textRect.width(), textRect.height());
+
+        painter->save();
+        painter->translate(textRect.topLeft());
+        doc.documentLayout()->draw(painter, context);
+        painter->restore();
     }
 };
 
@@ -63,6 +80,8 @@ XmlTreeView::XmlTreeView(QWidget* parent)
     // Create and set the model
     _model = new XmlTreeModel(this);
     setModel(_model);
+
+    _model->setStyles(Syntax::buildXmlStyles(QString()));
 
     // Set up the delegate for custom rendering
     _delegate = std::make_unique<XmlTreeDelegate>(this);
@@ -115,10 +134,28 @@ Inkscape::XML::Node* XmlTreeView::nodeAt(const QModelIndex& index) const {
     return _model->nodeForIndex(index);
 }
 
-void XmlTreeView::setStyle(const Linea::UI::Syntax::XMLStyles& /*newStyle*/) {
-    // TODO: Store the style and update the delegate to use it for syntax highlighting
-    // For now, the delegate uses basic text rendering
+void XmlTreeView::setMonoFont(bool enabled) {
+    setFont(enabled ? Syntax::fixedFont(font()) : QFont());
+    // Also set it on the delegate: stylesheet-managed widgets can have their
+    // font reverted when the application style sheet is re-applied.
+    if (enabled) {
+        static_cast<XmlTreeDelegate*>(_delegate.get())->setFixedFont(Syntax::fixedFont(font()));
+    } else {
+        static_cast<XmlTreeDelegate*>(_delegate.get())->clearFixedFont();
+    }
+}
+
+void XmlTreeView::setStyle(const Linea::UI::Syntax::XMLStyles& newStyle) {
+    _model->setStyles(newStyle);
     viewport()->update();
+}
+
+bool XmlTreeView::event(QEvent* e) {
+    // Rebuild palette-derived syntax colors on theme changes
+    if (e->type() == QEvent::PaletteChange || e->type() == QEvent::ApplicationPaletteChange) {
+        _model->setStyles(Syntax::buildXmlStyles(QString()));
+    }
+    return QTreeView::event(e);
 }
 
 XmlTreeModel* XmlTreeView::xmlModel() const {

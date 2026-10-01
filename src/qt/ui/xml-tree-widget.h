@@ -9,6 +9,7 @@
 #include <memory>
 #include <QWidget>
 
+#include "preferences.h"
 #include "syntax.h"
 #include "ui/operation-blocker.h"
 
@@ -103,6 +104,7 @@ private:
     QActionGroup* _layoutGroup = nullptr;
     std::unique_ptr<Ui::XmlTreeWidget> _ui;
     OperationBlocker _update;
+    Inkscape::Pref<bool> _mono_font{"/dialogs/xml/mono-font", true};
     Inkscape::XML::Node* _selectedNode = nullptr;
     DialogLayout _layout = DialogLayout::Vertical;
     int _minWidth = 0;

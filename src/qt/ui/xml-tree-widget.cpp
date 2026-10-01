@@ -55,6 +55,13 @@ XmlTreeWidget::XmlTreeWidget(QWidget* parent)
     _attrEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     _ui->attrContainer->layout()->addWidget(_attrEdit);
 
+    // Monospaced font for the tree and attribute editor, as in the GTK XML dialog
+    _mono_font.action = [this] {
+        _treeView->setMonoFont(_mono_font);
+        _attrEdit->setMonoFont(_mono_font);
+    };
+    _mono_font.action();
+
     _ui->splitter->setStretchFactor(0, 2);
     _ui->splitter->setStretchFactor(1, 1);
 

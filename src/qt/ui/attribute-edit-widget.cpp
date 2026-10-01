@@ -6,6 +6,7 @@
 #include "attribute-edit-widget.h"
 
 #include <QEvent>
+#include <QFont>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QKeyEvent>
@@ -18,6 +19,7 @@
 #include <glib.h>
 
 #include "xml/node.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -39,6 +41,13 @@ Linea::UI::Syntax::SyntaxMode modeForAttribute(const QString& name) {
         return Linea::UI::Syntax::SyntaxMode::SvgPolyPoints;
     }
     return Linea::UI::Syntax::SyntaxMode::PlainText;
+}
+
+// Structured or multiline values need the popup editor; everything else is
+// edited in place, like upstream's AttrDialog.
+bool needsPopupEditor(const QString& attrName, const QString& value) {
+    return modeForAttribute(attrName) != Linea::UI::Syntax::SyntaxMode::PlainText ||
+           value.contains(QLatin1Char('\n'));
 }
 
 } // namespace
@@ -94,6 +103,9 @@ void AttributeEditPopup::edit(const QString& attrName, const QString& value, con
     _editor = Linea::UI::Syntax::TextEditView::create(mode);
     _editor->setStyle(QString());
     _editor->setText(value);
+    if (_monoFont) {
+        Syntax::setMonoFont(_editor->getEditor(), true);
+    }
 
     // Replace any previous editor widget in the layout.
     while (_editorLayout->count() > 0) {
@@ -106,11 +118,14 @@ void AttributeEditPopup::edit(const QString& attrName, const QString& value, con
     _editorLayout->addWidget(&_editor->getEditor(), 1);
     _editor->getEditor().installEventFilter(this);
 
-    // Position and size the popup near the attribute value cell.
+    // Position and size the popup near the attribute value cell, keeping it
+    // fully on screen.
     QWidget* anchor = parentWidget() ? parentWidget() : this;
     int width = std::min(600, std::max(300, anchor->width() - 20));
     resize(width, 200);
-    move(pos);
+    QPoint popupPos = pos;
+    ensurePopupOnScreen(popupPos, size());
+    move(popupPos);
 
     show();
     raise();
@@ -119,6 +134,13 @@ void AttributeEditPopup::edit(const QString& attrName, const QString& value, con
 
 QString AttributeEditPopup::value() const {
     return _editor ? _editor->getText() : QString();
+}
+
+void AttributeEditPopup::setMonoFont(bool enabled) {
+    _monoFont = enabled;
+    if (_editor) {
+        Syntax::setMonoFont(_editor->getEditor(), enabled);
+    }
 }
 
 void AttributeEditPopup::onOk() {
@@ -189,6 +211,9 @@ AttributeEditWidget::AttributeEditWidget(QWidget* parent)
     _treeView->setProperty("class", "styled-header");
     treeLayout->addWidget(_treeView);
 
+    _attrDelegate = new Syntax::FixedFontDelegate(_treeView);
+    _treeView->setItemDelegate(_attrDelegate);
+
     _model = new QStandardItemModel(0, 2, this);
     _model->setHorizontalHeaderLabels({tr("Name"), tr("Value")});
     _treeView->setModel(_model);
@@ -206,7 +231,7 @@ AttributeEditWidget::AttributeEditWidget(QWidget* parent)
     connect(_addButton, &QToolButton::clicked, this, &AttributeEditWidget::onAddAttribute);
     connect(_deleteButton, &QToolButton::clicked, this, &AttributeEditWidget::onDeleteAttribute);
     connect(_treeView, &QTreeView::doubleClicked, this, &AttributeEditWidget::onEditValue);
-    connect(_model, &QStandardItemModel::itemChanged, this, &AttributeEditWidget::onNameEdited);
+    connect(_model, &QStandardItemModel::itemChanged, this, &AttributeEditWidget::onItemEdited);
     connect(_contentEdit, &QPlainTextEdit::textChanged, this, [this]() {
         if (!_repr || _update.pending()) {
             return;
@@ -225,6 +250,21 @@ AttributeEditWidget::AttributeEditWidget(QWidget* parent)
 
 AttributeEditWidget::~AttributeEditWidget() {
     setRepr(nullptr);
+}
+
+void AttributeEditWidget::setMonoFont(bool enabled) {
+    const QFont font = enabled ? Syntax::fixedFont(_treeView->font()) : QFont();
+    _treeView->setFont(font);
+    // The view's font can be reverted when the application style sheet is
+    // re-applied (the view matches stylesheet rules with font properties),
+    // so the delegate carries the display font as well.
+    if (enabled) {
+        _attrDelegate->setFixedFont(font);
+    } else {
+        _attrDelegate->clearFixedFont();
+    }
+    Syntax::setMonoFont(*_contentEdit, enabled);
+    _popup->setMonoFont(enabled);
 }
 
 void AttributeEditWidget::setRepr(Inkscape::XML::Node* repr) {
@@ -275,7 +315,7 @@ void AttributeEditWidget::onAddAttribute() {
     nameItem->setEditable(true);
     nameItem->setData(QString(), Qt::UserRole);
     auto valueItem = new QStandardItem("");
-    valueItem->setEditable(false);
+    valueItem->setEditable(!needsPopupEditor(QString(), QString()));
     _model->appendRow({nameItem, valueItem});
     const QModelIndex index = _model->index(_model->rowCount() - 1, 0);
     _treeView->setCurrentIndex(index);
@@ -305,14 +345,28 @@ void AttributeEditWidget::onEditValue(const QModelIndex& index) {
     if (!nameItem || !valueItem) {
         return;
     }
+    if (valueItem->isEditable()) {
+        _treeView->edit(index);
+        return;
+    }
     _editingIndex = index;
     const QRect rect = _treeView->visualRect(index);
     const QPoint pos = _treeView->viewport()->mapToGlobal(rect.topLeft());
     _popup->edit(nameItem->text(), valueItem->text(), pos);
 }
 
-void AttributeEditWidget::onNameEdited(QStandardItem* item) {
-    if (!_repr || _update.pending() || item->column() != 0) {
+void AttributeEditWidget::onItemEdited(QStandardItem* item) {
+    if (!_repr || _update.pending()) {
+        return;
+    }
+    if (item->column() == 1) {
+        const QString name = _model->item(item->row(), 0)->text();
+        // Rows without a name yet keep the value until the name is set.
+        if (name.isEmpty()) {
+            return;
+        }
+        auto scoped = _update.block();
+        _repr->setAttributeOrRemoveIfEmpty(name.toUtf8().constData(), item->text().toUtf8().constData());
         return;
     }
     const QString newName = item->text();
@@ -342,6 +396,8 @@ void AttributeEditWidget::onNameEdited(QStandardItem* item) {
     }
     _repr->setAttributeOrRemoveIfEmpty(newName.toUtf8().constData(), value.toUtf8().constData());
     item->setData(newName, Qt::UserRole);
+    // The editor mode depends on the attribute name.
+    _model->item(item->row(), 1)->setEditable(!needsPopupEditor(newName, value));
 }
 
 void AttributeEditWidget::onPopupAccepted() {
@@ -359,6 +415,7 @@ void AttributeEditWidget::onPopupAccepted() {
     const QString name = nameItem->text();
     auto scoped = _update.block();
     valueItem->setText(newValue);
+    valueItem->setEditable(!needsPopupEditor(name, newValue));
     _repr->setAttributeOrRemoveIfEmpty(name.toUtf8().constData(), newValue.toUtf8().constData());
     _editingIndex = QModelIndex();
 }
@@ -409,12 +466,13 @@ void AttributeEditWidget::notifyAttributeChanged(Inkscape::XML::Node& /*node*/, 
     if (new_value) {
         if (row >= 0) {
             _model->item(row, 1)->setText(value);
+            _model->item(row, 1)->setEditable(!needsPopupEditor(attrName, value));
         } else {
             auto nameItem = new QStandardItem(attrName);
             nameItem->setEditable(true);
             nameItem->setData(attrName, Qt::UserRole);
             auto valueItem = new QStandardItem(value);
-            valueItem->setEditable(false);
+            valueItem->setEditable(!needsPopupEditor(attrName, value));
             _model->appendRow({nameItem, valueItem});
         }
     } else if (row >= 0) {

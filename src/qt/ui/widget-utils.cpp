@@ -202,6 +202,32 @@ void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize) 
     new GeometryPersistenceFilter(window, prefsPath, defaultSize);
 }
 
+void ensurePopupOnScreen(QPoint& pos, QSize size) {
+    QScreen* screen = QGuiApplication::screenAt(pos);
+    if (!screen) {
+        screen = QGuiApplication::primaryScreen();
+    }
+    if (!screen) {
+        return;
+    }
+
+    const QRect screenGeometry = screen->availableGeometry();
+
+    // Adjust horizontal position if off-screen
+    if (pos.x() < screenGeometry.left()) {
+        pos.setX(screenGeometry.left() + 8);
+    } else if (pos.x() + size.width() > screenGeometry.right()) {
+        pos.setX(screenGeometry.right() - size.width() - 8);
+    }
+
+    // Adjust vertical position if off-screen
+    if (pos.y() < screenGeometry.top()) {
+        pos.setY(screenGeometry.top() + 8);
+    } else if (pos.y() + size.height() > screenGeometry.bottom()) {
+        pos.setY(screenGeometry.bottom() - size.height() - 8);
+    }
+}
+
 void settleLayout(QWidget* widget) {
     if (!widget) return;
     if (auto parent = widget->parentWidget()) {

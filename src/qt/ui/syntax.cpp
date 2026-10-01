@@ -5,18 +5,26 @@
 
 #include "syntax.h"
 
+#include <QFile>
+#include <QFileInfo>
 #include <QFont>
+#include <QFontDatabase>
 #include <QGuiApplication>
+#include <QHash>
 #include <QPalette>
 #include <QPlainTextEdit>
 #include <QRegularExpression>
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
+#include <QXmlStreamReader>
 
 #include <functional>
 #include <stdexcept>
 #include <vector>
 
+#include "io/resource.h"
+#include "object/sp-factory.h"
+#include "theme.h"
 #include "util/svg-path-parser.h"
 
 namespace Linea::UI::Syntax {
@@ -61,40 +69,143 @@ struct ColorTheme {
     QColor error;
 };
 
-ColorTheme themeFromPalette(const QPalette& palette) {
-    ColorTheme t;
-    t.background = palette.base().color();
-    t.text = palette.text().color();
-    const bool dark = t.background.lightness() < 128;
-    if (dark) {
-        t.keyword = QColor(0x88, 0xbb, 0xff);
-        t.string = QColor(0xff, 0x88, 0x66);
-        t.number = QColor(0xbb, 0x88, 0xff);
-        t.comment = QColor(0x88, 0x88, 0x88);
-        t.property = QColor(0x88, 0xbb, 0xff);
-        t.value = QColor(0xbb, 0x88, 0xff);
-        t.command = QColor(0x88, 0xbb, 0xff);
-        t.punctuation = QColor(0xcc, 0xcc, 0xcc);
-        t.path_node = QColor(0xff, 0x66, 0x66);
-        t.path_control = QColor(0x55, 0xcc, 0xcc);
-        t.path_angle = QColor(0xff, 0xcc, 0x66);
-        t.path_flags = QColor(0x99, 0xdd, 0x99);
-        t.error = QColor(0xff, 0x55, 0x55);
-    } else {
-        t.keyword = QColor(0x00, 0x00, 0xcc);
-        t.string = QColor(0xcc, 0x00, 0x00);
-        t.number = QColor(0x88, 0x00, 0x88);
-        t.comment = QColor(0x66, 0x66, 0x66);
-        t.property = QColor(0x00, 0x00, 0xcc);
-        t.value = QColor(0x88, 0x00, 0x88);
-        t.command = QColor(0x00, 0x00, 0xcc);
-        t.punctuation = QColor(0x44, 0x44, 0x44);
-        t.path_node = QColor(0xdd, 0x22, 0x22);
-        t.path_control = QColor(0x00, 0x88, 0x88);
-        t.path_angle = QColor(0xaa, 0x66, 0x00);
-        t.path_flags = QColor(0x22, 0x77, 0x22);
-        t.error = QColor(0xcc, 0x00, 0x00);
+/**
+ * Resolve a syntax theme name to a gtksourceview style scheme file.
+ *
+ * An empty theme auto-selects "inkscape-light" or "inkscape-dark" to match
+ * the current UI theme. Unknown ids fall back to that same default.
+ */
+QString findSchemeFile(QString theme) {
+    const auto dir = QString::fromStdString(Inkscape::IO::Resource::get_path_string(
+        Inkscape::IO::Resource::SYSTEM, Inkscape::IO::Resource::UIS, "syntax-themes"));
+    if (dir.isEmpty()) {
+        return {};
     }
+
+    const auto pathFor = [&dir](const QString& id) {
+        // "inkscape-light" -> "light", "-none-" -> "none"
+        QString suffix = id;
+        if (suffix.startsWith(QLatin1String("inkscape-"))) {
+            suffix = suffix.mid(9);
+        }
+        suffix.remove(QLatin1Char('-'));
+        return dir + "/syntax-theme-" + suffix + ".xml";
+    };
+
+    const bool dark = isDarkTheme();
+    const auto fallback = [&]() {
+        return pathFor(dark ? QStringLiteral("inkscape-dark") : QStringLiteral("inkscape-light"));
+    };
+
+    if (theme.isEmpty() || theme == QLatin1String("inkscape-light") ||
+        theme == QLatin1String("inkscape-dark")) {
+        return fallback();
+    }
+
+    const QString path = pathFor(theme);
+    return QFileInfo::exists(path) ? path : fallback();
+}
+
+/**
+ * Parse a gtksourceview style scheme file into a map of style id -> Style.
+ * Results are cached per resolved file path.
+ */
+const QHash<QString, Style>& schemeStyles(const QString& theme) {
+    static QHash<QString, QHash<QString, Style>> cache;
+
+    const QString path = findSchemeFile(theme);
+    auto it = cache.find(path);
+    if (it != cache.end()) {
+        return it.value();
+    }
+
+    QHash<QString, QString> colors;
+    struct RawStyle {
+        QString foreground;
+        QString background;
+        bool bold = false;
+        bool italic = false;
+        bool underline = false;
+    };
+    QHash<QString, RawStyle> rawStyles;
+
+    QFile file(path);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QXmlStreamReader xml(&file);
+        while (!xml.atEnd()) {
+            if (xml.readNext() != QXmlStreamReader::StartElement) {
+                continue;
+            }
+            const auto attrs = xml.attributes();
+            if (xml.name() == QLatin1String("color")) {
+                colors[attrs.value(QLatin1String("name")).toString()] =
+                    attrs.value(QLatin1String("value")).toString();
+            } else if (xml.name() == QLatin1String("style")) {
+                auto& s = rawStyles[attrs.value(QLatin1String("name")).toString()];
+                s.foreground = attrs.value(QLatin1String("foreground")).toString();
+                s.background = attrs.value(QLatin1String("background")).toString();
+                s.bold = attrs.value(QLatin1String("bold")) == QLatin1String("true");
+                s.italic = attrs.value(QLatin1String("italic")) == QLatin1String("true");
+                const auto underline = attrs.value(QLatin1String("underline"));
+                s.underline = !underline.isEmpty() && underline != QLatin1String("none") &&
+                              underline != QLatin1String("false");
+            }
+        }
+    }
+
+    // Resolve <color> name references in style attributes
+    auto resolve = [&colors](const QString& ref) -> std::optional<QColor> {
+        if (ref.isEmpty()) {
+            return {};
+        }
+        const QColor color(ref.startsWith(QLatin1Char('#')) ? ref : colors.value(ref));
+        return color.isValid() ? std::optional(color) : std::nullopt;
+    };
+
+    QHash<QString, Style> styles;
+    for (auto it = rawStyles.constBegin(); it != rawStyles.constEnd(); ++it) {
+        Style& s = styles[it.key()];
+        s.color = resolve(it.value().foreground);
+        s.background = resolve(it.value().background);
+        s.bold = it.value().bold;
+        s.italic = it.value().italic;
+        s.underline = it.value().underline;
+    }
+
+    return cache.insert(path, styles).value();
+}
+
+/**
+ * Build a ColorTheme from a syntax scheme file, mapping fields to the same
+ * style ids used by the bundled .lang definitions (svgd, svgpoints, css)
+ * and by upstream's build_xml_styles().
+ */
+ColorTheme themeFromScheme(const QString& theme, const QPalette& palette) {
+    const auto& styles = schemeStyles(theme);
+
+    const QColor text = palette.text().color();
+    auto color = [&styles, &text](const char* id) {
+        const auto it = styles.constFind(QLatin1String(id));
+        return it != styles.constEnd() && it->color ? *it->color : text;
+    };
+
+    ColorTheme t;
+    // Schemes don't define an editor background; keep the widget's base color
+    t.background = palette.base().color();
+    t.text = color("text");
+    t.keyword = color("def:keyword");
+    t.string = color("def:string");
+    t.number = color("def:number");
+    t.comment = color("def:comment");
+    t.property = color("def:identifier");
+    t.value = color("def:function");
+    t.command = color("def:keyword"); // svgd.lang maps command -> def:keyword
+    t.punctuation = color("css:delimiter");
+    t.path_node = color("def:number");
+    t.path_control = color("def:special-constant");
+    t.path_angle = color("def:type");
+    t.path_flags = color("def:preprocessor");
+    t.error = color("def:error");
     return t;
 }
 
@@ -370,8 +481,8 @@ HighlightingEditView::HighlightingEditView(RuleBuilder builder, Formatter pretti
     setStyle(QString());
 }
 
-void HighlightingEditView::setStyle(const QString& /*theme*/) {
-    const ColorTheme t = themeFromPalette(QGuiApplication::palette());
+void HighlightingEditView::setStyle(const QString& theme) {
+    const ColorTheme t = themeFromScheme(theme, QGuiApplication::palette());
     _highlighter->setRules(_builder(t));
     _highlighter->setPathTheme(t);
     QPalette p = _editor->palette();
@@ -394,18 +505,103 @@ QPlainTextEdit& HighlightingEditView::getEditor() const {
 
 } // namespace
 
-XMLStyles buildXmlStyles(const QString& /*theme*/) {
-    const ColorTheme t = themeFromPalette(QGuiApplication::palette());
+QString Style::openingTag() const {
+    if (isDefault()) {
+        return {};
+    }
+    QString tag = QStringLiteral("<span style=\"");
+    if (color) {
+        tag += QLatin1String("color:") + color->name() + QLatin1Char(';');
+    }
+    if (background) {
+        tag += QLatin1String("background-color:") + background->name() + QLatin1Char(';');
+    }
+    if (bold) {
+        tag += QStringLiteral("font-weight:bold;");
+    }
+    if (italic) {
+        tag += QStringLiteral("font-style:italic;");
+    }
+    if (underline) {
+        tag += QStringLiteral("text-decoration:underline;");
+    }
+    return tag + QStringLiteral("\">");
+}
+
+QString Style::closingTag() const {
+    return isDefault() ? QString() : QStringLiteral("</span>");
+}
+
+QString XMLFormatter::format(const Style& style, const QString& content) const {
+    return style.openingTag() + content.toHtmlEscaped() + style.closingTag();
+}
+
+void XMLFormatter::openTag(const QString& tagName) {
+    _wip = format(_style.angular_brackets, QStringLiteral("<"));
+    if (tagName.isEmpty()) {
+        return;
+    }
+
+    // Highlight as errors unsupported tags in the SVG namespace (explicit or implicit).
+    QString qualified = tagName;
+    bool isSvg = true;
+    if (!qualified.contains(QLatin1Char(':'))) {
+        qualified = QStringLiteral("svg:") + qualified;
+    } else {
+        isSvg = qualified.startsWith(QStringLiteral("svg:"));
+    }
+    bool error = isSvg && !SPFactory::supportsType(qualified.toStdString());
+
+    _wip += format(error ? _style.error : _style.tag_name, tagName);
+}
+
+void XMLFormatter::addAttribute(const QString& name, const QString& value) {
+    _wip += QLatin1Char(' ') + format(_style.attribute_name, name) +
+            format(_style.angular_brackets, QStringLiteral("=")) +
+            format(_style.attribute_value, QLatin1Char('"') + value + QLatin1Char('"'));
+}
+
+QString XMLFormatter::finishTag(bool selfClose) {
+    return _wip + format(_style.angular_brackets,
+                         selfClose ? QStringLiteral("/>") : QStringLiteral(">"));
+}
+
+QString XMLFormatter::formatContent(const QString& content) const {
+    return format(_style.content, content);
+}
+
+XMLStyles buildXmlStyles(const QString& theme) {
+    const auto& styles = schemeStyles(theme);
+    auto get = [&styles](const char* id) {
+        return styles.value(QLatin1String(id));
+    };
+
+    // Same style-id mapping as upstream's build_xml_styles()
     XMLStyles s;
-    s.prolog = Style{t.keyword, {}, true};
-    s.comment = Style{t.comment, {}, false, true};
-    s.angular_brackets = Style{t.punctuation};
-    s.tag_name = Style{t.command, {}, true};
-    s.attribute_name = Style{t.number};
-    s.attribute_value = Style{t.string};
-    s.content = Style{t.string};
-    s.error = Style{t.error, {}, true};
+    s.prolog = get("def:warning");
+    s.comment = get("def:comment");
+    s.angular_brackets = get("draw-spaces");
+    s.tag_name = get("def:statement");
+    s.attribute_name = get("def:number");
+    s.attribute_value = get("def:string");
+    s.content = get("def:string");
+    s.error = get("def:error");
     return s;
+}
+
+QFont fixedFont(const QFont& base) {
+    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    if (base.pointSizeF() > 0) {
+        font.setPointSizeF(base.pointSizeF());
+    } else if (base.pixelSize() > 0) {
+        font.setPixelSize(base.pixelSize());
+    }
+    return font;
+}
+
+void setMonoFont(QPlainTextEdit& editor, bool enabled) {
+    editor.setFont(enabled ? fixedFont(editor.font()) : QFont());
+    editor.document()->setDefaultFont(editor.font());
 }
 
 std::unique_ptr<TextEditView> TextEditView::create(SyntaxMode mode) {
