@@ -22,9 +22,12 @@
 #include <giomm/file.h>
 
 #include "auto-save.h"
+#include "document.h"
 #include "helper/gettext.h"
 #include "inkgc/gc-core.h"
 #include "inkscape.h"
+#include "io/file.h"
+#include "io/file-export-cmd.h"
 #include "linea-application.h"
 #include "path-prefix.h"
 #include "extension/init.h"
@@ -63,10 +66,8 @@ int main(int argc, char* argv[]) {
 
         Glib::init();
         // Qt bundles don't have girepository-1.0, so force bundle env setup
-        setenv("INKSCAPE_FORCE_BUNDLE_ENV", "1", 1);
+        // setenv("INKSCAPE_FORCE_BUNDLE_ENV", "1", 1);
         set_xdg_env();
-        g_message("get_inkscape_datadir() = %s", get_inkscape_datadir());
-        g_message("XDG_DATA_DIRS = %s", Glib::getenv("XDG_DATA_DIRS").empty() ? "(not set)" : Glib::getenv("XDG_DATA_DIRS").c_str());
         Inkscape::Application::create(true);
         LineaApplication::create();
         Inkscape::AutoSave::getInstance().init(&LineaApplication::instance());
@@ -91,7 +92,7 @@ int main(int argc, char* argv[]) {
         // Inkscape::Extension::shallow_init();
         app.setApplicationName("LineaDraw");
         app.setApplicationDisplayName("Linea Draw");
-#if 1
+#if 0
         {
             auto palette = app.palette();
             struct { QPalette::ColorRole role; const char* name; } roles[] = {
@@ -139,9 +140,49 @@ int main(int argc, char* argv[]) {
         parser.addHelpOption();
         parser.addPositionalArgument("file", "SVG file to open (optional)");
 
+        // Headless export: `linea input.svg -o out.png -w 32 -h 32` renders
+        // without opening a window. PNG size comes from -w/-h (independent
+        // unless both given), otherwise the document size at -d dpi.
+        QCommandLineOption exportFilename({"o", "export-filename"},
+            "Export the input file to this path and exit without a GUI", "file");
+        QCommandLineOption exportWidth({"w", "export-width"},
+            "Export width in pixels (PNG)", "px");
+        QCommandLineOption exportHeight("export-height",
+            "Export height in pixels (PNG)", "px");
+        QCommandLineOption exportDpi({"d", "export-dpi"},
+            "Export resolution in DPI", "dpi");
+        parser.addOptions({exportFilename, exportWidth, exportHeight, exportDpi});
+
         parser.process(app);
 
         QStringList args = parser.positionalArguments();
+
+        if (parser.isSet(exportFilename)) {
+            if (args.isEmpty()) {
+                std::cerr << "Linea: --export-filename requires an input file" << std::endl;
+                LINEA_APP.shutdown();
+                Inkscape::Util::StaticsBin::get().destroy();
+                return 1;
+            }
+            auto file = Gio::File::create_for_path(args.first().toStdString());
+            auto [document, error] = ink_file_open(file);
+            if (!document) {
+                std::cerr << "Linea: failed to load " << args.first().toStdString() << std::endl;
+                LINEA_APP.shutdown();
+                Inkscape::Util::StaticsBin::get().destroy();
+                return 1;
+            }
+            InkFileExportCmd exporter;
+            exporter.export_filename = parser.value(exportFilename).toStdString();
+            exporter.export_width = parser.value(exportWidth).toInt();
+            exporter.export_height = parser.value(exportHeight).toInt();
+            exporter.export_dpi = parser.value(exportDpi).toDouble();
+            exporter.export_overwrite = true;
+            exporter.do_export(document.get(), args.first().toStdString());
+            LINEA_APP.shutdown();
+            Inkscape::Util::StaticsBin::get().destroy();
+            return 0;
+        }
 
         if (!args.isEmpty()) {
             QString filePath = args.first();
