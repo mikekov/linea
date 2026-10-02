@@ -207,7 +207,6 @@ void FontList::refresh() {
 }
 
 void FontList::loadFonts() {
-    printf("loading fonts...\n");
     _fontConnection = Inkscape::FontDiscovery::get().connect_to_fonts(
         [this](const Inkscape::FontDiscovery::MessageType& msg) {
             if (auto result = Inkscape::Async::Msg::get_result(msg)) {
@@ -221,7 +220,7 @@ void FontList::loadFonts() {
                 }
                 // _expandedFamilies.clear();
                 Inkscape::sort_font_families(_fontFamilies, true);
-    printf("fnt loaded: %ld\n", _fontFamilies.size());
+    // printf("fnt loaded: %ld\n", _fontFamilies.size());
                 updateDisplayFonts();
             }
         });

@@ -217,7 +217,11 @@ void GradientEditor::setGradientInternal(SPGradient* gradient) {
 
     _gradientImage->setGradient(vector);
 
-    if (!vector || !vector->hasStops()) return;
+    if (!vector || !vector->hasStops()) {
+        // clear the color set so the picker doesn't show a stale stop color
+        stopSelectedInternal();
+        return;
+    }
 
     auto mode = gradient->isSpreadSet() ? gradient->getSpread() : SP_GRADIENT_SPREAD_PAD;
     setRepeatIcon(mode);
@@ -247,7 +251,11 @@ void GradientEditor::setGradientInternal(SPGradient* gradient) {
     _ui->turnButton->setEnabled(canRotate);
     _ui->angleSpin->setEnabled(canRotate);
 
-    selectStop(_currentStopIndex);
+    // _currentStopIndex may be out of range for this vector; fall back to the
+    // first stop so the color set is always synced with the visible selection
+    if (!selectStop(_currentStopIndex)) {
+        selectStop(0);
+    }
 }
 
 SPGradient* GradientEditor::getVector() {
@@ -362,7 +370,12 @@ std::optional<int> GradientEditor::getStopIndex(SPStop* stop) {
     SPGradient* vector = _gradient ? _gradient->getVector() : nullptr;
     if (!vector || !stop) return std::nullopt;
 
-    return sp_number_of_stops_before_stop(vector, stop);
+    // sp_number_of_stops_before_stop returns the total count when the stop is
+    // not in the vector - verify it actually found our stop
+    auto index = sp_number_of_stops_before_stop(vector, stop);
+    if (sp_get_nth_stop(vector, index) != stop) return std::nullopt;
+
+    return index;
 }
 
 SPStop* GradientEditor::getNthStop(size_t index) {
@@ -377,7 +390,7 @@ void GradientEditor::stopSelectedInternal() {
     _colors->clear();
 
     if (auto stop = currentStop()) {
-        _colors->set(stop->getId(), stop->getColor());
+        _colors->set(stop->getColor());
 
         auto [before, after] = sp_get_before_after_stops(stop);
         _ui->offsetSpin->setRange(before ? before->offset * 100 : 0, after ? after->offset * 100 : 100);

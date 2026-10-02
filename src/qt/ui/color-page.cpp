@@ -116,7 +116,7 @@ ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, bool
             _color_wheel->setColor(_specific_colors->getAverage());
         }
     });
-    _color_wheel_changed = wheel->connectColorChanged([this](const Inkscape::Colors::Color& color) {
+    _color_wheel_updated = wheel->connectColorChanged([this](const Inkscape::Colors::Color& color) {
         auto scoped = SignalBlocker{_color_wheel_changed};
         auto opacity = _specific_colors->isEmpty() ? 1.0 : _specific_colors->getAverage().getOpacity();
         auto updated = color;
@@ -127,6 +127,9 @@ ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, bool
 }
 
 void ColorPage::showEvent(QShowEvent* event) {
+    // setAll only adds/updates keyed entries - clear first so stale
+    // entries don't survive and skew getAverage()
+    _specific_colors->clear();
     _specific_colors->setAll(*_selected_colors);
     _specific_changed_connection.unblock();
     _selected_changed_connection.unblock();

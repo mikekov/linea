@@ -295,7 +295,7 @@ static char const preferences_skeleton[] =
     <group id="compassangledisplay" value="0"/>
     <group id="middlemousezoom" value="1"/>
     <group id="maskobject" topmost="1" remove="1"/>
-    <group id="blurquality" value="1"/>
+    <group id="blurquality" value="0"/>
     <group id="filterquality" value="1"/>
     <group id="startmode" outline="0"/>
     <group id="outlinemode" value="0"/>

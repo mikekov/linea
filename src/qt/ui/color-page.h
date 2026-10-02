@@ -55,6 +55,7 @@ private:
     sigc::scoped_connection _specific_changed_connection;
     sigc::scoped_connection _selected_changed_connection;
     sigc::scoped_connection _color_wheel_changed;
+    sigc::scoped_connection _color_wheel_updated;
     ColorWheel* _color_wheel = nullptr;
 };
 
