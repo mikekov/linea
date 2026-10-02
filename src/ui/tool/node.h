@@ -38,9 +38,9 @@ std::ostream &operator<<(std::ostream &, NodeType);
 
 struct ListNode
 {
-    ListNode *ln_next;
-    ListNode *ln_prev;
-    NodeList *ln_list;
+    ListNode* ln_next = nullptr;
+    ListNode* ln_prev = nullptr;
+    NodeList* ln_list = nullptr; // null while the node is not in a NodeList
 };
 
 struct NodeSharedData
@@ -127,7 +127,8 @@ public:
     Node(Node const &) = delete;
 
     void move(Geom::Point const &p) override;
-    void transform(Geom::Affine const &m) override;
+    void setPosition(const Geom::Point& p) override;
+    void transform(const Geom::Affine& m) override;
     void fixNeighbors() override;
     Geom::Rect bounds() const override;
 
@@ -212,6 +213,13 @@ protected:
 
 private:
     void _updateAutoHandles();
+
+    /**
+     * Set the control point type and rotation to reflect this node's position in
+     * the path: end nodes of open subpaths get a triangular handle tangent to the
+     * path, all other nodes get the shape matching their type.
+     */
+    void _updateEndShape();
 
     /**
      * Select or deselect a node in this node's subpath based on its path distance from this node.
@@ -367,7 +375,7 @@ public:
      */
     bool degenerate() const;
 
-    void setClosed(bool c) { _closed = c; }
+    void setClosed(bool c);
     iterator before(double t, double *fracpart = nullptr);
     iterator before(Geom::PathTime const &pvp);
     const_iterator before(double t, double *fracpart = nullptr) const {

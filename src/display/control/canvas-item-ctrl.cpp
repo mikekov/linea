@@ -16,7 +16,6 @@
 
 #include <2geom/transforms.h>
 #include <algorithm>
-#include <array>
 #include <cairomm/context.h>
 #include <cmath>
 #include <iostream>
@@ -456,6 +455,18 @@ void CanvasItemCtrl::_update(bool)
         }
         break;
     }
+
+    case CANVAS_ITEM_CTRL_SHAPE_TRIANGLE:
+        if (_handle.type == CANVAS_ITEM_CTRL_TYPE_NODE_END) {
+            // Endpoint knots: the tip of the triangle sits on the node, so shift
+            // the shape along its angle like the arrows above. In draw_triangle()
+            // the tip is (size/2 - 1) to the left of center.
+            const auto& style = _context->handlesCss()->style_map.at(_handle);
+            double tip = (width - 2.0 * style.outline_width() - get_stroke_width()) / 2.0 - 1.0;
+            dx = tip * cos(_angle);
+            dy = tip * sin(_angle);
+        }
+        break;
 
     default:
         switch (_anchor) {

@@ -148,19 +148,30 @@ void draw_carrow(Cairo::Context &cr, double size)
 
 void draw_triangle(Cairo::Context &cr, double size)
 {
-    // Construct an arrowhead (triangle)
-    double s = size / 2.0;
-    double wcos = s * cos(M_PI / 6);
-    double hsin = s * sin(M_PI / 6);
-    // Construct a smaller arrow head for fill.
-    Geom::Point p1f(1, s);
-    Geom::Point p2f(s + wcos - 1, s + hsin);
-    Geom::Point p3f(s + wcos - 1, s - hsin);
+    // Construct an arrowhead (triangle) pointing in the negative x direction.
+    // The shape rotates to arbitrary angles, so its corners must stay within the
+    // inscribed circle of the size x size canvas to avoid clipping.
+    double const s = size / 2.0;
+    double len = s * 1.9;                    // tip-to-base length
+    double halfw = s * 0.87;                 // base half-width
+    // Snap the base edge and its endpoints to the pixel grid (size is integral,
+    // so s is a whole or half pixel) - keeps the base crisp on axis-aligned
+    // tangents instead of straddling pixel boundaries
+    len = std::round(1.0 + len) - 1.0;
+    halfw = std::round(s + halfw) - s;
+    Geom::Point p1f(1, s);                    // tip
+    Geom::Point p2f(1 + len, s + halfw);
+    Geom::Point p3f(1 + len, s - halfw);
     // Draw arrow
     cr.move_to(p1f[0], p1f[1]);
     cr.line_to(p2f[0], p2f[1]);
     cr.line_to(p3f[0], p3f[1]);
     cr.close_path();
+    // Short bar at the tip, parallel to the base, marking the point location.
+    // Open subpath: stroked like the triangle but contributes no fill area.
+    double const halfb = std::round(s + halfw * 0.6) - s;
+    cr.move_to(p1f[0], s - halfb);
+    cr.line_to(p1f[0], s + halfb);
 }
 
 void draw_triangle_angled(Cairo::Context &cr, double size)

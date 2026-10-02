@@ -300,6 +300,8 @@ void Handle::setPosition(Geom::Point const &p)
     } else {
         setVisible(false);
     }
+
+    _parent->_updateEndShape();
 }
 
 void Handle::setLength(double len)
@@ -827,6 +829,17 @@ void Node::move(Geom::Point const &new_pos)
     Inkscape::UI::Tools::sp_update_helperpath(_desktop);
 }
 
+void Node::setPosition(const Geom::Point& p) {
+    ControlPoint::setPosition(p);
+    // Moving a node can change the endpoint tangent of adjacent nodes
+    // whose handles are degenerate, so refresh them as well.
+    _updateEndShape();
+    if (ln_list) {
+        if (Node *n = _prev()) n->_updateEndShape();
+        if (Node *n = _next()) n->_updateEndShape();
+    }
+}
+
 void Node::transform(Geom::Affine const &m)
 {
     // save the previous nodes strength to apply it again once the node is moved
@@ -969,6 +982,7 @@ void Node::showHandles(bool v)
 void Node::updateHandles()
 {
     _handleControlStyling();
+    _updateEndShape();
 
     _front._handleControlStyling();
     _back._handleControlStyling();
@@ -1091,7 +1105,7 @@ void Node::setType(NodeType type, bool update_handles)
         }
     }
     _type = type;
-    _setControlType(nodeTypeToCtrlType(_type));
+    _updateEndShape();
     updateState();
 }
 
@@ -1133,8 +1147,37 @@ void Node::pickBestType()
             }
         }
     } while (false);
-    _setControlType(nodeTypeToCtrlType(_type));
+    _updateEndShape();
     updateState();
+}
+
+void Node::_updateEndShape() {
+    Node *const prev = ln_list ? _prev() : nullptr;
+    Node *const next = ln_list ? _next() : nullptr;
+    bool const first = !prev && next;
+    bool const last = !next && prev;
+    if (!first && !last) {
+        _setControlType(nodeTypeToCtrlType(_type));
+        _canvas_item_ctrl->set_angle(0.0);
+        return;
+    }
+
+    _setControlType(Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_END);
+
+    // Direction of the path at the node: the adjacent handle if extended,
+    // otherwise the chord to the adjacent node.
+    Handle const &handle = first ? _front : _back;
+    Geom::Point const inward = !handle.isDegenerate()
+        ? handle.position()
+        : (first ? next : prev)->position();
+    // The first node points into the path, the last one points away from it.
+    Geom::Point const dir_doc = first ? inward - position() : position() - inward;
+    // Compute the angle in canvas space so it stays correct under view flips.
+    Geom::Point const dir = _desktop->d2w(position() + dir_doc) - _desktop->d2w(position());
+    if (dir.length() > 1e-4) {
+        // draw_triangle() points in the negative x direction.
+        _canvas_item_ctrl->set_angle(std::atan2(dir.y(), dir.x()) + M_PI);
+    }
 }
 
 bool Node::isEndNode() const
@@ -1759,6 +1802,17 @@ bool NodeList::degenerate() const
     return closed() ? empty() : ++begin() == end();
 }
 
+void NodeList::setClosed(bool c) {
+    if (c == _closed) return;
+
+    _closed = c;
+    // closing a subpath removes its endpoints, opening it creates them
+    if (!empty()) {
+        front()._updateEndShape();
+        back()._updateEndShape();
+    }
+}
+
 NodeList::iterator NodeList::before(double t, double *fracpart)
 {
     double intpart;
@@ -1785,6 +1839,10 @@ NodeList::iterator NodeList::insert(iterator pos, Node *x)
     ins->ln_prev->ln_next = x;
     ins->ln_prev = x;
     x->ln_list = this;
+    // endpoint status may have changed for the inserted node and its neighbors
+    x->_updateEndShape();
+    if (ins != this) static_cast<Node *>(ins)->_updateEndShape();
+    if (x->ln_prev != this) static_cast<Node *>(x->ln_prev)->_updateEndShape();
     return iterator(x);
 }
 
@@ -1814,6 +1872,13 @@ void NodeList::splice(iterator pos, NodeList & /*list*/, iterator first, iterato
     at->ln_prev = ins_end->ln_prev;
     ins_end->ln_prev = ins_beg->ln_prev;
     ins_beg->ln_prev = atprev;
+    // endpoint status may have changed for the nodes at the splice boundary
+    if (at != this) static_cast<Node *>(at)->_updateEndShape();
+    if (atprev != this) static_cast<Node *>(atprev)->_updateEndShape();
+    if (ins_beg != ins_end) {
+        static_cast<Node *>(ins_beg)->_updateEndShape();
+        static_cast<Node *>(at->ln_prev)->_updateEndShape();
+    }
 }
 
 void NodeList::shift(int n)
@@ -1835,6 +1900,11 @@ void NodeList::shift(int n)
     ln_prev = new_begin->ln_prev;
     new_begin->ln_prev->ln_next = this;
     new_begin->ln_prev = this;
+    // shifting the begin marker can change which nodes are open subpath endpoints
+    if (!empty()) {
+        front()._updateEndShape();
+        back()._updateEndShape();
+    }
 }
 
 void NodeList::reverse()
@@ -1847,6 +1917,10 @@ void NodeList::reverse()
         node->back()->setPosition(save_pos);
     }
     std::swap(ln_next, ln_prev);
+    if (!empty()) {
+        front()._updateEndShape();
+        back()._updateEndShape();
+    }
 }
 
 void NodeList::clear()
@@ -1894,6 +1968,9 @@ NodeList::iterator NodeList::erase(iterator i)
     delete rm;
     rmprev->ln_next = rmnext;
     rmnext->ln_prev = rmprev;
+    // the neighbors of the erased node may have become open subpath endpoints
+    if (rmprev != this) static_cast<Node *>(rmprev)->_updateEndShape();
+    if (rmnext != this) static_cast<Node *>(rmnext)->_updateEndShape();
     return i;
 }
 

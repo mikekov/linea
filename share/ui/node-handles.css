@@ -58,6 +58,7 @@ All available selectors:
     .inkscape-node-cusp
     .inkscape-node-smooth
     .inkscape-node-symmetrical
+    .inkscape-node-end
     .inkscape-mesh
     .inkscape-invisible
     .inkscape-guide-handle
@@ -143,6 +144,12 @@ Notes:
     shape: "circle";
     scale: 2.256758; /* 4 / sqrt(PI) */
     size-extra: 2px;
+}
+
+.inkscape-node-end { /* first/last node of an open subpath; rotated to match the path tangent */
+    shape: "triangle";
+    scale: 3.0;
+    size-extra: 0px;
 }
 
 /* snap indicators, measure tool handles */
