@@ -19,6 +19,7 @@
 #include "io/recent-files.h"
 #include "io/resource.h" // TEMPLATES
 #include "linea-window.h"
+#include "object/sp-namedview.h"
 #include "object/sp-root.h"
 #include "script/script-engine.h"
 #include "script/script-registry.h"
@@ -363,6 +364,9 @@ SPDesktop* LineaApplication::desktopOpen(SPDocument* document, bool new_window) 
     }
 
     document_fix(desktop);
+    // The namedview's clip_to_page flag is read before the desktop/canvas
+    // exists, so re-apply it now that both do.
+    desktop->getNamedView()->set_clip_to_page(desktop, desktop->getNamedView()->clip_to_page);
     return desktop;
 }
 
@@ -500,6 +504,9 @@ SPDesktop* LineaApplication::createDesktop(SPDocument* document, bool replace, b
         desktop = desktopOpen(document, new_window);
     }
 
+    if (desktop) {
+        desktop->getNamedView()->set_clip_to_page(desktop, desktop->getNamedView()->clip_to_page);
+    }
     return desktop;
 }
 
