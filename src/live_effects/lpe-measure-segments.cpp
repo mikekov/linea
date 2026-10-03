@@ -353,6 +353,11 @@ LPEMeasureSegments::createTextLabel(Geom::Point &pos, size_t counter, double len
     Inkscape::XML::Node *rstring = nullptr;
     elemref = document->getObjectById(id.c_str());
     if (elemref) {
+        if (!is<SPText>(elemref)) {
+            // This is no longer a text object, probably converted to path on export.
+            // Don't try to update it!
+            return;
+        }
         rtext = elemref->getRepr();
         rtext->setAttributeSvgDouble("x", pos[Geom::X]);
         rtext->setAttributeSvgDouble("y", pos[Geom::Y]);
