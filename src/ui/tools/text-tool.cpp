@@ -237,6 +237,13 @@ void TextTool::_setupText()
     /* Create <tspan> */
     Inkscape::XML::Node *rtspan = xml_doc->createElement("svg:tspan");
     rtspan->setAttribute("sodipodi:role", "line"); // otherwise, why bother creating the tspan?
+    // CSS property "vector-effect" doesn't inherit, so add it to <tspan> if part of the applied style.
+    auto css = sp_repr_css_attr(rtext, "style");
+    if (sp_repr_css_property(css, Glib::ustring("-inkscape-stroke"), Glib::ustring()) == "hairline" &&
+        sp_repr_css_property(css, Glib::ustring("vector-effect"), Glib::ustring()) == "non-scaling-stroke") {
+        rtspan->setAttribute("style", "vector-effect:non-scaling-stroke;-inkscape-stroke:hairline");
+    }
+    sp_repr_css_attr_unref(css);
     rtext->addChild(rtspan, nullptr);
     Inkscape::GC::release(rtspan);
 
