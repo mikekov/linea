@@ -14,6 +14,7 @@
 #include <QVBoxLayout>
 #include <cmath>
 #include <functional>
+#include <sstream>
 #include <glibmm/i18n.h>
 
 #include "desktop.h"
@@ -88,6 +89,10 @@ void add_filter_to_item(SPItem* item, Filters::FilterPrimitiveType type) {
     }
 
     auto filter = new_filter(item->document);
+    auto count = item->document->getResourceList("filter").size();
+    std::ostringstream os;
+    os << _("filter") << count;
+    filter->setLabel(os.str().c_str());
     filter_add_primitive(filter, type);
     sp_style_set_property_url(item, "filter", filter, false);
     item->updateRepr(SP_OBJECT_MODIFIED_FLAG | SP_OBJECT_STYLE_MODIFIED_FLAG);
