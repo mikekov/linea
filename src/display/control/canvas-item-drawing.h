@@ -18,12 +18,15 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <sigc++/signal.h>
+#include <sigc++/scoped_connection.h>
 #include <cairomm/refptr.h>
 #include <cairomm/region.h>
 #include <cairomm/surface.h>
 
 #include "canvas-item.h"
+#include "preferences.h"
 
 namespace Inkscape {
 
@@ -43,8 +46,8 @@ public:
     Inkscape::Drawing *get_drawing() { return _drawing.get(); }
 
     // Drawing items
-    void set_active(Inkscape::DrawingItem *active) { _active_item = active; }
-    Inkscape::DrawingItem *get_active() { return _active_item; }
+    void set_active(Inkscape::DrawingItem *active);
+    Inkscape::DrawingItem *get_active() { return _active_item ? _active_item->second : nullptr; }
 
     // Events
     bool handle_event(CanvasEvent const &event) override;
@@ -65,6 +68,7 @@ public:
         return _drawing_event_signal.connect(slot);
     }
 
+    void setCursorTolerance(double tol) { _cursor_tolerance = tol; }
 protected:
     ~CanvasItemDrawing() override;
 
@@ -74,8 +78,7 @@ protected:
     // Selection
     Geom::Point _c;
     double _delta = Geom::infinity();
-    Inkscape::DrawingItem *_active_item = nullptr;
-    Inkscape::DrawingItem *_picked_item = nullptr;
+    std::optional<std::pair<unsigned, Inkscape::DrawingItem *>> _active_item;
 
     // Display
     std::unique_ptr<Inkscape::Drawing> _drawing;
@@ -98,6 +101,17 @@ protected:
 
     // Signals
     sigc::signal<bool(CanvasEvent const &, Inkscape::DrawingItem *)> _drawing_event_signal;
+
+    // Prefs
+    void _loadPrefs();
+    std::unique_ptr<Preferences::PreferencesObserver> _pref_tracker;
+    double _cursor_tolerance = 1.0;
+private:
+    unsigned get_flags() const;
+
+    sigc::scoped_connection _drawing_updated_connection;
+    sigc::scoped_connection _redraw_area_connection;
+    sigc::scoped_connection _active_item_deleted;
 };
 
 } // namespace Inkscape

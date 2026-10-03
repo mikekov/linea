@@ -11,6 +11,8 @@
 #ifndef LINEA_DESKTOP_H
 #define LINEA_DESKTOP_H
 
+#include <deque>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -59,6 +61,7 @@ struct StopOnNonZero {
 
 // Forward declarations (global namespace)
 class SPDocument;
+class SPGroup;
 class SPItem;
 class SPRoot;
 class SPNamedView;
@@ -597,6 +600,8 @@ private:
     // Using sigc++ connections
     sigc::connection _reconstructionStartConn;
     sigc::connection _reconstructionFinishConn;
+    sigc::connection _document_modified_conn;
+    sigc::connection _document_object_bound_conn;
 
     // Signals (for compatibility with SPDesktop interface)
     sigc::signal<void (SPDesktop*)> _destroy_signal;
@@ -621,6 +626,15 @@ private:
     void reconstruction_start();
     void reconstruction_finish();
     void handle_y_axis_flip(double yshift);
+
+    std::deque<SPItem*> const &get_flat_item_list(bool into_groups, bool active_only) const;
+    SPItem *_getItemFromListAtPointBottom(SPGroup *group, std::vector<SPItem*> const &list, Geom::Point const &p) const;
+    std::vector<SPItem*> find_items_at_point(std::deque<SPItem*> const &nodes, Geom::Point const &p, int items_count = 0, SPItem *upto = nullptr) const;
+    SPItem *find_item_at_point(std::deque<SPItem*> const &nodes, Geom::Point const &p, SPItem *upto = nullptr) const;
+    SPItem *find_group_at_point(SPGroup *group, Geom::Point const &p) const;
+
+    // Find items by geometry --------------------
+    mutable std::map<unsigned long, std::deque<SPItem*>> _node_cache; // Used to speed up search.
 
     sigc::signal<void (StyleChangeArgs&)> _signal_style_changed;
     sigc::signal<void (SPCSSAttr*)> _signal_desktop_style_changed;
@@ -656,6 +670,8 @@ public:
     template <typename F> sigc::connection connectDesktopStyleChanged(F&& slot) {
         return _signal_desktop_style_changed.connect(std::forward<F>(slot));
     }
+
+    void clearNodeCache() { _node_cache.clear(); }
     void fireDesktopStyleChanged();
 };
 

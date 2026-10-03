@@ -1955,11 +1955,15 @@ CanvasItem *CanvasPrivate::find_item_at(Geom::Point pt)
         pt *= q->_affine.inverse() * canvasitem_ctx->affine();
     }
 
-    if (!q->_drawing || !q->_drawing->getCanvasItemDrawing()) {
+    if (!q->_drawing) {
         return nullptr;
     }
 
-    q->_drawing->getCanvasItemDrawing()->set_pick_outline(outline);
+    if (auto desktop = q->get_desktop()) {
+        if (auto cid = desktop->getCanvasDrawing()) {
+            cid->set_pick_outline(outline);
+        }
+    }
     auto result = canvasitem_ctx->root()->pick_item(pt);
     return result;
 }

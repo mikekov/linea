@@ -19,32 +19,30 @@
 #include <2geom/rect.h>
 #include <2geom/pathvector.h>
 #include <sigc++/sigc++.h>
+#include <sigc++/signal.h>
 
 #include "colors/color.h"
 #include "display/drawing-item.h"
 #include "display/rendermode.h"
 #include "nr-filter-colormatrix.h"
-#include "preferences.h"
 #include "util/snapshot-context.h"
 
 namespace Inkscape {
 
 class DrawingItem;
-class CanvasItemDrawing;
 class DrawingContext;
 
 class Drawing
     : public Util::SnapshotContext<DrawingItem>
 {
 public:
-    Drawing(CanvasItemDrawing *drawing = nullptr);
+    Drawing();
     Drawing(Drawing const &) = delete;
     Drawing &operator=(Drawing const &) = delete;
     ~Drawing();
 
     void setRoot(DrawingItem *root);
     DrawingItem *root() { return _root; }
-    CanvasItemDrawing *getCanvasItemDrawing() { return _canvas_item_drawing; }
 
     void setRenderMode(RenderMode);
     void setColorMode(ColorMode);
@@ -58,13 +56,13 @@ public:
     void setFilterQuality(int);
     void setBlurQuality(int);
     void setDithering(bool);
-    void setCursorTolerance(double tol) { _cursor_tolerance = tol; }
     void setCanvasScale(double scale) { _canvas_scale = scale; }
     void setSelectZeroOpacity(bool select_zero_opacity) { _select_zero_opacity = select_zero_opacity; }
     void setCacheBudget(size_t bytes);
     void setCacheLimit(Geom::OptIntRect const &rect);
     void setClip(std::optional<Geom::PathVector> &&clip);
     void setAntialiasingOverride(std::optional<Antialiasing> antialiasing_override);
+    void setNumDispatchThreads(int num);
 
     RenderMode renderMode() const { return _rendermode; }
     ColorMode colorMode() const { return _colormode; }
@@ -78,7 +76,6 @@ public:
     int filterQuality() const { return _filter_quality; }
     int blurQuality() const { return _blur_quality; }
     bool useDithering() const { return _use_dithering; }
-    double cursorTolerance() const { return _cursor_tolerance; }
     double canvasScale() const { return _canvas_scale; }
     bool selectZeroOpacity() const { return _select_zero_opacity; }
     Geom::OptIntRect const &cacheLimit() const { return _cache_limit; }
@@ -86,7 +83,7 @@ public:
     void update(Geom::IntRect const &area = Geom::IntRect::infinite(), Geom::Affine const &affine = Geom::identity(),
                 unsigned flags = DrawingItem::STATE_ALL, unsigned reset = 0);
     void render(DrawingContext &dc, Geom::IntRect const &area, unsigned flags = 0) const;
-    DrawingItem *pick(Geom::Point const &p, double delta, unsigned flags);
+    DrawingItem *pick(Geom::Point const &p, double delta, Geom::OptIntRect const &area_world, unsigned flags);
 
     // Convenience
     Colors::Color averageColor(Geom::IntRect const &area) const;
@@ -94,14 +91,15 @@ public:
     void setExact();
     void setOpacity(double opacity = 1.0);
 
+    sigc::connection connectDrawingUpdated(sigc::slot<void ()> const &slot) { return _drawing_updated_signal.connect(slot); }
+    sigc::connection connectRedrewArea(sigc::slot<void (Geom::IntRect)> const &slot) { return _redraw_area_signal.connect(slot); }
+    sigc::connection connectItemDeleted(sigc::slot<void (unsigned)> const &slot) { return _item_deleted_signal.connect(slot); }
+
 private:
     void _pickItemsForCaching();
     void _clearCache();
-    void _loadPrefs();
 
     DrawingItem *_root = nullptr;
-    CanvasItemDrawing *_canvas_item_drawing = nullptr;
-    std::unique_ptr<Preferences::PreferencesObserver> _pref_tracker;
 
     RenderMode _rendermode = RenderMode::NORMAL;
     ColorMode _colormode = ColorMode::NORMAL;
@@ -111,20 +109,23 @@ private:
     Colors::Color _clip_outline_color;
     Colors::Color _mask_outline_color;
     Colors::Color _image_outline_color;
-    bool _image_outline_mode; ///< Always draw images as images, even in outline mode.
-    int _filter_quality;
-    int _blur_quality;
-    bool _use_dithering;
-    double _cursor_tolerance;
+    bool _image_outline_mode = false; ///< Always draw images as images, even in outline mode.
+    int _filter_quality = 0;
+    int _blur_quality = 0;
+    bool _use_dithering = true;
     double _canvas_scale = 1.0; ///< Scale from canvas coordinates to drawing coordinates (pixel preview).
-    size_t _cache_budget; ///< Maximum allowed size of cache.
+    size_t _cache_budget = 0; ///< Maximum allowed size of cache.
     Geom::OptIntRect _cache_limit;
     std::optional<Geom::PathVector> _clip;
-    bool _select_zero_opacity;
+    bool _select_zero_opacity = false;
     std::optional<Antialiasing> _antialiasing_override;
 
     std::set<DrawingItem*> _cached_items; // modified by DrawingItem::_setCached()
     CacheSet _candidate_items;           // keep this list always sorted with std::greater
+
+    sigc::signal<void()> _drawing_updated_signal;
+    sigc::signal<void(Geom::IntRect)> _redraw_area_signal;
+    sigc::signal<void(unsigned)> _item_deleted_signal;
 
     friend class DrawingItem;
 };

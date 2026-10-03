@@ -132,14 +132,7 @@ DrawingItem::DrawingItem(Drawing &drawing)
 
 DrawingItem::~DrawingItem()
 {
-    // Unactivate if active.
-    if (auto itemdrawing = _drawing.getCanvasItemDrawing()) {
-        if (itemdrawing->get_active() == this) {
-            itemdrawing->set_active(nullptr);
-        }
-    } else {
-        // Typically happens, e.g. for any non-Canvas Drawing.
-    }
+    _drawing._item_deleted_signal.emit(_key);
 
     // Remove caching candidate entry.
     if (_has_cache_iterator) {
@@ -1073,7 +1066,7 @@ void DrawingItem::clip(DrawingContext &dc, Inkscape::RenderContext &rc, Geom::In
  *               When false, only visible and sensitive objects are considered.
  *               When true, invisible and insensitive objects can also be picked.
  */
-DrawingItem *DrawingItem::pick(Geom::Point const &p, double delta, unsigned flags)
+DrawingItem *DrawingItem::pick(Geom::Point const &p, double delta, Geom::OptIntRect const &area_world, unsigned flags)
 {
     // Sometimes there's no BBOX in state, reason unknown (bug 992817)
     // I made this not an assert to remove the warning
@@ -1091,14 +1084,14 @@ DrawingItem *DrawingItem::pick(Geom::Point const &p, double delta, unsigned flag
     if (!outline) {
         // pick inside clipping path; if NULL, it means the object is clipped away there
         if (_clip) {
-            DrawingItem *cpick = _clip->pick(p, delta, flags | PICK_AS_CLIP);
+            DrawingItem *cpick = _clip->pick(p, delta, area_world, flags | PICK_AS_CLIP);
             if (!cpick) {
                 return nullptr;
             }
         }
         // same for mask
         if (_mask) {
-            DrawingItem *mpick = _mask->pick(p, delta, flags);
+            DrawingItem *mpick = _mask->pick(p, delta, area_world, flags);
             if (!mpick) {
                 return nullptr;
             }
@@ -1118,7 +1111,7 @@ DrawingItem *DrawingItem::pick(Geom::Point const &p, double delta, unsigned flag
     }
 
     if (expanded.contains(p)) {
-        return _pickItem(p, delta, flags);
+        return _pickItem(p, delta, area_world, flags);
     }
     return nullptr;
 }
@@ -1198,9 +1191,7 @@ void DrawingItem::_markForRendering()
         bkg_root->_invalidateFilterBackground(*dirty);
     }
 
-    if (auto canvasitem = drawing().getCanvasItemDrawing()) {
-        canvasitem->redraw_drawing_area(*dirty);
-    }
+    _drawing._redraw_area_signal.emit(*dirty);
 }
 
 void DrawingItem::_invalidateFilterBackground(Geom::IntRect const &area)
@@ -1248,11 +1239,7 @@ void DrawingItem::_markForUpdate(unsigned flags, bool propagate)
             // up to the root. Do not bother recursing, because it won't change anything.
             // Also do this if we are the root item, because we have no more ancestors
             // to invalidate.
-            if (drawing().getCanvasItemDrawing()) {
-                drawing().getCanvasItemDrawing()->request_update();
-            } else {
-                // Typically happens, e.g. for any non-Canvas Drawing.
-            }
+            _drawing._drawing_updated_signal.emit();
         }
     }
 }

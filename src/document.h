@@ -193,9 +193,6 @@ private:
 
     std::queue<GQuark> pending_resource_changes;
 
-    // Find items by geometry --------------------
-    std::deque<SPItem*> const &get_flat_item_list(unsigned int dkey, bool into_groups, bool active_only) const;
-
     SPDocument *_searchForChild(std::string const &filename, SPDocument const *avoid = nullptr);
     /** Detect Y-axis orientation change.
      * \return true if change has been detected */
@@ -205,7 +202,6 @@ private:
     double update_desktop_affine();
 
 public:
-    void clearNodeCache() { _node_cache.clear(); }
     void importDefs(SPDocument *source);
 
     unsigned int vacuumDocument();
@@ -348,14 +344,6 @@ public:
 
     std::vector<SPItem*> getItemsInBox         (unsigned int dkey, Geom::Rect const &box, bool take_hidden = false, bool take_insensitive = false, bool take_groups = true, bool enter_groups = false, bool enter_layers = true) const;
     std::vector<SPItem*> getItemsPartiallyInBox(unsigned int dkey, Geom::Rect const &box, bool take_hidden = false, bool take_insensitive = false, bool take_groups = true, bool enter_groups = false, bool enter_layers = true) const;
-    SPItem *getItemAtPoint(unsigned int key, Geom::Point const &p, bool into_groups, SPItem *upto = nullptr) const;
-    std::vector<SPItem*> getItemsAtPoints(unsigned const key, std::vector<Geom::Point> points, bool all_layers = true, bool topmost_only = true, size_t limit = 0, bool active_only = true) const;
-    SPItem *getGroupAtPoint(unsigned int key,  Geom::Point const &p) const;
-
-    /**
-     * Returns the bottommost item from the list which is at the point, or NULL if none.
-     */
-    static SPItem *getItemFromListAtPointBottom(unsigned int dkey, SPGroup *group, const std::vector<SPItem*> &list, Geom::Point const &p, bool take_insensitive = false);
 
 
     // Box tool -------------------------------
@@ -444,9 +432,6 @@ private:
     std::map<std::string, SPObject *> iddef;
     std::map<Inkscape::XML::Node *, SPObject *> reprdef;
 
-    // Find items by geometry --------------------
-    mutable std::map<unsigned long, std::deque<SPItem*>> _node_cache; // Used to speed up search.
-
     // Box tool ----------------------------
     Persp3D *current_persp3d; /**< Currently 'active' perspective (to which, e.g., newly created boxes are attached) */
     Persp3DImpl *current_persp3d_impl;
@@ -485,6 +470,7 @@ private:
     using IDChangedSignal = sigc::signal<void (SPObject *)>;
     using ResourcesChangedSignal = sigc::signal<void ()>;
     using ModifiedSignal = sigc::signal<void (unsigned)>;
+    using ObjectBoundSignal = sigc::signal<void ()>;
     using FilenameSetSignal = sigc::signal<void (char const *)> ;
     using ResizedSignal = sigc::signal<void (double, double)>;
     using ReconstructionStart = sigc::signal<void ()>;
@@ -499,6 +485,7 @@ private:
     IDChangedSignalMap id_changed_signals;
 
     SPDocument::ModifiedSignal modified_signal;
+    SPDocument::ObjectBoundSignal object_bound_signal;
     SPDocument::FilenameSetSignal filename_set_signal;
     SPDocument::ReconstructionStart _reconstruction_start_signal;
     SPDocument::ReconstructionFinish  _reconstruction_finish_signal;
@@ -520,6 +507,7 @@ public:
 
     sigc::connection connectDestroy(sigc::signal<void ()>::slot_type slot);
     sigc::connection connectModified(ModifiedSignal::slot_type slot);
+    sigc::connection connectObjectBound(ObjectBoundSignal::slot_type slot);
     sigc::connection connectFilenameSet(FilenameSetSignal::slot_type slot);
     sigc::connection connectCommit(CommitSignal::slot_type slot);
     sigc::connection connectBeforeCommit(BeforeCommitSignal::slot_type slot);
