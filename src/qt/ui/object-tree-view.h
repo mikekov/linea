@@ -136,6 +136,9 @@ private:
     void onCollapsed(const QModelIndex& index);
     void emitSelectionSignals(Qt::KeyboardModifiers modifiers = Qt::NoModifier,
                               bool reselected = false);
+    // Deselects virtual nodes when the selection holds more than one row.
+    // Returns true if anything was deselected.
+    bool pruneVirtualSelection();
 
     SPDesktop* _desktop = nullptr;
     ObjectTreeModel* _model = nullptr;
@@ -162,6 +165,10 @@ private:
     // the "begin" and "end" sides of a structural change arrive as two
     // separate signal-handler invocations
     int _modelMutationDepth = 0;
+
+    // Guards pruneVirtualSelection's deselect against recursive entry via
+    // selectionChanged → emitSelectionSignals.
+    OperationBlocker _pruningVirtuals;
 
     // Icon cell (visibility/lock) currently under the cursor; the delegate
     // repaints its icon once more to brighten it as hover confirmation.

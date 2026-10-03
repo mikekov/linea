@@ -997,7 +997,9 @@ QVariant ObjectTreeModel::data(const QModelIndex& index, int role) const {
             case Qt::DisplayRole:
             case Qt::EditRole:
             case PlainTextRole:
-                return item->label();
+                // Only the label column has text; on the icon columns the
+                // label would elide to "..." in place of an absent icon.
+                return col == ColumnLabel ? QVariant(item->label()) : QVariant();
             case VirtualTypeRole:
                 return static_cast<int>(vtype);
             case IsLayerRole:

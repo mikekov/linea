@@ -381,35 +381,37 @@ void ObjectTreeView::mousePressEvent(QMouseEvent* event) {
             const int col = index.column();
             auto vtype = static_cast<VirtualNodeType>(index.data(ObjectTreeModel::VirtualTypeRole).toInt());
 
+            // A null state role means the icon doesn't apply in this cell;
+            // fall through so the click selects the row like a label click.
             if (col == ObjectTreeModel::ColumnVisible) {
                 auto hidden = index.data(ObjectTreeModel::IsHiddenRole);
-                if (hidden.isNull()) return;
-
-                bool isHidden = hidden.toBool();
-                if (vtype == VirtualNodeType::None) {
-                    if (auto obj = _model->objectForIndex(index)) {
-                        Q_EMIT objectVisibilityRequested(obj, !isHidden);
+                if (!hidden.isNull()) {
+                    bool isHidden = hidden.toBool();
+                    if (vtype == VirtualNodeType::None) {
+                        if (auto obj = _model->objectForIndex(index)) {
+                            Q_EMIT objectVisibilityRequested(obj, !isHidden);
+                        }
+                    } else {
+                        Q_EMIT virtualNodeVisibilityRequested(vtype, !isHidden);
                     }
-                } else {
-                    Q_EMIT virtualNodeVisibilityRequested(vtype, !isHidden);
+                    viewport()->update();
+                    return;
                 }
-                viewport()->update();
-                return;
             }
             if (col == ObjectTreeModel::ColumnLocked) {
                 auto locked = index.data(ObjectTreeModel::IsLockedRole);
-                if (locked.isNull()) return;
-
-                bool isLocked = locked.toBool();
-                if (vtype == VirtualNodeType::None) {
-                    if (auto obj = _model->objectForIndex(index)) {
-                        Q_EMIT objectLockRequested(obj, !isLocked);
+                if (!locked.isNull()) {
+                    bool isLocked = locked.toBool();
+                    if (vtype == VirtualNodeType::None) {
+                        if (auto obj = _model->objectForIndex(index)) {
+                            Q_EMIT objectLockRequested(obj, !isLocked);
+                        }
+                    } else {
+                        Q_EMIT virtualNodeLockRequested(vtype, !isLocked);
                     }
-                } else {
-                    Q_EMIT virtualNodeLockRequested(vtype, !isLocked);
+                    viewport()->update();
+                    return;
                 }
-                viewport()->update();
-                return;
             }
 
         }
@@ -617,7 +619,36 @@ void ObjectTreeView::selectionChanged(const QItemSelection& selected, const QIte
     emitSelectionSignals();
 }
 
+bool ObjectTreeView::pruneVirtualSelection() {
+    auto rows = selectionModel()->selectedRows();
+    if (rows.size() <= 1) return false;
+
+    QItemSelection virtualRows;
+    for (const auto& idx : rows) {
+        if (idx.data(ObjectTreeModel::VirtualTypeRole).toInt() !=
+            static_cast<int>(VirtualNodeType::None)) {
+            virtualRows.select(idx, idx);
+        }
+    }
+    if (virtualRows.isEmpty()) return false;
+
+    auto guard = _pruningVirtuals.block();
+    selectionModel()->select(virtualRows,
+                             QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
+    return true;
+}
+
 void ObjectTreeView::emitSelectionSignals(Qt::KeyboardModifiers modifiers, bool reselected) {
+    // Virtual nodes (DocumentProps, Guides, Grids, ...) may be selected
+    // singly but are never part of a multi-selection: drag-select, range
+    // select and Select All sweep them in, so strip them before emitting.
+    // Outside an input event the deselect re-triggers selectionChanged,
+    // which re-enters here and emits with the pruned selection — return
+    // early to avoid a duplicate signal.
+    if (!_pruningVirtuals.pending() && pruneVirtualSelection() && !_inputEvent.pending()) {
+        return;
+    }
+
     // Check if a single virtual node is selected
     auto selectedRows = selectionModel()->selectedRows();
     if (selectedRows.size() == 1) {
