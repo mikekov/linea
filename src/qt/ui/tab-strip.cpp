@@ -27,6 +27,7 @@
 #include <QHelpEvent>
 #include <QToolButton>
 #include <QToolTip>
+#include <QWheelEvent>
 #include <algorithm>
 #include <cassert>
 
@@ -1085,6 +1086,27 @@ void TabStrip::mouseMoveEvent(QMouseEvent* event) {
         Q_EMIT dndBegin();
     }
     _updateDragDrop(pos);
+}
+
+void TabStrip::wheelEvent(QWheelEvent* event) {
+    // Scroll wheel cycles tabs: up/right = previous, down/left = next,
+    // clamped at both ends (matching the GTK tabs widget — no wraparound).
+    // Use the dominant axis so trackpad horizontal swipes work too.
+    const QPoint delta = event->angleDelta();
+    const int d = std::abs(delta.y()) >= std::abs(delta.x()) ? delta.y() : delta.x();
+    if (d == 0 || !_activeTab || _drag) {
+        QWidget::wheelEvent(event);
+        return;
+    }
+    event->accept();
+
+    const int current = getTabPosition(*_activeTab);
+    const int next = current + (d > 0 ? -1 : 1);
+    if (next < 0 || next >= static_cast<int>(_tabs.size())) return;
+
+    // Routed through the same signal as clicks so the caller performs a full
+    // tab switch (cf. GTK a36ce392bf: switching the tab without the desktop).
+    Q_EMIT tabSelectRequested(_tabs[next].get());
 }
 
 void TabStrip::leaveEvent(QEvent*) {

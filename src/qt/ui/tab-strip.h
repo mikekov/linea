@@ -25,6 +25,7 @@ QT_BEGIN_NAMESPACE
 class QMenu;
 class QToolButton;
 class QMimeData;
+class QWheelEvent;
 QT_END_NAMESPACE
 
 namespace Linea::UI {
@@ -169,6 +170,7 @@ protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
     void leaveEvent(QEvent* event) override;
     bool event(QEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
