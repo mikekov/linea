@@ -34,8 +34,8 @@ x closing the last doc may leave left panel expanded, if there was a seleciton a
 - implement add/remove scripts, read them from local files
 - undo/redo is buggy
 x open path first/last point to use triangle handle
-- text panel - add text edit popup with simple editor and search
-- font selector - add header with sorting, filtering, search bar
+x text panel - add text edit popup with simple editor and search
+x font selector - add header with sorting, filtering, search bar
 - add color fonts entry in a font browser categories
 - add support for color fonts
 

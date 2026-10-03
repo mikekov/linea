@@ -153,6 +153,7 @@ FilterWidget::FilterWidget(QWidget* parent)
     _ui->removeButton->setVisible(false);
 
     connect(_ui->galleryButton, &QPushButton::clicked, this, &FilterWidget::onGalleryButtonClicked);
+    connect(_ui->editorButton, &QPushButton::clicked, this, &FilterWidget::onEditorButtonClicked);
     connect(_ui->addButton, &QPushButton::clicked, this, &FilterWidget::onAddButtonClicked);
     connect(_ui->removeButton, &QPushButton::clicked, this, &FilterWidget::removeCurrentFilter);
     connect(_ui->filterButton, &QPushButton::clicked, this, &FilterWidget::onEditorButtonClicked);
@@ -282,7 +283,8 @@ void FilterWidget::onEditorButtonClicked() {
     }
 
     _filterEditor->setDesktop(_desktop);
-    _editorPopup->showLeftOfWidget(_ui->filterButton);
+    auto anchor = qobject_cast<QPushButton*>(sender());
+    _editorPopup->showLeftOfWidget(anchor ? anchor : _ui->editorButton);
 }
 
 void FilterWidget::onAddButtonClicked() {
