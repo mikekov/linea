@@ -192,7 +192,16 @@ void NodeSatelliteArrayParam::param_transform_multiply(Geom::Affine const &postm
 void NodeSatelliteArrayParam::addKnotHolderEntities(KnotHolder *knotholder, SPItem *item, bool mirror)
 {
     if (!_last_pathvector_nodesatellites) {
-        return;
+        // Satellite positions are computed in doEffect, which may not have
+        // run yet: the repr 'd' already stores the effected output, so
+        // nothing else forces an update. Without it the LPE knots only
+        // appear on the second selection of the item.
+        if (auto lpeitem = cast<SPLPEItem>(item)) {
+            sp_lpe_item_update_patheffect(lpeitem, false, false);
+        }
+        if (!_last_pathvector_nodesatellites) {
+            return;
+        }
     }
     size_t index = 0;
     for (size_t i = 0; i < _vector.size(); ++i) {
