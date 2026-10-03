@@ -50,6 +50,7 @@ x obj to bitmap command
 x add obj tree panel toolbar
 x obj tree add context menu
 - settings dlg
+- shortcut customization in settings
 - dedicated layer edit panel
 x add layer selector above/below obj tree view
 - add missing panels for spiral props, path props, etc.
@@ -62,7 +63,7 @@ x add layer selector above/below obj tree view
 - tabstrip port sucks - make tabitems draw themselves and style them
 x list individual pages in object tree view, add export option to them?
 x add export strip in obj properties?
-- add btn to round up coordinates of position
+- add btn to round up coordinates of position and wire it up
 x add notification bar for showing errors
 x add a way to show notifications?
 - handle old checkerboard attribute to set page color transparency
@@ -110,6 +111,7 @@ x add a way to show notifications?
 - add missing shortcuts to linea.xml
 - fix kbd focus setting, esc back to canvas, etc.
 - Esc in number edit clears it instead of dismissing focus
+- Cmd+A in a editing widget should select text, Cmd C/V - copy and paste
 - allow multiple shortcuts per action (when editing)
 
 ## Items, Objects & Extensions
@@ -125,14 +127,14 @@ x marker transparency, direction, etc not reflected in preview
 - click on marker clear when none is assigned, and the list of markers disappears
 - 'corners' lpe in rect panel doesn't work
 - triangle knot is not pixel aligned (the one used in 'corners' lpe)
-- LPEs - add flatten, show/hide?
+x LPEs - add flatten, show/hide?
 
 ## Fonts & Text
 
 - add font collections, font filtering, sorting, etc
-- sorting and filtering can be added to the font list popup
+x sorting and filtering can be added to the font list popup
 - fix text panel underline options
-- connect font list popup to a combo, sync font selection
+x connect font list popup to a combo, sync font selection
 
 ## Canvas & Rendering
 

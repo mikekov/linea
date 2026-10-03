@@ -814,26 +814,21 @@ SPDocument *SPDocument::_searchForChild(std::string const &filename, SPDocument 
 }
 
 void SPDocument::update_lpobjs() {
-    //TODO: Kill this fucking crap in undo cycle;
-    // used to rebuild lpes on undo and corrupt undo state
-    // rebuilding lpes modifies document
-
     // write=false: don't write LPE output back to 'd' — after undo/redo the
     // XML already has the correct 'd'. We only need to regenerate in-memory
     // state (curves, clip/mask, satellites). Some LPEs still write satellite
-    // positions in doBeforeEffect; discard those writes so they don't leak
-    // into the caller's transaction.
+    // positions in doBeforeEffect; those writes are derived data and must not
+    // enter undo history.
     //
-    // Commit the caller's transaction (folding its log into partial), do LPE
-    // work in a fresh transaction, discard it, then start a new transaction so
-    // the caller still has one active.
+    // Rebuild writes run untransacted — mutations outside a transaction are
+    // never logged (same mechanism sp_repr_undo_log relies on). Committing the
+    // caller's transaction into partial preserves the "one transaction open"
+    // invariant and keeps its content queued for the next maybeDone.
 
     if (rdoc->inTransaction()) {
         partial = sp_repr_coalesce_log(partial, sp_repr_commit_undoable(rdoc));
     }
-    sp_repr_begin_transaction(rdoc);
     sp_lpe_item_update_patheffect(getRoot(), false, false, true);
-    sp_repr_free_log(sp_repr_commit_undoable(rdoc));
     sp_repr_begin_transaction(rdoc);
 }
 

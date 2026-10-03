@@ -140,7 +140,10 @@ protected:
 
     // Display
     bool _visible = true;
-    bool _net_visible = true;
+    // False until the item's first update() paints it: a fresh item is not
+    // net-visible yet, so its first computed bounds trigger request_redraw()
+    // via the "reappearing" path.
+    bool _net_visible = false;
     virtual void _render(Inkscape::CanvasItemBuffer &buf) const = 0;
 
     // Selection
