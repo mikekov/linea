@@ -71,6 +71,15 @@ void VirtualTreeList::setItemCount(int count) {
     _totalItemCount = count;
     _expandedRows.clear();
     _firstVisibleItem = ItemIndex(0);
+    _hoveredItem = ItemIndex();
+    _hoveredExpander = ItemIndex();
+    _pressedExpander = ItemIndex();
+    if (_selectedItem.isValid()) {
+        int top = _selectedItem.isSubitem() ? _selectedItem.parentIndex : _selectedItem.itemIndex;
+        if (top >= count) {
+            _selectedItem = ItemIndex();
+        }
+    }
     invalidateLayout();
     updateLayout();
     updateScrollBar();
@@ -335,9 +344,10 @@ void VirtualTreeList::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
-    // Check for alphanumeric input
+    // Check for alphanumeric input; isPrint() keeps space but excludes control
+    // keys like Return, whose text ("\r") would pass an isSpace() check
     QString text = event->text();
-    if (!text.isEmpty() && (text[0].isLetterOrNumber() || text[0].isSpace())) {
+    if (!text.isEmpty() && text[0].isPrint()) {
         _alphanumericBuffer += text;
         _typingTimer->start();
         Q_EMIT alphanumericInput(_alphanumericBuffer);
@@ -528,11 +538,11 @@ void VirtualTreeList::leaveEvent(QEvent* event) {
 }
 
 void VirtualTreeList::updateLayout() {
+    _layout.clear();
+    _layoutValid = true;
     if (!_topItemCount) return;
 
     // build layout for visible rows
-
-    _layout.clear();
     int viewportHeight = height();
     int y = 0;
     ItemIndex index = _firstVisibleItem;
@@ -551,7 +561,11 @@ void VirtualTreeList::updateLayout() {
 }
 
 void VirtualTreeList::updateScrollBar() {
-    if (!_topItemCount) return;
+    if (!_topItemCount) {
+        _scrollBar->setRange(0, 0);
+        _scrollBar->setValue(0);
+        return;
+    }
 
     int pageStep = 0;
     int viewportHeight = height();

@@ -28,15 +28,59 @@
       </property>
 
       <!-- Heading -->
-      <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="textHeader">
-          <property name="text">
-            <string>Text characters</string>
+      <item row="0" column="0" colspan="3">
+        <layout class="QHBoxLayout" name="textHeaderLayout">
+          <property name="spacing">
+            <number>4</number>
           </property>
-          <property name="class" stdset="0">
-            <string>panel-heading</string>
-          </property>
-        </widget>
+          <item>
+            <widget class="QLabel" name="textHeader">
+              <property name="text">
+                <string>Text characters</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>panel-heading</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="textHeaderSpacer">
+              <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+                <size>
+                  <width>0</width>
+                  <height>0</height>
+                </size>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <widget class="QPushButton" name="charViewerBtn">
+              <property name="toolTip">
+                <string>Character viewer</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/charmap</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="editorBtn">
+              <property name="toolTip">
+                <string>Text editor</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/text-input</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+        </layout>
       </item>
 
       <!-- Font family -->

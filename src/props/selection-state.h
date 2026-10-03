@@ -76,8 +76,10 @@ struct Counts {
     int images = 0;
     int textual = 0;
     int flowtext = 0;
+    int shape_inside = 0; // text flowed into a shape (shape-inside): kerning unsupported
     tools_enum activeTool = TOOLS_INVALID;
     bool text_tool_active = false;       // text tool is the current tool
+    bool text_editing = false;           // text tool has a placed caret (an editable text)
     bool has_text_subselection = false;  // text tool has an active span subselection
     bool operator == (const Counts&) const = default;
 };

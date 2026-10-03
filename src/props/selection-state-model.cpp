@@ -74,6 +74,12 @@ void SelectionStateModel::rebuildNow() {
     next.element.count.has_text_subselection = forEachLeafItem([&next](SPObject* item) { merge_item(next, item); });
     next.element.count.activeTool = _activeTool;
     next.element.count.text_tool_active = (_activeTool == TOOLS_TEXT);
+    if (next.element.count.text_tool_active) {
+        // A placed caret means the tool is editing a text (textItem() is null
+        // for a nascent object with no text typed yet).
+        auto tool = dynamic_cast<Inkscape::UI::Tools::TextTool*>(_desktop->getTool());
+        next.element.count.text_editing = tool && tool->textItem() != nullptr;
+    }
 
     // Selection bounding box in px. The bbox type follows the user preference:
     // visual bounds include stroke thickness; geometric bounds do not.

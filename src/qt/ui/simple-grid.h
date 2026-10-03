@@ -136,6 +136,7 @@ private:
     bool _hasFrame = false;
     std::size_t _cellCount = 0; // requested number of cells in a grid
     int _selectedCell = -1;
+    int _pendingScroll = -1;    // cell index to scroll to once layout is valid
     // layout
     Size _colsRows;    // size of grid in columns and rows
     Size _cellPitch;   // calculated cell pitch

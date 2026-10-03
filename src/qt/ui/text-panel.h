@@ -17,6 +17,8 @@
 #include "ui/operation-blocker.h"
 #include "util/text-utils.h"
 
+class FontInstance;
+
 namespace Inkscape { struct FontInfo; }
 
 class SPDesktop;
@@ -38,8 +40,10 @@ namespace Linea::Props { class Binder; struct SelectionState; }
 
 namespace Linea::UI {
 
+class CharacterViewer;
 class DecorationOptions;
-class FontList;
+class EditorPanel;
+class FontBrowser;
 class PopupMenu;
 class UnitTracker;
 
@@ -62,10 +66,9 @@ public:
     /// Declarative binding (called by AppearancePanel after creating the Binder).
     void bind(Props::Binder& binder);
 
-    /// Call when the text tool subselection changes.
-    // void subselectionChanged(const std::vector<SPItem*>& items);
-
-    void updateTypographyState(const TypographyState& state, Inkscape::UI::Tools::TextTool* text_tool);
+    /// Push text-tool cursor state (kerning, char rotation, justify) that
+    /// cannot be expressed as bound properties.
+    void updateTypographyState(Inkscape::UI::Tools::TextTool* text_tool);
 
 private:
     void setupConnections();
@@ -75,9 +78,7 @@ private:
     void updateTypographyState();
 
     // query helpers
-    std::vector<SPItem*> getSubselection();
-    std::vector<SPItem*> getQueryItems();
-    Inkscape::UI::Tools::TextTool* getTextTool();
+    Inkscape::UI::Tools::TextTool* getTextTool() const;
 
     // font helpers
     void populateFamilies();
@@ -86,6 +87,7 @@ private:
     void syncFontStyle(const Props::SelectionState& s);
     void syncFontVariations(const Props::SelectionState& s);
     void updateFontVariants(const Glib::ustring& fontspec, const SPIFontVariationSettings* variations = nullptr);
+    void selectFontspec(const QString& fontspec);
     int findFamilyIndex(const Glib::ustring& name) const;
     int findStyleIndex(const Glib::ustring& name) const;
     const Inkscape::FontInfo* getSelectedFont() const;
@@ -93,13 +95,20 @@ private:
 
     bool canUpdate() const;
 
+    // character viewer
+    void showCharacterViewer();
+    void insertCharacters(const QString& text);
+
+    // text editor popup
+    void showTextEditor();
+    void applyEditedText();
+
     std::unique_ptr<Ui::TextPanel> _ui;
     UnitTracker* _tracker_fs = nullptr;
     UnitTracker* _tracker_lh = nullptr;
     Props::Binder* _binder = nullptr;
     SPDocument* _document = nullptr;
     SPDesktop* _desktop = nullptr;
-    SPItem* _current_item = nullptr;
 
     std::vector<std::vector<Inkscape::FontInfo>> _font_families;
     std::vector<Glib::ustring> _family_names;
@@ -111,13 +120,25 @@ private:
     int _lineheight_unit = 0;
 
     sigc::scoped_connection _font_stream;
-    // sigc::scoped_connection _cursor_moved;
+    sigc::scoped_connection _cursor_moved;
     OperationBlocker _update;
     int _variableFontsMaxHeight = 0;
     DecorationOptions* _decorationOptions = nullptr;
     PopupMenu* _decorationPopup = nullptr;
-    FontList* _fontList = nullptr;
-    PopupMenu* _fontListPopup = nullptr;
+    FontBrowser* _fontBrowser = nullptr;
+    PopupMenu* _fontBrowserPopup = nullptr;
+    CharacterViewer* _charViewer = nullptr;
+    PopupMenu* _charViewerPopup = nullptr;
+    // Keeps the viewer's font instance alive while the popup is open;
+    // CharacterViewer holds only a raw pointer to it.
+    std::shared_ptr<FontInstance> _charFont;
+
+    EditorPanel* _editor = nullptr;
+    PopupMenu* _editorPopup = nullptr;
+    // The text element loaded into the editor; tracked via connectRelease
+    // so it is dropped if the element is deleted while the popup is open.
+    SPItem* _editorItem = nullptr;
+    sigc::scoped_connection _editorItemRelease;
 };
 
 } // namespace Linea::UI

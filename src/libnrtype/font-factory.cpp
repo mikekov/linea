@@ -302,6 +302,9 @@ std::vector<Glib::RefPtr<Pango::FontFamily>> FontFactory::get_font_families() {
             std::cerr << "Ignoring font '" << name << "'" << std::endl;
             continue;
         }
+        // dot-prefixed families (.AppleSystemUIFont, ...) are platform-internal
+        // fonts not meant for documents — hide them (same as GTK font-lister)
+        if (name[0] == '.') continue;
 
         sorted.emplace_back(family);
     }

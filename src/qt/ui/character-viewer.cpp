@@ -16,6 +16,7 @@
 #include "icon-combobox.h"
 #include "popup-menu.h"
 
+#include <QColor>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QSlider>
@@ -31,6 +32,8 @@
 #include <QHelpEvent>
 #include <QToolTip>
 #include <QVBoxLayout>
+
+#include <optional>
 
 #include "preferences.h"
 #include "libnrtype/font-instance.h"
@@ -65,6 +68,7 @@ void CharacterViewer::setupUi() {
 
     // Setup range selector as IconComboBox
     static_cast<IconComboBox*>(ui->rangeSelector)->setHeaderType(IconComboBox::LabelOnly);
+    ui->rangeSelector->setFixedWidth(100);
 
     // Connect signals
     connect(ui->searchEntry, &QLineEdit::textChanged, this, &CharacterViewer::refresh);
@@ -76,15 +80,7 @@ void CharacterViewer::setupUi() {
     ui->charGrid->setFocusPolicy(Qt::StrongFocus);
 
     connect(ui->charGrid, &SimpleGrid::cellSelected, this, [this](int index) {
-        _currentCell = index;
-        if (index >= 0 && index < _characters.size()) {
-            auto [unicode, glyph_index] = _characters.at(index);
-            QString result = QString("\nU+%1\n\n%2")
-                .arg(QString::number(unicode, 16).toUpper().rightJustified(4, '0'))
-                .arg(QString::fromStdString(Util::get_unicode_name(unicode)));
-            ui->charName->setText(result);
-            ui->glyphPreview->update();
-        }
+        updateSelectedChar(index);
     });
 
     connect(ui->charGrid, &SimpleGrid::cellOpened, this, [this](int index) {
@@ -170,8 +166,10 @@ void CharacterViewer::showCharSizePopup() {
         popupContent->setMinimumWidth(180);
         auto layout = new QVBoxLayout(popupContent);
         layout->setContentsMargins(0, 0, 0, 0);
+        layout->setSpacing(4);
 
         auto label = new QLabel("Character size");
+        label->setProperty("class", "panel-label");
         layout->addWidget(label);
 
         // Value label to show current size
@@ -188,6 +186,8 @@ void CharacterViewer::showCharSizePopup() {
         auto sizeLabels = new QHBoxLayout();
         auto smallLabel = new QLabel("Small");
         auto bigLabel = new QLabel("Big");
+        smallLabel->setProperty("class", "info-text");
+        bigLabel->setProperty("class", "info-text");
         bigLabel->setAlignment(Qt::AlignRight);
         sizeLabels->addWidget(smallLabel);
         sizeLabels->addStretch();
@@ -222,28 +222,58 @@ void CharacterViewer::showCharSizePopup() {
     _charSizePopup->showBelowWidget(ui->optionsButton);
 }
 
+void CharacterViewer::updateSelectedChar(int index) {
+    _currentCell = index;
+    if (index < 0 || index >= static_cast<int>(_characters.size())) return;
+
+    auto [unicode, glyph_index] = _characters.at(index);
+    QColor dimmed = ui->charName->palette().color(QPalette::WindowText);
+    dimmed.setAlphaF(dimmed.alphaF() * 0.5);
+    QString result = QString("<br>U+%1<br><br><span style=\"color: %2\">%3</span>")
+        .arg(QString::number(unicode, 16).toUpper().rightJustified(4, '0'))
+        .arg(dimmed.name(QColor::HexArgb))
+        .arg(QString::fromStdString(Util::get_unicode_name(unicode)).toHtmlEscaped());
+    ui->charName->setText(result);
+    ui->glyphPreview->update();
+}
+
 void CharacterViewer::showCharacters(std::uint32_t from, std::uint32_t to, const QString& filter) {
+    // remember the selected character so it can be reselected after the grid is repopulated
+    std::optional<std::uint32_t> selected_char;
+    if (_currentCell >= 0 && _currentCell < static_cast<int>(_characters.size())) {
+        selected_char = _characters[_currentCell].unicode;
+    }
+
     _characters.clear();
     _currentCell = -1;
     ui->charGrid->setCellCount(0);
     ui->charName->setText("");
     ui->glyphPreview->update();
 
-    if (_font) {
-        auto characters = _font->find_all_characters(from, to);
+    if (!_font) return;
 
-        if (!filter.isEmpty()) {
-            QString filterUpper = filter.toUpper();
-            std::copy_if(characters.begin(), characters.end(), std::back_inserter(_characters),
-                [&filterUpper](const FontInstance::CharInfo& info) {
-                    QString name = QString::fromStdString(Util::get_unicode_name(info.unicode));
-                    return name.contains(filterUpper, Qt::CaseInsensitive);
-                });
-        } else {
-            _characters = std::move(characters);
-        }
-        ui->charGrid->setCellCount(_characters.size());
+    auto characters = _font->find_all_characters(from, to);
+
+    if (!filter.isEmpty()) {
+        QString filterUpper = filter.toUpper();
+        std::copy_if(characters.begin(), characters.end(), std::back_inserter(_characters),
+            [&filterUpper](const FontInstance::CharInfo& info) {
+                QString name = QString::fromStdString(Util::get_unicode_name(info.unicode));
+                return name.contains(filterUpper, Qt::CaseInsensitive);
+            });
+    } else {
+        _characters = std::move(characters);
     }
+    ui->charGrid->setCellCount(_characters.size());
+
+    // reselect the same unicode glyph if it is still present
+    if (!selected_char) return;
+    auto it = std::find_if(_characters.begin(), _characters.end(),
+        [selected_char](const FontInstance::CharInfo& info) { return info.unicode == *selected_char; });
+    if (it == _characters.end()) return;
+    int index = static_cast<int>(std::distance(_characters.begin(), it));
+    ui->charGrid->setSelectedCell(index);
+    updateSelectedChar(index);
 }
 
 void CharacterViewer::drawGlyphPreview(QPainter* painter, const QRect& rect) {

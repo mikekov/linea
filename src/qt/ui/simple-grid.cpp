@@ -463,7 +463,15 @@ void SimpleGrid::openCell(int index) {
 }
 
 void SimpleGrid::scrollTo(int cell) {
-    if (!_layoutValid || !_cellCount) return;
+    if (!_layoutValid) {
+        calcLayout();
+    }
+    if (!_layoutValid || !_cellCount) {
+        // layout not ready (e.g. widget not shown yet); retry on next paint
+        _pendingScroll = cell;
+        return;
+    }
+    _pendingScroll = -1;
 
     auto vertScroll = getVScrollPosition();
     auto columns = _colsRows.x();
@@ -486,7 +494,15 @@ void SimpleGrid::scrollTo(int cell) {
     }
 
     if (scroll != vertScroll) {
-        _scrollArea->verticalScrollBar()->setValue(scroll);
+        auto scrollbar = _scrollArea->verticalScrollBar();
+        // The scroll area updates the bar's range lazily, after the viewport
+        // resize is processed; raise the maximum now so a long jump isn't
+        // clamped to a stale range.
+        auto maximum = std::max(0, _areaSize.y() - _scrollArea->height());
+        if (scrollbar->maximum() < maximum) {
+            scrollbar->setMaximum(maximum);
+        }
+        scrollbar->setValue(scroll);
     }
 }
 
@@ -495,6 +511,13 @@ void SimpleGrid::drawContent(QPainter* painter, int width, int height) {
         calcLayout();
     }
     if (!_layoutValid || !_colsRows.x() || !_colsRows.y() || !_cellCount || !_cellPitch.y() || !_cellPitch.x()) return;
+
+    // apply a scroll request that arrived before the layout was valid
+    if (_pendingScroll >= 0 && _pendingScroll < static_cast<int>(_cellCount)) {
+        int cell = _pendingScroll;
+        _pendingScroll = -1;
+        scrollTo(cell);
+    }
 
     auto vertScroll = getVScrollPosition();
 

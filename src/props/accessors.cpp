@@ -434,9 +434,18 @@ void merge_counts(Counts& counts, SPObject* item) {
     } else {
         if (is_textual_item(item)) {
             counts.textual++;
-        }
-        if (is<SPFlowtext>(item)) {
-            counts.flowtext++;
+            // The flowed/shape-inside classification lives on the <text> or
+            // <flowRoot> root. The leaf is that root itself for a plain
+            // selection, but a tspan/flowpara during a span subselection —
+            // walk up to the nearest text root so both cases classify alike.
+            for (auto p = item; p; p = p->parent) {
+                if (!is<SPText>(p) && !is<SPFlowtext>(p)) continue;
+                if (is<SPFlowtext>(p)) counts.flowtext++;
+                if (auto style = cast_unsafe<SPItem>(p)->style; style && style->shape_inside.set) {
+                    counts.shape_inside++;
+                }
+                break;
+            }
         }
     }
 }

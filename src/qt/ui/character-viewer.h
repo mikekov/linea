@@ -51,6 +51,7 @@ private:
     void refresh();
     void showCharacters(std::uint32_t from, std::uint32_t to, const QString& filter);
     void drawGlyphPreview(QPainter* painter, const QRect& rect);
+    void updateSelectedChar(int index);
     void drawGridCell(QPainter* painter, std::uint32_t index, const Geom::IntRect& rect, bool selected);
     void setCharSize(int size);
     void showCharSizePopup();

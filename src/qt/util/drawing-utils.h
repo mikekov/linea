@@ -110,9 +110,10 @@ void drawGlyph(const draw_glyph_params& params);
  * Convert Geom::PathVector to QPainterPath for Qt rendering.
  * Ported from Cairo feed_pathvector_to_cairo.
  * @param pathv The path vector to convert
+ * @param fillRule The fill rule to use (defaults to WindingFill)
  * @param trans Optional affine transform (defaults to identity)
  */
-QPainterPath pathVectorToQPainterPath(const Geom::PathVector& pathv, const Geom::Affine& trans = Geom::identity());
+QPainterPath pathVectorToQPainterPath(const Geom::PathVector& pathv, Qt::FillRule fillRule = Qt::WindingFill, const Geom::Affine& trans = Geom::identity());
 
 /**
  * Convert single Geom::Path to QPainterPath.

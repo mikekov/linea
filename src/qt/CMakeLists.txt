@@ -149,6 +149,9 @@ target_sources(linea_base PRIVATE
     ui/extension-gallery.ui
     ui/virtual-tree-list.cpp
     ui/virtual-tree-list.h
+    ui/font-browser.cpp
+    ui/font-browser.h
+    ui/font-browser.ui
     ui/font-list.cpp
     ui/font-list.h
     ui/font-selector.cpp
@@ -156,6 +159,9 @@ target_sources(linea_base PRIVATE
     ui/character-viewer.cpp
     ui/character-viewer.h
     ui/character-viewer.ui
+    ui/editor-panel.cpp
+    ui/editor-panel.h
+    ui/editor-panel.ui
     ui/drawing-area.cpp
     ui/drawing-area.h
     ui/popup-menu.cpp

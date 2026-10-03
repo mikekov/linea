@@ -18,6 +18,7 @@
 #include <QPolygon>
 #include <QTextOption>
 #include "util/font-discovery.h"
+#include "util/font-tags.h"
 
 namespace {
 
@@ -25,6 +26,12 @@ namespace {
 // return font name as it is recorded in the font itself, as far as Pango allows it
 QString get_full_name(const Inkscape::FontInfo& font_info) {
     return QString::fromUtf8(Inkscape::get_full_font_name(font_info.ff, font_info.face).raw());
+}
+
+// compare fontspecs ignoring their variable-font variations suffix
+bool same_font(const QString& lhs, const QString& rhs) {
+    return Inkscape::get_fontspec_without_variants(Glib::ustring(lhs.toUtf8().constData())) ==
+           Inkscape::get_fontspec_without_variants(Glib::ustring(rhs.toUtf8().constData()));
 }
 
 } // namespace
@@ -71,12 +78,11 @@ FontList::FontList(QWidget* parent)
 
     // Connect alphanumeric input for filtering
     connect(this, &VirtualTreeList::alphanumericInput, this, [this](const QString& text) {
-        // filterFonts(text);
         navigateToMatchingFont(text);
     });
 
-    // connect(this, &SimpleList::rowSelected, this, &FontList::onRowSelected);
-    // connect(this, &SimpleList::rowOpened, this, &FontList::onRowOpened);
+    connect(this, &VirtualTreeList::selectionChanged, this, &FontList::onItemSelected);
+    connect(this, &VirtualTreeList::itemActivated, this, &FontList::onItemActivated);
 
     refresh();
 }
@@ -111,7 +117,8 @@ const Inkscape::FontInfo* FontList::getFontInfo(const ItemIndex& index) const {
 void FontList::setFontOrder(Inkscape::FontOrder order) {
     if (_order != order) {
         _order = order;
-        updateDisplayFonts();
+        // text filtering is order-dependent (family vs full font names)
+        rebuildFontList();
     }
 }
 
@@ -143,63 +150,50 @@ QString FontList::sampleText() const {
 }
 
 void FontList::setFonts(const std::vector<std::vector<Inkscape::FontInfo>>& fontFamilies) {
-    _fontFamilies = fontFamilies;
-    _allFonts.clear();
-    for (auto& family : _fontFamilies) {
-        if (!family.empty()) {
-            _allFonts.insert(_allFonts.end(), family.begin(), family.end());
-        }
-    }
-    // _expandedFamilies.clear();
-    Inkscape::sort_font_families(_fontFamilies, true);
-    updateDisplayFonts();
+    _sourceFamilies = fontFamilies;
+    tagFontFaces();
+    rebuildFontList();
 }
 
 QString FontList::currentFontspec() const {
-    int row = -1;// selectedRow();
-    if (row < 0 || row >= static_cast<int>(_displayFontspecs.size())) {
-        return QString();
-    }
-    return _displayFontspecs[row];
+    auto info = getFontInfo(selectedItem());
+    return info ? fontspecOf(*info) : QString();
 }
 
 void FontList::setCurrentFont(const QString& fontspec) {
-    /*
     if (fontspec.isEmpty()) {
-        setSelectedRow(-1);
+        setSelectedItem(ItemIndex());
         return;
     }
-    if (_displayFontspecs.empty()) {
+    if (_fontFamilies.empty()) {
         _pendingFontspec = fontspec;
         return;
     }
 
-    auto row = findStyleRow(fontspec);
-    if (row >= 0) {
-        setSelectedRow(row);
+    if (_order == Inkscape::FontOrder::ByFamily) {
+        int familyIndex = findFamilyIndex(fontspec);
+        if (familyIndex < 0) return;
+
+        const auto& family = _fontFamilies[familyIndex];
+        if (family.size() > 1) {
+            for (int j = 0; j < static_cast<int>(family.size()); ++j) {
+                if (same_font(fontspecOf(family[j]), fontspec)) {
+                    setItemExpanded(familyIndex, true);
+                    setSelectedItem(ItemIndex(j, familyIndex));
+                    return;
+                }
+            }
+        }
+        setSelectedItem(ItemIndex(familyIndex));
         return;
     }
 
-    if (_order == Inkscape::FontOrder::ByFamily) {
-        auto familyIndex = findFamilyIndex(fontspec);
-        if (familyIndex < 0) return;
-        if (_fontFamilies[familyIndex].size() <= 1) {
-            auto familyRow = findFamilyRow(familyIndex);
-            if (familyRow >= 0) {
-                setSelectedRow(familyRow);
-            }
-            return;
-        }
-        _expandedFamilies.insert(familyIndex);
-        updateDisplayFonts();
-
-        row = findStyleRow(fontspec);
-        if (row >= 0) {
-            setSelectedRow(row);
+    for (int i = 0; i < static_cast<int>(_displayFonts.size()); ++i) {
+        if (same_font(fontspecOf(_displayFonts[i]), fontspec)) {
+            setSelectedItem(ItemIndex(i));
             return;
         }
     }
-    */
 }
 
 void FontList::refresh() {
@@ -210,18 +204,14 @@ void FontList::loadFonts() {
     _fontConnection = Inkscape::FontDiscovery::get().connect_to_fonts(
         [this](const Inkscape::FontDiscovery::MessageType& msg) {
             if (auto result = Inkscape::Async::Msg::get_result(msg)) {
-                _fontFamilies.clear();
-                _allFonts.clear();
+                _sourceFamilies.clear();
                 for (auto& family : **result) {
                     if (!family.empty()) {
-                        _fontFamilies.push_back(family);
-                        _allFonts.insert(_allFonts.end(), family.begin(), family.end());
+                        _sourceFamilies.push_back(family);
                     }
                 }
-                // _expandedFamilies.clear();
-                Inkscape::sort_font_families(_fontFamilies, true);
-    // printf("fnt loaded: %ld\n", _fontFamilies.size());
-                updateDisplayFonts();
+                tagFontFaces();
+                rebuildFontList();
             }
         });
 }
@@ -264,7 +254,7 @@ int FontList::findFamilyIndex(const QString& fontspec) const {
     for (int i = 0; i < static_cast<int>(_fontFamilies.size()); ++i) {
         for (auto& info : _fontFamilies[i]) {
             auto spec = Inkscape::get_inkscape_fontspec(info.ff, info.face, info.variations);
-            if (QString::fromUtf8(spec.raw()) == fontspec) {
+            if (same_font(QString::fromUtf8(spec.raw()), fontspec)) {
                 return i;
             }
         }
@@ -291,15 +281,19 @@ int FontList::findStyleRow(const QString& fontspec) const {
     return -1;
 }
 
-void FontList::onRowSelected(int index) {
-    if (index >= 0 && index < static_cast<int>(_displayFontspecs.size())) {
-        Q_EMIT fontChanged(_displayFontspecs[index]);
+QString FontList::fontspecOf(const Inkscape::FontInfo& info) const {
+    return QString::fromUtf8(Inkscape::get_inkscape_fontspec(info.ff, info.face, info.variations).raw());
+}
+
+void FontList::onItemSelected(const ItemIndex& index) {
+    if (auto info = getFontInfo(index)) {
+        Q_EMIT fontChanged(fontspecOf(*info));
     }
 }
 
-void FontList::onRowOpened(int index) {
-    if (index >= 0 && index < static_cast<int>(_displayFontspecs.size())) {
-        Q_EMIT fontSelected(_displayFontspecs[index]);
+void FontList::onItemActivated(const ItemIndex& index) {
+    if (auto info = getFontInfo(index)) {
+        Q_EMIT fontSelected(fontspecOf(*info));
     }
 }
 
@@ -417,8 +411,84 @@ void FontList::drawFontRow(QPainter* painter, const Inkscape::FontInfo& info, Dr
     painter->restore();
 }
 
+void FontList::rebuildFontList() {
+    _fontFamilies.clear();
+    _allFonts.clear();
+
+    for (auto& family : _sourceFamilies) {
+        std::vector<Inkscape::FontInfo> faces;
+        for (auto& info : family) {
+            if (_faceFilter && !_faceFilter(info)) {
+                continue;
+            }
+            // in flat mode the text filter applies to each font's full name;
+            // family grouping checks the representative font instead (see below)
+            if (_order != Inkscape::FontOrder::ByFamily && !_textFilter.isEmpty() &&
+                !get_full_name(info).contains(_textFilter, Qt::CaseInsensitive)) {
+                continue;
+            }
+            faces.push_back(info);
+        }
+        if (faces.empty()) continue;
+
+        if (_order == Inkscape::FontOrder::ByFamily && !_textFilter.isEmpty()) {
+            int rep = Inkscape::get_family_font_index(faces);
+            if (rep < 0 || !get_full_name(faces[rep]).contains(_textFilter, Qt::CaseInsensitive)) {
+                continue;
+            }
+        }
+
+        _allFonts.insert(_allFonts.end(), faces.begin(), faces.end());
+        _fontFamilies.push_back(std::move(faces));
+    }
+
+    Inkscape::sort_font_families(_fontFamilies, true);
+    updateDisplayFonts();
+    Q_EMIT fontCountChanged(fontCount(), totalFontCount());
+}
+
+void FontList::tagFontFaces() {
+    auto& tags = Inkscape::FontTags::get();
+    for (auto& family : _sourceFamilies) {
+        for (auto& font : family) {
+            auto kind = font.family_kind >> 8;
+            if (kind == 10) {
+                tags.tag_font(font.face, "script");
+            } else if (kind >= 1 && kind <= 5) {
+                tags.tag_font(font.face, "serif");
+            } else if (kind == 8) {
+                tags.tag_font(font.face, "sans");
+            } else if (kind == 12) {
+                tags.tag_font(font.face, "symbols");
+            }
+            if (font.monospaced) tags.tag_font(font.face, "monospace");
+            if (font.variable_font) tags.tag_font(font.face, "variable");
+            if (font.oblique) tags.tag_font(font.face, "oblique");
+        }
+    }
+}
+
 void FontList::filterFonts(const QString& match) {
-    // TODO: Implement filtering logic
+    if (_textFilter == match) return;
+    _textFilter = match;
+    rebuildFontList();
+}
+
+void FontList::setFontFilter(FontFilter filter) {
+    _faceFilter = std::move(filter);
+    rebuildFontList();
+}
+
+int FontList::fontCount() const {
+    return static_cast<int>(_allFonts.size());
+}
+
+int FontList::totalFontCount() const {
+    int total = 0;
+    for (auto& family : _sourceFamilies) {
+        total += static_cast<int>(family.size());
+    }
+    return total;
 }
 
 void FontList::navigateToMatchingFont(const QString& text) {

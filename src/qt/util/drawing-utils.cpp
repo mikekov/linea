@@ -290,10 +290,12 @@ QPainterPath pathToQPainterPath(const Geom::Path& path, const Geom::Affine& tran
  * Convert Geom::PathVector to QPainterPath for Qt rendering.
  * Ported from Cairo feed_pathvector_to_cairo.
  */
-QPainterPath pathVectorToQPainterPath(const Geom::PathVector& pathv, const Geom::Affine& trans) {
+QPainterPath pathVectorToQPainterPath(const Geom::PathVector& pathv, Qt::FillRule fillRule, const Geom::Affine& trans) {
     QPainterPath result;
 
     if (pathv.empty()) return result;
+
+    result.setFillRule(fillRule);
 
     for (const auto& path : pathv) {
         QPainterPath path_result = pathToQPainterPath(path, trans);

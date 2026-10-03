@@ -8,6 +8,7 @@
 #define LINEA_UI_FONT_LIST_H
 
 #include <atomic>
+#include <functional>
 #include <sigc++/scoped_connection.h>
 
 #include <QRect>
@@ -61,17 +62,31 @@ public:
     // filter fonts by matching the font name
     void filterFonts(const QString& match);
 
+    // predicate applied to each font face; faces that fail it are hidden,
+    // while families retain only their matching faces; empty std::function clears it
+    using FontFilter = std::function<bool (const Inkscape::FontInfo&)>;
+    void setFontFilter(FontFilter filter);
+
+    // number of fonts currently displayed / total number of fonts
+    int fontCount() const;
+    int totalFontCount() const;
+
 Q_SIGNALS:
     // emitted when the selected font changes
     void fontChanged(const QString& fontspec);
     // emitted when the user activates a row (double-click or Enter)
     void fontSelected(const QString& fontspec);
+    // emitted when the set of displayed fonts changes (filtering, sorting, reload)
+    void fontCountChanged(int count, int total);
 
 private:
     void loadFonts();
+    void rebuildFontList();
+    void tagFontFaces();
     void updateDisplayFonts();
-    void onRowSelected(int index);
-    void onRowOpened(int index);
+    QString fontspecOf(const Inkscape::FontInfo& info) const;
+    void onItemSelected(const ItemIndex& index);
+    void onItemActivated(const ItemIndex& index);
     void drawRow(QPainter* painter, const ItemIndex& item, const QRect& rect, bool selected);
     enum DrawMode { DrawFamily, DrawStyle, DrawFullName };
     void drawFontRow(QPainter* painter, const Inkscape::FontInfo& info, DrawMode mode, int count, const QRect& rect, bool selected);
@@ -86,9 +101,12 @@ private:
     Inkscape::FontOrder _order = Inkscape::FontOrder::ByFamily;
     int _previewSize = 0; // set by setPreviewSize() in the constructor
     QString _sampleText;
+    QString _textFilter;
+    FontFilter _faceFilter;
     QString _pendingFontspec;
     std::vector<Inkscape::FontInfo> _allFonts;
     std::vector<std::vector<Inkscape::FontInfo>> _fontFamilies;
+    std::vector<std::vector<Inkscape::FontInfo>> _sourceFamilies;
     std::vector<Inkscape::FontInfo> _displayFonts;
     std::vector<QString> _displayFontspecs;
     sigc::scoped_connection _fontConnection;

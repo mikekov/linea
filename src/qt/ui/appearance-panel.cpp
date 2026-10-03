@@ -171,9 +171,9 @@ std::pair<std::vector<SPItem*>, bool> AppearancePanel::getSubselection(Selection
 }
 
 void AppearancePanel::updateText(const TypographyState& state, bool subselection_active) {
+    (void)state;
     (void)subselection_active;  // header text now driven by binder via has_text_subselection
-    // _textPanel->setVisible(present && el.count.)
-    _textPanel->updateTypographyState(state, getTextTool());
+    _textPanel->updateTypographyState(getTextTool());
     _textPanel->setVisible(true);
 }
 

@@ -721,6 +721,23 @@ QPushButton.segment-last {
     border-top-left-radius: 0;
 }
 
+/* Removable tag pills, e.g. selected font categories in FontBrowser */
+QPushButton.tag-pill {
+    border: 0;
+    border-radius: 10px;
+    padding: 0 5px;
+    font-size: 10px;
+    background-color: palette(button);
+    min-width: 20px;
+    max-height: 20px;
+}
+QPushButton.tag-pill:hover {
+    border-color: palette(dark);
+}
+QPushButton.tag-pill:pressed {
+    background-color: palette(mid);
+}
+
 QPushButton[mixed="true"] {
     /* background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0.00 palette(button),
