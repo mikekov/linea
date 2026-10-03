@@ -23,6 +23,10 @@
 #include "linea-application.h"
 #include "text-chemistry.h"
 
+#include "object/sp-text.h"
+#include "selection.h"
+#include "actions/actions-svg-processing.h"
+
 namespace {
 
 void selection_text_put_on_path(SPDesktop* desktop) {
@@ -50,6 +54,16 @@ void select_text_unflow(SPDesktop* desktop) {
     text_unflow(desktop);
 }
 
+void select_text_unflow_and_keep_shape(SPDesktop* desktop) {
+    if (!desktop) return;
+    auto selection = desktop->getSelection();
+    auto text = cast<SPText>(selection->singleItem());
+    if (!text)
+        return;
+    insert_text_fallback(text->getRepr(), selection->document());
+    text->hide_shape_inside();
+}
+
 void text_convert_to_regular(SPDesktop* desktop) {
     if (!desktop) return;
     flowtext_to_text(desktop);
@@ -74,6 +88,7 @@ static auto text_action_defs = std::to_array<ActionSpec<SPDesktop>>({
     {"text-flow-into-frame",     N_("Flow into Frame"),        SECTION, N_("Put text into a frame (path or shape), creating a flowed text linked to the frame object"), nullptr, text_flow_into_frame},
     {"text-flow-subtract-frame",  N_("Set Subtraction Frames"), SECTION, N_("Flow text around a frame (path or shape), only available for SVG 2.0 Flow text."), nullptr, text_flow_subtract_frame},
     {"text-unflow",               N_("Unflow"),                 SECTION, N_("Remove text from frame (creates a single-line text object)"), nullptr, select_text_unflow},
+    {"text-unflow-and-keep-shape",N_("Unflow and Keep Shape"),  SECTION, N_("Remove text from shape"), nullptr, select_text_unflow_and_keep_shape},
     {"text-convert-to-regular",   N_("Convert to Text"),        SECTION, N_("Convert flowed text to regular text object (preserves appearance)"), nullptr, text_convert_to_regular},
     {"text-convert-to-glyphs",    N_("Convert to Glyphs"),      SECTION, N_("Convert text into individual glyphs"), nullptr, text_convert_to_glyphs},
     {"text-unkern",               N_("Remove Manual Kerns"),    SECTION, N_("Remove all manual kerns and glyph rotations from a text object"), nullptr, text_unkern}
