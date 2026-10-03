@@ -61,6 +61,10 @@ namespace Tools {
 static Geom::Point pen_drag_origin_w(0, 0);
 static bool pen_within_tolerance = false;
 
+// This gap defines an extra translation on points to avoid zeros in some calculations that really
+// affect spiro maths. See https://gitlab.com/inkscape/inkscape/-/work_items/5658 for details.
+static Geom::Translate handle_cubic_gap(0.001, 0.001);
+
 PenTool::PenTool(SPDesktop *desktop, std::string &&prefs_path, std::string &&cursor_filename)
     : FreehandBase(desktop, std::move(prefs_path), std::move(cursor_filename))
     , _acc_to_line{"tool-pen-to-line"}
@@ -1244,6 +1248,7 @@ void PenTool::_bsplineSpiroOn()
         p_array[0] = red_curve.initialPoint();
         p_array[3] = get_first_segment(red_curve)->finalPoint();
         p_array[2] = p_array[3] + (1./3) * (p_array[0] - p_array[3]);
+        p_array[2] *= handle_cubic_gap;
         _bsplineSpiroMotion(INK_ALT_MASK);
     }
 }
@@ -1311,6 +1316,7 @@ void PenTool::_bsplineSpiroStartAnchorOn()
     Geom::Point point_a = get_last_segment(*sa_overwrited)->initialPoint();
     Geom::Point point_d = sa_overwrited->finalPoint();
     Geom::Point point_c = point_d + (1./3) * (point_a - point_d);
+    point_c *= handle_cubic_gap;
     auto last_segment = Geom::Path{point_a};
     if (cubic) {
         last_segment.appendNew<Geom::CubicBezier>((*cubic)[1], point_c, point_d);
@@ -1358,8 +1364,10 @@ void PenTool::_bsplineSpiroMotion(unsigned const state)
     npoints = 5;
     Geom::PathVector tmp_curve;
     p_array[2] = p_array[3] + (1./3) * (p_array[0] - p_array[3]);
+    p_array[2] *= handle_cubic_gap;
     if (green_curve->curveCount() == 0 && !sa) {
         p_array[1] = p_array[0] + (1./3)*(p_array[3] - p_array[0]);
+        p_array[1] *= handle_cubic_gap;
         if (shift) {
             p_array[2] = p_array[3];
         }
@@ -1404,6 +1412,8 @@ void PenTool::_bsplineSpiroMotion(unsigned const state)
                 p_array[1] = weight_power.pointAt(0.33334);
                 if (Geom::are_near(p_array[1], p_array[0])) {
                     p_array[1] = p_array[0];
+                } else {
+                    p_array[1] *= handle_cubic_gap;
                 }
                 if (shift) {
                     p_array[2] = p_array[3];
@@ -1449,6 +1459,7 @@ void PenTool::_bsplineSpiroEndAnchorOn()
     using Geom::X;
     using Geom::Y;
     p_array[2] = p_array[3] + (1./3) * (p_array[0] - p_array[3]);
+    p_array[2] *= handle_cubic_gap;
     Geom::PathVector tmp_curve;
     Geom::Point point_c;
     if (green_anchor && green_anchor->active) {
@@ -1463,6 +1474,7 @@ void PenTool::_bsplineSpiroEndAnchorOn()
     }
     if (bspline) {
         point_c = tmp_curve.finalPoint() + (1./3) * (get_last_segment(tmp_curve)->initialPoint() - tmp_curve.finalPoint());
+        point_c *= handle_cubic_gap;
     } else {
         point_c = p_array[3] + p_array[3] - p_array[2];
     }
