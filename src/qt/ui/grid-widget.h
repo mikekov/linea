@@ -24,6 +24,7 @@
 #include <sigc++/scoped_connection.h>
 
 QT_BEGIN_NAMESPACE
+class QAction;
 class QCheckBox;
 class QLabel;
 class QLineEdit;
@@ -92,6 +93,8 @@ private:
     QCheckBox* _snapVisibleCheck = nullptr;
     QCheckBox* _dottedCheck = nullptr;
     QCheckBox* _clipToPageCheck = nullptr;
+    QCheckBox* _angleYVerticalCheck = nullptr;
+    QAction* _swapAxesAction = nullptr;
 
     // Subordinate widgets (disabled when grid is disabled)
     std::vector<QWidget*> _subordinateWidgets;

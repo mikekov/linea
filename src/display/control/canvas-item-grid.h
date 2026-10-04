@@ -118,6 +118,7 @@ public:
     // Properties
     void set_angle_x(double value);
     void set_angle_z(double value);
+    void set_angle_y_vertical(bool vertical);
 
 protected:
     friend class GridSnapperAxonom;
@@ -125,7 +126,11 @@ protected:
     void _update(bool propagate) override;
     void _render(CanvasItemBuffer &buf) const override;
 
-    bool scaled;          /**< Whether the grid is in scaled mode */
+    // Helper function to update the derived Y angle
+    void update_derived_angle_y();
+
+    bool scaled;           /**< Whether the grid is in scaled mode */
+    bool angle_y_vertical; /**< Whether the Y angle stays fixed at its default vertical value */
 
     double angle_deg[3];      /**< Angle of each axis (note that angle[Y] == 0) */
     double angle_rad[3];      /**< Angle of each axis (note that angle[Y] == 0) */

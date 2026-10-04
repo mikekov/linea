@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <glibmm/i18n.h>
+#include <QAction>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -124,6 +125,11 @@ void GridWidget::setupWidgets() {
     _snapVisibleCheck = addCheckboxAction("Snap to visible grid lines only");
     _dottedCheck = addCheckboxAction("Show dots instead of lines");
     _clipToPageCheck = addCheckboxAction("Clip to page");
+    _angleYVerticalCheck = addCheckboxAction("Y axis vertical");
+    _angleYVerticalCheck->setToolTip(QString::fromUtf8(
+        _("If set, y-axis will be vertical. Otherwise, it will be calculated from x and z angles.")));
+    _swapAxesAction = optionsMenu->addAction(QString::fromUtf8(_("Swap axes")));
+    _swapAxesAction->setToolTip(QString::fromUtf8(_("Swap axonometric grid axes")));
 
     connect(_ui->optionsButton, &QPushButton::clicked, this, [this, optionsMenu]() {
         optionsMenu->popup(_ui->optionsButton->mapToGlobal(_ui->optionsButton->rect().bottomLeft()));
@@ -208,7 +214,7 @@ void GridWidget::setupWidgets() {
         _ui->gridTypeCombo,
         _ui->visibleToggle, _ui->colorButton, _ui->optionsButton,
         _ui->alignButton, _ui->anglePopupButton, _ui->unitButton,
-        _snapVisibleCheck, _dottedCheck, _clipToPageCheck,
+        _snapVisibleCheck, _dottedCheck, _clipToPageCheck, _angleYVerticalCheck,
         _alignmentSelector,
     };
 }
@@ -321,6 +327,43 @@ void GridWidget::connectSignals() {
         }
     });
 
+    connect(_angleYVerticalCheck, &QCheckBox::toggled, this, [this](bool active) {
+        if (_update.pending()) return;
+        repr()->setAttributeBoolean("angleyvertical", active);
+        if (_grid && _grid->document) {
+            Inkscape::DocumentUndo::done(_grid->document,
+                RC_("Undo", "Change grid Y-axis mode"), "grid-angle-y");
+        }
+    });
+
+    connect(_swapAxesAction, &QAction::triggered, this, [this]() {
+        if (_update.pending() || !_grid) return;
+
+        auto cur_angle_x = _grid->getAngleX();
+        auto cur_angle_z = _grid->getAngleZ();
+        auto new_angle_x = 90 - cur_angle_x;
+        auto new_angle_z = 90 - cur_angle_z;
+        auto y_vertical = _grid->isAngleYVertical();
+        auto y_spacing = _grid->getSpacing()[Geom::Y];
+
+        auto rad_x = Geom::rad_from_deg(new_angle_x);
+        auto rad_z = Geom::rad_from_deg(new_angle_z);
+
+        auto b = y_spacing * sin(rad_x) / sin(rad_x + rad_z);
+        auto diag_size = 2.0 * sqrt(y_spacing * y_spacing / 4.0 + b * b - y_spacing * b * cos(rad_z));
+
+        _grid->setAngleYVertical(!y_vertical);
+        _grid->setAngleX(new_angle_x);
+        _grid->setAngleZ(new_angle_z);
+        _grid->setSpacing(Geom::Point(diag_size, diag_size));
+
+        if (_grid->document) {
+            Inkscape::DocumentUndo::done(_grid->document,
+                RC_("Undo", "Swap grid axes"), "grid-swap-axes");
+        }
+        update();
+    });
+
     // Alignment selector
     connect(_alignmentSelector, &AlignmentSelector::alignmentClicked,
             this, [this](int align) {
@@ -415,10 +458,14 @@ void GridWidget::update() {
     _ui->angleZ->setVisible(axonometric);
     _ui->angleLabel->setVisible(axonometric);
     _ui->anglePopupButton->setVisible(axonometric);
+    _angleYVerticalCheck->setVisible(axonometric);
+    _swapAxesAction->setVisible(axonometric);
 
     if (axonometric) {
         _ui->angleX->setValue(_grid->getAngleX());
         _ui->angleZ->setValue(_grid->getAngleZ());
+        QSignalBlocker blocker(_angleYVerticalCheck);
+        _angleYVerticalCheck->setChecked(_grid->isAngleYVertical());
     }
 
     _ui->gapX->setVisible(modular);
