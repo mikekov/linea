@@ -300,7 +300,7 @@ std::optional<std::pair<std::string, CapyPDF_FontId>> Document::get_font(std::sh
         try {
             auto fontprops = capypdf::FontProperties();
             auto axes = font->get_opentype_varaxes();
-            for (auto &[tag, axis] : axes) {
+            for (auto &axis : axes) {
                 auto iter = var.axes.find(axis.tag);
                 fontprops.set_variation(axis.tag, iter == var.axes.end()
                         ? (int)axis.def

@@ -874,7 +874,7 @@ void apply_font_style(const EditTarget& target, const Glib::ustring& style_name)
     auto fonts = Inkscape::FontDiscovery::get().fonts();
     if (auto fam = fonts ? Inkscape::find_font_family(*fonts, family) : nullptr) {
         if (auto font = Inkscape::find_font_face(*fam, style_name)) {
-            set_font_css(target, *font);
+            set_font_css(target, *font, font->variations);
             return;
         }
     }

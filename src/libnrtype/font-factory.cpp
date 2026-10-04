@@ -39,6 +39,7 @@
 
 #include "libnrtype/font-factory.h"
 #include "libnrtype/font-instance.h"
+#include "libnrtype/font-utils.h"
 #include "libnrtype/OpenTypeUtil.h"
 
 #ifdef _WIN32
@@ -103,44 +104,6 @@ FontFactory::~FontFactory()
 void FontFactory::refreshConfig()
 {
     pango_fc_font_map_config_changed(PANGO_FC_FONT_MAP(fontServer));
-}
-
-Glib::ustring FontFactory::ConstructFontSpecification(PangoFontDescription *font)
-{
-    Glib::ustring pangoString;
-
-    g_assert(font);
-
-    if (font) {
-        // Once the format for the font specification is decided, it must be
-        // kept.. if it is absolutely necessary to change it, the attribute
-        // it is written to needs to have a new version so the legacy files
-        // can be read.
-
-        PangoFontDescription *copy = pango_font_description_copy(font);
-
-        pango_font_description_unset_fields(copy, PANGO_FONT_MASK_SIZE);
-        char *copyAsString = pango_font_description_to_string(copy);
-        pangoString = copyAsString;
-        g_free(copyAsString);
-
-        pango_font_description_free(copy);
-    }
-
-    return pangoString;
-}
-
-Glib::ustring FontFactory::ConstructFontSpecification(FontInstance *font)
-{
-    Glib::ustring pangoString;
-
-    g_assert(font);
-
-    if (font) {
-        pangoString = ConstructFontSpecification(font->get_descr());
-    }
-
-    return pangoString;
 }
 
 /*
@@ -212,8 +175,15 @@ Glib::ustring FontFactory::GetUIStyleString(PangoFontDescription const *fontDesc
 
         // For now, keep it as style name taken from pango
         char *fontDescrAsString = pango_font_description_to_string(fontDescrCopy);
+
         style = fontDescrAsString;
         g_free(fontDescrAsString);
+
+        // Unsetting family causes "Normal" to be returned if all other values are default.
+        if (style == "Normal") {
+            style = "";
+        }
+
         pango_font_description_free(fontDescrCopy);
     }
 
@@ -342,7 +312,34 @@ std::vector<StyleNames> FontFactory::GetUIStyles(PangoFontFamily *in)
         }
 
         PangoFontDescription *faceDescr = pango_font_face_describe(faces[currentFace]);
+
         if (faceDescr) {
+
+            // pango_font_face_describe() does not include font variations. We need to add them
+            // ourselves!!  pango_font_family_is_variable() uses the FontConfig FC_VARIABLE bool
+            // but this only seems to be set true if the fonts 'fvar' table has variable weight,
+            // width (stretch), or optical size.  Thus Decovar is NOT marked as a variable font!!!
+            //
+            // The following is very wasteful but is necessary. We can't just load the font once since
+            // the faces may not be in one file. For example, Amestelvar has two different files, one
+            // for roman and another for italic variations.
+            auto pango_font = pango_font_map_load_font(fontServer, fontContext, faceDescr);
+            if (pango_font) {
+                auto hb_font = pango_font_get_hb_font(pango_font); // Pango owns hb_font
+                if (hb_font) {
+                    std::map<Glib::ustring, Glib::ustring> openTypeVarNames;
+                    readOpenTypeFvarNamedInstances(hb_font, openTypeVarNames);
+                    if (openTypeVarNames.find(displayName) != openTypeVarNames.end()) {
+                        pango_font_description_set_variations(faceDescr, openTypeVarNames[displayName].c_str());
+                    }
+                } else {
+                    std::cerr << "FontFactory::GetUIStyles: failed to load hb_font!" << std::endl;
+                }
+                g_object_unref(pango_font);
+            } else {
+                std::cerr << "FontFactory::GetUIStyles: failed to load pango_font!" << std::endl;
+            }
+
             Glib::ustring familyUIName = GetUIFamilyString(faceDescr);
             Glib::ustring styleUIName = GetUIStyleString(faceDescr);
             // std::cout << "  " << familyUIName << "  styleUIName: " << styleUIName << "  displayName: " << displayName << std::endl;
@@ -359,34 +356,17 @@ std::vector<StyleNames> FontFactory::GetUIStyles(PangoFontFamily *in)
                 }
             }
 
-            // Pango breaks the 1 to 1 mapping between Pango weights and CSS weights by
-            // adding Semi-Light (as of 1.36.7), Book (as of 1.24), and Ultra-Heavy (as of
-            // 1.24). We need to map these weights to CSS weights. Book and Ultra-Heavy
-            // are rarely used. Semi-Light (350) is problematic as it is halfway between
-            // Light (300) and Normal (400) and if care is not taken it is converted to
-            // Normal, rather than Light.
-            //
-            // Note: The ultimate solution to handling various weight in the same
-            // font family is to support the @font rules from CSS.
-            //
+            styleUIName = Inkscape::canonize_fontspec(styleUIName);
+
+            // NOTE: CSS no longer limits weights to multiple of 100.
+            // As of Pango 1.23.0, "weight=450" is valid font description syntax.
+
             // Additional notes, helpful for debugging:
             //   Pango's FC backend:
-            //     Weights defined in fontconfig/fontconfig.h
-            //     String equivalents in src/fcfreetype.c
+            //     Weights defined in fontconfig/src/fcweight.c (was fontconfig/fontconfig.h)
+            //     String equivalents in fontconfig/src/fcfreetype.c
             //     Weight set from os2->usWeightClass
             //   Use Fontforge: Element->Font Info...->OS/2->Misc->Weight Class to check font weight
-            size_t f = styleUIName.find( "Book" );
-            if( f != Glib::ustring::npos ) {
-                styleUIName.replace( f, 4, "Normal" );
-            }
-            f = styleUIName.find( "Semi-Light" );
-            if( f != Glib::ustring::npos ) {
-                styleUIName.replace( f, 10, "Light" );
-            }
-            f = styleUIName.find( "Ultra-Heavy" );
-            if( f != Glib::ustring::npos ) {
-                styleUIName.replace( f, 11, "Heavy" );
-            }
 
             bool exists = false;
             for (auto const &tmp : result) {
@@ -395,7 +375,9 @@ std::vector<StyleNames> FontFactory::GetUIStyles(PangoFontFamily *in)
                     std::cerr << "Warning: Font face with same CSS values already added: "
                               << familyUIName.raw() << " " << styleUIName.raw()
                               << " (" << tmp.display_name.raw()
-                              << ", " << displayName << ")" << std::endl;
+                              << ", " << displayName << ")"
+                              << " CSS (Pango): " << tmp.css_name << std::endl;
+                    std::cerr << "  This can happen if a variable font file and the corresponding fixed font files are installed together." << std::endl;
                     break;
                 }
             }
@@ -457,8 +439,8 @@ std::shared_ptr<FontInstance> FontFactory::FaceFromFontSpecification(char const 
 
     if (fontSpecification) {
         // How the string is used to reconstruct a font depends on how it
-        // was constructed in ConstructFontSpecification.  As it stands,
-        // the font specification is a pango-created string
+        // was constructed.  As it stands, the font specification is a
+        // pango-created string (pango_font_description_to_string())
         font = FaceFromPangoString(fontSpecification);
     }
 

@@ -575,7 +575,7 @@ void TextPanel::syncFontVariations(const Props::SelectionState& s) {
     auto font = getSelectedFont();
     // Fall back to the raw family name when the font is not in the discovery
     // database; FaceFromFontSpecification may still resolve it.
-    auto fontspec = font ? Inkscape::get_inkscape_fontspec(font->ff, font->face, Glib::ustring())
+    auto fontspec = font ? Inkscape::get_inkscape_fontspec(font->ff, font->face, font->variations)
                          : (s.typography.font_family.is_single() ? s.typography.font_family.value()
                                                                  : Glib::ustring());
     updateFontVariants(fontspec, vars);

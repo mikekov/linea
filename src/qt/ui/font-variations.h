@@ -7,6 +7,7 @@
 #ifndef LINEA_UI_FONT_VARIATIONS_H
 #define LINEA_UI_FONT_VARIATIONS_H
 
+#include <string>
 #include <vector>
 
 #include <QWidget>
@@ -61,12 +62,13 @@ Q_SIGNALS:
     void changed();
 
 private:
-    void build_ui(const std::map<Glib::ustring, OTVarAxis>& axes);
-    void update_axes(const std::map<Glib::ustring, OTVarAxis>& axes);
+    void build_ui(const std::vector<OTVarAxis>& axes);
+    void update_axes(const std::vector<OTVarAxis>& axes);
 
     /// One row in the axes grid: the per-axis widgets and metadata.
     struct AxisRow {
         Glib::ustring name;
+        std::string tag;
         QLabel* label = nullptr;
         NumberEdit* spin = nullptr;
         QSlider* slider = nullptr;
@@ -76,7 +78,7 @@ private:
 
     std::vector<AxisRow> _axes;
     QWidget* _container = nullptr;
-    std::map<Glib::ustring, OTVarAxis> _open_type_axes;
+    std::vector<OTVarAxis> _ot_axes;
     OperationBlocker _update;
     bool _scales_visible = true;
 };

@@ -16,6 +16,7 @@
 #include "svg/css-ostringstream.h"
 #include "util/units.h"
 #include "font-discovery.h"
+#include "libnrtype/font-utils.h"
 #include "object/sp-flowdiv.h"
 #include "object/sp-flowtext.h"
 #include "object/sp-item.h"
@@ -409,16 +410,19 @@ void fill_css_from_font_description(SPCSSAttr* css, const Glib::ustring& family,
     auto vars = desc.get_variations();
     if (!vars.empty()) {
         std::string css_vars;
-        auto tokens = Glib::Regex::split_simple(",", vars);
-        auto regex = Glib::Regex::create("(\\w{4})=([-+]?\\d*\\.?\\d+([eE][-+]?\\d+)?)");
-        Glib::MatchInfo match_info;
-        for (auto const& token : tokens) {
-            regex->match(token, match_info);
-            if (match_info.matches()) {
+        for (auto [tag, value] : Inkscape::parse_variations(vars.c_str())) {
+            // Per CSS Fonts Level 4, favor higher level properties over 'font-variation-settings'
+            if (tag == "wght") {
+                sp_repr_css_set_property(css, "font-weight", value.c_str());
+            } else if (tag == "ital") {
+                // A font should not have both a 'slnt' and an 'ital' axis. The 'ital' axis ranges
+                // between 0 and 1 but CSS only allows it to be either on or off.
+                sp_repr_css_set_property(css, "font-style", value == "1" ? "italic" : "normal");
+            } else {
                 css_vars += "'";
-                css_vars += match_info.fetch(1).raw();
+                css_vars += tag;
                 css_vars += "' ";
-                css_vars += match_info.fetch(2).raw();
+                css_vars += value;
                 css_vars += ", ";
             }
         }
@@ -449,6 +453,11 @@ void fill_css_from_fontspec(SPCSSAttr* css, const Glib::ustring& fontspec) {
     if (spec.empty()) {
         spec = "sans-serif";
     }
+
+    // Canonicalize: per CSS Fonts Level 4, 'wght'/'ital' axes map to
+    // 'font-weight'/'font-style' rather than 'font-variation-settings', and
+    // Pango does not sort the remaining axes.
+    spec = Inkscape::canonize_fontspec(spec);
 
     // Extract the family portion from the fontspec, mirroring
     // FontLister::ui_from_fontspec's family extraction (Pango bug workaround

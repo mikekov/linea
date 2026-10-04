@@ -431,7 +431,9 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
 
             auto desc = face->describe();
             desc.unset_fields(Pango::FontMask::SIZE);
-            std::string key = desc.to_string();
+            // Named instances of a variable font can share a bare description;
+            // the face name keeps them distinct.
+            std::string key = desc.to_string() + "|" + face->get_name().raw();
             if (styles.count(key)) continue;
 
             styles.insert(key);
@@ -480,6 +482,27 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
                 // font in a cache already
                 info = it->second;
                 valid = true;
+            }
+
+            // Variable-font named instances: Pango lists a face per named
+            // instance, but face->describe() drops the instance's axis
+            // values, so choosing that style would silently produce the
+            // default instance. The axis values live in the 'fvar' table
+            // under the instance's face name. FontFactory caches loaded
+            // fonts, so repeated lookups for the same file are cheap.
+            if (valid && info.variable_font && desc.get_variations().empty()) {
+                try {
+                    if (auto font = FontFactory::get().create_face(desc.gobj())) {
+                        auto const& named = font->get_opentype_varnamedinstances();
+                        if (auto ni = named.find(face->get_name());
+                            ni != named.end() && !ni->second.empty()) {
+                            info.variations = "@" + ni->second;
+                        }
+                    }
+                }
+                catch (...) {
+                    // leave variations empty
+                }
             }
 
             if (valid) {
