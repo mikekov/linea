@@ -20,13 +20,18 @@ namespace Inkscape::Colors::Space {
  * be used in color pickers or store data in a color field. Instead it's purely used
  * for converting a surface of pixels into a luminosity mask while rendering.
  */
-class Alpha : public AnySpace
+class Alpha : public ProfileSpace<true>
 {
 public:
-    Alpha(): AnySpace(Type::Alpha, 0, "Alpha", "Alpha", "") {}
+    Alpha()
+        : ProfileSpace(Type::Alpha, 0, "Alpha", "Alpha", "")
+    {}
 
-    bool isDirect() const override { return true; }
-    std::shared_ptr<Colors::CMS::Profile> const getProfile() const override;
+    std::shared_ptr<Colors::CMS::Profile> const getProfile() const override
+    {
+        static auto gray_profile = Colors::CMS::Profile::create_gray();
+        return gray_profile;
+    }
 
     std::string toString(std::vector<double> const &values, bool opacity) const override
     {

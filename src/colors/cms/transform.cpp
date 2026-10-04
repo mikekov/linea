@@ -53,7 +53,7 @@ int Transform::lcms_color_format(std::shared_ptr<Profile> const &profile, int si
     // to 0.0 to 1.0, we don't actually scale our xyz which can go as high as 1.99
     if ((format & COLORSPACE_SH(PT_XYZ)) != COLORSPACE_SH(PT_XYZ)) {
         format &= mask_colorspace;
-    }   
+    }
     return format;
 }
 

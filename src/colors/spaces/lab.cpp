@@ -17,45 +17,6 @@
 
 namespace Inkscape::Colors::Space {
 
-constexpr double LUMA_SCALE = 100;
-
-// CSS Actual values are scaled -128 -> 127
-constexpr double MIN_SCALE = -128;
-constexpr double MAX_SCALE = 127;
-
-Lab::Lab(Type type, int components, std::string name, std::string shortName, std::string icon, bool spaceIsUnbounded):
-    AnySpace(type, components, std::move(name), std::move(shortName), std::move(icon), spaceIsUnbounded) {
-}
-
-/**
- * Return the RGB color profile, this is static for all RGB sub-types
- */
-std::shared_ptr<Inkscape::Colors::CMS::Profile> const Lab::getProfile() const
-{
-    static std::shared_ptr<Colors::CMS::Profile> lab_profile = Colors::CMS::Profile::create_lab();
-    return lab_profile;
-}
-
-/**
- * Changes the values from 0..1, to typical lab scaling used in calculations.
- */
-void Lab::scaleUp(std::vector<double> &in_out)
-{
-    in_out[0] = SCALE_UP(in_out[0], 0, LUMA_SCALE);
-    in_out[1] = SCALE_UP(in_out[1], MIN_SCALE, MAX_SCALE);
-    in_out[2] = SCALE_UP(in_out[2], MIN_SCALE, MAX_SCALE);
-}
-
-/**
- * Changes the values from typical lab scaling (see above) to values 0..1.
- */
-void Lab::scaleDown(std::vector<double> &in_out)
-{
-    in_out[0] = SCALE_DOWN(in_out[0], 0, LUMA_SCALE);
-    in_out[1] = SCALE_DOWN(in_out[1], MIN_SCALE, MAX_SCALE);
-    in_out[2] = SCALE_DOWN(in_out[2], MIN_SCALE, MAX_SCALE);
-}
-
 /**
  * Print the Lab color to a CSS string.
  *

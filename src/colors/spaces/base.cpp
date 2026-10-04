@@ -15,8 +15,6 @@
 #include <sstream>
 #include <utility>
 
-#include "colors/cms/profile.h"
-#include "colors/cms/transform-color.h"
 #include "colors/color.h"
 #include "colors/manager.h"
 #include "components.h"
@@ -53,70 +51,6 @@ bool AnySpace::isValidData(std::vector<double> const &values) const
     auto const n_values = values.size();
     auto const n_space = getComponentCount();
     return n_values == n_space || n_values == n_space + 1;
-}
-
-/**
- * In place conversion of a color object to the given space.
- *
- * This three part conversion may not mutate the input at all, depending on
- * the space it's already in and the format of the data.
- */
-bool AnySpace::convert(std::vector<double> &io, std::shared_ptr<AnySpace> to_space) const
-{
-    // Nothing to change, so return.
-    if (*this == *to_space)
-        return true;
-
-    // Firstly convert from the formatted values (i.e. hsl) into the profile values (i.e. sRGB)
-    spaceToProfile(io);
-
-    // Secondly convert the color profile itself using lcms2 if the profiles are different
-    if (profileToProfile(io, to_space)) {
-        // Thirdly convert to the formatted values (i.e. hsl) from the profile values (i.e. sRGB)
-        to_space->profileToSpace(io);
-        return true;
-    }
-
-    // Turn it back so we don't leave data in a weird state
-    profileToSpace(io);
-    return false;
-}
-
-/**
- * Convert from the space's format, to the profile's data format.
- */
-void AnySpace::spaceToProfile(std::vector<double> &io) const {}
-
-/**
- * Convert from the profile's format, to the space's data format.
- */
-void AnySpace::profileToSpace(std::vector<double> &io) const {}
-
-/**
- * Step two in converting a color, convert its profile to another profile (if needed)
- */
-bool AnySpace::profileToProfile(std::vector<double> &io, std::shared_ptr<AnySpace> to_space) const
-{
-    auto from_profile = getProfile();
-    auto to_profile = to_space->getProfile();
-    if (*to_profile == *from_profile)
-        return true;
-
-    auto intent = getBestIntent(to_space);
-
-    // Look in the transform cache for the color profile
-    auto to_profile_id = to_profile->getChecksum() + "-" + intentIds[intent];
-
-    if (!_transforms.contains(to_profile_id)) {
-        // Create a new transform for this one way profile-pair
-        _transforms.emplace(to_profile_id, std::make_shared<Colors::CMS::TransformColor>(from_profile, to_profile, intent));
-    }
-
-    // Use the transform to convert the output colors.
-    if (auto &tr = _transforms[to_profile_id]) {
-        return tr->do_transform(io);
-    }
-    return false;
 }
 
 /**

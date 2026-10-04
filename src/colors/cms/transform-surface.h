@@ -27,6 +27,9 @@ class TransformContext
          fprintf(stderr, "  ---- LCMS error: %s (ErrorCode: %d)\n", Text, ErrorCode);
     }  
 public:
+    TransformContext(TransformContext const &) = delete;
+    TransformContext &operator=(TransformContext const &) = delete;
+
     TransformContext()
         : _context{cmsCreateContext(nullptr, nullptr)}
     {
@@ -60,7 +63,7 @@ public:
      */
     struct Format
     {
-        std::shared_ptr<Profile> const profile;
+        std::shared_ptr<Profile> profile;
 
         int  byte_count;
         bool integral;
@@ -78,8 +81,8 @@ public:
      * @arg proof_intent - An optional intent for the proofing conversion
      * @arg gamut_warn   - Optional flag for rendering out of gamut colors with a warning color.
      */
-    TransformSurface(Format input,
-                     Format output,
+    TransformSurface(Format const &input,
+                     Format const &output,
                      RenderingIntent intent = RenderingIntent::PERCEPTUAL,
                      std::shared_ptr<Profile> const &proof = nullptr,
                      RenderingIntent proof_intent = RenderingIntent::AUTO,

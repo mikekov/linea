@@ -22,14 +22,12 @@ namespace Inkscape::Colors::Space {
 class NamedColor : public RGB
 {
 public:
-    NamedColor(): RGB(Type::CSSNAME, 3, "CSSNAME", "CSS", "color-selector-named") {}
+    NamedColor(): RGB(Type::CSSNAME, "CSSNAME", "CSS", "color-selector-named") {}
     ~NamedColor() override = default;
 
     Type getComponentType() const override { return Type::RGB; }
 
     static std::string getNameFor(unsigned int rgba);
-
-    bool isDirect() const override { return false; }
 
 protected:
     friend class Inkscape::Colors::Color;
