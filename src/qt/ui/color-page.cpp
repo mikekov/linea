@@ -46,6 +46,11 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         }
     });
 
+    _selected_colors->signal_cleared.connect([this]() {
+        auto scoped = SignalBlocker(_specific_changed_connection);
+        _specific_colors->clear();
+    });
+
     // Control signals when widget isn't visible
     // (handled in showEvent/hideEvent instead)
 
