@@ -247,8 +247,8 @@ void createMainMenu(QMenuBar* bar) {
         {},
         {"path-simplify"},
         {"path-reverse"},
-        // {},
-        // {"paste-path-effect"},
+        {},
+        {"paste-path-effect"},
         // {"remove-path-effect"},
     };
 
