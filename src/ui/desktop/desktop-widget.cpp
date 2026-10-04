@@ -629,6 +629,20 @@ void SPDesktopWidget::switchDesktop(SPDesktop* desktop) {
 
     _updatePanelsForDesktop(desktop);
 
+    // Stateful Gio actions are not covered by ActionRegistry; sync them
+    // with the new desktop's canvas state.
+    if (_window) {
+        if (auto action = std::dynamic_pointer_cast<Gio::SimpleAction>(_window->lookup_action("canvas-color-mode"))) {
+            action->set_state(Glib::Variant<bool>::create(_desktop->getCanvas()->get_color_mode() == Inkscape::ColorMode::GRAYSCALE));
+        }
+        if (auto action = std::dynamic_pointer_cast<Gio::SimpleAction>(_window->lookup_action("canvas-split-mode"))) {
+            action->set_state(Glib::Variant<int>::create((int)_desktop->getCanvas()->get_split_mode()));
+        }
+        if (auto action = std::dynamic_pointer_cast<Gio::SimpleAction>(_window->lookup_action("canvas-color-manage"))) {
+            action->set_state(Glib::Variant<bool>::create(_desktop->getCanvas()->get_cms_active()));
+        }
+    }
+
     // All stateful actions are re-evaluated via syncAllActions
     // since the entire desktop context changed.
     ActionRegistry::get().syncAllActions();
