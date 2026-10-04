@@ -53,10 +53,9 @@ public:
     // the returned shared_ptr alive while holding pointers into it.
     FontsPayload fonts() const { return _fonts; }
 
-protected:
-    FontDiscovery();
-
 private:
+    FontDiscovery();
+    friend class EnableSingleton;
     FontsPayload _fonts;
     sigc::scoped_connection _connection;
     Inkscape::Async::OperationStream<FontsPayload, double, Glib::ustring, std::vector<FontInfo>> _loading;

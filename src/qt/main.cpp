@@ -37,6 +37,8 @@
 
 int main(int argc, char* argv[]) {
     try {
+        Inkscape::Util::Statics statics;
+
         // Required before QApplication: share GL contexts so QOpenGLWidget can composite
         // into the parent window on macOS (fixes "Failed to create wrapper texture").
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
@@ -161,7 +163,7 @@ int main(int argc, char* argv[]) {
             if (args.isEmpty()) {
                 std::cerr << "Linea: --export-filename requires an input file" << std::endl;
                 LINEA_APP.shutdown();
-                Inkscape::Util::StaticsBin::get().destroy();
+                Inkscape::Util::Statics::destroy();
                 return 1;
             }
             auto file = Gio::File::create_for_path(args.first().toStdString());
@@ -169,7 +171,7 @@ int main(int argc, char* argv[]) {
             if (!document) {
                 std::cerr << "Linea: failed to load " << args.first().toStdString() << std::endl;
                 LINEA_APP.shutdown();
-                Inkscape::Util::StaticsBin::get().destroy();
+                Inkscape::Util::Statics::destroy();
                 return 1;
             }
             InkFileExportCmd exporter;
@@ -180,7 +182,7 @@ int main(int argc, char* argv[]) {
             exporter.export_overwrite = true;
             exporter.do_export(document.get(), args.first().toStdString());
             LINEA_APP.shutdown();
-            Inkscape::Util::StaticsBin::get().destroy();
+            Inkscape::Util::Statics::destroy();
             return 0;
         }
 
@@ -205,14 +207,14 @@ int main(int argc, char* argv[]) {
         if (!LINEA_APP.get_active_window()) {
             std::cerr << "Linea: Failed to open document" << std::endl;
             LINEA_APP.shutdown();
-            Inkscape::Util::StaticsBin::get().destroy();
+            Inkscape::Util::Statics::destroy();
             return 1;
         }
 
         int result = app.exec();
 
         Inkscape::Preferences::get()->save();
-        Inkscape::Util::StaticsBin::get().destroy();
+        Inkscape::Util::Statics::destroy();
 
         return result;
     } catch (const std::exception& e) {

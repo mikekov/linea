@@ -46,10 +46,9 @@ public:
     Cairo::RefPtr<Cairo::Surface> get_image_surface(SPPaintServer* pattern, int width, int
 height, double device_scale);
 
-protected:
-    PatternManager();
-
 private:
+    PatternManager();
+    friend class EnableSingleton;
     void init();
     std::vector<std::shared_ptr<Category>> _categories;
     std::unordered_map<SPPaintServer*, std::shared_ptr<Inkscape::UI::Widget::PatternItem>> _cache;
