@@ -40,6 +40,7 @@ namespace Inkscape {
 
 static Inkscape::XML::Document *loadImpl( std::string const& prefsFilename, Glib::ustring & errMsg );
 static void migrateDetails( Inkscape::XML::Document *from, Inkscape::XML::Document *to );
+static void dropDefaultsDuplicates(Inkscape::XML::Node* defaults, Inkscape::XML::Node* loaded);
 
 static Inkscape::XML::Document *migrateFromDoc = nullptr;
 
@@ -171,6 +172,7 @@ void Preferences::_load()
 
     if ( prefs_read ) {
         // Merge the loaded prefs with defaults.
+        dropDefaultsDuplicates(_prefs_doc->root(), prefs_read->root());
         _prefs_doc->root()->mergeFrom(prefs_read->root(), "id");
         Inkscape::GC::release(prefs_read);
         _writable = true;
@@ -225,9 +227,39 @@ static Inkscape::XML::Document *loadImpl( std::string const& prefsFilename, Glib
     return prefs_read;
 }
 
+/**
+ * Drop loaded prefs children that duplicate a defaults child verbatim.
+ *
+ * Children without an "id" attribute (comments, text, processing instructions) have no merge identity,
+ * so mergeFrom() appends them on every load and they would accumulate a copy per session.
+ * A loaded child that is identical to the defaults child at the same position is the same piece of content
+ * and is dropped; identical content at a different position is user-added and kept.
+ * 
+ * Ideally mergeFrom() should do it, but I don't want to upset other use cases that rely on it by changing its behavior.
+ */
+static void dropDefaultsDuplicates(Inkscape::XML::Node* defaults, Inkscape::XML::Node* loaded) {
+    // Walk backwards: removing a child only shifts positions of the
+    // siblings after it, so the positions of not-yet-visited children stay
+    // comparable with the defaults.
+    for (XML::Node* child = loaded->lastChild(); child;) {
+        XML::Node* prev = child->prev();
+        if (const gchar* id = child->attribute("id")) {
+            if (XML::Node* match = sp_repr_lookup_child(defaults, "id", id)) {
+                dropDefaultsDuplicates(match, child);
+            }
+        } else if (XML::Node* counterpart = defaults->nthChild(child->position())) {
+            if (counterpart->equal(child, true)) {
+                loaded->removeChild(child);
+            }
+        }
+        child = prev;
+    }
+}
+
 static void migrateDetails( Inkscape::XML::Document *from, Inkscape::XML::Document *to )
 {
     // TODO pull in additional prefs with more granularity
+    dropDefaultsDuplicates(to->root(), from->root());
     to->root()->mergeFrom(from->root(), "id");
 }
 
