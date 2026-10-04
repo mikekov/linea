@@ -301,37 +301,55 @@ enum FontCacheFlags : int {
     Synthetic = 0x08,
 };
 
+void save_font_cache_entry(const Glib::RefPtr<Glib::KeyFile>& keyfile, const Glib::ustring& group, const FontInfo& font) {
+    int flags = FontCacheFlags::Normal;
+    if (font.monospaced) {
+        flags |= FontCacheFlags::Monospace;
+    }
+    if (font.oblique) {
+        flags |= FontCacheFlags::Oblique;
+    }
+    if (font.variable_font) {
+        flags |= FontCacheFlags::Variable;
+    }
+    if (font.synthetic) {
+        flags |= FontCacheFlags::Synthetic;
+    }
+    keyfile->set_double(group, "weight", font.weight);
+    keyfile->set_double(group, "width", font.width);
+    keyfile->set_integer(group, "family", font.family_kind);
+    keyfile->set_integer(group, "flags", flags);
+    if (!font.variations.empty()) {
+        keyfile->set_string(group, "variations", font.variations);
+    }
+}
+
 void save_font_cache(const std::vector<std::vector<FontInfo>>& fonts) {
     auto keyfile = Glib::KeyFile::create();
 
     keyfile->set_double(cache_header, "version", cache_version);
-    Glib::ustring weight("weight");
-    Glib::ustring width("width");
-    Glib::ustring ffamily("family");
-    Glib::ustring fontflags("flags");
 
     for (auto&& family : fonts) {
         for (auto&& font : family) {
             auto desc = get_font_description(font.ff, font.face);
-            auto group = desc.to_string();
-            int flags = FontCacheFlags::Normal;
-            if (font.monospaced) {
-                flags |= FontCacheFlags::Monospace;
-            }
-            if (font.oblique) {
-                flags |= FontCacheFlags::Oblique;
-            }
-            if (font.variable_font) {
-                flags |= FontCacheFlags::Variable;
-            }
-            if (font.synthetic) {
-                flags |= FontCacheFlags::Synthetic;
-            }
-            keyfile->set_double(group, weight, font.weight);
-            keyfile->set_double(group, width, font.width);
-            keyfile->set_integer(group, ffamily, font.family_kind);
-            keyfile->set_integer(group, fontflags, flags);
+            save_font_cache_entry(keyfile, desc.to_string(), font);
         }
+    }
+
+    std::string filename = Glib::build_filename(Inkscape::IO::Resource::profile_path(), font_cache);
+    keyfile->save_to_file(filename);
+}
+
+// Write the cache lookup map as it stands: previously cached entries plus
+// everything resolved so far. Used for incremental saves so an aborted scan
+// still keeps its progress; the complete scan's save prunes stale entries.
+void save_merged_font_cache(const std::unordered_map<std::string, FontInfo>& cache) {
+    auto keyfile = Glib::KeyFile::create();
+
+    keyfile->set_double(cache_header, "version", cache_version);
+
+    for (auto&& [group, font] : cache) {
+        save_font_cache_entry(keyfile, group, font);
     }
 
     std::string filename = Glib::build_filename(Inkscape::IO::Resource::profile_path(), font_cache);
@@ -360,6 +378,7 @@ std::unordered_map<std::string, FontInfo> load_cached_font_info() {
             Glib::ustring width("width");
             Glib::ustring family("family");
             Glib::ustring fontflags("flags");
+            Glib::ustring fontvariations("variations");
 
             for (auto&& group : keyfile->get_groups()) {
                 if (group == cache_header) continue;
@@ -381,6 +400,9 @@ std::unordered_map<std::string, FontInfo> load_cached_font_info() {
                 font.weight = keyfile->get_double(group, weight);
                 font.width = keyfile->get_double(group, width);
                 font.family_kind = keyfile->get_integer(group, family);
+                if (keyfile->has_key(group, fontvariations)) {
+                    font.variations = keyfile->get_string(group, fontvariations);
+                }
 
                 info[group.raw()] = font;
             }
@@ -410,6 +432,7 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
 
     progress.throw_if_cancelled();
     bool update_cache = false;
+    int pending_cache_entries = 0;
 
     double counter = 0.0;
     for (auto ff : families) {
@@ -443,7 +466,9 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
             bool valid = false;
 
             desc = get_font_description(ff, face);
-            auto it = cache.find(desc.to_string().raw());
+            // capture the cache key now; the metric calculations mutate desc
+            auto desc_key = desc.to_string().raw();
+            auto it = cache.find(desc_key);
             if (it == cache.end()) {
                 // font not found in a cache; calculate metrics
 
@@ -462,6 +487,21 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
                         info.oblique = font->is_oblique();
                         info.family_kind = font->family_class();
                         info.variable_font = !font->get_opentype_varaxes().empty();
+                        if (info.variable_font && desc.get_variations().empty()) {
+                            // Variable-font named instances: Pango lists a face
+                            // per named instance, but face->describe() drops the
+                            // instance's axis values, so choosing that style
+                            // would silently produce the default instance. The
+                            // axis values live in the 'fvar' table under the
+                            // instance's face name. Reading them here costs
+                            // nothing since the font is already loaded for the
+                            // metrics, and the result is stored in the cache.
+                            const auto& named = font->get_opentype_varnamedinstances();
+                            if (auto inst = named.find(face->get_name());
+                                inst != named.end() && !inst->second.empty()) {
+                                info.variations = "@" + inst->second;
+                            }
+                        }
                         auto glyph = font->LoadGlyph(font->MapUnicodeChar('E'));
                         if (glyph) {
                             // caps height normalized to 0..1
@@ -477,32 +517,22 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
 
                 desc = get_font_description(ff, face);
                 info.width = calculate_font_width(desc);
+
+                if (valid) {
+                    // Merge into the lookup map and flush periodically so an
+                    // aborted scan still keeps the progress it made; the full
+                    // save at the end rewrites a clean file.
+                    cache[desc_key] = info;
+                    if (++pending_cache_entries >= 200) {
+                        save_merged_font_cache(cache);
+                        pending_cache_entries = 0;
+                    }
+                }
             }
             else {
                 // font in a cache already
                 info = it->second;
                 valid = true;
-            }
-
-            // Variable-font named instances: Pango lists a face per named
-            // instance, but face->describe() drops the instance's axis
-            // values, so choosing that style would silently produce the
-            // default instance. The axis values live in the 'fvar' table
-            // under the instance's face name. FontFactory caches loaded
-            // fonts, so repeated lookups for the same file are cheap.
-            if (valid && info.variable_font && desc.get_variations().empty()) {
-                try {
-                    if (auto font = FontFactory::get().create_face(desc.gobj())) {
-                        auto const& named = font->get_opentype_varnamedinstances();
-                        if (auto ni = named.find(face->get_name());
-                            ni != named.end() && !ni->second.empty()) {
-                            info.variations = "@" + ni->second;
-                        }
-                    }
-                }
-                catch (...) {
-                    // leave variations empty
-                }
             }
 
             if (valid) {
