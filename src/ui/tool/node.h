@@ -212,6 +212,7 @@ public:
 protected:
     void dragged(Geom::Point &new_pos, MotionEvent const &event) override;
     bool grabbed(MotionEvent const &event) override;
+    void ungrabbed(ButtonReleaseEvent const *event) override;
     bool clicked(ButtonReleaseEvent const &event) override;
 
     void _setState(State state) override;
@@ -258,6 +259,13 @@ private:
     // Created on mouse down, this segment contains the curve between the previous node
     // and the next node used for confine-to-path.
     std::optional<Geom::PathVector> _short_segment_path;
+
+    // Neighbor this node was slid onto with confine-to-path when the drag
+    // ended at an extreme; the two fuse in ungrabbed().
+    Node* _fuse_target = nullptr;
+
+    void _reshapeToPath(Geom::Point const &new_pos, Geom::PathVectorTime const &pos);
+    void _fuseIntoNeighbor();
 
     // This is used by fixNeighbors to repair smooth nodes after all move
     // operations have been completed. If this is empty, no fixing is needed.

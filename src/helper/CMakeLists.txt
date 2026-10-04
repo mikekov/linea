@@ -2,7 +2,9 @@
 
 target_sources(linea_base PRIVATE
 	geom.cpp
+	geom-curves.cpp
 	geom-nodetype.cpp
+	geom-path-slide.cpp
 	geom-pathstroke.cpp
 	geom-pathvector_nodesatellites.cpp
 	geom-nodesatellite.cpp
@@ -15,6 +17,7 @@ target_sources(linea_base PRIVATE
 	# Headers
 	geom-curves.h
 	geom-nodetype.h
+	geom-path-slide.h
 	geom-pathstroke.h
 	geom-pathvector_nodesatellites.h
 	geom-nodesatellite.h

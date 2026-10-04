@@ -15,6 +15,7 @@
 #include "desktop.h"
 #include "display/control/canvas-item-bpath.h"
 #include "display/control/canvas-item-curve.h"
+#include "helper/geom-path-slide.h"
 #include "object/sp-namedview.h"
 #include "ui/modifiers.h"
 #include "ui/tool/control-point-selection.h"
@@ -916,6 +917,15 @@ Geom::Rect Node::bounds() const
  */
 void Node::fixNeighbors()
 {
+    // A confine-to-path slide recomputes the handles of this node and its
+    // neighbors on every move; normalizing them here would fight that.
+    if (_short_segment_path ||
+        (_prev() && _prev()->_short_segment_path) ||
+        (_next() && _next()->_short_segment_path)) {
+        _unfixed_pos.reset();
+        return;
+    }
+
     if (!_unfixed_pos)
         return;
 
@@ -1424,7 +1434,8 @@ bool Node::grabbed(MotionEvent const &event)
         return true;
     }
 
-    if (Modifiers::Modifier::get(Modifiers::Type::NODE_CONFINE_TO_PATH)->active(event.modifiers)) {
+    if (Modifiers::Modifier::get(Modifiers::Type::NODE_CONFINE_TO_PATH)->active(event.modifiers)
+        && !_pm()._isBSpline()) {
         Geom::PathBuilder builder;
 
         if (auto prev = _prev()) {
@@ -1480,6 +1491,7 @@ bool Node::grabbed(MotionEvent const &event)
 
 void Node::dragged(Geom::Point &new_pos, MotionEvent const &event)
 {
+    _fuse_target = nullptr;
     auto const confine = Modifiers::Modifier::get(Modifiers::Type::MOVE_CONFINE)->active(event.modifiers);
     auto const confine_handles = Modifiers::Modifier::get(Modifiers::Type::NODE_CONFINE_HANDLES)->active(event.modifiers);
     auto const confine_to_path = Modifiers::Modifier::get(Modifiers::Type::NODE_CONFINE_TO_PATH)->active(event.modifiers);
@@ -1573,7 +1585,7 @@ void Node::dragged(Geom::Point &new_pos, MotionEvent const &event)
         time_on_line = _short_segment_path->nearestTime(new_pos, &line_distance);
         new_pos = _short_segment_path->pointAt(*time_on_line);
 
-        // TODO: We could update the handle positions here to preserve more bezier shapes
+        _reshapeToPath(new_pos, *time_on_line);
     } else if (confine || confine_handles) {
         // We're about to consider a constrained snap, which is already limited to 1D
         // Therefore tangential or perpendicular snapping will not be considered, and therefore
@@ -1858,6 +1870,70 @@ void Node::build_segment(Geom::PathBuilder &builder, Node *next_node)
     }
 }
 
+/** Recompute the surrounding handles after a confine-to-path slide so the
+ * node's move does not deform the path.
+ */
+void Node::_reshapeToPath(const Geom::Point& new_pos, const Geom::PathVectorTime& pos) {
+    if (!_short_segment_path || pos.path_index >= _short_segment_path->size()) return;
+    const Geom::Path& path = (*_short_segment_path)[pos.path_index];
+    if (pos.curve_index >= path.size()) return;
+
+    // Auto and symmetric nodes have their handles regenerated when the
+    // node moves, which would undo the shape-preserving handle updates.
+    // Demote them as subdivideSegment() does.
+    if (_type == NODE_SYMMETRIC || _type == NODE_AUTO) {
+        setType(NODE_SMOOTH, false);
+    }
+
+    _fuse_target = nullptr;
+    Node* prev = _prev();
+    Node* next = _next();
+    const auto handles =
+        slide_node_along_path(path, pos.asPathTime(), new_pos, prev ? std::optional{prev->position()} : std::nullopt,
+                              next ? std::optional{next->position()} : std::nullopt);
+
+    // The node's own handles are rigidly translated by move() after
+    // dragged() returns; pre-compensate so they land on the positions
+    // computed here. Neighbors' handles are not translated.
+    const Geom::Point delta = new_pos - position();
+    if (handles.prev_front) prev->front()->setPosition(*handles.prev_front);
+    if (handles.back) _back.setPosition(*handles.back - delta);
+    if (handles.front) _front.setPosition(*handles.front - delta);
+    if (handles.next_back) next->back()->setPosition(*handles.next_back);
+    if (handles.collapse == PathSlideHandles::Collapse::Prev) _fuse_target = prev;
+    if (handles.collapse == PathSlideHandles::Collapse::Next) _fuse_target = next;
+}
+
+/** Merge the neighbor this node was slid onto by confine-to-path into this node
+ * This node survives (it is already at the fusion position and is
+ * the one being dragged, so it cannot remove itself safely); the neighbor
+ * is deselected and erased, and this node absorbs its outer handle and
+ * node type. The handles of the segment on the far side were already computed
+ * by the last _reshapeToPath() at the slide extreme, so nothing is refit here.
+ */
+void Node::_fuseIntoNeighbor() {
+    Node* victim = _fuse_target;
+    _fuse_target = nullptr;
+    if (!victim || !ln_list) return;
+
+    if (victim == _prev()) {
+        _back.setPosition(victim->back()->position());
+    } else {
+        _front.setPosition(victim->front()->position());
+    }
+    setType(victim->type(), false);
+
+    _selection.erase(victim);
+    nodeList().erase(NodeList::get_iterator(victim));
+}
+
+void Node::ungrabbed(const ButtonReleaseEvent* event) {
+    if (_fuse_target) {
+        _fuseIntoNeighbor();
+    }
+    _short_segment_path.reset();
+    SelectableControlPoint::ungrabbed(event);
+}
 
 NodeList::NodeList(SubpathList &splist)
     : _list(splist)
