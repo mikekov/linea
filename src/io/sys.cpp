@@ -236,3 +236,9 @@ void Inkscape::IO::remove_file_extension(std::string &path)
         path.erase(path.size() - ext.size());
     }
 }
+
+void Inkscape::IO::swap_file_extension(std::string &path, std::string const &new_ext)
+{
+    remove_file_extension(path);
+    path.append(new_ext);
+}
