@@ -599,6 +599,16 @@ void sp_import_document(SPDesktop *desktop, SPDocument *clipdoc, bool in_place, 
                 break;
             }
         }
+
+        // The selected repr can be nested inside a non-group container (e.g.
+        // <a>, <switch>, or sodipodi:namedview for pages/guides), so it needn't
+        // be a direct child of the resolved layer. addChild() asserts the ref
+        // node is a direct child, so paste above the selected node's top-level
+        // ancestor within the layer instead.
+        auto *layer_repr = layer->getRepr();
+        while (node_after && node_after->parent() != layer_repr) {
+            node_after = node_after->parent();
+        }
     } else {
         node_after = target_parent->lastChild();
     }
