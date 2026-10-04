@@ -464,11 +464,11 @@ public:
     virtual void changeOrder(Node *child, Node *after) = 0;
 
     /**
-     * @brief Remove all elements that not in src node
-     * @param src The node to check for elements into this node
+     * @brief Remove children whose @c key value is not present in source
+     * @param source The node providing the set of children to keep
      * @param key The attribute to use as the identity attribute
      */
-    virtual void cleanOriginal(Node *src, char const *key) = 0;
+    virtual void cleanOriginal(Node *source, char const *key) = 0;
 
     /**
      * @brief Compare 2 nodes equality
@@ -477,23 +477,27 @@ public:
      */
     virtual bool equal(Node const *other, bool recursive, bool skip_ids = false) = 0;
     /**
-     * @brief Merge all children of another node with the current
+     * @brief Overlay another node's contents onto this node
      *
-     * This method merges two node hierarchies, where @c src takes precedence.
-     * @c key is the name of the attribute that determines whether two nodes are
-     * corresponding (it must be the same for both, and all of their ancestors). If there is
-     * a corresponding node in @c src hierarchy, their attributes and content override the ones
-     * already present in this node's hierarchy. If there is no corresponding node,
-     * it is copied from @c src to this node. This method is used when merging the user's
-     * preferences file with the defaults, and has little use beyond that.
+     * Copies source's attributes over this node's (attributes present only
+     * here are kept), sets this node's content to source's, and merges
+     * source's children in document order. A source child carrying a @c key
+     * attribute is matched against this node's child with the same @c key
+     * value and merged recursively; if there is no match it is duplicated
+     * and appended. Children without a @c key value (comments, text nodes,
+     * ...) cannot be matched and are appended verbatim.
      *
-     * @param src The node to merge into this node
+     * @param source The node to merge into this node
      * @param key The attribute to use as the identity attribute
-     * @param noid If true process noid items
-     * @param key If clean callback to cleanOriginal
+     * @param replace_mismatched If true, a matched child that differs from
+     *        source's is replaced by a copy of source's instead of being
+     *        merged recursively
+     * @param clean If true, this node's children whose @c key value does not
+     *        appear in source are removed first (not recursive - applies to
+     *        this node's children only)
      */
 
-    virtual void mergeFrom(Node const *src, char const *key, bool extension = false, bool clean = false) = 0;
+    virtual void mergeFrom(Node const *src, char const *key, bool replace_mismatched = false, bool clean = false) = 0;
 
     /*@}*/
 

@@ -627,15 +627,15 @@ Node *SimpleNode::root() {
     }
 }
 
-void SimpleNode::cleanOriginal(Node *src, gchar const *key){
+void SimpleNode::cleanOriginal(Node *source, gchar const *key){
     std::vector<Node *> to_delete;
     for ( Node *child = this->firstChild() ; child != nullptr ; child = child->next() )
     {
         gchar const *id = child->attribute(key);
         if (id) {
-            Node *rch = sp_repr_lookup_child(src, key, id);
-            if (rch) {
-                child->cleanOriginal(rch, key);
+            Node *match = sp_repr_lookup_child(source, key, id);
+            if (match) {
+                child->cleanOriginal(match, key);
             } else {
                 to_delete.push_back(child);
             }
@@ -647,6 +647,7 @@ void SimpleNode::cleanOriginal(Node *src, gchar const *key){
         removeChild(i);
     }
 }
+
 bool string_equal(const gchar *a,const gchar *b) {
     return g_strcmp0(a, b) == 0;
 }
@@ -695,49 +696,50 @@ bool SimpleNode::equal(Node const *other, bool recursive, bool skip_ids) {
     return true;
 }
 
-void SimpleNode::mergeFrom(Node const *src, gchar const *key, bool extension, bool clean) {
-    g_return_if_fail(src != nullptr);
+// Overlays source onto this node: source's attributes and content win,
+// children are matched by their 'key' attribute and merged recursively, and
+// unmatched or unmatchable children are appended as copies. See node.h.
+void SimpleNode::mergeFrom(Node const *source, gchar const *key, bool replace_mismatched, bool clean) {
+    g_return_if_fail(source != nullptr);
     g_return_if_fail(key != nullptr);
-    g_assert(src != this);
-    
-    Node * srcp = const_cast<Node *>(src);
-    if (srcp->equal(this, true)) {
+    g_assert(source != this);
+
+    Node* mutable_source = const_cast<Node *>(source);
+    if (mutable_source->equal(this, true)) {
         return;
     }
-    setContent(src->content());
-    if(_parent) {
-        setPosition(src->position());
+    setContent(source->content());
+    if (_parent) {
+        setPosition(source->position());
     }
 
     if (clean) {
-        cleanOriginal(srcp, key);
+        cleanOriginal(mutable_source, key);
     }
 
-    for ( Node const *child = src->firstChild() ; child != nullptr ; child = child->next() )
-    {
-        gchar const *id = child->attribute(key);
+    for (const Node* child = source->firstChild(); child != nullptr; child = child->next()) {
+        const auto id = child->attribute(key);
         if (id) {
-            Node *rch=sp_repr_lookup_child(this, key, id);
-            if (rch && (!extension || rch->equal(child, false))) {
-                rch->mergeFrom(child, key, extension);
+            Node* match = sp_repr_lookup_child(this, key, id);
+            if (match && (!replace_mismatched || match->equal(child, false))) {
+                match->mergeFrom(child, key, replace_mismatched);
                 continue;
             } else {
-                if(rch) {
-                    removeChild(rch);
+                if (match) {
+                    removeChild(match);
                 }
             }
         }
         {
-            guint pos = child->position();
-            Node *rch=child->duplicate(_document);
-            addChildAtPos(rch, pos);
-            rch->release();
+            auto pos = child->position();
+            Node* copy = child->duplicate(_document);
+            addChildAtPos(copy, pos);
+            copy->release();
         }
     }
 
-    for ( const auto & iter : src->attributeList() )
-    {
-        setAttribute(g_quark_to_string(iter.key), iter.value);
+    for (const auto& attr : source->attributeList()) {
+        setAttribute(g_quark_to_string(attr.key), attr.value);
     }
 }
 
