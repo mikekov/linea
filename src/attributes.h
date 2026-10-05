@@ -66,7 +66,6 @@ enum class SPAttr {
     /* SPNamedView */
     VIEWONLY,
     SHOWGUIDES,
-    SHOWGRIDS,
     GRIDTOLERANCE,
     GUIDETOLERANCE,
     OBJECTTOLERANCE,

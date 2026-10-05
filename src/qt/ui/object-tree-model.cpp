@@ -545,6 +545,9 @@ void ObjectNodeWatcher::notifyElementNameChanged(Inkscape::XML::Node&, GQuark, G
 
 // Watches the sp-namedview repr and keeps virtual node rows up to date.
 // All virtual nodes that reflect namedview state are refreshed through here.
+// Registered as a subtree observer so that changes to child grid reprs
+// (visible/enabled attributes, grid added/removed) are seen too — grid
+// visibility is derived from the grids themselves, not a namedview attribute.
 class NamedViewWatcher : public Inkscape::XML::NodeObserver {
 public:
     NamedViewWatcher() = delete;
@@ -554,7 +557,11 @@ public:
 private:
     void emitVirtualDataChanged(VirtualNodeType type);
 
-    void notifyAttributeChanged(Inkscape::XML::Node&, GQuark key, Inkscape::Util::ptr_shared,
+    static bool isGridRepr(Inkscape::XML::Node const& node);
+
+    void notifyChildAdded(Inkscape::XML::Node&, Inkscape::XML::Node& child, Inkscape::XML::Node* prev) override;
+    void notifyChildRemoved(Inkscape::XML::Node&, Inkscape::XML::Node& child, Inkscape::XML::Node* prev) override;
+    void notifyAttributeChanged(Inkscape::XML::Node& node, GQuark key, Inkscape::Util::ptr_shared,
                                 Inkscape::Util::ptr_shared) override;
 
     ObjectTreeModel* _model;
@@ -564,11 +571,15 @@ private:
 NamedViewWatcher::NamedViewWatcher(ObjectTreeModel* model, Inkscape::XML::Node* node)
     : _model(model)
     , _node(node) {
-    if (_node) _node->addObserver(*this);
+    if (_node) _node->addSubtreeObserver(*this);
 }
 
 NamedViewWatcher::~NamedViewWatcher() {
-    if (_node) _node->removeObserver(*this);
+    if (_node) _node->removeSubtreeObserver(*this);
+}
+
+bool NamedViewWatcher::isGridRepr(Inkscape::XML::Node const& node) {
+    return node.type() == Inkscape::XML::NodeType::ELEMENT_NODE && !std::strcmp(node.name(), "inkscape:grid");
 }
 
 void NamedViewWatcher::emitVirtualDataChanged(VirtualNodeType type) {
@@ -580,15 +591,30 @@ void NamedViewWatcher::emitVirtualDataChanged(VirtualNodeType type) {
                                 static_cast<int>(ObjectTreeModel::IsLockedRole)});
 }
 
-void NamedViewWatcher::notifyAttributeChanged(Inkscape::XML::Node&, GQuark key, Inkscape::Util::ptr_shared,
+void NamedViewWatcher::notifyChildAdded(Inkscape::XML::Node&, Inkscape::XML::Node& child,
+                                        Inkscape::XML::Node*) {
+    if (isGridRepr(child)) {
+        emitVirtualDataChanged(VirtualNodeType::Grids);
+    }
+}
+
+void NamedViewWatcher::notifyChildRemoved(Inkscape::XML::Node&, Inkscape::XML::Node& child,
+                                          Inkscape::XML::Node*) {
+    if (isGridRepr(child)) {
+        emitVirtualDataChanged(VirtualNodeType::Grids);
+    }
+}
+
+void NamedViewWatcher::notifyAttributeChanged(Inkscape::XML::Node& node, GQuark key, Inkscape::Util::ptr_shared,
                                               Inkscape::Util::ptr_shared) {
     static const GQuark q_showguides = g_quark_from_static_string("showguides");
     static const GQuark q_lockguides = g_quark_from_static_string("inkscape:lockguides");
-    static const GQuark q_showgrid = g_quark_from_static_string("showgrid");
+    static const GQuark q_visible = g_quark_from_static_string("visible");
+    static const GQuark q_enabled = g_quark_from_static_string("enabled");
 
     if (key == q_showguides || key == q_lockguides) {
         emitVirtualDataChanged(VirtualNodeType::Guides);
-    } else if (key == q_showgrid) {
+    } else if ((key == q_visible || key == q_enabled) && isGridRepr(node)) {
         emitVirtualDataChanged(VirtualNodeType::Grids);
     }
 }

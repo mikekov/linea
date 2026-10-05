@@ -53,7 +53,6 @@ public:
     bool editable = true;
     SVGBool showguides{true};
     SVGBool lockguides{false};
-    SVGBool grids_visible{false};
     SVGBool clip_to_page{false}; // if true, clip rendered content to pages' boundaries
     SVGBool antialias_rendering{true};
     // SVGBool desk_checkerboard{false};
@@ -104,7 +103,6 @@ public:
     bool getShowGuides();
 
     void updateViewPort();
-    void newGridCreated();
 
     bool desk_checkerboard() const;
 
@@ -144,7 +142,6 @@ private:
     friend class SPDocument;
 
     std::unique_ptr<Inkscape::CanvasPage> _viewport;
-    bool _sync_grids = true;
     std::optional<Inkscape::Colors::Color> _desk_color;
     std::optional<Inkscape::Colors::Color> _guide_color;
     std::optional<Inkscape::Colors::Color> _guide_hi_color;

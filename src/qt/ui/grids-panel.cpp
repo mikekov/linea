@@ -29,8 +29,6 @@ void create_new_grid(SPNamedView* namedview) {
     auto repr = namedview->getRepr();
     SPGrid::create_new(namedview->document, repr, GridType::RECTANGULAR);
 
-    namedview->newGridCreated();
-
     Inkscape::DocumentUndo::done(namedview->document,
         RC_("Undo", "Create new grid"), "");
 }

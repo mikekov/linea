@@ -224,7 +224,6 @@ void SPDesktop::_attachDocument() {
     _namedview = _document->getNamedView();
     _namedview->viewcount++;
     _namedview->show(this);  // KEY: adds page canvas items
-    _namedview->setShowGrids(_namedview->getShowGrids());
     _namedview->set_desk_color(this);
 
     _view_number = _namedview->viewcount;
