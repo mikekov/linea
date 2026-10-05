@@ -1281,8 +1281,22 @@ bool TextTool::root_handler(CanvasEvent const &event)
                     // inputMethodEvent — they arrive here as keyPressEvent with
                     // QKeyEvent::text() populated. Insert the character directly
                     // when no shortcut modifier (Ctrl/Alt) is held.
+                    // Ctrl/Alt usually mark shortcuts, but not always:
+                    // - macOS: Option maps to AltModifier yet is a character modifier
+                    //   (Option+o → ø); real shortcuts use Command → ControlModifier.
+                    // - Windows: AltGr arrives as Ctrl+Alt + GroupSwitchModifier.
+                    // Dead keys are skipped on all platforms: the accent is composed
+                    // into the following keystroke, not inserted standalone.
+                    bool const dead_key = event.qtKey >= Qt::Key_Dead_Grave && event.qtKey <= Qt::Key_Dead_Lowline;
+                    bool const alt_gr = (event.qtModifiers & Qt::GroupSwitchModifier) != 0;
+                    bool const modifier_blocks_text = dead_key
+                        || (mod_ctrl(event) && !alt_gr)
+#ifndef Q_OS_MACOS
+                        || (mod_alt(event) && !alt_gr)
+#endif
+                        ;
                     if (!ret && !event.text.empty()
-                        && !mod_ctrl(event) && !mod_alt(event)
+                        && !modifier_blocks_text
                         && !unimode)
                     {
                         _onIMCommit(QString::fromStdString(event.text));
