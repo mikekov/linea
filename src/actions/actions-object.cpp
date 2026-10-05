@@ -466,24 +466,24 @@ static auto object_action_defs = std::to_array<ActionSpec<Inkscape::Selection>>(
     {"object-stroke-to-path",      N_("Stroke to Path"),          SECTION, N_("Convert strokes to paths"),
         "stroke-to-path", object_stroke_to_path},
 
-    {"object-set-clip",            N_("Object Clip Set"),         SECTION, N_("Apply clipping path to selection (using the topmost object as clipping path)"),
+    {"object-set-clip",            N_("Set Object Clipping"),         SECTION, N_("Apply clipping path to selection (using the topmost object as clipping path)"),
         nullptr, object_clip_set},
-    {"object-set-inverse-clip",    N_("Object Clip Set Inverse"), SECTION, N_("Apply inverse clipping path to selection (Power Clip LPE)"),
+    {"object-set-inverse-clip",    N_("Set Object Inverse Clipping"), SECTION, N_("Apply inverse clipping path to selection (Power Clip LPE)"),
         nullptr, object_clip_set_inverse},
-    {"object-release-clip",        N_("Object Clip Release"),     SECTION, N_("Remove clipping path from selection"),
+    {"object-release-clip",        N_("Release Object Clipping"),     SECTION, N_("Remove clipping path from selection"),
         nullptr, object_clip_release},
-    {"object-set-clip-group",      N_("Object Clip Set Group"),   SECTION, N_("Create a self-clipping group to which objects (not contributing to the clip-path) can be added"),
+    {"object-set-clip-group",      N_("Set Object Clipping Group"),   SECTION, N_("Create a self-clipping group to which objects (not contributing to the clip-path) can be added"),
         nullptr, object_clip_set_group},
-    {"object-set-mask",            N_("Object Mask Set"),         SECTION, N_("Apply mask to selection (using the topmost object as mask)"),
+    {"object-set-mask",            N_("Set Object Mask"),         SECTION, N_("Apply mask to selection (using the topmost object as mask)"),
         nullptr, object_mask_set},
-    {"object-set-inverse-mask",    N_("Object Mask Set Inverse"), SECTION, N_("Apply inverse mask to selection (Power Mask LPE)"),          nullptr, object_mask_set_inverse},
-    {"object-release-mask",        N_("Object Mask Release"),     SECTION, N_("Remove mask from selection"),                                nullptr, object_mask_release},
+    {"object-set-inverse-mask",    N_("Set Object Inverse Mask"), SECTION, N_("Apply inverse mask to selection (Power Mask LPE)"),          nullptr, object_mask_set_inverse},
+    {"object-release-mask",        N_("Release Object Mask"),     SECTION, N_("Remove mask from selection"),                                nullptr, object_mask_release},
 
     // Deprecated, see app.transform-rotate(90)
-    {"object-rotate-90-cw",        N_("Object Rotate 90°"),       SECTION, N_("Rotate selection 90° clockwise"),                            nullptr, object_rotate_90_cw},
-    {"object-rotate-90-ccw",       N_("Object Rotate -90°"),      SECTION, N_("Rotate selection 90° counter-clockwise"),                    nullptr, object_rotate_90_ccw},
-    {"object-flip-horizontal",     N_("Object Flip Horizontal"),  SECTION, N_("Flip selected objects horizontally"),                        nullptr, object_flip_horizontal},
-    {"object-flip-vertical",       N_("Object Flip Vertical"),    SECTION, N_("Flip selected objects vertically"),                          nullptr, object_flip_vertical},
+    {"object-rotate-90-cw",        N_("Rotate Object 90°"),        SECTION, N_("Rotate selected objects 90° clockwise"),                    nullptr, object_rotate_90_cw},
+    {"object-rotate-90-ccw",       N_("Rotate Object 90° CCW"),    SECTION, N_("Rotate selected objects 90° counter-clockwise"),            nullptr, object_rotate_90_ccw},
+    {"object-flip-horizontal",     N_("Flip Object Horizontally"),  SECTION, N_("Flip selected objects horizontally"),                      nullptr, object_flip_horizontal},
+    {"object-flip-vertical",       N_("Flip Object Vertically"),    SECTION, N_("Flip selected objects vertically"),                        nullptr, object_flip_vertical},
     {"object-star-turn-upright",   N_("Turn Stars/Polygons Upright"), SECTION, N_("Turn stars and polygons upright"), nullptr, object_star_turn_upright}
     // clang-format on
 });
