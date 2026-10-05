@@ -87,26 +87,26 @@ static void create_clipboard_actions(QMenu* menu, bool const paste_only = false)
 {
     auto result = menu;// Gio::Menu::create();
     if (!paste_only) {
-        AppendItemFromAction(result, "app.cut",  _("Cu_t"),  "edit-cut");
-        AppendItemFromAction(result, "app.copy", _("_Copy"), "edit-copy");
+        AppendItemFromAction(result, "cut",  _("Cu_t"),  "edit-cut");
+        AppendItemFromAction(result, "copy", _("_Copy"), "edit-copy");
     }
-    AppendItemFromAction(result, "win.paste", _("_Paste"), "edit-paste");
-    
-    /// Also appending special paste options 
+    AppendItemFromAction(result, "paste", _("_Paste"), "edit-paste");
+
+    /// Also appending special paste options
     /// (in place, paste on page, paste style, paste size, paste width, paste height, paste size separately,
     /// paste width separately, paste height separately), to increase discoverability.
     // auto gmenu_paste_section = Gio::Menu::create();
-    auto gmenu_paste_submenu = appendCustomSubmenu(menu, _("Paste..."));
-    AppendItemFromAction(gmenu_paste_submenu, "win.paste-in-place", _("_In Place"), "edit-paste-in-place");
-    AppendItemFromAction(gmenu_paste_submenu, "win.paste-on-page", _("_On Page"), "");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-style", _("_Style"), "edit-paste-style");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-size", _("Si_ze"), "edit-paste-size");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-width", _("_Width"), "edit-paste-width");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-height", _("_Height"), "edit-paste-height");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-size-separately", _("Size Separately"), "edit-paste-size-separately");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-width-separately", _("Width Separately"), "edit-paste-width-separately");
-    AppendItemFromAction(gmenu_paste_submenu, "app.paste-height-separately", _("Height Separately"), "edit-paste-height-separately");
-    // gmenu_paste_section->append_submenu(_("Paste..."), gmenu_paste_submenu);
+    auto gmenu_paste_submenu = appendCustomSubmenu(menu, _("Paste Options"));
+    AppendItemFromAction(gmenu_paste_submenu, "paste-in-place", _("Paste _in Place"), "edit-paste-in-place");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-on-page", _("Paste _on Page"), "");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-style", _("Paste _Style"), "edit-paste-style");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-size", _("Paste Si_ze Onto Selection"), "edit-paste-size");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-width", _("Paste _Width Onto Selection"), "edit-paste-width");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-height", _("Paste _Height Onto Selection"), "edit-paste-height");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-size-separately", _("Paste Size Onto Selection Separately"), "edit-paste-size-separately");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-width-separately", _("Paste Width Onto Selection Separately"), "edit-paste-width-separately");
+    AppendItemFromAction(gmenu_paste_submenu, "paste-height-separately", _("Paste Height Onto Selection Separately"), "edit-paste-height-separately");
+    // gmenu_paste_section->append_submenu(_("Paste Options"), gmenu_paste_submenu);
     // result->append_section(gmenu_paste_section);
     appendCustomSeparator(menu);
     // return result;
