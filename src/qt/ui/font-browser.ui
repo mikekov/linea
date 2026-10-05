@@ -105,6 +105,24 @@
             </spacer>
           </item>
           <item>
+            <widget class="QPushButton" name="optionsButton">
+              <property name="toolTip">
+                <string>Font preview options</string>
+              </property>
+              <property name="text">
+                <string/>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/gear</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>no-menu-arrow</string>
+              </property>
+            </widget>
+          </item>
+          <item>
             <widget class="QLineEdit" name="searchEntry">
               <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

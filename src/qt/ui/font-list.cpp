@@ -63,7 +63,10 @@ FontList::FontList(QWidget* parent)
         QFontMetrics nameMetrics(nameFont);
         QFont sampleFont;
         QFontMetrics sampleMetrics = makePreviewFont(familyName, styleName, sampleFont);
-        int rowHeight = topMargin + nameMetrics.height() + spacing + sampleMetrics.height() + bottomMargin;
+        int rowHeight = topMargin + sampleMetrics.height() + bottomMargin;
+        if (_showFontName) {
+            rowHeight += nameMetrics.height() + spacing;
+        }
         return rowHeight;
     });
 
@@ -147,6 +150,17 @@ void FontList::setSampleText(const QString& text) {
 
 QString FontList::sampleText() const {
     return _sampleText;
+}
+
+void FontList::setShowFontName(bool show) {
+    if (_showFontName != show) {
+        _showFontName = show;
+        invalidate();
+    }
+}
+
+bool FontList::showFontName() const {
+    return _showFontName;
 }
 
 void FontList::setFonts(const std::vector<std::vector<Inkscape::FontInfo>>& fontFamilies) {
@@ -380,6 +394,11 @@ void FontList::drawFontRow(QPainter* painter, const Inkscape::FontInfo& info, Dr
     // sample rendered in the selected font
     int sampleBaseline = area.top() + sampleMetrics.ascent();
     drawSample(painter, sampleFont, sampleMetrics, sample, area.left(), sampleBaseline, area.width());
+
+    if (!_showFontName) {
+        painter->restore();
+        return;
+    }
 
     // font name
     painter->setFont(nameFont);

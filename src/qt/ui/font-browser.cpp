@@ -28,7 +28,9 @@
 #include <algorithm>
 #include <set>
 
+#include "font-browser-options.h"
 #include "font-list.h"
+#include "popup-menu.h"
 #include "preferences.h"
 #include "ui_font-browser.h"
 #include "util/font-tags.h"
@@ -89,15 +91,20 @@ FontBrowser::FontBrowser(QWidget* parent)
 
     connect(ui->searchEntry, &QLineEdit::textChanged, ui->fontList, &FontList::filterFonts);
     // Enter in the search field hands focus to the list for keyboard navigation
-    connect(ui->searchEntry, &QLineEdit::returnPressed, this, [this] {
-        ui->fontList->setFocus();
-    });
+    connect(ui->searchEntry, &QLineEdit::returnPressed, this, [this] { ui->fontList->setFocus(); });
 
     // Esc asks to be dismissed no matter which child widget has focus;
-    // the host decides what that means (hide popup, reject dialog, ...)
+    // the host decides what that means (hide popup, reject dialog, ...).
+    // With the options popup open it closes that first instead.
     auto esc = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     esc->setContext(Qt::WidgetWithChildrenShortcut);
-    connect(esc, &QShortcut::activated, this, &FontBrowser::cancelled);
+    connect(esc, &QShortcut::activated, this, [this] {
+        if (_optionsPopup && _optionsPopup->isVisible()) {
+            _optionsPopup->hide();
+        } else {
+            Q_EMIT cancelled();
+        }
+    });
 
     // category menu: the checkable list sits inside a widget action so that
     // toggling entries does not close the menu; gives the button a real menu
@@ -109,6 +116,42 @@ FontBrowser::FontBrowser(QWidget* parent)
     categoryMenu->addAction(categoryAction);
     ui->categoryButton->setMenu(categoryMenu);
     connect(categoryMenu, &QMenu::aboutToShow, this, &FontBrowser::syncCategoryChecks);
+
+    // preview options popup: sample text, font name visibility, preview size
+    auto options = new FontBrowserOptions;
+    _optionsPopup = new PopupMenu(this);
+    _optionsPopup->setContent(options);
+    connect(ui->optionsButton, &QPushButton::clicked, this, [this] {
+        _optionsPopup->showBelowWidget(ui->optionsButton);
+    });
+
+    // preview size is a percentage of the base point size
+    constexpr int basePreviewPoints = 13;
+    auto prefs = Inkscape::Preferences::get();
+    auto pref = [this](const char* key) { return (_prefsPath + key).toStdString(); };
+
+    auto sample = QString::fromStdString(prefs->getString(pref("/sample-text")));
+    options->setSampleText(sample);
+    ui->fontList->setSampleText(sample);
+    auto showName = prefs->getBool(pref("/show-font-names"), true);
+    options->setShowFontName(showName);
+    ui->fontList->setShowFontName(showName);
+    auto percent = prefs->getIntLimited(pref("/preview-size"), 100, 100, 500);
+    options->setPreviewPercent(percent);
+    ui->fontList->setPreviewSize(std::max(1, percent * basePreviewPoints / 100));
+
+    connect(options, &FontBrowserOptions::sampleTextChanged, this, [this, pref](const QString& text) {
+        ui->fontList->setSampleText(text);
+        Inkscape::Preferences::get()->setString(pref("/sample-text"), text.toStdString());
+    });
+    connect(options, &FontBrowserOptions::showFontNameChanged, this, [this, pref](bool show) {
+        ui->fontList->setShowFontName(show);
+        Inkscape::Preferences::get()->setBool(pref("/show-font-names"), show);
+    });
+    connect(options, &FontBrowserOptions::previewPercentChanged, this, [this, pref](int value) {
+        ui->fontList->setPreviewSize(std::max(1, value * basePreviewPoints / 100));
+        Inkscape::Preferences::get()->setInt(pref("/preview-size"), value);
+    });
 
     connect(ui->fontList, &FontList::fontChanged, this, &FontBrowser::fontChanged);
     connect(ui->fontList, &FontList::fontSelected, this, &FontBrowser::fontSelected);

@@ -27,6 +27,7 @@ class FontBrowser;
 namespace Linea::UI {
 
 class FontList;
+class PopupMenu;
 
 /**
  * Reusable font browser panel.
@@ -77,6 +78,7 @@ private:
 
     std::unique_ptr<Ui::FontBrowser> ui;
     QWidget* _categoryList = nullptr;
+    PopupMenu* _optionsPopup = nullptr;
     QString _prefsPath = "/options/fontbrowser";
     sigc::scoped_connection _tagConnection;
 };

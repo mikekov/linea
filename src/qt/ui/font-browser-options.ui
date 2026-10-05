@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>FontBrowserOptions</class>
+  <widget class="QWidget" name="FontBrowserOptions">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>260</width>
+        <height>160</height>
+      </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+
+      <!-- Row 0: Sample label -->
+      <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="sampleLabel">
+          <property name="text">
+            <string>Sample</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>settings-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 1: Sample text + presets menu -->
+      <item row="1" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="sampleLayout">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <item>
+            <widget class="QLineEdit" name="sampleEdit">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>1</horstretch>
+                  <verstretch>0</verstretch>
+                </sizepolicy>
+              </property>
+              <property name="placeholderText">
+                <string>Font name</string>
+              </property>
+              <property name="minimumSize">
+                <size>
+                  <width>160</width>
+                  <height>0</height>
+                </size>
+              </property>
+              <property name="clearButtonEnabled">
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="samplePresetsButton">
+              <property name="toolTip">
+                <string>Sample text presets</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/pan-down</normaloff>
+                </iconset>
+              </property>
+              <property name="class" stdset="0">
+                <string>no-menu-arrow</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
+      <!-- Row 2: Show font name -->
+      <item row="2" column="0" colspan="2">
+        <widget class="QCheckBox" name="showFontNameCheck">
+          <property name="text">
+            <string>Show font name</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 3: Preview size label -->
+      <item row="3" column="0" colspan="2">
+        <widget class="QLabel" name="sizeLabel">
+          <property name="text">
+            <string>Preview size</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>settings-label</string>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 4: Preview size slider + edit -->
+      <item row="4" column="0">
+        <widget class="QSlider" name="sizeSlider">
+          <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="minimum">
+            <number>100</number>
+          </property>
+          <property name="maximum">
+            <number>500</number>
+          </property>
+          <property name="singleStep">
+            <number>10</number>
+          </property>
+          <property name="pageStep">
+            <number>50</number>
+          </property>
+        </widget>
+      </item>
+      <item row="4" column="1">
+        <widget class="Linea::UI::NumberEdit" name="sizeEdit">
+          <property name="minimum">
+            <double>100.000000</double>
+          </property>
+          <property name="maximum">
+            <double>500.000000</double>
+          </property>
+          <property name="decimals">
+            <number>0</number>
+          </property>
+          <property name="singleStep">
+            <double>1.000000</double>
+          </property>
+          <property name="suffix">
+            <string>%</string>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

@@ -152,6 +152,9 @@ target_sources(linea_base PRIVATE
     ui/font-browser.cpp
     ui/font-browser.h
     ui/font-browser.ui
+    ui/font-browser-options.cpp
+    ui/font-browser-options.h
+    ui/font-browser-options.ui
     ui/font-list.cpp
     ui/font-list.h
     ui/font-selector.cpp

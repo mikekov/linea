@@ -47,6 +47,10 @@ public:
     void setSampleText(const QString& text);
     QString sampleText() const;
 
+    // show the font's name under the preview sample (on by default)
+    void setShowFontName(bool show);
+    bool showFontName() const;
+
     // replace the displayed font families with a custom list; grouping and sorting are still applied
     void setFonts(const std::vector<std::vector<Inkscape::FontInfo>>& fontFamilies);
 
@@ -100,6 +104,7 @@ private:
 
     Inkscape::FontOrder _order = Inkscape::FontOrder::ByFamily;
     int _previewSize = 0; // set by setPreviewSize() in the constructor
+    bool _showFontName = true;
     QString _sampleText;
     QString _textFilter;
     FontFilter _faceFilter;
