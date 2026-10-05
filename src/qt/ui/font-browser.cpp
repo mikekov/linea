@@ -101,21 +101,23 @@ FontBrowser::FontBrowser(QWidget* parent)
     connect(esc, &QShortcut::activated, this, [this] {
         if (_optionsPopup && _optionsPopup->isVisible()) {
             _optionsPopup->hide();
+        } else if (_categoryPopup && _categoryPopup->isVisible()) {
+            _categoryPopup->hide();
         } else {
             Q_EMIT cancelled();
         }
     });
 
-    // category menu: the checkable list sits inside a widget action so that
-    // toggling entries does not close the menu; gives the button a real menu
-    // and the drop-down arrow, same as the sort button
+    // category popup: the checkable list stays open while toggling entries
+    ui->categoryButton->setMenu(new QMenu(this)); // this adds drop down arrow
     _categoryList = createCategoryList();
-    auto categoryMenu = new QMenu(this);
-    auto categoryAction = new QWidgetAction(categoryMenu);
-    categoryAction->setDefaultWidget(_categoryList);
-    categoryMenu->addAction(categoryAction);
-    ui->categoryButton->setMenu(categoryMenu);
-    connect(categoryMenu, &QMenu::aboutToShow, this, &FontBrowser::syncCategoryChecks);
+    _categoryPopup = new PopupMenu(this);
+    _categoryPopup->setContent(_categoryList);
+    ui->categoryButton->
+    connect(ui->categoryButton, &QPushButton::clicked, this, [this] {
+        syncCategoryChecks();
+        _categoryPopup->showBelowWidget(ui->categoryButton);
+    });
 
     // preview options popup: sample text, font name visibility, preview size
     auto options = new FontBrowserOptions;
@@ -212,7 +214,7 @@ void FontBrowser::setSortOrder(Inkscape::FontOrder order) {
 QWidget* FontBrowser::createCategoryList() {
     auto list = new QWidget;
     auto layout = new QVBoxLayout(list);
-    layout->setContentsMargins(14, 10, 14, 10);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(8);
 
     auto& tags = Inkscape::FontTags::get();

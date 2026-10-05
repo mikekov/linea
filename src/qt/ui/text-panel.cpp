@@ -7,6 +7,7 @@
 #include "text-panel.h"
 
 #include <QComboBox>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QSignalBlocker>
 #include <QSizePolicy>
@@ -310,6 +311,17 @@ void TextPanel::setupFontDiscovery() {
             if (!family.empty()) {
                 _font_families.push_back(family);
             }
+            auto& name = std::get<Glib::ustring>(*p);
+            if (!name.empty()) {
+                _ui->fontScanLabel->setText(tr("Scanning fonts") + " – " + QString::fromStdString(name.raw()));
+            }
+            _ui->fontScanLabel->setVisible(true);
+            _ui->fontScanProgress->setValue(static_cast<int>(std::get<double>(*p) * 100));
+            _ui->fontScanProgress->setVisible(true);
+        }
+        else if (Async::Msg::is_finished(msg)) {
+            _ui->fontScanLabel->setVisible(false);
+            _ui->fontScanProgress->setVisible(false);
         }
     });
 }

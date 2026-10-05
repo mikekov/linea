@@ -98,7 +98,7 @@
       </item>
 
       <!-- Row 2: Show font name -->
-      <item row="2" column="0" colspan="2">
+      <item row="2" column="0" colspan="1">
         <widget class="QCheckBox" name="showFontNameCheck">
           <property name="text">
             <string>Show font name</string>

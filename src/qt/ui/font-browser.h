@@ -78,6 +78,7 @@ private:
 
     std::unique_ptr<Ui::FontBrowser> ui;
     QWidget* _categoryList = nullptr;
+    PopupMenu* _categoryPopup = nullptr;
     PopupMenu* _optionsPopup = nullptr;
     QString _prefsPath = "/options/fontbrowser";
     sigc::scoped_connection _tagConnection;

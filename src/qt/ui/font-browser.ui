@@ -60,9 +60,6 @@
               <property name="toolTip">
                 <string>Font sorting</string>
               </property>
-              <property name="text">
-                <string/>
-              </property>
               <property name="icon">
                 <iconset>
                   <normaloff>:/icons/sort-by-family</normaloff>
@@ -77,9 +74,6 @@
             <widget class="QPushButton" name="categoryButton">
               <property name="toolTip">
                 <string>Font categories</string>
-              </property>
-              <property name="text">
-                <string/>
               </property>
               <property name="icon">
                 <iconset>
@@ -116,9 +110,6 @@
                 <iconset>
                   <normaloff>:/icons/gear</normaloff>
                 </iconset>
-              </property>
-              <property name="class" stdset="0">
-                <string>no-menu-arrow</string>
               </property>
             </widget>
           </item>

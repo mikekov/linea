@@ -38,9 +38,7 @@ FontBrowserOptions::FontBrowserOptions(QWidget* parent)
         tr("abcdefghijklmnopqrstuvwxyz"),
         tr("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
         tr("The quick brown fox jumps over the lazy dog."),
-        QString::fromUtf8("Y\u00e9ll\u00f8w \u0165\u00fc\u0159tle fr\u00f6m \u00c1\u0142ph\u00e5rett\u00e4 "
-                          "\u00ed\u015b \u010d\u014dmi\u0144\u0121 f\u00f4r \u010f\u00ef\u00f1\u00f1\u0119r "
-                          "t\u00f2\u0111\u00e2y."),
+        tr("Yélløw ťüřtle fröm Áłphårettä íś čōmińġ fôr ďïññęr tòđây.")
     };
     for (auto& text : samples) {
         presets->addAction(text, this, [this, text] { ui->sampleEdit->setText(text); });

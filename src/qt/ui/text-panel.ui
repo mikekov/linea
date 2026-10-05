@@ -83,8 +83,61 @@
         </layout>
       </item>
 
+      <!-- Font scan progress -->
+      <item row="1" column="0" colspan="3">
+        <layout class="QVBoxLayout" name="fontScanProgressLayout">
+          <property name="spacing">
+            <number>3</number>
+          </property>
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <item>
+            <widget class="Linea::UI::ElidingLabel" name="fontScanLabel">
+              <property name="visible">
+                <bool>false</bool>
+              </property>
+              <property name="text">
+                <string>Scanning fonts…</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>info-text</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QProgressBar" name="fontScanProgress">
+              <property name="maximumSize">
+                <size>
+                  <width>16777215</width>
+                  <height>4</height>
+                </size>
+              </property>
+              <property name="visible">
+                <bool>false</bool>
+              </property>
+              <property name="textVisible">
+                <bool>false</bool>
+              </property>
+              <property name="value">
+                <number>0</number>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+
       <!-- Font family -->
-      <item row="1" column="0" colspan="2">
+      <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="fontLabel">
           <property name="text">
             <string>Font</string>
@@ -94,7 +147,7 @@
           </property>
         </widget>
       </item>
-      <item row="2" column="0" colspan="2">
+      <item row="3" column="0" colspan="2">
         <widget class="QComboBox" name="fontFamily">
           <property name="editable">
             <bool>true</bool>
@@ -104,7 +157,7 @@
           </property>
         </widget>
       </item>
-      <item row="2" column="2">
+      <item row="3" column="2">
         <widget class="QPushButton" name="fontBrowserBtn">
           <property name="toolTip">
             <string>Font browser</string>
@@ -118,7 +171,7 @@
       </item>
 
       <!-- Font style -->
-      <item row="3" column="0" colspan="2">
+      <item row="4" column="0" colspan="2">
         <widget class="QLabel" name="styleLabel">
           <property name="text">
             <string>Style</string>
@@ -128,12 +181,12 @@
           </property>
         </widget>
       </item>
-      <item row="4" column="0" colspan="2">
+      <item row="5" column="0" colspan="2">
         <widget class="QComboBox" name="fontStyle"/>
       </item>
 
       <!-- Font variations -->
-      <item row="5" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
         <widget class="QScrollArea" name="fontVariationsScroll">
           <property name="widgetResizable">
             <bool>true</bool>
@@ -149,7 +202,7 @@
       </item>
 
       <!-- Font size -->
-      <item row="6" column="0" colspan="2">
+      <item row="7" column="0" colspan="2">
         <widget class="QLabel" name="sizeLabel">
           <property name="text">
             <string>Font Size</string>
@@ -159,7 +212,7 @@
           </property>
         </widget>
       </item>
-      <item row="7" column="0">
+      <item row="8" column="0">
         <widget class="Linea::UI::NumberEdit" name="fontSize">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -181,7 +234,7 @@
           </property>
         </widget>
       </item>
-      <item row="7" column="1">
+      <item row="8" column="1">
         <widget class="QComboBox" name="fontSizeUnit">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed"/>
@@ -196,7 +249,7 @@
       </item>
 
       <!-- Line height (leading) -->
-      <item row="8" column="0" colspan="2">
+      <item row="9" column="0" colspan="2">
         <widget class="QLabel" name="leadingLabel">
           <property name="text">
             <string>Leading</string>
@@ -206,7 +259,7 @@
           </property>
         </widget>
       </item>
-      <item row="9" column="0">
+      <item row="10" column="0">
         <widget class="Linea::UI::NumberEdit" name="lineHeight">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -231,7 +284,7 @@
           </property>
         </widget>
       </item>
-      <item row="9" column="1">
+      <item row="10" column="1">
         <widget class="QComboBox" name="lineHeightUnit">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed"/>
@@ -246,7 +299,7 @@
       </item>
 
       <!-- Alignment -->
-      <item row="10" column="0" colspan="2">
+      <item row="11" column="0" colspan="2">
         <widget class="QLabel" name="alignmentLabel">
           <property name="text">
             <string>Alignment</string>
@@ -256,7 +309,7 @@
           </property>
         </widget>
       </item>
-      <item row="11" column="0" colspan="2">
+      <item row="12" column="0" colspan="2">
         <widget class="Linea::UI::RadioToggle" name="alignToggle">
           <property name="buttonIcons" stdset="0">
             <stringlist>
@@ -278,7 +331,7 @@
       </item>
 
       <!-- Typography heading -->
-      <item row="12" column="0" colspan="2">
+      <item row="13" column="0" colspan="2">
         <widget class="QLabel" name="typographyHeader">
           <property name="text">
             <string>Typography</string>
@@ -290,7 +343,7 @@
       </item>
 
       <!-- Styles (super/subscript) -->
-      <item row="13" column="0" colspan="2">
+      <item row="14" column="0" colspan="2">
         <widget class="QLabel" name="stylesLabel">
           <property name="text">
             <string>Styles</string>
@@ -300,7 +353,7 @@
           </property>
         </widget>
       </item>
-      <item row="14" column="0">
+      <item row="15" column="0">
         <layout class="QHBoxLayout" name="stylesLayout">
           <property name="spacing">
             <number>2</number>
@@ -347,7 +400,7 @@
       </item>
 
       <!-- Decoration -->
-      <item row="15" column="0" colspan="2">
+      <item row="16" column="0" colspan="2">
         <widget class="QLabel" name="decorationLabel">
           <property name="text">
             <string>Decoration</string>
@@ -357,7 +410,7 @@
           </property>
         </widget>
       </item>
-      <item row="16" column="0" colspan="2">
+      <item row="17" column="0" colspan="2">
         <layout class="QHBoxLayout" name="decorationLayout">
           <property name="spacing">
             <number>2</number>
@@ -436,7 +489,7 @@
           </item>
         </layout>
       </item>
-      <item row="16" column="2">
+      <item row="17" column="2">
         <widget class="QPushButton" name="decorationMoreButton">
           <property name="toolTip">
             <string>More decoration options</string>
@@ -450,7 +503,7 @@
       </item>
 
       <!-- Spacing -->
-      <item row="18" column="0" colspan="2">
+      <item row="19" column="0" colspan="2">
         <widget class="QLabel" name="spacingLabel">
           <property name="text">
             <string>Spacing</string>
@@ -460,7 +513,7 @@
           </property>
         </widget>
       </item>
-      <item row="19" column="0">
+      <item row="20" column="0">
         <widget class="Linea::UI::NumberEdit" name="letterSpacing">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -485,7 +538,7 @@
           </property>
         </widget>
       </item>
-      <item row="19" column="1">
+      <item row="20" column="1">
         <widget class="Linea::UI::NumberEdit" name="wordSpacing">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -512,7 +565,7 @@
       </item>
 
       <!-- Kerning -->
-      <item row="20" column="0" colspan="2">
+      <item row="21" column="0" colspan="2">
         <widget class="QLabel" name="kerningLabel">
           <property name="text">
             <string>Kerning</string>
@@ -522,7 +575,7 @@
           </property>
         </widget>
       </item>
-      <item row="21" column="0">
+      <item row="22" column="0">
         <widget class="Linea::UI::NumberEdit" name="kernHorz">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -547,7 +600,7 @@
           </property>
         </widget>
       </item>
-      <item row="21" column="1">
+      <item row="22" column="1">
         <widget class="Linea::UI::NumberEdit" name="kernVert">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -574,7 +627,7 @@
       </item>
 
       <!-- Rotation -->
-      <item row="22" column="0" colspan="2">
+      <item row="23" column="0" colspan="2">
         <widget class="QLabel" name="rotationLabel">
           <property name="text">
             <string>Rotation</string>
@@ -584,7 +637,7 @@
           </property>
         </widget>
       </item>
-      <item row="23" column="0">
+      <item row="24" column="0">
         <widget class="Linea::UI::NumberEdit" name="charRotation">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
@@ -611,7 +664,7 @@
       </item>
 
       <!-- Vertical text -->
-      <item row="24" column="0" colspan="2">
+      <item row="25" column="0" colspan="2">
         <widget class="QLabel" name="verticalTextLabel">
           <property name="text">
             <string>Vertical text</string>
@@ -621,7 +674,7 @@
           </property>
         </widget>
       </item>
-      <item row="25" column="0" colspan="2">
+      <item row="26" column="0" colspan="2">
         <widget class="Linea::UI::RadioToggle" name="writingModeToggle">
           <property name="toolTip">
             <string>Block progression</string>
@@ -642,7 +695,7 @@
           </property>
         </widget>
       </item>
-      <item row="26" column="0" colspan="2">
+      <item row="27" column="0" colspan="2">
         <widget class="Linea::UI::RadioToggle" name="orientationToggle">
           <property name="toolTip">
             <string>Text (glyph) orientation in vertical text</string>
@@ -665,7 +718,7 @@
       </item>
 
       <!-- Direction -->
-      <item row="27" column="0" colspan="2">
+      <item row="28" column="0" colspan="2">
         <widget class="QLabel" name="directionLabel">
           <property name="text">
             <string>Direction</string>
@@ -675,7 +728,7 @@
           </property>
         </widget>
       </item>
-      <item row="28" column="0" colspan="2">
+      <item row="29" column="0" colspan="2">
         <widget class="Linea::UI::RadioToggle" name="directionToggle">
           <property name="toolTip">
             <string>Text direction for normally horizontal text</string>
@@ -696,7 +749,7 @@
       </item>
 
       <!-- Bottom stretch -->
-      <item row="29" column="0" colspan="2">
+      <item row="30" column="0" colspan="2">
         <spacer>
           <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -707,6 +760,11 @@
     </layout>
   </widget>
   <customwidgets>
+    <customwidget>
+      <class>Linea::UI::ElidingLabel</class>
+      <extends>QLabel</extends>
+      <header>eliding-label.h</header>
+    </customwidget>
     <customwidget>
       <class>Linea::UI::NumberEdit</class>
       <extends>QWidget</extends>
