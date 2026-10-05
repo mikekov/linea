@@ -119,7 +119,7 @@ ExecutionEnv::createWorkingDialog () {
         _visibleDialog = nullptr;
     }
 
-    auto const msg = QString::fromUtf8(_("'%1' complete, loading result...")).arg(QString::fromUtf8(_effect->get_name()));
+    auto const msg = QString::fromUtf8(_("Running '%1'...")).arg(QString::fromUtf8(_effect->get_name()));
     auto box = new QMessageBox(_popup_parent());
     box->setIcon(QMessageBox::Information);
     box->setText(msg);
