@@ -212,7 +212,17 @@ int PointWidget::nodeCount() const {
     if (!curve) {
         curve = path->curve();
     }
-    return curve ? static_cast<int>(curve->curveCount()) : 0;
+    std::size_t node_count = curve ? curve->curveCount() : 0;
+    if (node_count == 0 && curve && !curve->empty()) {
+        for (auto const &subpath : *curve) {
+            if (subpath.closed()) {
+                // An "empty" closed path has one node (the starting move), but zero curves
+                // because the degenerate close curve is discounted.
+                node_count += 1;
+            }
+        }
+    }
+    return static_cast<int>(node_count);
 }
 
 } // namespace Linea::UI

@@ -94,7 +94,7 @@ LPEVonKoch::doEffect_path (Geom::PathVector const & path_in)
     Geom::Affine affine = generator.get_relative_affine();
     Geom::PathVector generating_path = generator.get_pathvector() * affine;
     
-    if (generating_path.empty()) {
+    if (generating_path.curveCount() == 0) {
         return path_in;
     }
     if (is_load) {

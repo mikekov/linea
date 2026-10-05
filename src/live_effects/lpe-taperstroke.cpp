@@ -434,7 +434,7 @@ LPETaperStroke::doBeforeEffect (SPLPEItem const* lpeitem)
         end_shape.param_set_and_write_new_value(end_shape._vector);
     }
     pathv_out.clear();
-    if (pathvector_before_effect.empty()) {
+    if (pathvector_before_effect.empty() || pathvector_before_effect.curveCount() == 0) {
         return;
     }
     
