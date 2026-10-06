@@ -28,6 +28,7 @@
 #include "colors/parser.h"
 #include "io/resource.h"
 #include "object/sp-factory.h"
+#include "style-enums.h"
 #include "theme.h"
 #include "util/svg-path-parser.h"
 
@@ -63,6 +64,7 @@ struct ColorTheme {
     QColor number;
     QColor comment;
     QColor property;
+    QColor css_value;
     QColor value;
     QColor command;
     QColor punctuation;
@@ -201,7 +203,8 @@ ColorTheme themeFromScheme(const QString& theme, const QPalette& palette) {
     t.string = color("def:string");
     t.number = color("def:number");
     t.comment = color("def:comment");
-    t.property = color("def:identifier");
+    t.property = color("def:keyword");
+    t.css_value = color("def:identifier");
     t.value = color("def:function");
     t.command = color("def:keyword"); // svgd.lang maps command -> def:keyword
     t.punctuation = color("css:delimiter");
@@ -368,11 +371,75 @@ const QRegularExpression& cssFunctionNamePattern() {
         for (const auto& name : Inkscape::Colors::Parsers::get().getCssFunctionNames()) {
             names.append(QString::fromStdString(name));
         }
-        // "url" is used for paint servers/filters/markers, but is not a color parser.
+        // "url" (paint servers/filters/markers) and "var" (custom-property references
+        // resolved in SPStyle::_mergeDecl) are not color parsers.
         names.append(QStringLiteral("url"));
+        names.append(QStringLiteral("var"));
         // CSS function names are case-insensitive; getCssPrefix lowercases.
         return makeKeywordPattern(std::move(names), QStringLiteral("(?=\\()"),
                                   QRegularExpression::CaseInsensitiveOption);
+    }();
+    return pattern;
+}
+
+void appendEnumKeys(const SPStyleEnum* table, QStringList& names) {
+    for (const SPStyleEnum* entry = table; entry->key; ++entry) {
+        const QString key = QString::fromUtf8(entry->key);
+        // Purely numeric keys (e.g. font-weight "100".."900") are handled by the number rule.
+        if (!key.isEmpty() && std::all_of(key.begin(), key.end(), [](QChar c) { return c.isDigit(); })) {
+            continue;
+        }
+        names.append(key);
+    }
+}
+
+const QRegularExpression& cssValueKeywordPattern() {
+    static const QRegularExpression pattern = [] {
+        QStringList names;
+        for (const SPStyleEnum* table : {
+                enum_fill_rule,
+                enum_stroke_linejoin,
+                enum_stroke_linecap,
+                enum_font_style,
+                enum_font_size,
+                enum_font_variant,
+                enum_font_weight,
+                enum_font_stretch,
+                enum_font_variant_ligatures,
+                enum_font_variant_position,
+                enum_font_variant_caps,
+                enum_font_variant_numeric,
+                enum_font_variant_alternates,
+                enum_font_variant_east_asian,
+                enum_text_align,
+                enum_text_transform,
+                enum_text_anchor,
+                enum_white_space,
+                enum_direction,
+                enum_writing_mode,
+                enum_text_orientation,
+                enum_baseline,
+                enum_baseline_shift,
+                enum_visibility,
+                enum_overflow,
+                enum_isolation,
+                enum_blend_mode,
+                enum_display,
+                enum_shape_rendering,
+                enum_color_rendering,
+                enum_image_rendering,
+                enum_text_rendering,
+                enum_enable_background,
+                enum_clip_rule,
+                enum_vector_effect,
+                enum_stroke_extensions,
+            }) {
+            appendEnumKeys(table, names);
+        }
+        // Universal values parsed by hand in style-internal.cpp, not in any enum table.
+        names.append({"inherit", "none", "currentColor", "context-fill", "context-stroke", "auto"});
+        names.removeDuplicates();
+        return makeKeywordPattern(std::move(names), QStringLiteral("(?![\\w-])"));
     }();
     return pattern;
 }
@@ -383,6 +450,16 @@ std::vector<Rule> makeCssRules(const ColorTheme& t) {
     rules.push_back({QRegularExpression("/\\*.*?\\*/"), makeFormat(t.comment)});
     rules.push_back({QRegularExpression("//.*"), makeFormat(t.comment)});
     rules.push_back({QRegularExpression(R"("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')"), makeFormat(t.string)});
+    // Value keywords come before property names so a keyword that is also a
+    // property name keeps the property color (later rules overwrite earlier ones).
+    rules.push_back({cssValueKeywordPattern(), makeFormat(t.css_value)});
+    // Inkscape only accepts the exact `!important` suffix (strip_important in style-internal.cpp);
+    // maps to def:keyword in upstream css.lang.
+    rules.push_back({QRegularExpression(QStringLiteral("!important(?![\\w-])")), makeFormat(t.keyword, true)});
+    // Custom (--x) and vendor (-x) properties are stored without being understood
+    // (SPStyle::_mergeDecl); shown non-bold to distinguish them from known properties.
+    // The known-property rule follows and overwrites, so e.g. -inkscape-font-specification stays bold.
+    rules.push_back({QRegularExpression(QStringLiteral(R"((?<![\w-])--?[A-Za-z_][\w-]*(?=\s*:))")), makeFormat(t.property)});
     rules.push_back({cssPropertyNamePattern(), makeFormat(t.property, true)});
     rules.push_back({cssFunctionNamePattern(), makeFormat(t.value)});
     rules.push_back({QRegularExpression(R"(\B#[0-9a-fA-F]{3,8}\b)"), makeFormat(t.number)});
@@ -634,12 +711,15 @@ XMLStyles buildXmlStyles(const QString& theme) {
     return s;
 }
 
+// Monospace glyphs read larger than proportional ones at the same nominal size, so shrink slightly to match optically.
+constexpr double kMonoFontScale = 0.95;
+
 QFont fixedFont(const QFont& base) {
     QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     if (base.pointSizeF() > 0) {
-        font.setPointSizeF(base.pointSizeF());
+        font.setPointSizeF(base.pointSizeF() * kMonoFontScale);
     } else if (base.pixelSize() > 0) {
-        font.setPixelSize(base.pixelSize());
+        font.setPixelSize(qRound(base.pixelSize() * kMonoFontScale));
     }
     return font;
 }

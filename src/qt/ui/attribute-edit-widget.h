@@ -18,7 +18,6 @@
 #include "xml/node-observer.h"
 
 QT_BEGIN_NAMESPACE
-class QPlainTextEdit;
 class QPushButton;
 class QStackedWidget;
 class QVBoxLayout;
@@ -97,6 +96,7 @@ private Q_SLOTS:
 private:
     void buildAttributeList();
     void clearAttributeList();
+    void ensureContentView(Syntax::SyntaxMode mode);
 
     void notifyAttributeChanged(Inkscape::XML::Node& node, GQuark name,
                                 Inkscape::Util::ptr_shared old_value,
@@ -113,7 +113,11 @@ private:
     QStandardItemModel* _model = nullptr;
     QToolButton* _addButton = nullptr;
     QToolButton* _deleteButton = nullptr;
-    QPlainTextEdit* _contentEdit = nullptr;
+    QWidget* _contentPage = nullptr;
+    QVBoxLayout* _contentLayout = nullptr;
+    std::unique_ptr<Syntax::TextEditView> _contentView;
+    Syntax::SyntaxMode _contentMode = Syntax::SyntaxMode::PlainText;
+    bool _monoFont = false;
     std::unique_ptr<AttributeEditPopup> _popup;
     QModelIndex _editingIndex;
     OperationBlocker _update;

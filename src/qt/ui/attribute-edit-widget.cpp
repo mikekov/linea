@@ -16,6 +16,7 @@
 #include <QStackedWidget>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <cstring>
 #include <glib.h>
 
 #include "xml/node.h"
@@ -41,6 +42,31 @@ Linea::UI::Syntax::SyntaxMode modeForAttribute(const QString& name) {
         return Linea::UI::Syntax::SyntaxMode::SvgPolyPoints;
     }
     return Linea::UI::Syntax::SyntaxMode::PlainText;
+}
+
+// Content of a text node under <svg:style> is CSS, under <svg:script> is
+// JavaScript (as in upstream's AttrDialog); everything else is plain text.
+Linea::UI::Syntax::SyntaxMode modeForContent(const Inkscape::XML::Node& node) {
+    const auto parent = node.parent();
+    if (!node.name() || std::strcmp(node.name(), "string") != 0 || !parent || !parent->name()) {
+        return Linea::UI::Syntax::SyntaxMode::PlainText;
+    }
+    if (std::strcmp(parent->name(), "svg:style") == 0) {
+        return Linea::UI::Syntax::SyntaxMode::CssStyle;
+    }
+    if (std::strcmp(parent->name(), "svg:script") == 0) {
+        return Linea::UI::Syntax::SyntaxMode::JavaScript;
+    }
+    return Linea::UI::Syntax::SyntaxMode::PlainText;
+}
+
+// Remove any widgets from the layout and put the given one in their place.
+// The previous widget is not deleted: its owner (e.g. a TextEditView) does that.
+void replaceLayoutWidget(QVBoxLayout& layout, QWidget& widget) {
+    while (QLayoutItem* item = layout.takeAt(0)) {
+        delete item;
+    }
+    layout.addWidget(&widget, 1);
 }
 
 // Structured or multiline values need the popup editor; everything else is
@@ -108,14 +134,7 @@ void AttributeEditPopup::edit(const QString& attrName, const QString& value, con
     }
 
     // Replace any previous editor widget in the layout.
-    while (_editorLayout->count() > 0) {
-        QLayoutItem* item = _editorLayout->takeAt(0);
-        if (item->widget()) {
-            delete item->widget();
-        }
-        delete item;
-    }
-    _editorLayout->addWidget(&_editor->getEditor(), 1);
+    replaceLayoutWidget(*_editorLayout, _editor->getEditor());
     _editor->getEditor().installEventFilter(this);
 
     // Position and size the popup near the attribute value cell, keeping it
@@ -223,22 +242,17 @@ AttributeEditWidget::AttributeEditWidget(QWidget* parent)
 
     _stack->addWidget(_treePage);
 
-    // Page 1: text/comment content.
-    _contentEdit = new QPlainTextEdit(this);
-    _contentEdit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
-    _stack->addWidget(_contentEdit);
+    // Page 1: text/comment content; the editor view is created on demand by
+    // ensureContentView() so it can match the node's syntax mode.
+    _contentPage = new QWidget(this);
+    _contentLayout = new QVBoxLayout(_contentPage);
+    _contentLayout->setContentsMargins(0, 0, 0, 0);
+    _stack->addWidget(_contentPage);
 
     connect(_addButton, &QToolButton::clicked, this, &AttributeEditWidget::onAddAttribute);
     connect(_deleteButton, &QToolButton::clicked, this, &AttributeEditWidget::onDeleteAttribute);
     connect(_treeView, &QTreeView::doubleClicked, this, &AttributeEditWidget::onEditValue);
     connect(_model, &QStandardItemModel::itemChanged, this, &AttributeEditWidget::onItemEdited);
-    connect(_contentEdit, &QPlainTextEdit::textChanged, this, [this]() {
-        if (!_repr || _update.pending()) {
-            return;
-        }
-        auto scoped = _update.block();
-        _repr->setContent(_contentEdit->toPlainText().toUtf8().constData());
-    });
 
     _treeView->installEventFilter(this);
     _treeView->setFocus();
@@ -252,6 +266,25 @@ AttributeEditWidget::~AttributeEditWidget() {
     setRepr(nullptr);
 }
 
+void AttributeEditWidget::ensureContentView(Syntax::SyntaxMode mode) {
+    if (_contentView && _contentMode == mode) {
+        return;
+    }
+    _contentMode = mode;
+    _contentView = Syntax::TextEditView::create(mode);
+    replaceLayoutWidget(*_contentLayout, _contentView->getEditor());
+    if (_monoFont) {
+        Syntax::setMonoFont(_contentView->getEditor(), true);
+    }
+    connect(&_contentView->getEditor(), &QPlainTextEdit::textChanged, this, [this]() {
+        if (!_repr || _update.pending()) {
+            return;
+        }
+        auto scoped = _update.block();
+        _repr->setContent(_contentView->getText().toUtf8().constData());
+    });
+}
+
 void AttributeEditWidget::setMonoFont(bool enabled) {
     const QFont font = enabled ? Syntax::fixedFont(_treeView->font()) : QFont();
     _treeView->setFont(font);
@@ -263,7 +296,10 @@ void AttributeEditWidget::setMonoFont(bool enabled) {
     } else {
         _attrDelegate->clearFixedFont();
     }
-    Syntax::setMonoFont(*_contentEdit, enabled);
+    _monoFont = enabled;
+    if (_contentView) {
+        Syntax::setMonoFont(_contentView->getEditor(), enabled);
+    }
     _popup->setMonoFont(enabled);
 }
 
@@ -282,8 +318,12 @@ void AttributeEditWidget::setRepr(Inkscape::XML::Node* repr) {
     }
 
     if (_repr && isTextOrCommentNode(*_repr)) {
-        _stack->setCurrentWidget(_contentEdit);
-        _contentEdit->setPlainText(QString::fromUtf8(_repr->content() ? _repr->content() : ""));
+        ensureContentView(modeForContent(*_repr));
+        {
+            auto scoped = _update.block();
+            _contentView->setText(QString::fromUtf8(_repr->content() ? _repr->content() : ""));
+        }
+        _stack->setCurrentWidget(_contentPage);
     } else {
         _stack->setCurrentWidget(_treePage);
         buildAttributeList();
@@ -483,15 +523,16 @@ void AttributeEditWidget::notifyAttributeChanged(Inkscape::XML::Node& /*node*/, 
 void AttributeEditWidget::notifyContentChanged(Inkscape::XML::Node& /*node*/,
                                                Inkscape::Util::ptr_shared /*old_content*/,
                                                Inkscape::Util::ptr_shared new_content) {
-    if (!_contentEdit || !_repr || _update.pending()) {
+    if (!_contentView || !_repr || _update.pending()) {
         return;
     }
-    if (!_contentEdit->document()->isModified()) {
+    auto& editor = _contentView->getEditor();
+    if (!editor.document()->isModified()) {
         const QString text = new_content ? QString::fromUtf8(new_content.pointer()) : QString();
         auto scoped = _update.block();
-        _contentEdit->setPlainText(text);
+        _contentView->setText(text);
     }
-    _contentEdit->document()->setModified(false);
+    editor.document()->setModified(false);
 }
 
 } // namespace Linea::UI
