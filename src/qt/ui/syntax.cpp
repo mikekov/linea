@@ -14,14 +14,18 @@
 #include <QPalette>
 #include <QPlainTextEdit>
 #include <QRegularExpression>
+#include <QStringList>
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
 #include <QXmlStreamReader>
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 #include <vector>
 
+#include "attributes.h"
+#include "colors/parser.h"
 #include "io/resource.h"
 #include "object/sp-factory.h"
 #include "theme.h"
@@ -333,13 +337,54 @@ Formatter noReformat() {
     return [](const QString& s) { return s; };
 }
 
+QRegularExpression makeKeywordPattern(QStringList names, const QString& lookahead,
+                                      QRegularExpression::PatternOptions options = QRegularExpression::NoPatternOption) {
+    for (auto& name : names) {
+        name = QRegularExpression::escape(name);
+    }
+    // Longer alternatives must come first so e.g. stroke-width wins over stroke.
+    std::sort(names.begin(), names.end(), [](const QString& a, const QString& b) {
+        return a.size() > b.size();
+    });
+    return QRegularExpression(QStringLiteral("(?<![\\w-])(?:") + names.join(QLatin1Char('|')) +
+                                  QStringLiteral(")") + lookahead,
+                              options);
+}
+
+const QRegularExpression& cssPropertyNamePattern() {
+    static const QRegularExpression pattern = [] {
+        QStringList names;
+        for (const auto& name : sp_attribute_name_list(true)) {
+            names.append(QString::fromUtf8(name.c_str()));
+        }
+        return makeKeywordPattern(std::move(names), QStringLiteral("(?=\\s*:)"));
+    }();
+    return pattern;
+}
+
+const QRegularExpression& cssFunctionNamePattern() {
+    static const QRegularExpression pattern = [] {
+        QStringList names;
+        for (const auto& name : Inkscape::Colors::Parsers::get().getCssFunctionNames()) {
+            names.append(QString::fromStdString(name));
+        }
+        // "url" is used for paint servers/filters/markers, but is not a color parser.
+        names.append(QStringLiteral("url"));
+        // CSS function names are case-insensitive; getCssPrefix lowercases.
+        return makeKeywordPattern(std::move(names), QStringLiteral("(?=\\()"),
+                                  QRegularExpression::CaseInsensitiveOption);
+    }();
+    return pattern;
+}
+
 std::vector<Rule> makeCssRules(const ColorTheme& t) {
     std::vector<Rule> rules;
     // Single-line block comments only; multi-line CSS comments are rare here.
     rules.push_back({QRegularExpression("/\\*.*?\\*/"), makeFormat(t.comment)});
     rules.push_back({QRegularExpression("//.*"), makeFormat(t.comment)});
     rules.push_back({QRegularExpression(R"("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')"), makeFormat(t.string)});
-    rules.push_back({QRegularExpression(R"(\b([a-zA-Z-]+)(?=\s*:))"), makeFormat(t.property, true)});
+    rules.push_back({cssPropertyNamePattern(), makeFormat(t.property, true)});
+    rules.push_back({cssFunctionNamePattern(), makeFormat(t.value)});
     rules.push_back({QRegularExpression(R"(\B#[0-9a-fA-F]{3,8}\b)"), makeFormat(t.number)});
     rules.push_back({QRegularExpression(R"(\b[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?(?:px|pt|em|rem|ex|ch|cm|mm|in|pc|%)?\b)"), makeFormat(t.number)});
     rules.push_back({QRegularExpression("[;:{},]"), makeFormat(t.punctuation)});

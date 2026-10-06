@@ -128,6 +128,22 @@ bool Parsers::_parse(std::istringstream &ss, Space::Type &type, std::string &nam
 }
 
 /**
+ * Return the list of CSS color function names the registered parsers handle.
+ */
+std::vector<std::string> Parsers::getCssFunctionNames() const {
+    std::vector<std::string> names;
+    for (const auto& [prefix, parsers] : _parsers) {
+        for (const auto& parser : parsers) {
+            auto name = parser->getCssFunctionName();
+            if (!name.empty() && std::find(names.begin(), names.end(), name) == names.end()) {
+                names.emplace_back(std::move(name));
+            }
+        }
+    }
+    return names;
+}
+
+/**
  * Add a prser to the list of parser objects used when parsing color strings.
  */
 void Parsers::addParser(Parser *parser)

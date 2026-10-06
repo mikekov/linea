@@ -41,6 +41,8 @@ public:
         NameParser()
             : Colors::Parser("", Type::CSSNAME)
         {}
+        // Named colors are bare names, not a function syntax.
+        std::string getCssFunctionName() const override { return ""; }
         bool parse(std::istringstream &input, std::vector<double> &output) const override;
     };
 };

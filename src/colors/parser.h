@@ -27,6 +27,8 @@ public:
 
     Space::Type getType() const { return _type; }
     std::string const getPrefix() const { return _prefix; }
+    // The CSS function this parser handles, or empty if it is not a function syntax.
+    virtual std::string getCssFunctionName() const { return _prefix; }
     static std::string getCssPrefix(std::istringstream &ss);
     static bool css_number(std::istringstream &ss, double &value, std::string &unit, bool &end, char const sep = 0x0);
     static bool append_css_value(std::istringstream &ss, std::vector<double> &output, bool &end, char const sep = 0x0,
@@ -75,6 +77,8 @@ public:
     HexParser()
         : Parser("#", Space::Type::RGB)
     {}
+    // Hex is a literal, not a function syntax.
+    std::string getCssFunctionName() const override { return ""; }
     bool parse(std::istringstream &input, std::vector<double> &output, bool &more) const override;
 };
 
@@ -85,6 +89,8 @@ public:
         : Parser(prefix, type)
         , _channels(channels)
     {}
+    // These parsers handle the space argument of the CSS color() function.
+    std::string getCssFunctionName() const override { return "color"; }
 
 private:
     bool parse(std::istringstream &ss, std::vector<double> &output) const override;
@@ -110,6 +116,11 @@ public:
 
     bool parse(std::string const &input, Space::Type &type, std::string &cms, std::vector<double> &values,
                std::vector<double> &fallback) const;
+
+    /**
+     * Return the list of CSS color function names the registered parsers handle.
+     */
+    std::vector<std::string> getCssFunctionNames() const;
 
 protected:
     friend class Manager;
