@@ -16,12 +16,11 @@ using namespace Inkscape::Colors;
 namespace Linea::UI {
 
 ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
-                     std::shared_ptr<Inkscape::Colors::ColorSet> colors, QWidget* parent)
+                     std::shared_ptr<ColorHolder> colors, QWidget* parent)
     : QWidget(parent)
     , _space(std::move(space))
     , _selected_colors(colors)
-    , _specific_colors(
-          std::make_shared<Inkscape::Colors::ColorSet>(_space, colors->getAlphaConstraint().value_or(true))) {
+    , _specific_colors(std::make_shared<ColorHolder>(_space, colors->hasAlpha())) {
     _grid = new QGridLayout();
     _grid->setHorizontalSpacing(2);
     _grid->setVerticalSpacing(1);
@@ -29,20 +28,23 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
     _grid->setColumnStretch(1, 1); // Make column 1 (slider) resizable
     setLayout(_grid);
 
-    // Keep the selected colorset in-sync with the space specific colorset.
+    // Keep the selected color in-sync with the space specific color.
+    // set() stores the incoming space as written — the picker's space is the
+    // color's identity in the model; serialization decides if it survives.
     _specific_changed_connection = _specific_colors->signal_changed.connect([this]() {
         auto scoped = SignalBlocker{_specific_changed_connection};
-        for (auto& [id, color] : *_specific_colors) {
-            _selected_colors->set(id, color);
+        if (auto color = _specific_colors->get()) {
+            _selected_colors->set(*color);
         }
     });
 
-    // Keep the child in-sync with the selected colorset.
+    // Keep the child in-sync with the selected color.
     _selected_changed_connection = _selected_colors->signal_changed.connect([this]() {
         auto scoped = SignalBlocker{_selected_changed_connection};
-        _specific_colors->clear();
-        for (auto& [id, color] : *_selected_colors) {
-            _specific_colors->set(id, color);
+        if (auto color = _selected_colors->get()) {
+            _specific_colors->set(*color);
+        } else {
+            _specific_colors->clear();
         }
     });
 
@@ -117,25 +119,25 @@ ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, bool
     // keep color wheel in sync with the color set
     _color_wheel = wheel;
     _color_wheel_changed = _specific_colors->signal_changed.connect([this]() {
-        if (!_specific_colors->isEmpty()) {
-            _color_wheel->setColor(_specific_colors->getAverage());
+        if (auto color = _specific_colors->get()) {
+            _color_wheel->setColor(*color);
         }
     });
     _color_wheel_updated = wheel->connectColorChanged([this](const Inkscape::Colors::Color& color) {
         auto scoped = SignalBlocker{_color_wheel_changed};
-        auto opacity = _specific_colors->isEmpty() ? 1.0 : _specific_colors->getAverage().getOpacity();
+        auto opacity = _specific_colors->get() ? _specific_colors->get()->getOpacity() : 1.0;
         auto updated = color;
         updated.setOpacity(opacity);
-        _specific_colors->setAll(updated);
+        _specific_colors->set(updated);
     });
     return wheel;
 }
 
 void ColorPage::showEvent(QShowEvent* event) {
-    // setAll only adds/updates keyed entries - clear first so stale
-    // entries don't survive and skew getAverage()
     _specific_colors->clear();
-    _specific_colors->setAll(*_selected_colors);
+    if (auto color = _selected_colors->get()) {
+        _specific_colors->set(*color);
+    }
     _specific_changed_connection.unblock();
     _selected_changed_connection.unblock();
     QWidget::showEvent(event);
@@ -148,7 +150,7 @@ void ColorPage::hideEvent(QHideEvent* event) {
     QWidget::hideEvent(event);
 }
 
-ColorPageChannel::ColorPageChannel(std::shared_ptr<Inkscape::Colors::ColorSet> color, QLabel& label,
+ColorPageChannel::ColorPageChannel(std::shared_ptr<ColorHolder> color, QLabel& label,
                                    ColorSlider& slider, NumberEdit& edit)
     : _label(label)
     , _slider(slider)

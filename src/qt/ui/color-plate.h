@@ -45,6 +45,11 @@ public:
     void moveIndicatorTo(const Inkscape::Colors::Color& color);
 
 protected:
+    // true while the user is dragging; the widget suppresses incoming
+    // setColor() updates then, the same way edit controls block signal
+    // feedback while the user is typing
+    bool isDragging() const { return _drag; }
+
     void paintEvent(QPaintEvent*) override;
     void mousePressEvent(QMouseEvent*) override;
     void mouseMoveEvent(QMouseEvent*) override;

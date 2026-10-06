@@ -34,6 +34,7 @@
 #include "props/property-def.h"
 #include "spin-scale.h"
 #include "stroke-options.h"
+#include "style.h"
 #include "ui/tools/marker-tool.h"
 #include "ui/widget/paint-enums.h"
 #include "ui_style-panel.h"
@@ -73,7 +74,7 @@ private:
 
 StylePanel::PaintButton::PaintButton(QWidget* parent)
     : QPushButton(parent) {
-    _colorPreview = new ColorPreview(0x808080ff, this);
+    _colorPreview = new ColorPreview(this, 0x808080ff);
     _colorPreview->setStyle(ColorPreview::Simple);
     _colorPreview->setFrame(true);
     _colorPreview->setBorderRadius(0);
@@ -193,13 +194,16 @@ void StylePanel::PaintButton::setPreview(const Linea::mixed_property<Linea::Pain
 
 // --- PaintStrip helpers ---
 
-void StylePanel::PaintStrip::setFlatColor(const Inkscape::Colors::Color& color) {
+static boost::intrusive_ptr<SPCSSAttr> make_paint_css(bool fill, const Inkscape::Colors::Color& color) {
     auto c = color;
     c.enableOpacity(false);
     auto css = new_css_attr();
-    sp_repr_css_set_property_string(css.get(), isFill ? "fill" : "stroke", c.toString(false));
-    sp_repr_css_set_property_double(css.get(), isFill ? "fill-opacity" : "stroke-opacity", color.getOpacity());
+    sp_repr_css_set_property_string(css.get(), fill ? "fill" : "stroke", sp_color_to_css(c));
+    sp_repr_css_set_property_double(css.get(), fill ? "fill-opacity" : "stroke-opacity", color.getOpacity());
+    return css;
+}
 
+void StylePanel::PaintStrip::setFlatColor(const Inkscape::Colors::Color& color) {
     if (paintBtn) paintBtn->setFlatColor(color);
 }
 
@@ -257,11 +261,7 @@ void StylePanel::PaintStrip::bind(Props::Binder& binder) {
 
     binder.track(
         connect(selector, &PaintSelector::flatColorChanged, paintBtn, [this, editor, fill](const Color& color) {
-            auto c = color;
-            c.enableOpacity(false);
-            auto css = new_css_attr();
-            sp_repr_css_set_property_string(css.get(), fill ? "fill" : "stroke", c.toString(false));
-            sp_repr_css_set_property_double(css.get(), fill ? "fill-opacity" : "stroke-opacity", color.getOpacity());
+            auto css = make_paint_css(fill, color);
             editor->apply(PaintEditDelegate::CssOp{css}, fill ? "change-fill" : "change-stroke",
                           fill ? RC_("Undo", "Set fill color") : RC_("Undo", "Set stroke color"));
             if (paintBtn) paintBtn->setFlatColor(color);
@@ -345,11 +345,7 @@ void StylePanel::PaintStrip::bind(Props::Binder& binder) {
     // ---- Write: Add button (set default flat color) ----
     binder.track(connect(addBtn, &QPushButton::clicked, paintBtn, [this, editor, fill](bool) {
         Color color(0x909090ff);
-        auto c = color;
-        c.enableOpacity(false);
-        auto css = new_css_attr();
-        sp_repr_css_set_property_string(css.get(), fill ? "fill" : "stroke", c.toString(false));
-        sp_repr_css_set_property_double(css.get(), fill ? "fill-opacity" : "stroke-opacity", color.getOpacity());
+        auto css = make_paint_css(fill, color);
         editor->apply(PaintEditDelegate::CssOp{css}, fill ? "change-fill" : "change-stroke",
                       fill ? RC_("Undo", "Set fill color") : RC_("Undo", "Set stroke color"));
         if (paintBtn) paintBtn->setFlatColor(color);

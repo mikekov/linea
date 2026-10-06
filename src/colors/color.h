@@ -34,6 +34,11 @@ public:
     static std::optional<Color> ifValid(Space::Type space_type, std::vector<double> values);
 
     bool operator==(Color const &other) const;
+    /// Same space type and every shared channel within epsilon; a trailing
+    /// alpha channel present on only one side is ignored. Deliberately
+    /// coarser than operator== — meant to absorb serialization round-trip
+    /// error (CSS prints ~3 decimals, hex quantizes to 8 bit).
+    bool isNear(Color const &other, double epsilon = 0.001) const;
     double operator[](unsigned int index) const { return get(index); }
 
     std::shared_ptr<Space::AnySpace> const &getSpace() const { return _space; }

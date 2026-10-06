@@ -14,7 +14,7 @@ x pixel perfect icons: disabled and x2 checked together
 - navigating virtual nodes - something is stealing focus
 - Align buttons do not work
 x page labels are not visible / not showing up
-- add 'quit instantly' action
+- add 'quit instantly' action, make 'quit' check for unsaved changes
 - add spell checker (including in context menu)
 - expose recolor functionality when selection is > 1
 - have modes of operation? so the main toolbar can adjust automatically
@@ -77,8 +77,11 @@ x add a way to show notifications?
 
 ## Color & Paint
 
+- color roundtrip is not faithful - examine and fix
+- add support for setting color_interpolation style attribute
 - ColorPicker -> add a mode with some predefined colors to choose from
 - ColorPicker: add missing current color preview
+- color picker - add easy to use color copy/paste
 - more comprehensive set of palette colors across all color groups (UI theme cleanup)
 - add swatches in flat color picker
 - add swatch edit panel (virtual node)

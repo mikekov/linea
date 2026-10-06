@@ -17,11 +17,9 @@
 
 class QTimer;
 
-namespace Inkscape::Colors {
-class ColorSet;
-} // namespace Inkscape::Colors
-
 namespace Linea::UI {
+
+class ColorHolder;
 
 /**
  * A slider with a color-gradient track and an animated circular thumb.
@@ -29,7 +27,7 @@ namespace Linea::UI {
 class ColorSlider : public QWidget {
     Q_OBJECT
 public:
-    ColorSlider(std::shared_ptr<Inkscape::Colors::ColorSet> colors,
+    ColorSlider(std::shared_ptr<ColorHolder> colors,
                 Inkscape::Colors::Space::Component component,
                 QWidget* parent = nullptr);
     ~ColorSlider() override;
@@ -60,7 +58,7 @@ private:
     void onAnimationTick();
     void startAnimation();
 
-    std::shared_ptr<Inkscape::Colors::ColorSet> _colors;
+    std::shared_ptr<ColorHolder> _colors;
     Inkscape::Colors::Space::Component _component;
 
     // Gradient pixel cache

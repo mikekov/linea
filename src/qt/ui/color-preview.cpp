@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 
@@ -36,11 +37,18 @@ static QColor fromRgba32(std::uint32_t rgba) {
 
 // ---------------------------------------------------------------------------
 
-ColorPreview::ColorPreview(std::uint32_t rgba, QWidget* parent)
+ColorPreview::ColorPreview(QWidget* parent, std::uint32_t rgba)
     : QWidget(parent)
     , _rgba(rgba)
 {
     setObjectName("ColorPreview");
+}
+
+void ColorPreview::mouseReleaseEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton && rect().contains(event->pos())) {
+        Q_EMIT clicked();
+    }
+    QWidget::mouseReleaseEvent(event);
 }
 
 void ColorPreview::setRgba32(std::uint32_t rgba) {

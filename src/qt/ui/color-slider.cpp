@@ -14,7 +14,7 @@
 #include <QKeyEvent>
 #include <QTimer>
 
-#include "colors/color-set.h"
+#include "color-holder.h"
 #include "colors/manager.h"
 #include "colors/spaces/enum.h"
 #include "colors/spaces/gamut.h"
@@ -66,7 +66,7 @@ double ColorSlider::valueAtX(double x) const {
 // Construction
 // ---------------------------------------------------------------------------
 
-ColorSlider::ColorSlider(std::shared_ptr<Inkscape::Colors::ColorSet> colors,
+ColorSlider::ColorSlider(std::shared_ptr<ColorHolder> colors,
                          Inkscape::Colors::Space::Component component,
                          QWidget* parent)
     : QWidget(parent)
@@ -97,12 +97,14 @@ ColorSlider::~ColorSlider() = default;
 
 double ColorSlider::getScaled() const {
     if (_colors->isEmpty()) return 0.0;
-    return _colors->getAverage(_component) * _component.scale;
+
+    return _colors->getComponent(_component) * _component.scale;
 }
 
 void ColorSlider::setScaled(double value) {
     if (!_colors->isValid(_component)) return;
-    _colors->setAll(_component, value / _component.scale);
+
+    _colors->setComponent(_component, value / _component.scale);
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +120,7 @@ QSize ColorSlider::sizeHint() const {
 // ---------------------------------------------------------------------------
 
 void ColorSlider::updateComponent(double x) {
-    if (_colors->isValid(_component) && _colors->setAll(_component, valueAtX(x))) {
+    if (_colors->isValid(_component) && _colors->setComponent(_component, valueAtX(x))) {
         Q_EMIT valueChanged();
     }
 }
@@ -315,7 +317,7 @@ void ColorSlider::paintEvent(QPaintEvent* /*event*/) {
         _gr_width = gradW;
     }
 
-    auto paintColor = _colors->getAverage();
+    auto paintColor = _colors->getOrDefault();
     if (!isAlpha) {
         paintColor.enableOpacity(false);
     }
@@ -352,7 +354,7 @@ void ColorSlider::paintEvent(QPaintEvent* /*event*/) {
     // --- Thumb ---
     if (!_colors->isValid(_component)) return;
 
-    double value = std::clamp(_colors->getAverage(_component), 0.0, 1.0);
+    double value = std::clamp(_colors->getComponent(_component), 0.0, 1.0);
     if (!std::isfinite(value)) return;
 
     double thumbX = area.left() + value * area.width();

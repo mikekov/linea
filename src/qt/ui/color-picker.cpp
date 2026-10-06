@@ -10,10 +10,9 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include "color-holder.h"
 #include "color-notebook.h"
 #include "color-preview.h"
-#include "colors/color-set.h"
-#include "colors/spaces/components.h"
 #include "desktop.h"
 #include "document-undo.h"
 #include "inkscape.h"
@@ -23,7 +22,7 @@ namespace Linea::UI {
 
 ColorPicker::ColorPicker(QWidget* parent)
     : QPushButton(parent)
-    , _colors(std::make_shared<Inkscape::Colors::ColorSet>(nullptr, _use_transparency)) {
+    , _colors(std::make_shared<ColorHolder>(nullptr, _use_transparency)) {
     _colors->set(Inkscape::Colors::Color(0x000000FFu));
     init();
 }
@@ -35,7 +34,7 @@ ColorPicker::ColorPicker(SPDesktop* desktop, QString title, QString tip, const I
     , _title(std::move(title))
     , _undo(undo)
     , _use_transparency(use_transparency)
-    , _colors(std::make_shared<Inkscape::Colors::ColorSet>(nullptr, use_transparency)) {
+    , _colors(std::make_shared<ColorHolder>(nullptr, use_transparency)) {
 
     setToolTip(tip);
     _colors->set(initial);
@@ -45,10 +44,10 @@ ColorPicker::ColorPicker(SPDesktop* desktop, QString title, QString tip, const I
 void ColorPicker::init() {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    auto initial_rgba = _colors->isEmpty() ? 0x000000FFu : _colors->getAverage().toRGBA();
+    auto initial_rgba = _colors->isEmpty() ? 0x000000FFu : _colors->getOrDefault().toRGBA();
 
     // Create color preview
-    _preview = new ColorPreview(initial_rgba);
+    _preview = new ColorPreview(nullptr, initial_rgba);
     _preview->setStyle(ColorPreview::Simple);
     _preview->setFrame(true);
     _preview->setBorderRadius(1);
@@ -67,7 +66,6 @@ void ColorPicker::init() {
 
     // Connect color set signals
     _colors->signal_changed.connect(sigc::mem_fun(*this, &ColorPicker::onSelectedColorChanged));
-    _colors->signal_released.connect(sigc::mem_fun(*this, &ColorPicker::onSelectedColorChanged));
 }
 
 ColorPicker::~ColorPicker() {
@@ -128,11 +126,10 @@ void ColorPicker::setUseTransparency(bool use_transparency) {
 
     _use_transparency = use_transparency;
     auto current = getCurrentColor();
-    _colors = std::make_shared<Inkscape::Colors::ColorSet>(nullptr, use_transparency);
+    _colors = std::make_shared<ColorHolder>(nullptr, use_transparency);
     _colors->set(current);
     _colors->signal_changed.connect(sigc::mem_fun(*this, &ColorPicker::onSelectedColorChanged));
-    _colors->signal_released.connect(sigc::mem_fun(*this, &ColorPicker::onSelectedColorChanged));
-    // Rebuild popup so the color selector uses the new ColorSet
+    // Rebuild popup so the color selector uses the new color holder
     if (_popup) {
         delete _popup;
         _popup = nullptr;
@@ -144,7 +141,7 @@ Inkscape::Colors::Color ColorPicker::getCurrentColor() const {
     if (_colors->isEmpty()) {
         return Inkscape::Colors::Color(0x0);
     }
-    return _colors->getAverage();
+    return _colors->getOrDefault();
 }
 
 sigc::connection ColorPicker::connectChanged(sigc::slot<void(const Inkscape::Colors::Color&)> slot) {

@@ -20,7 +20,7 @@ namespace Linea::UI {
 class ColorPreview : public QWidget {
     Q_OBJECT
 public:
-    explicit ColorPreview(std::uint32_t rgba = 0, QWidget* parent = nullptr);
+    explicit ColorPreview(QWidget* parent = nullptr, std::uint32_t rgba = 0);
 
     // set preview color as RGBA32 (0xRRGGBBAA)
     void setRgba32(std::uint32_t rgba);
@@ -56,8 +56,11 @@ public:
 
     // QSize sizeHint() const override { return {16, 16}; }
 
+Q_SIGNAL void clicked();
+
 protected:
     void paintEvent(QPaintEvent*) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
     void drawCheckers(QPainter& p, const QRectF& rect) const;

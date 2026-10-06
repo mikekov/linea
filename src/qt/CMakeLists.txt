@@ -96,7 +96,9 @@ target_sources(linea_base PRIVATE
     ui/alignment-selector.cpp
     ui/switch-widget.cpp
     ui/color-button.cpp
+    ui/color-clipboard-menu.cpp
     ui/color-entry.cpp
+    ui/color-holder.cpp
     ui/icon-combobox.cpp
     ui/extension-selector.cpp
     ui/color-notebook.cpp

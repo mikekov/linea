@@ -18,10 +18,8 @@ class ColorPickerPanel;
 }
 QT_END_NAMESPACE
 
-#include "color-entry.h"
-#include "color-preview.h"
 
-#include "colors/color-set.h"
+#include "color-holder.h"
 #include "colors/color.h"
 #include "colors/spaces/enum.h"
 
@@ -45,7 +43,7 @@ public:
     static std::unique_ptr<ColorPickerPanel> create(
         Inkscape::Colors::Space::Type space,
         PlateType type,
-        std::shared_ptr<Inkscape::Colors::ColorSet> color,
+        std::shared_ptr<ColorHolder> color,
         QWidget* parent = nullptr);
 
     ~ColorPickerPanel() override;
@@ -67,7 +65,7 @@ private:
     explicit ColorPickerPanel(
         Inkscape::Colors::Space::Type space,
         PlateType type,
-        std::shared_ptr<Inkscape::Colors::ColorSet> color,
+        std::shared_ptr<ColorHolder> color,
         QWidget* parent);
 
     void buildBottomBar();
@@ -82,16 +80,15 @@ private:
 
     Inkscape::Colors::Space::Type _spaceType = Inkscape::Colors::Space::Type::NONE;
     PlateType _plateType;
-    std::shared_ptr<Inkscape::Colors::ColorSet> _colorSet;
+    std::shared_ptr<ColorHolder> _colorSet;
     SPDesktop* _desktop = nullptr;
 
     ColorWheel* _plate = nullptr;       // interface (non-owning alias into _plateWidget)
     QWidget*    _plateWidget = nullptr; // the actual widget owned by the layout
     ColorPage*  _page = nullptr;
     // custom widgets created in code (not uic-constructible), owned by colorEntryFrame
-    ColorPreview* _swatch = nullptr;
-    ColorEntry* _hexEdit = nullptr;
     std::unique_ptr<QMenu> _spacesMenu;
+    QMenu* _swatchMenu = nullptr;
 
     sigc::scoped_connection _colorChanged;
     sigc::signal<void(Inkscape::Colors::Space::Type)> _colorSpaceChanged;

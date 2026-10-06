@@ -82,6 +82,19 @@ bool Color::operator==(Color const &other) const
     return _space == other._space && _isnear(other._values, 0.00001);
 }
 
+bool Color::isNear(Color const &other, double epsilon) const {
+    if (_space->getType() != other._space->getType()) {
+        return false;
+    }
+    auto const n = std::min(_values.size(), other._values.size());
+    for (size_t i = 0; i < n; i++) {
+        if (std::abs(_values[i] - other._values[i]) >= epsilon) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  * Get a single channel from this color.
  */

@@ -5,6 +5,7 @@
 
 #include "color-entry.h"
 
+#include "color-holder.h"
 #include "colors/color.h"
 #include "colors/spaces/base.h"
 #include "colors/spaces/gamut.h"
@@ -13,17 +14,14 @@ namespace Linea::UI {
 
 using namespace Inkscape::Colors;
 
-ColorEntry::ColorEntry(std::shared_ptr<ColorSet> colors, QWidget* parent)
-    : QLineEdit(parent)
-    , _colors(std::move(colors)) {
+ColorEntry::ColorEntry(QWidget* parent)
+    : QLineEdit(parent) {
     setObjectName("ColorEntry");
     setAlignment(Qt::AlignCenter);
     setToolTip(tr("Hexadecimal RGB value of the color"));
 
-    _color_changed_connection = _colors->signal_changed.connect([this]() { onColorChanged(); });
-
     connect(this, &QLineEdit::textEdited, [this](const QString& text) {
-        if (_update.pending()) return;
+        if (_update.pending() || !_colors) return;
 
         auto t = text.trimmed();
         if (looksLikeHex(t)) t = "#" + t;
@@ -35,9 +33,16 @@ ColorEntry::ColorEntry(std::shared_ptr<ColorSet> colors, QWidget* parent)
         if (auto color = _colors->get()) {
             new_color->setOpacity(color->getOpacity());
         }
-        _colors->setAll(*new_color);
+        _colors->set(*new_color);
     });
+}
 
+void ColorEntry::setColorHolder(std::shared_ptr<ColorHolder> colors) {
+    if (_colors == colors) return;
+
+    _colors = std::move(colors);
+    _color_changed_connection = _colors ? _colors->signal_changed.connect([this]() { onColorChanged(); })
+                                        : sigc::scoped_connection{};
     onColorChanged();
 }
 
@@ -52,7 +57,7 @@ QSize ColorEntry::sizeHint() const {
 }
 
 void ColorEntry::onColorChanged() {
-    if (_update.pending()) return;
+    if (_update.pending() || !_colors) return;
 
     if (_colors->isEmpty()) {
         auto scoped = _update.block();
@@ -60,7 +65,9 @@ void ColorEntry::onColorChanged() {
         return;
     }
 
-    auto color = *_colors->getAverage().converted(Space::Type::RGB);
+    auto converted = _colors->get()->converted(Space::Type::RGB);
+    if (!converted) return;
+    auto color = *converted;
     if (out_of_gamut(color, color.getSpace())) {
         auto r = color[0], g = color[1], b = color[2];
         auto msg = tr("Color rgb(%1% %2% %3%) is out of sRGB gamut.\nIt has been mapped to sRGB gamut.")

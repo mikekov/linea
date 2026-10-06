@@ -18,8 +18,8 @@
 
 class SPDesktop;
 
-namespace Inkscape::Colors {
-class ColorSet;
+namespace Linea::UI {
+class ColorHolder;
 }
 
 namespace Linea::UI {
@@ -68,7 +68,7 @@ private:
     bool _undo = false;
     OperationBlocker _update;
     bool _use_transparency = true;
-    std::shared_ptr<Inkscape::Colors::ColorSet> _colors;
+    std::shared_ptr<ColorHolder> _colors;
     PopupMenu* _popup = nullptr;
     ColorNotebook* _color_selector = nullptr;
     sigc::signal<void(void)> _signal_open;

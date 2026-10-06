@@ -58,7 +58,7 @@ GradientEditor::GradientEditor(
     : QWidget(parent)
     , _ui(std::make_unique<Ui::GradientEditor>())
     , _prefs(prefs)
-    , _colors(std::make_shared<Inkscape::Colors::ColorSet>())
+    , _colors(std::make_shared<ColorHolder>())
 {
     _ui->setupUi(this);
     setupCustomWidgets(space, showTypeSelector, showColorwheelExpander);
@@ -134,7 +134,7 @@ void GradientEditor::connectSignals() {
 
     // Color picker
     _colorChanged = _colors->signal_changed.connect([this]() {
-        setStopColor(_colors->getAverage());
+        setStopColor(_colors->getOrDefault());
     });
 
     // Gradient selector in the library menu: adopt the gradient picked in the

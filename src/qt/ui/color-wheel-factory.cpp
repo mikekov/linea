@@ -5,9 +5,12 @@
 
 #include "color-wheel-factory.h"
 #include "color-plate.h"
+#include "colors/spaces/base.h"
 #include "colors/spaces/enum.h"
 
 #include <chrono>
+#include <optional>
+#include <QDebug>
 #include <QImage>
 #include <QPainter>
 
@@ -33,6 +36,8 @@ public:
     }
 
     void setColor(const Color& color) override {
+        if (isDragging()) return;
+
         auto copy = color.converted(_plate);
         auto dest = copy.value_or(Color{_plate, {0, 0, 0}});
         setBaseColor(dest, _fixed_channel, _var_channel1, _var_channel2);
@@ -44,8 +49,11 @@ public:
     sigc::connection connectColorChanged(sigc::slot<void(const Color&)> cb) override {
         return ColorPlate::connectColorChanged([this, cb](const Color& c) {
             auto color = c.converted(_source);
-            if (color) cb(*color);
-            else qWarning("Color conversion from type %d to type %d failed.", int(_plate), int(_source));
+            if (color) {
+                cb(*color);
+            } else {
+                qWarning("Color conversion from type %d to type %d failed.", int(_plate), int(_source));
+            }
         });
     }
 

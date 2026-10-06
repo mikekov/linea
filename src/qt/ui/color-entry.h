@@ -8,18 +8,22 @@
 
 #include <memory>
 #include <QLineEdit>
+#include <sigc++/scoped_connection.h>
 #include <sigc++/signal.h>
 
-#include "colors/color-set.h"
 #include "ui/operation-blocker.h"
 
 namespace Linea::UI {
 
+class ColorHolder;
+
 class ColorEntry : public QLineEdit {
     Q_OBJECT
 public:
-    explicit ColorEntry(std::shared_ptr<Inkscape::Colors::ColorSet> colors, QWidget* parent = nullptr);
+    explicit ColorEntry(QWidget* parent = nullptr);
     ~ColorEntry() override;
+
+    void setColorHolder(std::shared_ptr<ColorHolder> colors);
 
     QSize sizeHint() const override;
 
@@ -29,7 +33,7 @@ private:
     void onColorChanged();
     bool looksLikeHex(const QString& text) const;
 
-    std::shared_ptr<Inkscape::Colors::ColorSet> _colors;
+    std::shared_ptr<ColorHolder> _colors;
     OperationBlocker _update;
     bool _warning = false;
     sigc::scoped_connection _color_changed_connection;

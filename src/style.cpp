@@ -32,6 +32,7 @@
 
 #include "attributes.h"
 #include "bad-uri-exception.h"
+#include "colors/color.h"
 #include "colors/manager.h"
 #include "document.h"
 #include "preferences.h"
@@ -1630,6 +1631,15 @@ sp_css_attr_unset_uris(SPCSSAttr *css)
     if (is_url(sp_repr_css_property(css, "stroke", nullptr))) sp_repr_css_set_property(css, "stroke", nullptr);
 
     return css;
+}
+
+std::string sp_color_to_css(Inkscape::Colors::Color color) {
+    if (Inkscape::Preferences::get()->getBool("/options/svgoutput/rgb_hex_colors", false)) {
+        if (auto rgb = color.converted(Inkscape::Colors::Space::Type::RGB)) {
+            color = std::move(*rgb);
+        }
+    }
+    return color.toString(false);
 }
 
 // Called in style.cpp

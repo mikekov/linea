@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-#include "colors/color-set.h"
+#include "color-holder.h"
 #include "colors/color.h"
 #include "colors/spaces/base.h"
 #include "colors/spaces/enum.h"
@@ -33,7 +33,7 @@ class ColorPage : public QWidget {
 
 public:
     ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
-              std::shared_ptr<Inkscape::Colors::ColorSet> colors,
+              std::shared_ptr<ColorHolder> colors,
               QWidget* parent = nullptr);
     ~ColorPage() override;
 
@@ -46,8 +46,8 @@ protected:
 
 private:
     std::shared_ptr<Inkscape::Colors::Space::AnySpace> _space;
-    std::shared_ptr<Inkscape::Colors::ColorSet> _selected_colors;
-    std::shared_ptr<Inkscape::Colors::ColorSet> _specific_colors;
+    std::shared_ptr<ColorHolder> _selected_colors;
+    std::shared_ptr<ColorHolder> _specific_colors;
 
     QGridLayout* _grid;
     std::vector<std::unique_ptr<ColorPageChannel>> _channels;
@@ -61,7 +61,7 @@ private:
 
 class ColorPageChannel {
 public:
-    ColorPageChannel(std::shared_ptr<Inkscape::Colors::ColorSet> color,
+    ColorPageChannel(std::shared_ptr<ColorHolder> color,
                      QLabel& label,
                      ColorSlider& slider,
                      NumberEdit& edit);
@@ -74,7 +74,7 @@ private:
     QLabel& _label;
     ColorSlider& _slider;
     NumberEdit& _edit;
-    std::shared_ptr<Inkscape::Colors::ColorSet> _color;
+    std::shared_ptr<ColorHolder> _color;
     sigc::scoped_connection _color_changed;
     QMetaObject::Connection _slider_changed;
     QMetaObject::Connection _edit_changed;

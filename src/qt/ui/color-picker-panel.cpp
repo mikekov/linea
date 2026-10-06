@@ -15,6 +15,7 @@
 
 #include "ui_color-picker-panel.h"
 
+#include "color-clipboard-menu.h"
 #include "color-entry.h"
 #include "color-page.h"
 #include "color-preview.h"
@@ -31,7 +32,7 @@ using namespace Inkscape::Colors;
 
 std::unique_ptr<ColorPickerPanel> ColorPickerPanel::create(
     Space::Type space, PlateType type,
-    std::shared_ptr<ColorSet> color, QWidget* parent)
+    std::shared_ptr<ColorHolder> color, QWidget* parent)
 {
     return std::unique_ptr<ColorPickerPanel>(
         new ColorPickerPanel(space, type, std::move(color), parent));
@@ -39,7 +40,7 @@ std::unique_ptr<ColorPickerPanel> ColorPickerPanel::create(
 
 ColorPickerPanel::ColorPickerPanel(
     Space::Type space, PlateType type,
-    std::shared_ptr<ColorSet> color, QWidget* parent)
+    std::shared_ptr<ColorHolder> color, QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::ColorPickerPanel>())
     , _spaceType(space)
@@ -60,26 +61,24 @@ void ColorPickerPanel::buildBottomBar() {
     // eye dropper button
     connect(_ui->dropperBtn, &QPushButton::clicked, [this]() { pickColor(); });
 
-    // color swatch + hex edit inside the framed container from the .ui file;
-    // both take extra constructor arguments, so uic cannot create them
-    auto frameLayout = _ui->frameLayout;
+    // color swatch and hex entry live in the .ui file; only the color holder
+    // wiring needs code
+    _ui->swatch->setStyle(ColorPreview::Simple);
+    _ui->swatch->setFrame(true);
+    _ui->swatch->setCheckerboardTileSize(4);
+    _ui->swatch->setCursor(Qt::PointingHandCursor);
+    _ui->swatch->setToolTip(tr("Click for copy/paste options"));
 
-    _swatch = new ColorPreview(0, _ui->colorEntryFrame);
-    _swatch->setStyle(ColorPreview::Simple);
-    _swatch->setFrame(true);
-    _swatch->setCheckerboardTileSize(4);
-    _swatch->setFixedSize(16, 16);
-    frameLayout->insertWidget(0, _swatch);
+    _swatchMenu = createColorClipboardMenu(_colorSet, [this] { return _spaceType; }, this);
+    connect(_ui->swatch, &ColorPreview::clicked, this, [this] {
+        _swatchMenu->popup(QCursor::pos());
+    });
 
-    _hexEdit = new ColorEntry(_colorSet, _ui->colorEntryFrame);
-    _hexEdit->setProperty("class", "button-bar");
-    _hexEdit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    _hexEdit->setFrame(false);
-    frameLayout->insertWidget(1, _hexEdit);
+    _ui->hexEdit->setColorHolder(_colorSet);
 
     // out-of-gamut warning icon
     _ui->warningLabel->setPixmap(QIcon(":/icons/warning").pixmap(12, 12));
-    _hexEdit->outOfGamutSignal().connect([this](const std::string& msg) {
+    _ui->hexEdit->outOfGamutSignal().connect([this](const std::string& msg) {
         _ui->warningLabel->setToolTip(msg.empty() ? tr("Color is out of gamut") : QString::fromStdString(msg));
         _ui->warningLabel->setVisible(!msg.empty());
     });
@@ -148,8 +147,8 @@ void ColorPickerPanel::removeWidgets() {
 void ColorPickerPanel::updateColor() {
     if (!_colorSet || _colorSet->isEmpty()) return;
 
-    auto color = _colorSet->getAverage();
-    _swatch->setRgba32(color.toRGBA());
+    auto color = _colorSet->getOrDefault();
+    _ui->swatch->setRgba32(color.toRGBA());
     if (_plate) _plate->setColor(color);
 }
 
@@ -166,7 +165,7 @@ void ColorPickerPanel::setDesktop(SPDesktop* desktop) {
 }
 
 void ColorPickerPanel::setColor(const Inkscape::Colors::Color& color) {
-    _colorSet->setAll(color);
+    _colorSet->set(color);
 }
 
 void ColorPickerPanel::setPickerType(Space::Type type) {
@@ -207,7 +206,7 @@ void ColorPickerPanel::pickColor() {
 //     Tools::sp_toggle_dropper(desktop);
 //     if (auto tool = dynamic_cast<Tools::DropperTool*>(desktop->getTool())) {
 //         _colorPicking = tool->onetimepick_signal.connect([this](auto& color) {
-//             _colorSet->setAll(color);
+//             _colorSet->set(color);
 //         });
 //     }
 }

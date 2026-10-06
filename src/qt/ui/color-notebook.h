@@ -12,7 +12,7 @@
 #include <QWidget>
 #include <memory>
 
-#include "colors/color-set.h"
+#include "color-holder.h"
 
 class SPDesktop;
 class SPDocument;
@@ -27,11 +27,11 @@ class ColorNotebook : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ColorNotebook(SPDesktop* desktop, std::shared_ptr<Inkscape::Colors::ColorSet> color, QWidget* parent = nullptr);
+    explicit ColorNotebook(SPDesktop* desktop, std::shared_ptr<ColorHolder> color, QWidget* parent = nullptr);
     ~ColorNotebook() override;
 
     void setLabel(const QString& label);
-    void setCurrentColor(std::shared_ptr<Inkscape::Colors::ColorSet>& colors);
+    void setCurrentColor(std::shared_ptr<ColorHolder>& colors);
     // show/hide color space selector
     void setSwitcherVisible(bool visible);
     // show/hide "too much ink" warning icon
@@ -46,7 +46,7 @@ private:
     void switchToSpace(std::shared_ptr<Inkscape::Colors::Space::AnySpace>& space);
     void setDocument(SPDocument* document);
 
-    std::shared_ptr<Inkscape::Colors::ColorSet> _colors;
+    std::shared_ptr<ColorHolder> _colors;
     std::shared_ptr<Inkscape::Colors::Space::AnySpace> _current_space;
     ColorPage* _current_page = nullptr;
     IconComboBox* _combo = nullptr;

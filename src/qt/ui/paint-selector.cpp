@@ -24,7 +24,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 
-#include "colors/color-set.h"
+#include "color-holder.h"
 #include "colors/manager.h"
 #include "colors/spaces/base.h"
 #include "document.h"
@@ -37,6 +37,7 @@
 #include "object/sp-radial-gradient.h"
 #include "object/sp-stop.h"
 #include "preferences.h"
+#include "style.h"
 #include "style-internal.h"
 #include "actions/actions-tools.h"
 #include "ui/operation-blocker.h"
@@ -103,7 +104,7 @@ const char* FLAT_COLOR_PREFS = "/color-editor";
 
 class FlatColorEditor : public QWidget {
 public:
-    FlatColorEditor(Type space, std::shared_ptr<Inkscape::Colors::ColorSet> colors,
+    FlatColorEditor(Type space, std::shared_ptr<ColorHolder> colors,
                     QWidget* parent = nullptr)
         : QWidget(parent)
         , _picker(ColorPickerPanel::create(space,
@@ -203,7 +204,8 @@ public:
 
     void fire_flat_color_changed() {
         if (_update.pending()) return;
-        Q_EMIT flatColorChanged(_color->getAverage());
+        _last_emitted = _color->getOrDefault();
+        Q_EMIT flatColorChanged(*_last_emitted);
     }
     // get selected pattern/hatch
     SPPaintServer* get_paint() {
@@ -268,7 +270,12 @@ public:
     // map each PaintMode to its editor page widget (built once in the constructor)
     std::map<PaintMode, QWidget*> _pages;
 
-    std::shared_ptr<Inkscape::Colors::ColorSet> _color = std::make_shared<Inkscape::Colors::ColorSet>();
+    std::shared_ptr<ColorHolder> _color = std::make_shared<ColorHolder>();
+    // Last color seen by the document — written by fire_flat_color_changed
+    // or accepted in setColor. Used to absorb the serialized read-back of
+    // our own writes (space conversion, hex quantization, CSS precision)
+    // without churning the holder's stored color and space.
+    std::optional<Inkscape::Colors::Color> _last_emitted;
 
     Ui::PaintSelector _ui;
 
@@ -504,6 +511,13 @@ void PaintSelectorImpl::switch_paint_mode(PaintMode mode) {
 }
 
 void PaintSelectorImpl::setColor(const Inkscape::Colors::Color& color) {
+    // A document read-back that serializes to the same string as the last
+    // emitted color is that write echoing back — keep the held color (and
+    // its space) instead of absorbing the lossy serialized form.
+    if (_last_emitted && sp_color_to_css(*_last_emitted) == sp_color_to_css(color)) {
+        return;
+    }
+    _last_emitted = color;
     _color->set(color);
 }
 

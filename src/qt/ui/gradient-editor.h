@@ -21,7 +21,7 @@
 
 #include "ui/operation-blocker.h"
 
-#include "colors/color-set.h"
+#include "color-holder.h"
 #include "object/sp-gradient.h"
 #include "qt/ui/color-picker-panel.h"
 #include "ui/widget/gradient-selector-interface.h"
@@ -132,7 +132,7 @@ private:
     std::unique_ptr<QMenu> _libraryMenu;
     std::unique_ptr<GradientSelector> _selector;
     ColorPickerPanel* _colorPicker = nullptr;
-    std::shared_ptr<Inkscape::Colors::ColorSet> _colors;
+    std::shared_ptr<ColorHolder> _colors;
 
     // State
     int _currentStopIndex = 0;

@@ -150,6 +150,6 @@ void SPStop::setColor(Inkscape::Colors::Color const &color)
 void SPStop::setColorRepr(Inkscape::XML::Node *node, Inkscape::Colors::Color const &color)
 {
     Inkscape::CSSOStringStream os;
-    os << "stop-color:" << color.toString(false) << ";stop-opacity:" << color.getOpacity() <<";";
+    os << "stop-color:" << sp_color_to_css(color) << ";stop-opacity:" << color.getOpacity() <<";";
     node->setAttribute("style", os.str());
 }

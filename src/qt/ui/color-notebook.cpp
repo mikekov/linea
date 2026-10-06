@@ -27,7 +27,7 @@ namespace Linea::UI {
 static constexpr int XPAD = 2;
 static constexpr int YPAD = 1;
 
-ColorNotebook::ColorNotebook(SPDesktop* desktop, std::shared_ptr<Inkscape::Colors::ColorSet> colors, QWidget* parent)
+ColorNotebook::ColorNotebook(SPDesktop* desktop, std::shared_ptr<ColorHolder> colors, QWidget* parent)
     : QWidget(parent)
     , _colors(std::move(colors)) {
     setObjectName("ColorNotebook");
@@ -173,7 +173,8 @@ void ColorNotebook::initUI() {
     auto rgbLabel = new QLabel(tr("RGB"));
     bottomLayout->addWidget(rgbLabel);
 
-    _rgba_entry = new ColorEntry(_colors);
+    _rgba_entry = new ColorEntry;
+    _rgba_entry->setColorHolder(_colors);
     _rgba_entry->setMaximumWidth(100);
     bottomLayout->addWidget(_rgba_entry, 1);
 
@@ -189,7 +190,7 @@ void ColorNotebook::initUI() {
             auto tool = dynamic_cast<Inkscape::UI::Tools::DropperTool*>(SP_ACTIVE_DESKTOP->getTool());
             if (tool) {
                 _onetimepick = tool->onetimepick_signal.connect(
-                    [this](const Inkscape::Colors::Color& color) { _colors->setAll(color); });
+                    [this](const Inkscape::Colors::Color& color) { _colors->set(color); });
             }
         }
     });
@@ -223,10 +224,14 @@ void ColorNotebook::switchToSpace(std::shared_ptr<Inkscape::Colors::Space::AnySp
     prefs->setString("/colorselector/page", space->getName());
 }
 
-void ColorNotebook::setCurrentColor(std::shared_ptr<Inkscape::Colors::ColorSet>& colors) {
-    if (_current_page) {
-        // ColorPage doesn't have setCurrentColor, we need to update the color set directly
-        _colors = colors;
+void ColorNotebook::setCurrentColor(std::shared_ptr<ColorHolder>& colors) {
+    if (colors == _colors) return;
+
+    _colors = colors;
+    _rgba_entry->setColorHolder(_colors);
+    // ColorPage binds the holder at construction — rebuild it on the new holder
+    if (_current_space) {
+        switchToSpace(_current_space);
     }
 }
 

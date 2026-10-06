@@ -105,6 +105,60 @@
                   <property name="bottomMargin">
                     <number>0</number>
                   </property>
+                  <item>
+                    <widget class="Linea::UI::ColorPreview" name="swatch">
+                      <property name="minimumSize">
+                        <size>
+                          <width>16</width>
+                          <height>16</height>
+                        </size>
+                      </property>
+                      <property name="maximumSize">
+                        <size>
+                          <width>16</width>
+                          <height>16</height>
+                        </size>
+                      </property>
+                    </widget>
+                  </item>
+                  <!-- <item>
+                    <widget class="QPushButton" name="copyBtn">
+                      <property name="toolTip">
+                        <string>Copy color to clipboard</string>
+                      </property>
+                      <property name="icon">
+                        <iconset>
+                          <normaloff>:/icons/edit-copy</normaloff>
+                        </iconset>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="pasteBtn">
+                      <property name="toolTip">
+                        <string>Paste color from clipboard</string>
+                      </property>
+                      <property name="icon">
+                        <iconset>
+                          <normaloff>:/icons/edit-paste</normaloff>
+                        </iconset>
+                      </property>
+                    </widget>
+                  </item> -->
+                  <!-- hex color entry; ColorSet is assigned in code -->
+                  <item>
+                    <widget class="Linea::UI::ColorEntry" name="hexEdit">
+                      <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Minimum"/>
+                      </property>
+                      <property name="frame">
+                        <bool>false</bool>
+                      </property>
+                      <property name="class" stdset="0">
+                        <string>button-bar</string>
+                      </property>
+                    </widget>
+                  </item>
                   <!-- out-of-gamut warning icon; pixmap set in code -->
                   <item>
                     <widget class="QLabel" name="warningLabel">
@@ -145,6 +199,18 @@
       </item>
     </layout>
   </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::ColorPreview</class>
+      <extends>QWidget</extends>
+      <header>color-preview.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::ColorEntry</class>
+      <extends>QLineEdit</extends>
+      <header>color-entry.h</header>
+    </customwidget>
+  </customwidgets>
   <resources/>
   <connections/>
 </ui>

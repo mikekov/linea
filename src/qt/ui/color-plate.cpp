@@ -123,6 +123,7 @@ void ColorPlate::setDisc(bool disc) {
 }
 
 void ColorPlate::setColor(const Color& color) {
+    if (_drag) return;
     // Base implementation: convert to current plate space, update indicator only.
     // FastColorPlate in the factory overrides this with the proper fixed/var channel logic.
     auto plateType = _baseColor.getSpace() ? _baseColor.getSpace()->getType() : Space::Type::RGB;
