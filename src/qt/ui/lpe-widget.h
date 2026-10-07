@@ -13,6 +13,7 @@
 
 #include <QWidget>
 #include <memory>
+#include <sigc++/scoped_connection.h>
 
 #include "ui/operation-blocker.h"
 
@@ -98,6 +99,7 @@ private:
 
     SPObject* _object = nullptr;
     SPDesktop* _desktop = nullptr;
+    sigc::scoped_connection _objectRelease;
     OperationBlocker _update;
 };
 

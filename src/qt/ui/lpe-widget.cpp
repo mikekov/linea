@@ -121,7 +121,15 @@ LpeWidget::LpeWidget(QWidget* parent)
 LpeWidget::~LpeWidget() = default;
 
 void LpeWidget::setObject(SPObject* object) {
+    _objectRelease.disconnect();
     _object = object;
+    if (_object) {
+        _objectRelease = _object->connectRelease([this](SPObject* released) {
+            if (released != _object) return;
+            _object = nullptr;
+            refreshAppliedLpes();
+        });
+    }
     refreshAppliedLpes();
 }
 
@@ -297,7 +305,7 @@ void LpeWidget::populateAddPopup() {
     for (const auto& lpe : list) {
         if (!lpe.sensitive) continue;
 
-        auto* item = new QListWidgetItem();
+        auto item = new QListWidgetItem();
         item->setText(QString::fromStdString(lpe.label));
         item->setToolTip(QString::fromStdString(lpe.tooltip));
         item->setData(Qt::UserRole, static_cast<int>(lpe.type));
@@ -313,7 +321,7 @@ void LpeWidget::onSearchChanged() {
     QString text = _searchEdit->text().toLower();
 
     for (int i = 0; i < _addList->count(); ++i) {
-        auto* item = _addList->item(i);
+        auto item = _addList->item(i);
         bool match = text.isEmpty() || item->text().toLower().contains(text);
         item->setHidden(!match);
     }
@@ -351,7 +359,7 @@ void LpeWidget::flattenLpe(int index) {
     lpe_item->setCurrentPathEffect(lperef);
     lpe_item = lpe_item->flattenCurrentPathEffect();
     if (!lpe_item) return;
-    _object = lpe_item;
+    setObject(lpe_item);
 
     auto selection = _desktop ? _desktop->getSelection() : nullptr;
     if (selection && selection->isEmpty()) {
@@ -383,7 +391,7 @@ void LpeWidget::toggleLpeVisibility(int index) {
 void LpeWidget::showLpeParams(int index, QWidget* anchorWidget) {
     if (!_object) return;
 
-    auto* effect = get_effect_at_index(_object, index);
+    auto effect = get_effect_at_index(_object, index);
     if (!effect) return;
 
     // Close any existing param popup
