@@ -1,20 +1,20 @@
 #ifndef LINEA_ACTION_REGISTRY_H
 #define LINEA_ACTION_REGISTRY_H
 
+#include <QAction>
+#include <QActionGroup>
+#include <QObject>
+#include <QStringList>
 #include <array>
 #include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <QAction>
-#include <QActionGroup>
-#include <QObject>
-#include <QStringList>
+
 #include "action-meta.h"
 #include "linea-application.h"
 #include "linea-window.h"
 #include "ui/shortcut-manager.h"
-
 
 class QAction;
 class LineaWindow;
@@ -45,19 +45,22 @@ public:
                          bool radioGroup = false);
 
     // Create and register actions (templates avoid std::function overhead)
-    template<typename Meta, typename Callback>
+    template <typename Meta, typename Callback>
     QAction* createAction(const Meta& meta, Callback callback);
 
-    template<typename Callback, typename StateQuery>
-    QAction* createBoolAction(const BoolActionMeta& meta, Callback callback, StateQuery state_query, bool initial = false);
+    template <typename Callback, typename StateQuery>
+    QAction* createBoolAction(const BoolActionMeta& meta, Callback callback, StateQuery state_query,
+                              bool initial = false);
 
     // create a toggle action that makes buttons show one of two different icons
-    template<typename Callback, typename StateQuery>
+    template <typename Callback, typename StateQuery>
     QAction* createToggleAction(const ActionParamMeta& meta, Callback callback, StateQuery state_query,
                                 const char* checked_icon, bool initial = false);
 
     // Apply dual-label swapping to a bool action (called by createBoolAction).
     void setupDualLabel(QAction* action, const char* checked_label);
+    // Apply dual-icon swapping to a bool action (called by createBoolAction).
+    void setupDualIcon(QAction* action, const char* checked_icon);
 
     // Sync all stateful actions (those with state query callbacks).
     // Updates checked states via setChecked — fires toggled (so buttons
@@ -88,7 +91,7 @@ private:
     std::unordered_map<QAction*, std::function<bool ()>> _enabledQueries;
 };
 
-template<typename Meta, typename Callback>
+template <typename Meta, typename Callback>
 QAction* ActionRegistry::createAction(const Meta& meta, Callback callback) {
     auto action = createActionBase(meta.id, meta.label, meta.icon_name, meta.tooltip);
     QObject::connect(action, &QAction::triggered, this, [callback]() { callback(); });
@@ -96,8 +99,9 @@ QAction* ActionRegistry::createAction(const Meta& meta, Callback callback) {
     return action;
 }
 
-template<typename Callback, typename StateQuery>
-QAction* ActionRegistry::createBoolAction(const BoolActionMeta& meta, Callback callback, StateQuery state_query, bool initial) {
+template <typename Callback, typename StateQuery>
+QAction* ActionRegistry::createBoolAction(const BoolActionMeta& meta, Callback callback, StateQuery state_query,
+                                          bool initial) {
     auto action = createActionBase(meta.id, meta.label, meta.icon_name, meta.tooltip);
     action->setCheckable(true);
     action->setChecked(initial);
@@ -125,27 +129,19 @@ QAction* ActionRegistry::createBoolAction(const BoolActionMeta& meta, Callback c
     if (meta.checked_label) {
         setupDualLabel(action, meta.checked_label);
     }
+    if (meta.checked_icon) {
+        setupDualIcon(action, meta.checked_icon);
+    }
     registerAction(meta.id, action);
     _stateQueries[action] = state_query;
     return action;
 }
 
-template<typename Callback, typename StateQuery>
-QAction* ActionRegistry::createToggleAction(const ActionParamMeta& meta,
-                                             Callback callback, StateQuery state_query, const char* checked_icon,
-                                             bool initial) {
-    BoolActionMeta boolMeta = { meta.id, meta.label, meta.icon_name, meta.tooltip, nullptr };
-    auto action = createBoolAction(boolMeta, callback, state_query, initial);
-    action->setProperty("iconToggle", true);
-    auto unchecked = action->icon();
-    auto checked = QIcon(QString(":/icons/%1").arg(checked_icon));
-    QObject::connect(action, &QAction::toggled, action, [action, unchecked, checked](bool on) {
-        action->setIcon(on ? checked : unchecked);
-    });
-    if (initial) {
-        action->setIcon(checked);
-    }
-    return action;
+template <typename Callback, typename StateQuery>
+QAction* ActionRegistry::createToggleAction(const ActionParamMeta& meta, Callback callback, StateQuery state_query,
+                                            const char* checked_icon, bool initial) {
+    BoolActionMeta boolMeta = {meta.id, meta.label, meta.tooltip, meta.icon_name, meta.checked_label, checked_icon};
+    return createBoolAction(boolMeta, callback, state_query, initial);
 }
 
 namespace details {
@@ -174,11 +170,8 @@ Context* active_context(LineaApplication* app) {
 } // namespace details
 
 template <typename Context>
-void ActionRegistry::registerActions(
-    LineaApplication* app,
-    std::span<const ActionSpec<Context>> entries,
-    bool radioGroup) {
-
+void ActionRegistry::registerActions(LineaApplication* app, std::span<const ActionSpec<Context>> entries,
+                                     bool radioGroup) {
     assert(app);
     if (!app) return;
 
@@ -208,11 +201,7 @@ void ActionRegistry::registerActions(
             };
             auto initial = state_query();
             auto action = createBoolAction(
-                {entry.id,
-                 entry.label,
-                 entry.tooltip,
-                 entry.icon_name,
-                 entry.checked_label},
+                {entry.id, entry.label, entry.tooltip, entry.icon_name, entry.checked_label, entry.checked_icon},
 
                 [app, fn = entry.callback](bool) {
                     if (auto context = details::active_context<Context>(app)) {
@@ -220,21 +209,18 @@ void ActionRegistry::registerActions(
                     }
                 },
 
-                state_query,
-                initial);
+                state_query, initial);
 
             action->setEnabled(enabled_query());
             _enabledQueries[action] = enabled_query;
             wnd->addAction(action);
             if (group) group->addAction(action);
         } else {
-            auto action = createAction(
-                entry,
-                [app, fn = entry.callback]() {
-                    if (auto context = details::active_context<Context>(app)) {
-                        fn(context);
-                    }
-                });
+            auto action = createAction(entry, [app, fn = entry.callback]() {
+                if (auto context = details::active_context<Context>(app)) {
+                    fn(context);
+                }
+            });
 
             action->setEnabled(enabled_query());
             _enabledQueries[action] = enabled_query;
@@ -245,10 +231,8 @@ void ActionRegistry::registerActions(
 }
 
 template <typename Context, std::size_t N>
-void ActionRegistry::registerActions(
-    LineaApplication* app,
-    const std::array<ActionSpec<Context>, N>& entries,
-    bool radioGroup) {
+void ActionRegistry::registerActions(LineaApplication* app, const std::array<ActionSpec<Context>, N>& entries,
+                                     bool radioGroup) {
     registerActions<Context>(app, std::span<const ActionSpec<Context>>(entries), radioGroup);
 }
 

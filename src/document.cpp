@@ -52,7 +52,6 @@
 #include "3rdparty/libcroco/src/cr-term.h"
 #include "actions/actions-edit-document.h"
 #include "actions/actions-effect.h"
-#include "actions/actions-svg-processing.h"
 #include "actions/actions-undo-document.h"
 #include "colors/document-cms.h"
 #include "debug/console-output-undo-observer.h"
@@ -146,10 +145,9 @@ SPDocument::SPDocument()
     undoStackObservers.add(*console_output_undo_observer);
 
     // Actions
-    action_group = Gio::SimpleActionGroup::create();
+    // action_group = Gio::SimpleActionGroup::create();
     //TODO: remove all
     // add_actions_edit_document(this);
-    add_actions_processing(this);
     // add_actions_undo_document(this);
     // add_document_actions_effect(this);
 

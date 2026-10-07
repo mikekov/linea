@@ -12,6 +12,7 @@
 
 #include <glibmm/i18n.h>
 
+#include "actions/actions-svg-processing.h"
 #include "document.h"
 #include "preferences.h"
 
@@ -58,18 +59,7 @@ bool ProcessingAction::is_enabled()
  */
 void ProcessingAction::run(SPDocument *doc)
 {
-    if (auto action = doc->getActionGroup()->lookup_action(_action_name)) {
-        if (action->get_enabled()) {
-            // Doc is already bound into this action so does't need to be passed in
-            action->activate();
-        }
-    } else {
-        // Qt TODO: implement app-level action lookup
-        // else if (auto action = LINEA_APP.gio_app()->lookup_action(_action_name)) {
-        //     if (action->get_enabled()) {
-        //         action->activate();
-        //     }
-        // } else {
+    if (!run_svg_processing_action(doc, _action_name.c_str())) {
         g_warning("Can't find action 'doc.%s'", _action_name.c_str());
     }
 }

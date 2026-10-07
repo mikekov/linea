@@ -38,6 +38,9 @@ x text panel - add text edit popup with simple editor and search
 x font selector - add header with sorting, filtering, search bar
 - add color fonts entry in a font browser categories
 - add support for color fonts
+- add 'home' button to switch to "no document" and show welcome page
+- editing layer transform matrix does not apply it
+- node 'position' is not being refreshed
 
 ## Missing features
 

@@ -154,10 +154,12 @@ void createMainMenu(QMenuBar* bar) {
         {"snap-global-toggle"},
         {"show-grids"},
         {"show-all-guides"},
-        {"toggle-panel-docking"},
         {"view-color-palette"},
         {"view-rulers"},
         {"view-command-palette"},
+        {},
+        {"toggle-panel-docking"},
+        {"toggle-home-page"},
         // {"view-fullscreen"}, - fullscreen gets inserted automatically on macos
     };
 

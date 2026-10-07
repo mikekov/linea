@@ -40,6 +40,7 @@
 #include "sp-item-group.h"
 #include "sp-root.h"
 
+#include "actions/action-registry.h"
 #include "actions/actions-canvas-snapping.h"
 #include "display/control/canvas-page.h"
 #include "ui/monitor.h"
@@ -194,12 +195,13 @@ void SPNamedView::modified(unsigned int flags)
         for (auto &page : page_manager.getPages()) {
             page->setDefaultAttributes();
         }
+        //TODO
         // Update unit action group
-        auto action = document->getActionGroup()->lookup_action("set-display-unit");
-        if (auto saction = std::dynamic_pointer_cast<Gio::SimpleAction>(action)) {
-            Glib::VariantType String(Glib::VARIANT_TYPE_STRING);
-            saction->change_state(getDisplayUnit()->abbr);
-        }
+        // auto action = document->getActionGroup()->lookup_action("set-display-unit");
+        // if (auto saction = std::dynamic_pointer_cast<Gio::SimpleAction>(action)) {
+        //     Glib::VariantType String(Glib::VARIANT_TYPE_STRING);
+        //     saction->change_state(getDisplayUnit()->abbr);
+        // }
 
         updateGuides();
     }
@@ -877,11 +879,8 @@ bool SPNamedView::getLockGuides()
 
 void SPNamedView::updateGrids()
 {
-    if (auto saction = std::dynamic_pointer_cast<Gio::SimpleAction>(
-                document->getActionGroup()->lookup_action("show-grids"))) {
-
-        saction->change_state(getShowGrids());
-    }
+    // Sync checkable UI actions (e.g. "show-grids") with the namedview state.
+    ActionRegistry::get().syncAllActions();
 }
 
 void SPNamedView::updateGuides()
@@ -889,17 +888,8 @@ void SPNamedView::updateGuides()
     bool const shown = getShowGuides();
     bool const locked = getLockGuides();
 
-    if (auto saction = std::dynamic_pointer_cast<Gio::SimpleAction>(
-                document->getActionGroup()->lookup_action("show-all-guides")))
-    {
-        saction->set_state(Glib::Variant<bool>::create(shown));
-    }
-
-    if (auto saction = std::dynamic_pointer_cast<Gio::SimpleAction>(
-                document->getActionGroup()->lookup_action("lock-all-guides")))
-    {
-        saction->set_state(Glib::Variant<bool>::create(locked));
-    }
+    // Sync checkable UI actions (e.g. "show-all-guides", "lock-all-guides").
+    ActionRegistry::get().syncAllActions();
 
     for (auto guide : guides) {
         setShowGuideSingle(guide);

@@ -47,6 +47,10 @@ void lock_all_guides(SPDocument* document) {
     document->getNamedView()->toggleLockGuides();
 }
 
+bool are_guides_locked(SPDocument* document) {
+    return document->getNamedView()->getLockGuides();
+}
+
 bool are_guides_visible(SPDocument* document) {
     return document->getNamedView()->getShowGuides();
 }
@@ -94,7 +98,7 @@ const Glib::ustring SECTION = NC_("Action Section", "Edit Document");
 static auto editDocTable = std::to_array<ActionSpec<SPDocument>>({
     // clang-format off
     {"create-guides-around-page", N_("Create Guides Around the Current Page"), SECTION, N_("Create four guides aligned with the page borders of the current page"), "guide",        create_guides_around_page},
-    {"lock-all-guides",           N_("Lock All Guides"),                       SECTION, N_("Toggle lock of all guides in the document"),                            "guide",        lock_all_guides},
+    {"lock-all-guides",           N_("Lock All Guides"),                       SECTION, N_("Toggle lock of all guides in the document"),                            "guide",        lock_all_guides,      are_guides_locked,       N_("Unlock All Guides")},
     {"show-all-guides",           N_("Show All Guides"),                       SECTION, N_("Toggle visibility of all guides in the document"),                      "show-guides",  show_all_guides,      are_guides_visible,      N_("Hide All Guides")},
     {"delete-all-guides",         N_("Delete All Guides"),                     SECTION, N_("Delete all the guides in the document"),                                "guide",        delete_all_guides},
     {"fit-canvas-to-drawing",     N_("Fit Page to Drawing"),                   SECTION, N_("Fit the page to the drawing"),                                          "pages-resize", fit_canvas_drawing},

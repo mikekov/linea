@@ -119,6 +119,14 @@ QRect OverlayLayout::calculatePanelGeometry(const PanelInfo& panel, QRect& rect)
             geom.moveTop(rect.top() + margins.top);
             rect.adjust(margins.left + geom.width(), 0, 0, 0);
         }
+        else if (panel.position == Position::Top) {
+            // A full-width strip anchored to the top of the remaining area: processed after side panels
+            // have consumed space, it spans only the gap between them and pushes the area's top edge down.
+            geom.setWidth(rect.width() - margins.left - margins.right);
+            geom.moveLeft(rect.left() + margins.left);
+            geom.moveTop(rect.top() + margins.top);
+            rect.adjust(0, geom.height() + margins.top, 0, 0);
+        }
         else if (panel.position == Position::Center) {
             int y = rect.top() + margins.top;
             int w = panel.widget ? std::max(panel.widget->sizeHint().width(), panel.size.width()) : panel.size.width();
@@ -157,7 +165,7 @@ void OverlayLayout::setGeometry(const QRect& rect) {
     auto docked = rect;
     auto area = rect;
     auto center = rect;
-// printf("set geo: %d %d %d %d (panels: %ld)\n", rect.x(), rect.y(), rect.width(), rect.height(), static_cast<long>(_panels.size()));
+
     for (auto mode : {Mode::Docked, Mode::Floating}) {
         area = rect;
         for (auto& panel : _panels) {
@@ -168,10 +176,6 @@ void OverlayLayout::setGeometry(const QRect& rect) {
             QRect geom = calculatePanelGeometry(panel, area);
             panel.widget->setGeometry(geom);
 
-            if (panel.widget->isVisible()) {
-                panel.widget->raise();
-            }
-
             if (panel.mode == Mode::Docked) {
                 switch (panel.position) {
                     case Position::Left:
@@ -179,6 +183,9 @@ void OverlayLayout::setGeometry(const QRect& rect) {
                         break;
                     case Position::Right:
                         docked.setRight(area.right());
+                        break;
+                    case Position::Top:
+                        docked.setTop(area.top());
                         break;
                     case Position::Center:
                         break;

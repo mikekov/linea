@@ -44,6 +44,7 @@
 #include "actions/actions-text.h"
 #include "actions/actions-tools.h"
 #include "actions/actions-transform.h"
+#include "actions/actions-svg-processing.h"
 #include "actions/actions-undo-document.h"
 #include "actions/actions-view-mode.h"
 #include "actions/actions-view-window.h"
@@ -127,6 +128,7 @@ void LineaWindow::createActions() {
     add_actions_pages(_app);
     add_actions_path(_app);
     add_actions_edit_document(_app);
+    add_actions_svg_processing(_app);
     add_actions_canvas_snapping(this);
     add_actions_canvas_transform(this);
     add_actions_node_options(this);
@@ -236,12 +238,24 @@ bool LineaWindow::rulersVisible() const {
     return _desktop_widget && _desktop_widget->rulersVisible();
 }
 
+void LineaWindow::toggleHomePage() {
+    if (_desktop_widget) _desktop_widget->toggleHomePage();
+}
+
+bool LineaWindow::isHomePageVisible() const {
+    return _desktop_widget && _desktop_widget->isHomePageVisible();
+}
+
 void LineaWindow::toggleDialogs() {
     if (_desktop_widget) _desktop_widget->toggleDialogs();
 }
 
 bool LineaWindow::dialogsVisible() const {
     return _desktop_widget && _desktop_widget->dialogsVisible();
+}
+
+bool LineaWindow::dialogsFloating() const {
+    return _desktop_widget && _desktop_widget->dialogsFloating();
 }
 
 bool LineaWindow::getFullscreen() const {

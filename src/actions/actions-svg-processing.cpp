@@ -10,18 +10,16 @@
 
 #include "actions-svg-processing.h"
 
+#include <array>
+#include <cstring>
 #include <iostream>
-
-#include <giomm.h>
 #include <glibmm/i18n.h>
 
+#include "action-meta.h"
+#include "action-registry.h"
 #include "actions-helper.h"
-
-
 #include "document.h"
 // #include "inkscape-application.h"
-#include "style.h"
-
 #include "object/object-set.h"
 #include "object/sp-defs.h"
 #include "object/sp-image.h"
@@ -29,6 +27,7 @@
 #include "object/sp-text.h"
 #include "path-chemistry.h"
 #include "path/path-outline.h"
+#include "style.h"
 #include "svg/svg-box.h"
 #include "svg/svg.h"
 #include "xml/attribute-record.h"
@@ -38,32 +37,31 @@
  * Removes all sodipodi and inkscape elements and attributes from an xml tree.
  * used to make plain svg output.
  */
-void prune_inkscape_from_node(Inkscape::XML::Node *repr)
-{
+void prune_inkscape_from_node(Inkscape::XML::Node* repr) {
     if (repr) {
-        if ( repr->type() == Inkscape::XML::NodeType::ELEMENT_NODE ) {
-            std::vector<gchar const*> attrsRemoved;
-            for ( const auto & it : repr->attributeList()) {
+        if (repr->type() == Inkscape::XML::NodeType::ELEMENT_NODE) {
+            std::vector<const gchar*> attrsRemoved;
+            for (const auto& it : repr->attributeList()) {
                 const gchar* attrName = g_quark_to_string(it.key);
                 if ((strncmp("inkscape:", attrName, 9) == 0) || (strncmp("sodipodi:", attrName, 9) == 0)) {
                     attrsRemoved.push_back(attrName);
                 }
             }
             // Can't change the set we're iterating over while we are iterating.
-            for (auto & it : attrsRemoved) {
+            for (auto& it : attrsRemoved) {
                 repr->removeAttribute(it);
             }
         }
 
-        std::vector<Inkscape::XML::Node *> nodesRemoved;
+        std::vector<Inkscape::XML::Node*> nodesRemoved;
         for (auto child = repr->firstChild(); child; child = child->next()) {
-            if((strncmp("inkscape:", child->name(), 9) == 0) || strncmp("sodipodi:", child->name(), 9) == 0) {
+            if ((strncmp("inkscape:", child->name(), 9) == 0) || strncmp("sodipodi:", child->name(), 9) == 0) {
                 nodesRemoved.push_back(child);
             } else {
                 prune_inkscape_from_node(child);
             }
         }
-        for (auto & it : nodesRemoved) {
+        for (auto& it : nodesRemoved) {
             repr->removeChild(it);
         }
     }
@@ -73,19 +71,19 @@ void prune_inkscape_from_node(Inkscape::XML::Node *repr)
  * Similar to the above prune, but used on all documents to remove problematic elements
  * for example Adobe's i:pgf tag; only removes known garbage tags.
  */
-static void prune_proprietary_from_node( Inkscape::XML::Node *repr )
-{
+static void prune_proprietary_from_node(Inkscape::XML::Node* repr) {
     if (repr) {
-        std::vector<Inkscape::XML::Node *> nodesRemoved;
-        for (auto child = repr->firstChild(); child; child = child->next() ) {
-            if((strncmp("i:pgf", child->name(), 5) == 0)) {
+        std::vector<Inkscape::XML::Node*> nodesRemoved;
+        for (auto child = repr->firstChild(); child; child = child->next()) {
+            if ((strncmp("i:pgf", child->name(), 5) == 0)) {
                 nodesRemoved.push_back(child);
-                g_warning( "An Adobe proprietary tag was found which is known to cause issues. It was removed before saving.");
+                g_warning(
+                    "An Adobe proprietary tag was found which is known to cause issues. It was removed before saving.");
             } else {
                 prune_proprietary_from_node(child);
             }
         }
-        for (auto & it : nodesRemoved) {
+        for (auto& it : nodesRemoved) {
             repr->removeChild(it);
         }
     }
@@ -102,19 +100,16 @@ static void prune_proprietary_from_node( Inkscape::XML::Node *repr )
  *  \param     property  Which property to check, either 'marker' or 'marker-start'.
  *
  */
-static void remove_marker_auto_start_reverse(Inkscape::XML::Node *repr,
-                                             Inkscape::XML::Node *defs,
-                                             Glib::ustring const &property)
-{
-    for (auto child = repr->firstChild(); child; child = child->next() ) {
+static void remove_marker_auto_start_reverse(Inkscape::XML::Node* repr, Inkscape::XML::Node* defs,
+                                             const Glib::ustring& property) {
+    for (auto child = repr->firstChild(); child; child = child->next()) {
         remove_marker_auto_start_reverse(child, defs, property);
     }
 
-    SPCSSAttr* css = sp_repr_css_attr (repr, "style");
-    Glib::ustring value = sp_repr_css_property (css, property.c_str(), "");
+    SPCSSAttr* css = sp_repr_css_attr(repr, "style");
+    Glib::ustring value = sp_repr_css_property(css, property.c_str(), "");
 
-    if (value.empty())
-        return;
+    if (value.empty()) return;
 
     // Find reference <marker>
     static Glib::RefPtr<Glib::Regex> regex = Glib::Regex::create("url\\(#([^\\)]*)\\)");
@@ -122,26 +117,21 @@ static void remove_marker_auto_start_reverse(Inkscape::XML::Node *repr,
     regex->match(value, matchInfo);
 
     if (matchInfo.matches()) {
-
         auto marker_name = matchInfo.fetch(1).raw();
-        Inkscape::XML::Node *marker = sp_repr_lookup_child (defs, "id", marker_name.c_str());
+        Inkscape::XML::Node* marker = sp_repr_lookup_child(defs, "id", marker_name.c_str());
         if (marker) {
-
             // Does marker use "auto-start-reverse"?
-            if (strncmp(marker->attribute("orient"), "auto-start-reverse", 17)==0) {
-
+            if (strncmp(marker->attribute("orient"), "auto-start-reverse", 17) == 0) {
                 // See if a reversed marker already exists.
                 auto marker_name_reversed = marker_name + "_reversed";
-                Inkscape::XML::Node *marker_reversed =
-                    sp_repr_lookup_child (defs, "id", marker_name_reversed.c_str());
+                Inkscape::XML::Node* marker_reversed = sp_repr_lookup_child(defs, "id", marker_name_reversed.c_str());
 
                 if (!marker_reversed) {
-
                     // No reversed marker, need to create!
                     marker_reversed = repr->document()->createElement("svg:marker");
 
                     // Copy attributes
-                    for (const auto & iter : marker->attributeList()) {
+                    for (const auto& iter : marker->attributeList()) {
                         marker_reversed->setAttribute(g_quark_to_string(iter.key), iter.value);
                     }
 
@@ -170,12 +160,12 @@ static void remove_marker_auto_start_reverse(Inkscape::XML::Node *repr,
                     transform += ")";
 
                     // We can't set a transform on a marker... must create group first.
-                    Inkscape::XML::Node *group = repr->document()->createElement("svg:g");
+                    Inkscape::XML::Node* group = repr->document()->createElement("svg:g");
                     group->setAttribute("transform", transform);
                     marker_reversed->addChild(group, nullptr);
 
                     // Copy all marker content to group.
-                    for (auto child = marker->firstChild() ; child != nullptr ; child = child->next() ) {
+                    for (auto child = marker->firstChild(); child != nullptr; child = child->next()) {
                         auto new_child = child->duplicate(repr->document());
                         group->addChild(new_child, nullptr);
                         new_child->release();
@@ -184,7 +174,7 @@ static void remove_marker_auto_start_reverse(Inkscape::XML::Node *repr,
                     // Add new marker to <defs>.
                     defs->addChild(marker_reversed, marker);
                     marker_reversed->release();
-                 }
+                }
 
                 // Change url to reference reversed marker.
                 std::string marker_url("url(#" + marker_name_reversed + ")");
@@ -206,23 +196,20 @@ static void remove_marker_auto_start_reverse(Inkscape::XML::Node *repr,
 }
 
 // Called by remove_marker_context_paint() for each property value ("marker", "marker-start", ...).
-void remove_marker_context_paint (Inkscape::XML::Node *repr, Inkscape::XML::Node *defs, Glib::ustring property)
-{
+void remove_marker_context_paint(Inkscape::XML::Node* repr, Inkscape::XML::Node* defs, Glib::ustring property) {
     // Value of 'marker', 'marker-start', ... property.
     std::string value("url(#");
     value += repr->attribute("id");
     value += ")";
 
     // Generate a list of elements that reference this marker.
-    std::vector<Inkscape::XML::Node *> to_fix_fill_stroke =
-        sp_repr_lookup_property_many(repr->root(), property, value);
+    std::vector<Inkscape::XML::Node*> to_fix_fill_stroke = sp_repr_lookup_property_many(repr->root(), property, value);
 
-    for (auto it: to_fix_fill_stroke) {
-
+    for (auto it : to_fix_fill_stroke) {
         // Figure out value of fill... could be inherited.
-        SPCSSAttr* css = sp_repr_css_attr_inherited (it, "style");
-        Glib::ustring fill   = sp_repr_css_property (css, "fill",   "");
-        Glib::ustring stroke = sp_repr_css_property (css, "stroke", "");
+        SPCSSAttr* css = sp_repr_css_attr_inherited(it, "style");
+        Glib::ustring fill = sp_repr_css_property(css, "fill", "");
+        Glib::ustring stroke = sp_repr_css_property(css, "stroke", "");
 
         // Name of new marker./
         Glib::ustring marker_fixed_id = repr->attribute("id");
@@ -235,7 +222,7 @@ void remove_marker_context_paint (Inkscape::XML::Node *repr, Inkscape::XML::Node
 
         {
             // Replace characters from color value that are invalid in ids
-            gchar *normalized_id = g_strdup(marker_fixed_id.c_str());
+            gchar* normalized_id = g_strdup(marker_fixed_id.c_str());
             g_strdelimit(normalized_id, "#%", '-');
             g_strdelimit(normalized_id, "(), \n\t\r", '.');
             marker_fixed_id = normalized_id;
@@ -247,31 +234,30 @@ void remove_marker_context_paint (Inkscape::XML::Node *repr, Inkscape::XML::Node
         Inkscape::XML::Node* marker_fixed = sp_repr_lookup_child(defs, "id", marker_fixed_id.c_str());
 
         if (!marker_fixed) {
-
             // Need to create new marker.
 
             marker_fixed = repr->duplicate(repr->document());
             marker_fixed->setAttribute("id", marker_fixed_id);
 
             // This needs to be turned into a function that fixes all descendents.
-            for (auto child = marker_fixed->firstChild() ; child != nullptr ; child = child->next()) {
+            for (auto child = marker_fixed->firstChild(); child != nullptr; child = child->next()) {
                 // Find style.
-                SPCSSAttr* css = sp_repr_css_attr ( child, "style" );
+                SPCSSAttr* css = sp_repr_css_attr(child, "style");
 
-                Glib::ustring fill2   = sp_repr_css_property (css, "fill",   "");
-                if (fill2 == "context-fill" ) {
-                    sp_repr_css_set_property (css, "fill", fill.c_str());
+                Glib::ustring fill2 = sp_repr_css_property(css, "fill", "");
+                if (fill2 == "context-fill") {
+                    sp_repr_css_set_property(css, "fill", fill.c_str());
                 }
-                if (fill2 == "context-stroke" ) {
-                    sp_repr_css_set_property (css, "fill", stroke.c_str());
+                if (fill2 == "context-stroke") {
+                    sp_repr_css_set_property(css, "fill", stroke.c_str());
                 }
 
-                Glib::ustring stroke2 = sp_repr_css_property (css, "stroke", "");
-                if (stroke2 == "context-fill" ) {
-                    sp_repr_css_set_property (css, "stroke", fill.c_str());
+                Glib::ustring stroke2 = sp_repr_css_property(css, "stroke", "");
+                if (stroke2 == "context-fill") {
+                    sp_repr_css_set_property(css, "stroke", fill.c_str());
                 }
-                if (stroke2 == "context-stroke" ) {
-                    sp_repr_css_set_property (css, "stroke", stroke.c_str());
+                if (stroke2 == "context-stroke") {
+                    sp_repr_css_set_property(css, "stroke", stroke.c_str());
                 }
 
                 sp_repr_css_set(child, css, "style");
@@ -283,40 +269,33 @@ void remove_marker_context_paint (Inkscape::XML::Node *repr, Inkscape::XML::Node
         }
 
         Glib::ustring marker_value = "url(#" + marker_fixed_id + ")";
-        sp_repr_css_set_property (css, property.c_str(), marker_value.c_str());
-        sp_repr_css_set (it, css, "style");
+        sp_repr_css_set_property(css, property.c_str(), marker_value.c_str());
+        sp_repr_css_set(it, css, "style");
         sp_repr_css_attr_unref(css);
     }
 }
 
-void remove_marker_context_paint(Inkscape::XML::Node *repr, Inkscape::XML::Node *defs)
-{
-    for (auto child = repr->firstChild(); child; child = child->next() ) {
+void remove_marker_context_paint(Inkscape::XML::Node* repr, Inkscape::XML::Node* defs) {
+    for (auto child = repr->firstChild(); child; child = child->next()) {
         remove_marker_context_paint(child, defs);
     }
 
     if (strncmp("svg:marker", repr->name(), 10) == 0) {
-
         if (!repr->attribute("id")) {
-
             std::cerr << "remove_marker_context_paint: <marker> without 'id'!" << std::endl;
 
         } else {
-
             // First see if we need to do anything.
             bool need_to_fix = false;
 
             // This needs to be turned into a function that searches all descendents.
-            for (auto child = repr->firstChild() ; child != nullptr ; child = child->next()) {
-
+            for (auto child = repr->firstChild(); child != nullptr; child = child->next()) {
                 // Find style.
-                SPCSSAttr* css = sp_repr_css_attr ( child, "style" );
-                Glib::ustring fill   = sp_repr_css_property (css, "fill",   "");
-                Glib::ustring stroke = sp_repr_css_property (css, "stroke", "");
-                if (fill   == "context-fill"   ||
-                    fill   == "context-stroke" ||
-                    stroke == "context-fill"   ||
-                    stroke == "context-stroke" ) {
+                SPCSSAttr* css = sp_repr_css_attr(child, "style");
+                Glib::ustring fill = sp_repr_css_property(css, "fill", "");
+                Glib::ustring stroke = sp_repr_css_property(css, "stroke", "");
+                if (fill == "context-fill" || fill == "context-stroke" || stroke == "context-fill" ||
+                    stroke == "context-stroke") {
                     need_to_fix = true;
                     break;
                 }
@@ -324,12 +303,11 @@ void remove_marker_context_paint(Inkscape::XML::Node *repr, Inkscape::XML::Node 
             }
 
             if (need_to_fix) {
-
                 // Now we need to search document for all elements that use this marker.
-                remove_marker_context_paint (repr, defs, "marker");
-                remove_marker_context_paint (repr, defs, "marker-start");
-                remove_marker_context_paint (repr, defs, "marker-mid");
-                remove_marker_context_paint (repr, defs, "marker-end");
+                remove_marker_context_paint(repr, defs, "marker");
+                remove_marker_context_paint(repr, defs, "marker-start");
+                remove_marker_context_paint(repr, defs, "marker-mid");
+                remove_marker_context_paint(repr, defs, "marker-end");
             }
         }
     }
@@ -340,24 +318,20 @@ void remove_marker_context_paint(Inkscape::XML::Node *repr, Inkscape::XML::Node 
  * Notes:
  *   Text must have been layed out. Access via old document.
  */
-void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_doc, Inkscape::XML::Node *defs)
-{
+void insert_text_fallback(Inkscape::XML::Node* repr, const SPDocument* original_doc, Inkscape::XML::Node* defs) {
     if (repr) {
-
         if (strncmp("svg:text", repr->name(), 8) == 0) {
-
             auto id = repr->attribute("id");
             // std::cout << "insert_text_fallback: found text!  id: " << (id?id:"null") << std::endl;
 
             // We need to get original SPText object to access layout.
-            SPText* text = static_cast<SPText *>(original_doc->getObjectById( id ));
+            SPText* text = static_cast<SPText*>(original_doc->getObjectById(id));
             if (text == nullptr) {
                 std::cerr << "insert_text_fallback: bad cast" << std::endl;
                 return;
             }
 
-            if (!text->has_inline_size() &&
-                !text->has_shape_inside()) {
+            if (!text->has_inline_size() && !text->has_shape_inside()) {
                 // No SVG 2 text, nothing to do.
                 return;
             }
@@ -371,7 +345,7 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
             // For text in a shape, We need to unset 'text-anchor' or SVG 1.1 fallback won't work.
             // Note 'text' here refers to original document while 'repr' refers to new document copy.
             if (text->has_shape_inside()) {
-                SPCSSAttr *css = sp_repr_css_attr(repr, "style" );
+                SPCSSAttr* css = sp_repr_css_attr(repr, "style");
                 sp_repr_css_unset_property(css, "text-anchor");
                 sp_repr_css_set(repr, css, "style");
                 sp_repr_css_attr_unref(css);
@@ -379,11 +353,10 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
 
             // We need to put trailing white space into its own tspan for inline size so
             // it is excluded during calculation of line position in SVG 1.1 renderers.
-            bool trim = text->has_inline_size() &&
-                !(text->style->text_anchor.computed == SP_CSS_TEXT_ANCHOR_START);
+            bool trim = text->has_inline_size() && !(text->style->text_anchor.computed == SP_CSS_TEXT_ANCHOR_START);
 
             // Make a list of children to delete at end:
-            std::vector<Inkscape::XML::Node *> old_children;
+            std::vector<Inkscape::XML::Node*> old_children;
             for (auto child = repr->firstChild(); child; child = child->next()) {
                 old_children.push_back(child);
             }
@@ -396,10 +369,9 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
             // std::cout << "text_x: " << text_x << " text_y: " << text_y << std::endl;
 
             // Loop over all lines in layout.
-            for (auto it = text->layout.begin() ; it != text->layout.end() ; ) {
-
+            for (auto it = text->layout.begin(); it != text->layout.end();) {
                 // Create a <tspan> with 'x' and 'y' for each line.
-                Inkscape::XML::Node *line_tspan = repr->document()->createElement("svg:tspan");
+                Inkscape::XML::Node* line_tspan = repr->document()->createElement("svg:tspan");
 
                 // This could be useful if one wants to edit in an old version of Inkscape but we
                 // need to check if it breaks anything:
@@ -420,16 +392,19 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
                         // std::cout << "  horizontal: " << text_x << " " << line_anchor_point[Geom::Y] << std::endl;
                         if (text->has_inline_size()) {
                             // We use text_x as this is the reference for 'text-anchor'
-                            // (line_x is the start of the line which gives wrong position when 'text-anchor' not start).
+                            // (line_x is the start of the line which gives wrong position when 'text-anchor' not
+                            // start).
                             line_tspan->setAttributeSvgDouble("x", text_x);
                         } else {
                             // shape-inside (we don't have to worry about 'text-anchor').
                             line_tspan->setAttributeSvgDouble("x", line_x);
                         }
-                        line_tspan->setAttributeSvgDouble("y", line_y); // FIXME: this will pick up the wrong end of counter-directional runs
+                        line_tspan->setAttributeSvgDouble("y", line_y); // FIXME: this will pick up the wrong end of
+                                                                        // counter-directional runs
                     } else {
                         // std::cout << "  vertical:   " << line_anchor_point[Geom::X] << " " << text_y << std::endl;
-                        line_tspan->setAttributeSvgDouble("x", line_x); // FIXME: this will pick up the wrong end of counter-directional runs
+                        line_tspan->setAttributeSvgDouble("x", line_x); // FIXME: this will pick up the wrong end of
+                                                                        // counter-directional runs
                         if (text->has_inline_size()) {
                             line_tspan->setAttributeSvgDouble("y", text_y);
                         } else {
@@ -438,8 +413,8 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
                     }
                 }
 
-                // Inside line <tspan>, create <tspan>s for each change of style or shift. (No shifts in SVG 2 flowed text.)
-                // For simple lines, this creates an unneeded <tspan> but so be it.
+                // Inside line <tspan>, create <tspan>s for each change of style or shift. (No shifts in SVG 2 flowed
+                // text.) For simple lines, this creates an unneeded <tspan> but so be it.
                 Inkscape::Text::Layout::iterator it_line_end = it;
                 it_line_end.nextStartOfLine();
 
@@ -452,8 +427,7 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
 
                 // Loop over chunks in line
                 while (it != it_line_end) {
-
-                    Inkscape::XML::Node *span_tspan = repr->document()->createElement("svg:tspan");
+                    Inkscape::XML::Node* span_tspan = repr->document()->createElement("svg:tspan");
 
                     // use kerning to simulate justification and whatnot
                     Inkscape::Text::Layout::iterator it_span_end = it;
@@ -466,13 +440,13 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
                         std::swap(attrs.dx, attrs.dy);
                     }
                     TextTagAttributes(attrs).writeTo(span_tspan);
-                    SPObject *source_obj = nullptr;
+                    SPObject* source_obj = nullptr;
                     Glib::ustring::iterator span_text_start_iter;
                     text->layout.getSourceOfCharacter(it, &source_obj, &span_text_start_iter);
 
                     // Set tspan style
-                    Glib::ustring style_text = (is<SPString>(source_obj) ? source_obj->parent : source_obj)
-                                                   ->style->writeIfDiff(text->style);
+                    Glib::ustring style_text =
+                        (is<SPString>(source_obj) ? source_obj->parent : source_obj)->style->writeIfDiff(text->style);
                     if (!style_text.empty()) {
                         span_tspan->setAttributeOrRemoveIfEmpty("style", style_text);
                     }
@@ -489,32 +463,35 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
                     // Add text node
                     auto str = cast<SPString>(source_obj);
                     if (str) {
-                        Glib::ustring *string = &(str->string); // TODO fixme: dangerous, unsafe premature-optimization
-                        SPObject *span_end_obj = nullptr;
+                        Glib::ustring* string = &(str->string); // TODO fixme: dangerous, unsafe premature-optimization
+                        SPObject* span_end_obj = nullptr;
                         Glib::ustring::iterator span_text_end_iter;
                         text->layout.getSourceOfCharacter(it_span_end, &span_end_obj, &span_text_end_iter);
                         if (span_end_obj != source_obj) {
                             if (it_span_end == text->layout.end()) {
                                 span_text_end_iter = span_text_start_iter;
-                                for (int i = text->layout.iteratorToCharIndex(it_span_end) - text->layout.iteratorToCharIndex(it) ; i ; --i)
+                                for (int i = text->layout.iteratorToCharIndex(it_span_end) -
+                                             text->layout.iteratorToCharIndex(it);
+                                     i; --i)
                                     ++span_text_end_iter;
                             } else
-                                span_text_end_iter = string->end();    // spans will never straddle a source boundary
+                                span_text_end_iter = string->end(); // spans will never straddle a source boundary
                         }
 
                         if (span_text_start_iter != span_text_end_iter) {
                             Glib::ustring new_string;
                             while (span_text_start_iter != span_text_end_iter)
-                                new_string += *span_text_start_iter++;    // grr. no substr() with iterators
+                                new_string += *span_text_start_iter++; // grr. no substr() with iterators
 
                             if (it == it_last_span && trim) {
                                 // Found last span in line
-                                const auto s = new_string.find_last_not_of(" \t"); // Any other white space characters needed?
-                                trailing_whitespace = new_string.substr(s+1, new_string.length());
-                                new_string.erase(s+1);
+                                const auto s =
+                                    new_string.find_last_not_of(" \t"); // Any other white space characters needed?
+                                trailing_whitespace = new_string.substr(s + 1, new_string.length());
+                                new_string.erase(s + 1);
                             }
 
-                            Inkscape::XML::Node *new_text = repr->document()->createTextNode(new_string.c_str());
+                            Inkscape::XML::Node* new_text = repr->document()->createTextNode(new_string.c_str());
                             span_tspan->appendChild(new_text);
                             Inkscape::GC::release(new_text);
                             // std::cout << "  new_string: |" << new_string << "|" << std::endl;
@@ -531,8 +508,7 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
                 // into a separate tspan (alignment is done by "text chunk" and spaces at ends of
                 // line will mess this up).
                 if (trim && trailing_whitespace.length() != 0) {
-
-                    Inkscape::XML::Node *space_tspan = repr->document()->createElement("svg:tspan");
+                    Inkscape::XML::Node* space_tspan = repr->document()->createElement("svg:tspan");
                     // Set either 'x' or 'y' to force a new text chunk. To do: this really should
                     // be positioned at the end of the line (overhanging).
                     if (text->is_horizontal()) {
@@ -540,34 +516,31 @@ void insert_text_fallback(Inkscape::XML::Node *repr, const SPDocument *original_
                     } else {
                         space_tspan->setAttributeSvgDouble("x", line_x);
                     }
-                    Inkscape::XML::Node *space = repr->document()->createTextNode(trailing_whitespace.c_str());
+                    Inkscape::XML::Node* space = repr->document()->createTextNode(trailing_whitespace.c_str());
                     space_tspan->appendChild(space);
                     Inkscape::GC::release(space);
                     line_tspan->appendChild(space_tspan);
                     Inkscape::GC::release(space_tspan);
                 }
-
             }
 
-            for (auto i: old_children) {
-                repr->removeChild (i);
+            for (auto i : old_children) {
+                repr->removeChild(i);
             }
 
-	    text->setHidden(was_hidden);
+            text->setHidden(was_hidden);
             return; // No need to look at children of <text>
         }
 
-        for (auto child = repr->firstChild(); child; child = child->next() ) {
-            insert_text_fallback (child, original_doc, defs);
+        for (auto child = repr->firstChild(); child; child = child->next()) {
+            insert_text_fallback(child, original_doc, defs);
         }
     }
 }
 
-void insert_mesh_polyfill(Inkscape::XML::Node *repr)
-{
+void insert_mesh_polyfill(Inkscape::XML::Node* repr) {
     if (repr) {
-
-        Inkscape::XML::Node *defs = sp_repr_lookup_name (repr, "svg:defs");
+        Inkscape::XML::Node* defs = sp_repr_lookup_name(repr, "svg:defs");
 
         if (defs == nullptr) {
             // We always put meshes in <defs>, no defs -> no mesh.
@@ -582,30 +555,27 @@ void insert_mesh_polyfill(Inkscape::XML::Node *repr)
             }
         }
 
-        Inkscape::XML::Node *script = sp_repr_lookup_child (repr, "id", "mesh_polyfill");
+        Inkscape::XML::Node* script = sp_repr_lookup_child(repr, "id", "mesh_polyfill");
 
         if (has_mesh && script == nullptr) {
-
             script = repr->document()->createElement("svg:script");
-            script->setAttribute ("id",   "mesh_polyfill");
-            script->setAttribute ("type", "text/javascript");
+            script->setAttribute("id", "mesh_polyfill");
+            script->setAttribute("type", "text/javascript");
             repr->root()->appendChild(script); // Must be last
 
             // Insert JavaScript via raw string literal.
             Glib::ustring js =
 #include "extension/internal/polyfill/mesh_compressed.include"
-;
+                ;
 
-            Inkscape::XML::Node *script_text = repr->document()->createTextNode(js.c_str());
+            Inkscape::XML::Node* script_text = repr->document()->createTextNode(js.c_str());
             script->appendChild(script_text);
         }
     }
 }
-void insert_hatch_polyfill(Inkscape::XML::Node *repr)
-{
+void insert_hatch_polyfill(Inkscape::XML::Node* repr) {
     if (repr) {
-
-        Inkscape::XML::Node *defs = sp_repr_lookup_name (repr, "svg:defs");
+        Inkscape::XML::Node* defs = sp_repr_lookup_name(repr, "svg:defs");
 
         if (defs == nullptr) {
             // We always put meshes in <defs>, no defs -> no mesh.
@@ -620,21 +590,20 @@ void insert_hatch_polyfill(Inkscape::XML::Node *repr)
             }
         }
 
-        Inkscape::XML::Node *script = sp_repr_lookup_child (repr, "id", "hatch_polyfill");
+        Inkscape::XML::Node* script = sp_repr_lookup_child(repr, "id", "hatch_polyfill");
 
         if (has_hatch && script == nullptr) {
-
             script = repr->document()->createElement("svg:script");
-            script->setAttribute ("id",   "hatch_polyfill");
-            script->setAttribute ("type", "text/javascript");
+            script->setAttribute("id", "hatch_polyfill");
+            script->setAttribute("type", "text/javascript");
             repr->root()->appendChild(script); // Must be last
 
             // Insert JavaScript via raw string literal.
             Glib::ustring js =
 #include "extension/internal/polyfill/hatch_compressed.include"
-;
+                ;
 
-            Inkscape::XML::Node *script_text = repr->document()->createTextNode(js.c_str());
+            Inkscape::XML::Node* script_text = repr->document()->createTextNode(js.c_str());
             script->appendChild(script_text);
         }
     }
@@ -645,16 +614,15 @@ void insert_hatch_polyfill(Inkscape::XML::Node *repr)
  *
  * This means groups also end up with boxes and any other item where one can be made.
  */
-void insert_bounding_boxes(SPItem *item)
-{
-    for (auto& child: item->childList(false)) {
+void insert_bounding_boxes(SPItem* item) {
+    for (auto& child : item->childList(false)) {
         if (auto child_item = cast<SPItem>(child)) {
             insert_bounding_boxes(child_item);
         }
     }
-    auto const scale = item->document->getDocumentScale().inverse();
-    auto const vbox = item->visualBounds(item->i2doc_affine() * scale);
-    auto const gbox = item->geometricBounds(item->i2doc_affine() * scale);
+    const auto scale = item->document->getDocumentScale().inverse();
+    const auto vbox = item->visualBounds(item->i2doc_affine() * scale);
+    const auto gbox = item->geometricBounds(item->i2doc_affine() * scale);
     item->setAttributeOrRemoveIfEmpty("inkscape:visualbox", SVGBox(vbox).write());
     if (gbox != vbox) {
         item->setAttributeOrRemoveIfEmpty("inkscape:geometricbox", SVGBox(gbox).write());
@@ -664,14 +632,13 @@ void insert_bounding_boxes(SPItem *item)
 /**
  * Appends the shape path, if available, to any SPShape recursively.
  */
-void insert_path_data(SPItem *item)
-{
+void insert_path_data(SPItem* item) {
     Geom::PathVector fill;
     Geom::PathVector stroke;
     if (item_find_paths(item, fill, stroke)) {
         item->setAttribute("inkscape:d", sp_svg_write_path(fill));
     } else {
-        for (auto& child: item->childList(false)) {
+        for (auto& child : item->childList(false)) {
             if (auto child_item = cast<SPItem>(child)) {
                 insert_path_data(child_item);
             }
@@ -682,103 +649,145 @@ void insert_path_data(SPItem *item)
 /**
  * Makes paths more predictable for better processing
  */
-void normalize_all_paths(Inkscape::XML::Node *node)
-{
+void normalize_all_paths(Inkscape::XML::Node* node) {
     if (auto attr = node->attribute("d")) {
         node->setAttribute("d", sp_svg_write_path(sp_svg_read_pathv(attr), true));
     }
-    for (auto child = node->firstChild(); child; child = child->next() ) {
+    for (auto child = node->firstChild(); child; child = child->next()) {
         normalize_all_paths(child);
     }
 }
 
+namespace {
+
+void set_svg_version_1(SPDocument* doc) {
+    doc->getReprRoot()->setAttribute("version", "1.1");
+}
+
+void set_svg_version_2(SPDocument* doc) {
+    auto rroot = doc->getReprRoot();
+    rroot->setAttribute("standalone", "no");
+    rroot->setAttribute("version", "2.0");
+}
+
+void set_inkscape_version(SPDocument* doc) {
+    doc->getRoot()->updateDocVersion();
+}
+
+void prune_inkscape_namespaces(SPDocument* doc) {
+    prune_inkscape_from_node(doc->getReprRoot());
+}
+
+void prune_proprietary_namespaces(SPDocument* doc) {
+    prune_proprietary_from_node(doc->getReprRoot());
+}
+
+void reverse_auto_start_markers(SPDocument* doc) {
+    // Do marker start for efficiency reasons
+    remove_marker_auto_start_reverse(doc->getReprRoot(), doc->getDefs()->getRepr(), "marker-start");
+    remove_marker_auto_start_reverse(doc->getReprRoot(), doc->getDefs()->getRepr(), "marker");
+}
+
+void remove_all_transforms(SPDocument* doc) {
+    doc->getRoot()->removeTransformsRecursively(doc->getRoot());
+}
+
+void remove_marker_context_paints(SPDocument* doc) {
+    remove_marker_context_paint(doc->getReprRoot(), doc->getDefs()->getRepr());
+}
+
+void insert_svg1_text_fallback(SPDocument* doc) {
+    insert_text_fallback(doc->getReprRoot(), doc->getOriginalDocument());
+}
+
+void insert_mesh_polyfill_script(SPDocument* doc) {
+    insert_mesh_polyfill(doc->getReprRoot());
+}
+
+void insert_hatch_polyfill_script(SPDocument* doc) {
+    insert_hatch_polyfill(doc->getReprRoot());
+}
+
+void all_clones_to_objects(SPDocument* doc) {
+    auto selection = Inkscape::ObjectSet(doc);
+    selection.set(doc->getRoot());
+    selection.unlinkRecursive(true, false, true);
+}
+
+void all_objects_to_paths(SPDocument* doc) {
+    std::vector<SPItem*> selected;
+    std::vector<Inkscape::XML::Node*> to_select;
+    sp_item_list_to_curves({doc->getRoot()}, selected, to_select, false);
+}
+
+void add_strokes_to_paths(SPDocument* doc) {
+    item_to_paths(doc->getRoot());
+}
+
+void normalize_paths(SPDocument* doc) {
+    normalize_all_paths(doc->getReprRoot());
+}
+
+void annotate_bounding_boxes(SPDocument* doc) {
+    insert_bounding_boxes(doc->getRoot());
+}
+
+void annotate_path_data(SPDocument* doc) {
+    insert_path_data(doc->getRoot());
+}
+
+void vacuum_defs(SPDocument* doc) {
+    doc->vacuumDocument();
+}
+
+const ActionGroup svgProcessingActionGroup = {"svg-processing", N_("Processing"), ActionScope::Document};
+
 const Glib::ustring SECTION = NC_("Action Section", "Processing");
 
-std::vector<std::vector<Glib::ustring>> doc_svg_processing_actions =
-{
+static auto processingTable = std::to_array<ActionSpec<SPDocument>>({
     // clang-format off
-    {"doc.set-svg-version-1",            N_("Set SVG Version to 1.1"),       SECTION, N_("Set the document's SVG version to 1.1") },
-    {"doc.set-svg-version-2",            N_("Set SVG Version to 2.0"),       SECTION, N_("Set the document's SVG version to 2.0") },
-    {"doc.set-inkscape-version",         N_("Set Inkscape Version"),         SECTION, N_("Add the Inkscape version to the document") },
-    {"doc.prune-inkscape-namespaces",    N_("Prune Inkscape Namespaces"),    SECTION, N_("Remove any Inkscape-specific SVG data") },
-    {"doc.prune-proprietary-namespaces", N_("Prune Proprietary Namespaces"), SECTION, N_("Remove any known proprietary SVG data") },
+    {"set-svg-version-1",            N_("Set SVG Version to 1.1"),       SECTION, N_("Set the document's SVG version to 1.1"),                                                               nullptr, set_svg_version_1},
+    {"set-svg-version-2",            N_("Set SVG Version to 2.0"),       SECTION, N_("Set the document's SVG version to 2.0"),                                                               nullptr, set_svg_version_2},
+    {"set-inkscape-version",         N_("Set Inkscape Version"),         SECTION, N_("Add the Inkscape version to the document"),                                                            nullptr, set_inkscape_version},
+    {"prune-inkscape-namespaces",    N_("Prune Inkscape Namespaces"),    SECTION, N_("Remove any Inkscape-specific SVG data"),                                                               nullptr, prune_inkscape_namespaces},
+    {"prune-proprietary-namespaces", N_("Prune Proprietary Namespaces"), SECTION, N_("Remove any known proprietary SVG data"),                                                               nullptr, prune_proprietary_namespaces},
 
-    {"doc.reverse-auto-start-markers",   N_("Reverse Auto Start Markers"),   SECTION, N_("Remove auto start positions from markers") },
-    {"doc.remove-all-transforms",        N_("Try to Remove All Transforms"), SECTION, N_("Attempt to remove all transforms from all shapes") },
-    {"doc.remove-marker-context-paint",  N_("Remove Marker Context Paint"),  SECTION, N_("Remove context paints from markers") },
+    {"reverse-auto-start-markers",   N_("Reverse Auto Start Markers"),   SECTION, N_("Remove auto start positions from markers"),                                                            nullptr, reverse_auto_start_markers},
+    {"remove-all-transforms",        N_("Try to Remove All Transforms"), SECTION, N_("Attempt to remove all transforms from all shapes"),                                                    nullptr, remove_all_transforms},
+    {"remove-marker-context-paint",  N_("Remove Marker Context Paint"),  SECTION, N_("Remove context paints from markers"),                                                                  nullptr, remove_marker_context_paints},
 
-    {"doc.insert-text-fallback",         N_("Insert Text Fallback"),         SECTION, N_("Replace SVG2 text with SVG1.1 text") },
-    {"doc.insert-mesh-polyfill",         N_("Insert Mesh Polyfill"),         SECTION, N_("Insert JavaScript for rendering meshes") },
-    {"doc.insert-hatch-polyfill",        N_("Insert Hatch Polyfill"),        SECTION, N_("Insert JavaScript for rendering hatches") },
+    {"insert-text-fallback",         N_("Insert Text Fallback"),         SECTION, N_("Replace SVG2 text with SVG1.1 text"),                                                                  nullptr, insert_svg1_text_fallback},
+    {"insert-mesh-polyfill",         N_("Insert Mesh Polyfill"),         SECTION, N_("Insert JavaScript for rendering meshes"),                                                              nullptr, insert_mesh_polyfill_script},
+    {"insert-hatch-polyfill",        N_("Insert Hatch Polyfill"),        SECTION, N_("Insert JavaScript for rendering hatches"),                                                             nullptr, insert_hatch_polyfill_script},
 
-    {"doc.all-clones-to-objects",        N_("Unlink All Clones"),            SECTION, N_("Recursively unlink all clones and symbols") },
-    {"doc.all-objects-to-paths",         N_("All Objects to Paths"),         SECTION, N_("Turn all shapes recursively into path elements") },
-    {"doc.add-strokes-to-paths",         N_("All Strokes to Paths"),         SECTION, N_("Turn all strokes recursively into fill-only paths") },
-    {"doc.normalize-all-paths",          N_("Normalize Path Data"),          SECTION, N_("Make all paths absolute and predictable") },
+    {"all-clones-to-objects",        N_("Unlink All Clones"),            SECTION, N_("Recursively unlink all clones and symbols"),                                                           nullptr, all_clones_to_objects},
+    {"all-objects-to-paths",         N_("All Objects to Paths"),         SECTION, N_("Turn all shapes recursively into path elements"),                                                      nullptr, all_objects_to_paths},
+    {"add-strokes-to-paths",         N_("All Strokes to Paths"),         SECTION, N_("Turn all strokes recursively into fill-only paths"),                                                   nullptr, add_strokes_to_paths},
+    {"normalize-all-paths",          N_("Normalize Path Data"),          SECTION, N_("Make all paths absolute and predictable"),                                                             nullptr, normalize_paths},
 
-    {"doc.insert-bounding-boxes",        N_("Annotate all Bounding Boxes"),  SECTION, N_("Annotate every shape and group with its current bounding box (not kept up to date)") },
-    {"doc.insert-path-data",             N_("Annotate all Shape Paths"),     SECTION, N_("Annotate every non-path shape with their equivalent path string (not kept up to date)") },
+    {"insert-bounding-boxes",        N_("Annotate all Bounding Boxes"),  SECTION, N_("Annotate every shape and group with its current bounding box (not kept up to date)"),                  nullptr, annotate_bounding_boxes},
+    {"insert-path-data",             N_("Annotate all Shape Paths"),     SECTION, N_("Annotate every non-path shape with their equivalent path string (not kept up to date)"),               nullptr, annotate_path_data},
 
-    {"doc.vacuum-defs",                  N_("Clean up Document"),            SECTION, N_("Remove unused definitions (gradients, etc.)") },
+    {"vacuum-defs",                  N_("Clean up Document"),            SECTION, N_("Remove unused definitions (gradients, etc.)"),                                                         nullptr, vacuum_defs},
     // clang-format on
-};
+});
 
-void add_actions_processing(SPDocument* doc)
-{
+} // namespace
 
-    auto group = doc->getActionGroup();
-    // clang-format off
-    group->add_action("set-svg-version-2",            [doc]() {
-        auto rroot = doc->getReprRoot();
-        rroot->setAttribute("standalone", "no");
-        rroot->setAttribute("version", "2.0");
-    });
-    group->add_action("set-svg-version-1",            [doc]() {
-        auto rroot = doc->getReprRoot();
-        rroot->setAttribute("version", "1.1");
-    });
-    group->add_action("set-inkscape-version",         [doc]() {
-        doc->getRoot()->updateDocVersion();
-    });
-    group->add_action("prune-inkscape-namespaces",    [doc]() { prune_inkscape_from_node(doc->getReprRoot()); });
-    group->add_action("prune-proprietary-namespaces", [doc]() { prune_proprietary_from_node(doc->getReprRoot()); });
-    group->add_action("reverse-auto-start-markers",   [doc]() {
-        // Do marker start for efficiency reasons
-        remove_marker_auto_start_reverse(doc->getReprRoot(), doc->getDefs()->getRepr(), "marker-start");
-        remove_marker_auto_start_reverse(doc->getReprRoot(), doc->getDefs()->getRepr(), "marker");
-    });
-    group->add_action("remove-all-transforms", [doc]() {
-        doc->getRoot()->removeTransformsRecursively(doc->getRoot());
-    });
+void add_actions_svg_processing(LineaApplication* app) {
+    auto& registry = ActionRegistry::get();
+    registry.registerGroup(svgProcessingActionGroup);
+    registry.registerActions(app, processingTable);
+}
 
-    group->add_action("remove-marker-context-paint",  [doc]() { remove_marker_context_paint(doc->getReprRoot(), doc->getDefs()->getRepr()); });
-    group->add_action("insert-text-fallback",         [doc]() { insert_text_fallback(doc->getReprRoot(), doc->getOriginalDocument()); });
-    group->add_action("insert-mesh-polyfill",         [doc]() { insert_mesh_polyfill(doc->getReprRoot()); });
-    group->add_action("insert-hatch-polyfill",        [doc]() { insert_hatch_polyfill(doc->getReprRoot()); });
-    group->add_action("all-clones-to-objects",        [doc]() {
-        auto selection = Inkscape::ObjectSet(doc);
-        selection.set(doc->getRoot());
-        selection.unlinkRecursive(true, false, true);
-    });
-    group->add_action("all-objects-to-paths",         [doc]() {
-        std::vector<SPItem*> selected;
-        std::vector<Inkscape::XML::Node*> to_select;
-        sp_item_list_to_curves({doc->getRoot()}, selected, to_select, false);
-    });
-    group->add_action("add-strokes-to-paths",         [doc]() {
-        item_to_paths(doc->getRoot());
-    });
-    group->add_action("normalize-all-paths",       [doc]() { normalize_all_paths(doc->getReprRoot()); });
-    group->add_action("insert-bounding-boxes",     [doc]() { insert_bounding_boxes(doc->getRoot()); });
-    group->add_action("insert-path-data",          [doc]() { insert_path_data(doc->getRoot()); });
-    group->add_action("vacuum-defs",               [doc]() { doc->vacuumDocument(); });
-    // clang-format on
-#if 0
-    // Note: This will only work for the first ux to load, possible problem.
-    auto app = InkscapeApplication::instance();
-    if (!app) { // i.e. Inkview
-        return;
+bool run_svg_processing_action(SPDocument* doc, const char* name) {
+    if (!doc || !name) return false;
+
+    for (const auto& entry : processingTable) {
+        if (std::strcmp(entry.id, name) == 0) {
+            entry.callback(doc);
+            return true;
+        }
     }
-    app->get_action_extra_data().add_data(doc_svg_processing_actions);
-#endif
+    return false;
 }

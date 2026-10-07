@@ -146,7 +146,7 @@ document_cleanup(LineaWindow* win)
 void document_close(LineaWindow* win) {
     auto& app = LineaApplication::instance();
     if (auto desktop = win->get_desktop()) {
-        app.destroyDesktop(desktop, false);
+        app.destroyDesktop(desktop);
     }
 }
 

@@ -1,12 +1,15 @@
 #include "action-registry.h"
-#include "action-meta.h"
-#include "ui/shortcut-manager.h"
+
 #include <QAction>
 #include <QActionGroup>
+#include <QIcon>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+
+#include "action-meta.h"
 #include "linea-window.h"
+#include "ui/shortcut-manager.h"
 
 ActionRegistry& ActionRegistry::get() {
     static ActionRegistry instance;
@@ -95,4 +98,13 @@ void ActionRegistry::setupDualLabel(QAction* action, const char* checked_label) 
         action->setText(on ? checked_text : unchecked_text);
     });
     action->setText(action->isChecked() ? checked_text : unchecked_text);
+}
+
+void ActionRegistry::setupDualIcon(QAction* action, const char* checked_icon) {
+    action->setProperty("iconToggle", true);
+    auto unchecked = action->icon();
+    auto checked = QIcon(QString(":/icons/%1").arg(checked_icon));
+    QObject::connect(action, &QAction::toggled, action,
+                     [action, unchecked, checked](bool on) { action->setIcon(on ? checked : unchecked); });
+    action->setIcon(action->isChecked() ? checked : unchecked);
 }

@@ -67,6 +67,9 @@ public:
     bool getFullscreen() const;
     void toggleDialogs();
     bool dialogsVisible() const;
+    bool dialogsFloating() const;
+    void toggleHomePage();
+    bool isHomePageVisible() const;
     void toggleRulers();
     bool rulersVisible() const;
     void toggleColorPalette();

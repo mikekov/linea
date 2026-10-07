@@ -18,7 +18,6 @@
 #include <QWidget>
 #include <sigc++/scoped_connection.h>
 
-#include "qt/ui/tab-strip.h"
 #include "ruler-widget.h"
 
 class QStackedWidget;
@@ -46,7 +45,8 @@ public:
     void addCanvas(Inkscape::UI::Widget::Canvas* canvas);
     /// Remove a canvas from the stack.
     void removeCanvas(Inkscape::UI::Widget::Canvas* canvas);
-    /// Show the given canvas (switch current page).
+    /// Show the given canvas (switch current page), or the "no document"
+    /// empty page when @p canvas is null.
     void setCurrentCanvas(SPDesktop* desktop, Inkscape::UI::Widget::Canvas* canvas);
     /// Get the currently visible canvas.
     Inkscape::UI::Widget::Canvas* currentCanvas() const;
@@ -54,15 +54,16 @@ public:
     /// Update ruler data (unit, range, page, selection) from the current desktop.
     void updateRulers();
 
-    /// Show or hide the rulers (and corner).
+    /// Show or hide the rulers (and corner). The preference is stored, but
+    /// the rulers are only actually shown while a desktop is active.
     void setRulersVisible(bool visible);
     bool rulersVisible() const { return _rulersVisible; }
 
+    /// Whether the rulers are on screen right now (preference + a desktop).
+    bool rulersShown() const { return _rulersVisible && _desktop != nullptr; }
+
     /// Ruler thickness in pixels. Collapsible panels can use this to adjust margins.
     int rulerSize() const { return _hruler->rulerSize(); }
-
-    /// The tab strip hosted in the header row (one tab per open desktop).
-    TabStrip* tabStrip() const { return _tabStrip; }
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -71,16 +72,17 @@ protected:
 private:
     // set current desktop (may be null)
     void setDesktop(SPDesktop* desktop);
+    void applyRulerVisibility();
     void onCanvasMouseMoved(QPointF pos);
     void onCanvasMouseLeft();
     void onRulerDragStarted(RulerWidget* ruler, double position);
     void setRulersUnit(const QString& abbr);
 
     QStackedWidget* _stack = nullptr;
+    QWidget* _emptyPage = nullptr; // "no document" placeholder page, first in the stack
     RulerWidget* _hruler = nullptr;
     RulerWidget* _vruler = nullptr;
     QWidget* _corner = nullptr;
-    TabStrip* _tabStrip = nullptr;
     bool _rulersVisible = true;
     QPointF _lastMousePos;
     SPDesktop* _desktop = nullptr;

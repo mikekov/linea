@@ -180,13 +180,14 @@ void LeftPanel::buildUi() {
 void LeftPanel::buildHeader() {
     auto tb = new Toolbar();
     tb->addButton("document-new");
-    tb->addDropDownButton(newDocumentFromTemplateMenu(), {});
+    // tb->addDropDownButton(newDocumentFromTemplateMenu(), {});
     tb->addSpace();
     tb->addButton("document-open");
-    tb->addDynamicDropDownButton(recentFilesMenu);
+    // tb->addDynamicDropDownButton(recentFilesMenu);
     tb->addSpace();
     tb->addButton("document-save");
     tb->addStretch();
+    tb->addButton("toggle-home-page");
     tb->addButton("toggle-panel-docking");
     tb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     setHeader(tb);

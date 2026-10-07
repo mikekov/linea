@@ -24,8 +24,8 @@ void activate_any_actions(action_vector_t const &actions, Glib::RefPtr<Gio::Appl
             app->activate_action(name, param);
         } else if (win && win->has_action(name)) {
             win->activate_action(name, param);
-        } else if (doc && doc->getActionGroup()->has_action(name)) {
-            doc->getActionGroup()->activate_action(name, param);
+        // } else if (doc && doc->getActionGroup()->has_action(name)) {
+        //     doc->getActionGroup()->activate_action(name, param);
         } else {
             std::cerr << "ActionsHelper::activate_actions: Unknown action name: " << name << std::endl;
         }

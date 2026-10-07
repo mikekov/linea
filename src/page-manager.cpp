@@ -813,11 +813,11 @@ bool PageManager::subset(SPAttr key, const gchar *value)
             return false; // propagate further
         case SPAttr::PAGELABELSTYLE:
             label_style = value ? value : "default";
-
+            //TODO
             // Update user action button
-            if (auto action = _document->getActionGroup()->lookup_action("page-label-style")) {
-                action->change_state(label_style == "below");
-            }
+            // if (auto action = _document->getActionGroup()->lookup_action("page-label-style")) {
+            //     action->change_state(label_style == "below");
+            // }
             break;
         default:
             return false;

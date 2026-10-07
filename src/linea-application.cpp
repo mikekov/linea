@@ -514,7 +514,7 @@ SPDesktop* LineaApplication::createDesktop(SPDocument* document, bool replace, b
  * Destroy a desktop and (if no other desktops remain) its document.
  * Returns false if aborted due to unsaved data.
  */
-bool LineaApplication::destroyDesktop(SPDesktop* desktop, [[maybe_unused]] bool keep_alive) {
+bool LineaApplication::destroyDesktop(SPDesktop* desktop) {
     if (!desktop) {
         std::cerr << "LineaApplication::destroyDesktop: No desktop!" << std::endl;
         return false;
@@ -539,14 +539,7 @@ bool LineaApplication::destroyDesktop(SPDesktop* desktop, [[maybe_unused]] bool 
         }
     }
 
-    if (get_number_of_windows() == 1 && keep_alive) {
-        // Last desktop: replace with a new blank document instead of closing.
-        auto new_document = document_new();
-        document_swap(desktop, new_document);
-        // desktopClose(desktop);
-    } else {
-        desktopClose(desktop);
-    }
+    desktopClose(desktop);
 
     // Close the document if it no longer has any desktops.
     if (it->second.empty()) {

@@ -228,6 +228,9 @@ static void open_scripting(LineaWindow* win) {
 
 static void open_extension_gallery(LineaWindow* /*win*/) {}
 static void toggle_dialogs(LineaWindow* wnd) { wnd->toggleDialogs(); }
+static bool dialogs_floating(LineaWindow* wnd) { return wnd->dialogsFloating(); }
+static void toggle_home_page(LineaWindow* wnd) { wnd->toggleHomePage(); }
+static bool is_home_page_visible(LineaWindow* wnd) { return wnd->isHomePageVisible(); }
 
 Glib::ustring const ABOUT_SECTION = NC_("Action Section", "Help");
 QPointer<Linea::UI::AboutWidget> about_widget;
@@ -266,7 +269,9 @@ static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
     {"dialog-open-scripting", N_("Open Script Editor"), SECTION,
      N_("Edit and run scripts"), "dialog-scripts", open_scripting},
     {"toggle-panel-docking", N_("Toggle All Dialogs"), SECTION,
-     N_("Dock or collapse all dialogs"), "panel-left", toggle_dialogs},
+     N_("Dock or collapse all dialogs"), "panel-left", toggle_dialogs, dialogs_floating, nullptr, nullptr, "panel-left-2" },
+    {"toggle-home-page", N_("Toggle Home Page"), SECTION,
+     N_("Toggle the home page with recent files, templates, and crash recovery"), "home", toggle_home_page, is_home_page_visible, nullptr, nullptr, "home-2"},
     {"about-linea", N_("About Linea"), ABOUT_SECTION,
      N_("Show information about Linea"), nullptr, show_about},
     {"dialog-open-settings", N_("Open Settings"), SECTION,

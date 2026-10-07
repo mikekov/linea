@@ -379,7 +379,7 @@ public:
 
 
     // Actions ---------------------------------
-    Glib::RefPtr<Gio::SimpleActionGroup> getActionGroup() { return action_group; }
+    // Glib::RefPtr<Gio::SimpleActionGroup> getActionGroup() { return action_group; }
 
     /************* Data ***************/
 private:
@@ -463,7 +463,7 @@ private:
     std::vector<SPObject *> _collection_queue; ///< Orphans
 
     // Actions ---------------------------------
-    Glib::RefPtr<Gio::SimpleActionGroup> action_group;
+    // Glib::RefPtr<Gio::SimpleActionGroup> action_group;
 
     /*********** Signals **************/
 

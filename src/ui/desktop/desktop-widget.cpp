@@ -92,7 +92,20 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
 
     this->installEventFilter(this);
 
-    _tabStrip = _canvasFrame->tabStrip();
+    // Create overlay layout for canvas and panels, parented to the container.
+    // OverlayLayout positions CanvasFrame as the first (canvas) widget that
+    // panels overlap / dock against.
+    _overlayLayout = new OverlayLayout(_canvasContainer);
+    _overlayLayout->addWidget(_canvasFrame);
+
+    // Tab strip is a top-positioned overlay panel, so it sits above the canvas
+    // inside the container — out of CanvasFrame, and below/behind nothing.
+    _tabStrip = new TabStrip(_canvasContainer);
+    Inkscape::UI::add_drop_shadow(_tabStrip, 0, 0);
+    _tabStrip->setShowLabels(TabStrip::ShowLabels::Always);
+    _tabStrip->setShowCloseButton(true);
+    _tabStrip->setRearrangingTabs(TabStrip::Rearrange::Externally);
+    _tabStrip->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     _tabStrip->setVisible(false); // hidden until a second desktop is added
 
     // Tab-strip signal connections are set up here once; they reference
@@ -109,7 +122,7 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     connect(_tabStrip, &TabStrip::tabCloseRequested, this, [this](QWidget* tab) {
         for (auto& [dt, handle] : _tabHandles) {
             if (handle == tab) {
-                LINEA_APP.destroyDesktop(dt, true);
+                LINEA_APP.destroyDesktop(dt);
                 return;
             }
         }
@@ -137,12 +150,10 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
 
     connect(_tabStrip, &TabStrip::tabMoveRequested, this,
             [this](QWidget* tab, int /*srcIdx*/, TabStrip* srcStrip, int dstIdx) {
-                // Find the source SPDesktopWidget via the strip's parent chain
-                auto srcDW = qobject_cast<SPDesktopWidget*>(srcStrip->parent());
-                if (!srcDW) return;
+                if (srcStrip != _tabStrip) return; // no cross-window moves
 
                 SPDesktop* dt = nullptr;
-                for (auto& [d, h] : srcDW->_tabHandles) {
+                for (auto& [d, h] : _tabHandles) {
                     if (h == tab) {
                         dt = d;
                         break;
@@ -150,15 +161,9 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
                 }
                 if (!dt) return;
 
-                srcDW->removeDesktop(dt);
+                removeDesktop(dt);
                 addDesktop(dt, dstIdx);
             });
-
-    // Create overlay layout for canvas and panels, parented to the container.
-    // OverlayLayout positions CanvasFrame as the first (canvas) widget that
-    // panels overlap / dock against.
-    _overlayLayout = new OverlayLayout(_canvasContainer);
-    _overlayLayout->addWidget(_canvasFrame);
 
     _welcomePage = new WelcomePage(_canvasContainer);
     _welcomePage->setMinimumWidth(400);
@@ -219,6 +224,10 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
             [this](QSize) { _overlayLayout->updatePanelGeometry(); });
     connect(_colorPalettePanel, &ColorPalettePanel::resized, this,
             [this](QSize) { _overlayLayout->updatePanelGeometry(); });
+
+    // Registered after the side panels so that in docked mode it spans the
+    // gap between them and pushes the canvas frame's top edge down.
+    _overlayLayout->setPanelPosition(_tabStrip, OverlayLayout::Position::Top, QSize(0, 24), false);
 
     // Floating console panel anchored at the bottom of the canvas; resizable
     // from its left/top/right edges, capped at a fixed number of text lines.
@@ -407,7 +416,9 @@ void SPDesktopWidget::refreshTabTitle(SPDesktop* desktop) {
 }
 
 void SPDesktopWidget::showTabStrip() {
-    auto visible = _desktops.size() > 1;
+    // The strip must stay reachable in the "home" state (no active desktop)
+    // even with a single document, so its tab can be clicked to return.
+    auto visible = _desktops.size() > 1 || (!_desktops.empty() && _desktop == nullptr);
     if (_tabStrip->isVisible() != visible) {
         _tabStrip->setVisible(visible);
         // Re-apply dock state so toolbar mode is updated (floating when tabstrip visible)
@@ -461,8 +472,13 @@ void SPDesktopWidget::updateEmptyStateVisibility() {
     assert(_toolbar);
     assert(_welcomePage);
     _toolbar->setVisible(_desktop != nullptr);
-    _canvasFrame->setVisible(_desktop != nullptr);
-    _welcomePage->setVisible(_desktops.empty());
+    _canvasFrame->setVisible(!_desktops.empty());
+    _welcomePage->setVisible(_desktop == nullptr);
+    // Idempotent: re-evaluates strip visibility when entering/leaving the
+    // home state (single-document strips are only shown while home).
+    showTabStrip();
+    // Ruler visibility follows _desktop, so margins must be recomputed too.
+    updatePanelMargins();
 }
 
 void SPDesktopWidget::removeDesktop(SPDesktop* desktop) {
@@ -510,6 +526,7 @@ void SPDesktopWidget::removeDesktop(SPDesktop* desktop) {
             // Clear the window's cached document/desktop before the desktop is
             // destroyed; the window itself remains open and empty.
             _window->setActiveTab(nullptr);
+            ActionRegistry::get().syncAllActions();
         }
     }
 
@@ -618,6 +635,7 @@ void SPDesktopWidget::switchDesktop(SPDesktop* desktop) {
     _restorePreviousTool();
 
     _desktop = desktop;
+    _homeDesktopIndex = -1;
     updateEmptyStateVisibility();
 
     // Sync tab strip selection
@@ -671,6 +689,12 @@ void SPDesktopWidget::switchDesktop(SPDesktop* desktop) {
 
 void SPDesktopWidget::advanceTab(int by) {
     if (_desktops.empty()) return;
+
+    // Ctrl-Tab escapes the home state by returning to the document that was active when it was shown
+    if (!_desktop && !_desktops.empty()) {
+        _leaveHomePage();
+        return;
+    }
 
     auto it = std::find(_desktops.begin(), _desktops.end(), _desktop);
     if (it == _desktops.end()) return;
@@ -764,15 +788,18 @@ void SPDesktopWidget::toggleScrollbars() {
 }
 
 void SPDesktopWidget::updatePanelMargins() {
-    const bool rulers = _canvasFrame->rulersVisible();
+    const bool rulers = _rulersShown();
     const int extra = rulers ? _canvasFrame->rulerSize() : 0;
     const int tabStrip = _tabStrip->isVisible() ? _tabStrip->height() : 0;
     constexpr int margin = PANEL_MARGIN;
     auto top_margin = dialogsDocked() ? extra + tabStrip : margin + extra + tabStrip;
-    // Base margins: {left, right, top, bottom} — add ruler height + tab strip to top
+    // Base margins: {left, right, top, bottom} — add ruler + tab strip to top
     _overlayLayout->setPanelMargins(_leftPanel, {margin + extra, 0, margin + extra + tabStrip, margin});
     _overlayLayout->setPanelMargins(_rightPanel, {0, margin, margin + extra + tabStrip, margin});
     _overlayLayout->setPanelMargins(_toolbar, {0, 0, top_margin, 0}, false);
+    // The welcome page is a docked Center panel, already starting below the
+    // tab strip; rulers are hidden while it is visible, so no extra margin.
+    _overlayLayout->setPanelMargins(_welcomePage, {margin, margin, margin, margin});
     _overlayLayout->updatePanelGeometry();
 }
 
@@ -798,12 +825,47 @@ void SPDesktopWidget::toggleDialogs() {
     dockPanels(!dialogsDocked());
 }
 
+void SPDesktopWidget::_leaveHomePage() {
+    // Restore the document that was active when the home page was shown
+    // (clamped in case tabs were closed meanwhile).
+    if (_desktop || _desktops.empty()) return;
+
+    int idx = _homeDesktopIndex;
+    if (idx < 0 || idx >= static_cast<int>(_desktops.size())) {
+        idx = 0;
+    }
+    switchDesktop(_desktops[idx]);
+}
+
+void SPDesktopWidget::toggleHomePage() {
+    if (!_desktop) {
+        _leaveHomePage();
+        return;
+    }
+
+    // Mirror switchDesktop()'s ordering, deselecting rather than selecting:
+    // the document stays open and its tab remains for switching back.
+    _restorePreviousTool();
+
+    auto it = std::find(_desktops.begin(), _desktops.end(), _desktop);
+    _homeDesktopIndex = static_cast<int>(std::distance(_desktops.begin(), it));
+
+    _desktop = nullptr;
+    _tabStrip->deselectTab();
+    _updatePanelsForDesktop(nullptr);
+    updateEmptyStateVisibility();
+
+    if (_window) _window->setActiveTab(nullptr);
+
+    ActionRegistry::get().syncAllActions();
+}
+
 void SPDesktopWidget::dockPanels(bool dock) {
     auto mode = dock ? OverlayLayout::Mode::Docked : OverlayLayout::Mode::Floating;
     _overlayLayout->setPanelMode(_leftPanel, mode);
     _overlayLayout->setPanelMode(_rightPanel, mode);
     // Toolbar is always floating when rulers or tabstrip are visible
-    bool visible = _canvasFrame->rulersVisible() || _canvasFrame->tabStrip()->isVisible();
+    bool visible = _rulersShown() || _tabStrip->isVisible();
     _overlayLayout->setPanelMode(_toolbar, visible ? OverlayLayout::Mode::Floating : mode);
     _overlayLayout->activate();
     _leftPanel->setRounded(!dock);
@@ -1024,6 +1086,13 @@ bool SPDesktopWidget::eventFilter(QObject* watched, QEvent* event) {
         }
     }
     return QWidget::eventFilter(watched, event);
+}
+
+// Intended ruler visibility: the stored preference plus whether a desktop is active.
+// CanvasFrame's own rulersShown() lags one step behind during desktop transitions,
+// so margin math must not use it.
+bool SPDesktopWidget::_rulersShown() const {
+    return _canvasFrame->rulersVisible() && _desktop != nullptr;
 }
 
 } // namespace Linea::UI

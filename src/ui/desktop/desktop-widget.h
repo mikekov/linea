@@ -103,6 +103,9 @@ public:
     void setWindowTransient(QWidget& window, int transient_policy = 1);
     void toggleDialogs();
     bool dialogsVisible() const;
+    bool dialogsFloating() const { return !dialogsDocked(); }
+    void toggleHomePage();
+    bool isHomePageVisible() const { return _desktop == nullptr; }
     // color palette on the right
     void toggleColorPalette();
     bool colorPaletteVisible() const { return _colorPaletteVisible; }
@@ -172,8 +175,12 @@ private:
     // Desktop management
     std::vector<SPDesktop*> _desktops;
     SPDesktop* _desktop = nullptr;
+    int _homeDesktopIndex = -1; // remember which desktop was active before home page was shown
     TabStrip* _tabStrip = nullptr;
     std::unordered_map<SPDesktop*, QWidget*> _tabHandles;
+
+    bool _rulersShown() const;
+    void _leaveHomePage();
 
     // Per-desktop signal connections
     std::unordered_map<SPDesktop*, sigc::scoped_connection> _docModifiedConns;

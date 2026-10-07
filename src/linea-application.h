@@ -153,8 +153,7 @@ public:
     bool createNewDocument(int templateIndex = 0);
 
     /// Destroy a desktop and its document, checking for unsaved data.
-    /// If keep_alive=true and this is the last window, replaces with a new document.
-    bool destroyDesktop(SPDesktop* desktop, bool keep_alive = false);
+    bool destroyDesktop(SPDesktop* desktop);
 
     /// Move a desktop out of its current window into a new standalone window.
     void detachDesktopToNewWindow(SPDesktop* desktop);

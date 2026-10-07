@@ -89,6 +89,9 @@ public:
     void selectTab(const QWidget& tab);
     void selectTabAt(int pos);
 
+    /// Deselect the active tab, leaving no tab selected.
+    void deselectTab();
+
     /// Reorder the internal tab list to match @p sorted (a permutation of get_tabs()).
     void setTabsOrder(std::vector<QWidget*> sorted);
 
@@ -183,6 +186,9 @@ private:
     void _doLayout();
     void _updatePlusButton();
     int _plusButtonWidth() const;
+
+    // Re-sync per-tab visibility flags with the active state and relayout.
+    void _refreshTabsState();
 
     // Hit-testing
     TabItem* _tabAtPoint(QPoint pos) const;

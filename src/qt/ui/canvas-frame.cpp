@@ -23,7 +23,6 @@
 #include "ruler-widget.h"
 #include "selection.h"
 #include "snap.h"
-#include "ui/util.h"
 #include "ui/widget/canvas.h"
 
 namespace Linea::UI {
@@ -36,40 +35,31 @@ CanvasFrame::CanvasFrame(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    // Row 0: tab strip spanning both columns (hidden until a 2nd desktop is added).
-    _tabStrip = new TabStrip(this);
-    Inkscape::UI::add_drop_shadow(_tabStrip, 0, 0);
-    _tabStrip->setShowLabels(TabStrip::ShowLabels::Always);
-    _tabStrip->setShowCloseButton(true);
-    _tabStrip->setRearrangingTabs(TabStrip::Rearrange::Externally);
-    _tabStrip->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    layout->addWidget(_tabStrip, 0, 0, 1, 2);
-
     const int rs = 18; // default ruler size
 
     // Corner — empty widget, painted by the frame to match ruler edge lines.
     _corner = new QWidget(this);
     _corner->setFixedSize(rs, rs);
     _corner->setObjectName("RulerCorner");
-    layout->addWidget(_corner, 1, 0);
+    layout->addWidget(_corner, 0, 0);
 
     // Horizontal ruler
     _hruler = new RulerWidget(Qt::Horizontal, this);
     _hruler->setRulerSize(rs);
-    layout->addWidget(_hruler, 1, 1);
+    layout->addWidget(_hruler, 0, 1);
 
     // Vertical ruler
     _vruler = new RulerWidget(Qt::Vertical, this);
     _vruler->setRulerSize(rs);
-    layout->addWidget(_vruler, 2, 0);
+    layout->addWidget(_vruler, 1, 0);
 
-    // Canvas stack — one page per open document's canvas
+    // Canvas stack — one page per open document's canvas. The first page is a
+    // plain placeholder shown when no document is selected ("home" state).
     _stack = new QStackedWidget(this);
+    _emptyPage = new QWidget(_stack);
+    _stack->addWidget(_emptyPage);
     // _stack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    layout->addWidget(_stack, 2, 1);
-
-    // Keep the tab strip on top so its drop shadow renders over the rulers/canvas.
-    _tabStrip->raise();
+    layout->addWidget(_stack, 1, 1);
 
     // Wire ruler drag signals for guide creation.
     connect(_hruler, &RulerWidget::rulerDragStarted, this, &CanvasFrame::onRulerDragStarted);
@@ -96,9 +86,7 @@ void CanvasFrame::removeCanvas(Inkscape::UI::Widget::Canvas* canvas) {
 }
 
 void CanvasFrame::setCurrentCanvas(SPDesktop* desktop, Inkscape::UI::Widget::Canvas* canvas) {
-    if (canvas) {
-        _stack->setCurrentWidget(canvas);
-    }
+    _stack->setCurrentWidget(canvas ? canvas : _emptyPage);
     setDesktop(desktop);
 }
 
@@ -123,9 +111,14 @@ void CanvasFrame::setRulersVisible(bool visible) {
     if (_rulersVisible == visible) return;
 
     _rulersVisible = visible;
-    _corner->setVisible(visible);
-    _hruler->setVisible(visible);
-    _vruler->setVisible(visible);
+    applyRulerVisibility();
+}
+
+void CanvasFrame::applyRulerVisibility() {
+    const bool show = rulersShown();
+    _corner->setVisible(show);
+    _hruler->setVisible(show);
+    _vruler->setVisible(show);
     update();
 }
 
@@ -133,6 +126,7 @@ void CanvasFrame::setDesktop(SPDesktop* desktop) {
     if (_desktop == desktop) return;
 
     _desktop = desktop;
+    applyRulerVisibility();
 
     _pageSelectedConn.disconnect();
     _pageModifiedConn.disconnect();
@@ -140,7 +134,7 @@ void CanvasFrame::setDesktop(SPDesktop* desktop) {
     _selChangedConn.disconnect();
 
     auto canvas = currentCanvas();
-    if (!canvas) return;
+    if (!_desktop || !canvas) return;
 
     auto document = _desktop->getDocument();
     if (!document) return;

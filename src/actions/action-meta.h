@@ -30,6 +30,8 @@ struct ActionMeta {
 struct BoolActionMeta : ActionMeta {
     // Label when checked (translated), nullptr for no swap
     const char* checked_label = nullptr;
+    // Icon when checked, nullptr for no swap
+    const char* checked_icon = nullptr;
 };
 
 struct ActionMeta2 {
@@ -70,6 +72,8 @@ struct ActionSpec {
     const char* checked_label = nullptr;
     // optional enabled state query
     bool (*enabled)(Context*) = nullptr;
+    // Icon when checked, nullptr for no swap
+    const char* checked_icon = nullptr;
 };
 
 // Parameterized action metadata (e.g., tool-switch with specific tool name)

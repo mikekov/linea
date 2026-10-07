@@ -320,7 +320,7 @@ void TabStrip::removeTab(const QWidget& tab) {
 }
 
 void TabStrip::removeTabAt(int pos) {
-    if (auto* t = getTabAt(pos)) removeTab(*t);
+    if (auto t = getTabAt(pos)) removeTab(*t);
 }
 
 void TabStrip::selectTab(const QWidget& tab) {
@@ -333,18 +333,20 @@ void TabStrip::selectTab(const QWidget& tab) {
     _activeTab = found;
     _activeTab->active = true;
 
-    // Refresh label/close visibility
-    for (auto& t : _tabs) {
-        t->closeVisible = _showCloseBtn && t->active;
-        t->labelVisible = (_showLabels == ShowLabels::Always) || (_showLabels == ShowLabels::ActiveOnly && t->active);
-    }
+    _refreshTabsState();
+}
 
-    _doLayout();
-    update();
+void TabStrip::deselectTab() {
+    if (!_activeTab) return;
+
+    _activeTab->active = false;
+    _activeTab = nullptr;
+
+    _refreshTabsState();
 }
 
 void TabStrip::selectTabAt(int pos) {
-    if (auto* t = getTabAt(pos)) selectTab(*t);
+    if (auto t = getTabAt(pos)) selectTab(*t);
 }
 
 void TabStrip::setTabLabel(const QWidget& tab, const QString& label) {
@@ -455,6 +457,17 @@ bool TabStrip::isTabActive(const QWidget& tab) const {
 }
 
 // ── Private: layout ───────────────────────────────────────────────────────────
+
+void TabStrip::_refreshTabsState() {
+    // Refresh label/close visibility
+    for (auto& t : _tabs) {
+        t->closeVisible = _showCloseBtn && t->active;
+        t->labelVisible = (_showLabels == ShowLabels::Always) || (_showLabels == ShowLabels::ActiveOnly && t->active);
+    }
+
+    _doLayout();
+    update();
+}
 
 int TabStrip::_plusButtonWidth() const {
     if (!_plusBtn->isVisible()) return 0;
@@ -727,7 +740,7 @@ void TabStrip::_startDrag(TabItem* tab, QPoint pressOffset) {
     memcpy(encoded.data(), &ptrVal, sizeof(quintptr));
     memcpy(encoded.data() + sizeof(quintptr), &idx, sizeof(int));
 
-    auto* mime = new QMimeData;
+    auto mime = new QMimeData;
     mime->setData(kTabMimeType, encoded);
 
     // Render a pixmap of the tab for the drag cursor
@@ -1120,7 +1133,7 @@ void TabStrip::leaveEvent(QEvent*) {
 
 bool TabStrip::event(QEvent* ev) {
     if (ev->type() == QEvent::ToolTip) {
-        auto* he = static_cast<QHelpEvent*>(ev);
+        auto he = static_cast<QHelpEvent*>(ev);
         for (auto& tabPtr : _tabs) {
             const TabItem& t = *tabPtr;
             if (!t.rect.contains(he->pos()) || t.tooltip.isEmpty()) continue;
@@ -1149,7 +1162,7 @@ void TabStrip::dragEnterEvent(QDragEnterEvent* event) {
         // Record a drop position
         auto src = unpack_drop_source(event->mimeData());
         if (src) {
-            auto* srcStrip = src->first;
+            auto srcStrip = src->first;
             if (srcStrip->_drag) {
                 srcStrip->_drag->setDstStrip(this);
             }
