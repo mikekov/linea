@@ -283,6 +283,7 @@ static char const preferences_skeleton[] =
     <group id="defaultwindowsize" value="2" />
     <group id="arenatilescachesize" value="8192"/>
     <group id="preservetransform" value="0"/>
+    <group id="defaulttemplate" value="1"/>
     <group id="clonecompensation" value="1"/>
     <group id="cloneorphans" value="0"/>
     <group id="stickyzoom" value="0"/>

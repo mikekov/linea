@@ -179,7 +179,7 @@ void LeftPanel::buildUi() {
 
 void LeftPanel::buildHeader() {
     auto tb = new Toolbar();
-    tb->addButton("document-new");
+    tb->addButton("document-new-from-template-0");
     // tb->addDropDownButton(newDocumentFromTemplateMenu(), {});
     tb->addSpace();
     tb->addButton("document-open");

@@ -911,9 +911,9 @@ void TabStrip::paintEvent(QPaintEvent*) {
 
         const QRect& r = t.rect;
 
-        // Thin separator at left edge (skip the first visible tab)
+        // One-logical-pixel separator at left edge (skip the first visible tab)
         if (!firstVisible) {
-            p.setPen(pal.color(QPalette::Mid));
+            p.setPen(QPen(pal.color(QPalette::Mid), devicePixelRatioF()));
             if (_orientation == Qt::Horizontal)
                 p.drawLine(r.left(), r.top() + 4, r.left(), r.bottom() - 4);
             else

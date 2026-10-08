@@ -168,6 +168,7 @@ static auto file_window_action_defs = std::to_array<ActionSpec<LineaWindow>>({
     {"document-cleanup",          N_("Clean Up Document"), SECTION,   N_("Remove unused definitions (such as gradients or clipping paths) from the document"), "document-cleanup", document_cleanup},
     {"document-close",            N_("Close"),             SECTION,   N_("Close document (unless last document)"), nullptr, document_close},
 
+    {"document-new-from-template-0", N_("New"), SECTION, N_("Create new document from the default template"), "document-new", [](LineaWindow* wnd){document_new_from_template(wnd, 0);}},
     {"document-new-from-template-1", N_("New from Template 1"), SECTION, N_("Create new document from template 1"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 1);}},
     {"document-new-from-template-2", N_("New from template 2"), SECTION, N_("Create new document from template 2"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 2);}},
     {"document-new-from-template-3", N_("New from template 3"), SECTION, N_("Create new document from template 3"), nullptr, [](LineaWindow* wnd){document_new_from_template(wnd, 3);}},

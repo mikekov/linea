@@ -65,9 +65,12 @@ WelcomePage::WelcomePage(QWidget* parent)
     _ui->templatesList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     _ui->templatesList->setMouseTracking(true);
     _ui->templatesList->viewport()->setMouseTracking(true);
+    _ui->templatesList->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(_ui->templatesList, &QListWidget::itemClicked, this, &WelcomePage::openTemplate);
     connect(_ui->templatesList, &QListWidget::itemActivated, this, &WelcomePage::openTemplate);
+    connect(_ui->templatesList, &QListWidget::customContextMenuRequested, this,
+            &WelcomePage::showTemplateMenu);
     setTabOrder(_ui->recentFilesList, _ui->recentFilesSearch);
     connect(_ui->recentFilesSearch, &QLineEdit::textChanged, this, [this] {
         rebuildRecentFiles(_ui->recentFilesList, false);
@@ -204,12 +207,32 @@ void WelcomePage::openTemplate(QListWidgetItem* item) {
     if (action) action->trigger();
 }
 
+void WelcomePage::showTemplateMenu(const QPoint& position) {
+    auto list = _ui->templatesList;
+    if (!list) return;
+
+    auto item = list->itemAt(position);
+    if (!item) return;
+
+    const int index = templateIndexForAction(item->data(Qt::UserRole).toString());
+    if (index <= 0) return;
+
+    QMenu menu(this);
+    auto defaultAction = menu.addAction(tr("Set as Default Template"));
+    connect(defaultAction, &QAction::triggered, this, [this, index](bool) {
+        setDefaultTemplateIndex(index);
+        rebuildTemplates();
+    });
+    menu.exec(list->viewport()->mapToGlobal(position));
+}
+
 void WelcomePage::rebuildTemplates() {
     auto list = _ui->templatesList;
     if (!list) return;
 
     list->clear();
 
+    const int defIndex = defaultTemplateIndex();
     for (const auto& tmpl : newDocumentFromTemplateMenu()) {
         auto listItem = new QListWidgetItem(list);
         listItem->setData(Qt::UserRole, QString::fromStdString(tmpl.action));
@@ -237,6 +260,11 @@ void WelcomePage::rebuildTemplates() {
 
         auto titleLabel = new QLabel(tmpl.title, row);
         titleLabel->setProperty("class", "menu-item-label");
+        if (templateIndexForAction(QString::fromStdString(tmpl.action)) == defIndex) {
+            auto font = titleLabel->font();
+            font.setBold(true);
+            titleLabel->setFont(font);
+        }
         text->addWidget(titleLabel);
 
         if (!tmpl.description.isEmpty()) {

@@ -26,6 +26,7 @@
 #include "script/test-script.h"
 #include "ui/desktop/desktop-widget.h"
 #include "ui/desktop/document-check.h" // document_check_for_data_loss
+#include "ui/desktop/document-templates-menu.h"
 #include "ui/util.h"
 
 // ---------------------------------------------------------------------------
@@ -90,16 +91,12 @@ void LineaApplication::set_active_desktop(SPDesktop* desktop) {
 bool LineaApplication::createNewDocument(int templateIndex) {
     UI::OverrideCursor wait(Qt::WaitCursor);
 
-    // TODO: configurable templates -------
-    auto fname = "default.svg";
-    if (templateIndex == 2) {
-        fname = "default-wide.svg";
-    } else if (templateIndex == 3) {
-        fname = "default-a4.svg";
-    } else if (templateIndex == 4) {
-        fname = "default-us-letter.svg";
+    // Index 0 means "the configured default template".
+    if (templateIndex <= 0) {
+        templateIndex = Linea::UI::defaultTemplateIndex();
     }
-    auto def = Inkscape::IO::Resource::get_filename(Inkscape::IO::Resource::TEMPLATES, fname, true);
+    auto def = Inkscape::IO::Resource::get_filename(Inkscape::IO::Resource::TEMPLATES,
+                                                    Linea::UI::templateFilenameForIndex(templateIndex), true);
 
     SPDesktop* desktop = nullptr;
     auto document = document_new(def);
