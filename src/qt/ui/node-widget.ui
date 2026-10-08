@@ -424,7 +424,7 @@
             <item row="8" column="2">
               <widget class="QPushButton" name="roundCoordsBtn">
                 <property name="toolTip">
-                  <string>Round coordinates</string>
+                  <string>Round coordinates of selected nodes</string>
                 </property>
                 <property name="icon">
                   <iconset>

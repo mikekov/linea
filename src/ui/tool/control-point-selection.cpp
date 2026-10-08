@@ -314,6 +314,23 @@ void ControlPointSelection::distribute(Geom::Dim2 d)
     }
 }
 
+/** Round the coordinates of all selected nodes to whole numbers. */
+void ControlPointSelection::round() {
+    if (empty()) return;
+
+    for (auto _point : _points) {
+        if (auto node = dynamic_cast<Node*>(_point)) {
+            Geom::Point pos = node->position();
+            pos[Geom::X] = std::round(pos[Geom::X]);
+            pos[Geom::Y] = std::round(pos[Geom::Y]);
+            node->move(pos);
+        }
+    }
+
+    _updateBounds();
+    signal_update.emit();
+}
+
 /** Get the bounds of the selection.
  * @return Smallest rectangle containing the positions of all selected points,
  *         or nothing if the selection is empty */

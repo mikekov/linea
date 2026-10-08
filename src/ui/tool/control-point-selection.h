@@ -94,6 +94,7 @@ public:
     void transform(Geom::Affine const &m);
     void align(Geom::Dim2 d, AlignTargetNode target = AlignTargetNode::MID_NODE);
     void distribute(Geom::Dim2 d);
+    void round();
 
     Geom::OptRect pointwiseBounds();
     Geom::OptRect bounds();

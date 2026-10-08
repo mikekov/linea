@@ -552,6 +552,13 @@ void MultiPathManipulator::scale(Geom::Point const &center, Geom::Point const &s
     _done(RC_("Undo", "Scale nodes"));
 }
 
+void MultiPathManipulator::roundNodes() {
+    if (_selection.empty()) return;
+
+    _selection.round();
+    _done(RC_("Undo", "Round node coordinates"));
+}
+
 void MultiPathManipulator::showOutline(bool show)
 {
     for (auto & i : _mmap) {

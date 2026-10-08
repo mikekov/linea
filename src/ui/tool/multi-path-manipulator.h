@@ -77,6 +77,7 @@ public:
     void reverseSubpaths();
     void move(Geom::Point const &delta);
     void scale(Geom::Point const &center, Geom::Point const &scale);
+    void roundNodes();
 
     void showOutline(bool show);
     void showHandles(bool show);

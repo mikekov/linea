@@ -173,6 +173,7 @@ This file is the default keymap for LineaDraw. User customizations are stored se
   <bind action="tool-node-duplicate-nodes"     keys="Shift+D" />
   <bind action="tool-node-join-nodes"          keys="Shift+J" />
   <bind action="tool-node-join-segments"       keys="Alt+J" />
+  <bind action="tool-node-delete-segments"     keys="" />
   <bind action="tool-node-break-nodes"         keys="Shift+B" />
   <bind action="tool-node-cusp"                keys="Shift+C" />
   <bind action="tool-node-smooth"              keys="Shift+S" />

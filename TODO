@@ -38,7 +38,7 @@ x text panel - add text edit popup with simple editor and search
 x font selector - add header with sorting, filtering, search bar
 - add color fonts entry in a font browser categories
 - add support for color fonts
-- add 'home' button to switch to "no document" and show welcome page
+x add 'home' button to switch to "no document" and show welcome page
 - editing layer transform matrix does not apply it
 - node 'position' is not being refreshed
 
@@ -80,11 +80,11 @@ x add a way to show notifications?
 
 ## Color & Paint
 
-- color roundtrip is not faithful - examine and fix
+x color roundtrip is not faithful - examine and fix
 - add support for setting color_interpolation style attribute
 - ColorPicker -> add a mode with some predefined colors to choose from
 - ColorPicker: add missing current color preview
-- color picker - add easy to use color copy/paste
+x color picker - add easy to use color copy/paste
 - more comprehensive set of palette colors across all color groups (UI theme cleanup)
 - add swatches in flat color picker
 - add swatch edit panel (virtual node)
@@ -98,6 +98,7 @@ x add a way to show notifications?
 - paint indicator - allow changing paint
 - assigning new gradient to multisel is broken
 - gradient lib - selecting gradient doesn't work
+- gradient edit -where did the cursors go; no "add" cursor
 - remember custom height of the pattern editor in paint selector
 - page/border colors -> use and configure default colors instead of baked in
 

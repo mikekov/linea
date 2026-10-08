@@ -8,18 +8,19 @@
 #define LINEA_UI_NODE_WIDGET_H
 
 #include <QWidget>
-
 #include <memory>
-#include <sigc++/connection.h>
+#include <sigc++/scoped_connection.h>
 
 class SPDesktop;
 
 namespace Inkscape {
 namespace UI {
 class ControlPointSelection;
-namespace Tools { class NodeTool; }
+namespace Tools {
+class NodeTool;
 }
-}
+} // namespace UI
+} // namespace Inkscape
 
 namespace Ui {
 class NodeWidget;
@@ -27,7 +28,9 @@ class NodeWidget;
 
 namespace Linea {
 
-namespace Props { class Binder; }
+namespace Props {
+class Binder;
+}
 
 namespace UI {
 
@@ -55,14 +58,15 @@ private:
     void edit_auto();
     void edit_toline();
     void edit_tocurve();
+    void edit_round();
     void updateNodeControls(Inkscape::UI::ControlPointSelection* selectedNodes);
     void editNodePosition(double value, bool xCoordinate);
     void editNodeDistance(double value);
 
     std::unique_ptr<Ui::NodeWidget> _ui;
     SPDesktop* _desktop = nullptr;
-    sigc::connection _selectionChanged;
-    sigc::connection _subselectionChanged;
+    sigc::scoped_connection _selectionChanged;
+    sigc::scoped_connection _subselectionChanged;
     bool _updatingNodeControls = false;
 };
 

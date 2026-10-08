@@ -160,6 +160,7 @@ enum class NodeAction {
     JoinNodes,
     JoinSegments,
     BreakNodes,
+    DeleteSegments,
     Cusp,
     Smooth,
     AutoSmooth,
@@ -195,6 +196,9 @@ void node_action(SPDesktop* desk, NodeAction action) {
             return;
         case NodeAction::BreakNodes:
             manipulator->breakNodes();
+            return;
+        case NodeAction::DeleteSegments:
+            manipulator->deleteSegments();
             return;
         case NodeAction::Cusp:
             manipulator->setNodeType(Inkscape::UI::NODE_CUSP);
@@ -353,6 +357,9 @@ const auto toolSpecific = std::to_array<ActionSpec<SPDesktop>>({
     {"tool-node-break-nodes", N_("Break Nodes"), SECTION,
      N_("Break selected nodes."), nullptr,
      [](SPDesktop* desk) { node_action(desk, NodeAction::BreakNodes); }, nullptr, nullptr, node_enabled},
+    {"tool-node-delete-segments", N_("Delete Segments"), SECTION,
+     N_("Delete selected segments."), nullptr,
+     [](SPDesktop* desk) { node_action(desk, NodeAction::DeleteSegments); }, nullptr, nullptr, node_enabled},
     {"tool-node-cusp", N_("Make Nodes Cusp"), SECTION,
      N_("Make selected nodes cusp nodes."), nullptr,
      [](SPDesktop* desk) { node_action(desk, NodeAction::Cusp); }, nullptr, nullptr, node_enabled},

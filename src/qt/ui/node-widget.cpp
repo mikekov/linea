@@ -11,20 +11,20 @@
 
 #include "node-widget.h"
 
+#include <QSignalBlocker>
+#include <array>
+
 #include "actions/action-registry.h"
 #include "desktop.h"
-#include "props/binder.h"
-#include "ui/tool/multi-path-manipulator.h"
-#include "ui/widget/custom-menu.h"
-
-#include <array>
-#include <QSignalBlocker>
-#include "page-manager.h"
-#include "selection.h"
-#include "ui/tool/control-point-selection.h"
-#include "ui/tools/node-tool.h"
 #include "number-edit.h"
 #include "number-range.h"
+#include "page-manager.h"
+#include "props/binder.h"
+#include "selection.h"
+#include "ui/tool/control-point-selection.h"
+#include "ui/tool/multi-path-manipulator.h"
+#include "ui/tools/node-tool.h"
+#include "ui/widget/custom-menu.h"
 #include "ui_node-widget.h"
 
 namespace Linea::UI {
@@ -53,6 +53,7 @@ NodeWidget::NodeWidget(QWidget* parent)
     connect(_ui->auto_btn, &QPushButton::clicked, this, &NodeWidget::edit_auto);
     connect(_ui->line_btn, &QPushButton::clicked, this, &NodeWidget::edit_toline);
     connect(_ui->curve_btn, &QPushButton::clicked, this, &NodeWidget::edit_tocurve);
+    connect(_ui->roundCoordsBtn, &QPushButton::clicked, this, &NodeWidget::edit_round);
 
     auto& registry = ActionRegistry::get();
     connect(_ui->object_stroke_to_path_btn, &QPushButton::clicked, this,
@@ -60,19 +61,12 @@ NodeWidget::NodeWidget(QWidget* parent)
     connect(_ui->object_to_path_btn, &QPushButton::clicked, this,
             [&registry] { registry.action("object-to-path")->trigger(); });
 
-    connect(_ui->nodeXEdit, &NumberEdit::valueChanged, this,
-            [this](double value) { editNodePosition(value, true); });
-    connect(_ui->nodeYEdit, &NumberEdit::valueChanged, this,
-            [this](double value) { editNodePosition(value, false); });
-    connect(_ui->distanceEdit, &NumberEdit::valueChanged, this,
-            [this](double value) { editNodeDistance(value); });
+    connect(_ui->nodeXEdit, &NumberEdit::valueChanged, this, [this](double value) { editNodePosition(value, true); });
+    connect(_ui->nodeYEdit, &NumberEdit::valueChanged, this, [this](double value) { editNodePosition(value, false); });
+    connect(_ui->distanceEdit, &NumberEdit::valueChanged, this, [this](double value) { editNodeDistance(value); });
 
     constexpr std::array<const char*, 5> node_action_ids = {
-        "node-show-outline",
-        "node-show-handles",
-        "node-show-transform-handles",
-        "node-edit-mask",
-        "node-edit-clip",
+        "node-show-outline", "node-show-handles", "node-show-transform-handles", "node-edit-mask", "node-edit-clip",
     };
     auto menu = createCustomMenu(_ui->nodeOptionsBtn, node_action_ids);
     _ui->nodeOptionsBtn->setMenu(menu);
@@ -91,23 +85,17 @@ void NodeWidget::setDesktop(SPDesktop* desktop) {
         return;
     }
 
-    _selectionChanged = _desktop->getSelection()->connectChanged([this](auto) {
-        if (auto nodeTool = getNodeTool()) {
-            updateNodeControls(nodeTool->_selected_nodes);
-        } else {
-            updateNodeControls(nullptr);
-        }
-    });
-    _subselectionChanged = _desktop->connect_control_point_selected(
-        [this](Inkscape::UI::ControlPointSelection* selectedNodes) {
-            updateNodeControls(selectedNodes);
-        });
+    auto update = [this]() {
+        auto nodeTool = getNodeTool();
+        updateNodeControls(nodeTool ? nodeTool->_selected_nodes : nullptr);
+    };
 
-    if (auto nodeTool = getNodeTool()) {
-        updateNodeControls(nodeTool->_selected_nodes);
-    } else {
-        updateNodeControls(nullptr);
-    }
+    _selectionChanged = _desktop->getSelection()->connectChanged([this, update](auto) { update(); });
+
+    _subselectionChanged = _desktop->connect_control_point_selected(
+        [this](Inkscape::UI::ControlPointSelection* selectedNodes) { updateNodeControls(selectedNodes); });
+
+    update();
 }
 
 void NodeWidget::bind(Props::Binder& binder) {
@@ -130,6 +118,7 @@ void NodeWidget::updateNodeControls(Inkscape::UI::ControlPointSelection* selecte
     const bool hasNodes = selectedNodes && !selectedNodes->empty();
     _ui->nodeXEdit->setEnabled(hasNodes);
     _ui->nodeYEdit->setEnabled(hasNodes);
+    _ui->roundCoordsBtn->setEnabled(hasNodes);
 
     if (hasNodes) {
         auto midpoint = selectedNodes->pointwiseBounds()->midpoint();
@@ -138,8 +127,7 @@ void NodeWidget::updateNodeControls(Inkscape::UI::ControlPointSelection* selecte
         }
         _ui->nodeXEdit->setValue(midpoint.x());
         _ui->nodeYEdit->setValue(midpoint.y());
-    }
-    else {
+    } else {
         _ui->nodeXEdit->setValue(0.0);
         _ui->nodeYEdit->setValue(0.0);
     }
@@ -250,6 +238,12 @@ void NodeWidget::edit_toline() {
 void NodeWidget::edit_tocurve() {
     if (auto nt = getNodeTool()) {
         nt->_multipath->setSegmentType(Inkscape::UI::SEGMENT_CUBIC_BEZIER);
+    }
+}
+
+void NodeWidget::edit_round() {
+    if (auto nt = getNodeTool()) {
+        nt->_multipath->roundNodes();
     }
 }
 
