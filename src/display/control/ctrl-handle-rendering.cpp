@@ -146,32 +146,40 @@ void draw_carrow(Cairo::Context &cr, double size)
     cr.close_path();
 }
 
-void draw_triangle(Cairo::Context &cr, double size)
-{
-    // Construct an arrowhead (triangle) pointing in the negative x direction.
-    // The shape rotates to arbitrary angles, so its corners must stay within the
-    // inscribed circle of the size x size canvas to avoid clipping.
-    double const s = size / 2.0;
-    double len = s * 1.9;                    // tip-to-base length
-    double halfw = s * 0.87;                 // base half-width
-    // Snap the base edge and its endpoints to the pixel grid (size is integral,
-    // so s is a whole or half pixel) - keeps the base crisp on axis-aligned
-    // tangents instead of straddling pixel boundaries
-    len = std::round(1.0 + len) - 1.0;
+void draw_triangle(Cairo::Context& cr, double size) {
+    // Construct a blunt arrowhead (trapezoid: a triangle whose tip is cropped
+    // into a short flat side) pointing in the negative x direction. The
+    // tip-to-base extent is centered on the canvas so the knot's midpoint sits
+    // on the node position. The shape rotates to arbitrary angles, so its
+    // corners must stay within the inscribed circle of the size x size canvas
+    // to avoid clipping.
+    const double s = size / 2.0;
+    double len = s * 1.4;    // tip-to-base length
+    double halfw = s * 0.87; // base half-width
+    // Snap the flat tip side and base edge to the pixel grid (size is integral,
+    // so s is a whole or half pixel) - keeps them, and the bar that sits 1px
+    // past the tip side, crisp on axis-aligned tangents instead of straddling
+    // pixel boundaries
+    const double tipx = std::round(s - len / 2.0);
+    const double basex = std::round(s + len / 2.0);
     halfw = std::round(s + halfw) - s;
-    Geom::Point p1f(1, s);                    // tip
-    Geom::Point p2f(1 + len, s + halfw);
-    Geom::Point p3f(1 + len, s - halfw);
+    const double halft = std::round(s + halfw * 0.2) - s; // half-height of the flat tip side
+    Geom::Point p1a(tipx, s - halft);                     // flat side endpoints, where the tip was
+    Geom::Point p1b(tipx, s + halft);
+    Geom::Point p2f(basex, s + halfw); // base corners
+    Geom::Point p3f(basex, s - halfw);
     // Draw arrow
-    cr.move_to(p1f[0], p1f[1]);
-    cr.line_to(p2f[0], p2f[1]);
+    cr.move_to(p1a[0], p1a[1]);
     cr.line_to(p3f[0], p3f[1]);
+    cr.line_to(p2f[0], p2f[1]);
+    cr.line_to(p1b[0], p1b[1]);
     cr.close_path();
-    // Short bar at the tip, parallel to the base, marking the point location.
-    // Open subpath: stroked like the triangle but contributes no fill area.
-    double const halfb = std::round(s + halfw * 0.6) - s;
-    cr.move_to(p1f[0], s - halfb);
-    cr.line_to(p1f[0], s + halfb);
+
+    // Short bar just outside the flat tip side, parallel to the base, marking the
+    // node position. Open subpath: stroked like the arrowhead but contributes no fill area.
+    const double halfb = std::round(s + halfw * 0.6) - s;
+    cr.move_to(p1a[0] - 1.0, s - halfb);
+    cr.line_to(p1b[0] - 1.0, s + halfb);
 }
 
 void draw_triangle_angled(Cairo::Context &cr, double size)

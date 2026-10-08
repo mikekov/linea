@@ -149,7 +149,7 @@ Notes:
 .inkscape-node-end { /* first/last node of an open subpath; rotated to match the path tangent */
     shape: "triangle";
     scale: 3.0;
-    size-extra: 0px;
+    size-extra: 1px;
 }
 
 /* snap indicators, measure tool handles */
