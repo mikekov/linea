@@ -34,7 +34,7 @@ QPixmap draw_handles_preview(double device_scale) {
     constexpr auto types = std::to_array({
         Inkscape::CANVAS_ITEM_CTRL_TYPE_ADJ_SKEW,
         Inkscape::CANVAS_ITEM_CTRL_TYPE_ADJ_ROTATE,
-        Inkscape::CANVAS_ITEM_CTRL_TYPE_POINTER, // pointy, triangular handle
+        Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_END, // pointy, triangular handle
         Inkscape::CANVAS_ITEM_CTRL_TYPE_MARKER, // X mark
         Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_AUTO,
         Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_CUSP,

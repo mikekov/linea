@@ -34,6 +34,12 @@ Where 'shape' is one of:
     'middle-align'
     'corner-bl'
     'corner-tr'
+    'rounded-square'
+    'rounded-square-dot'
+    'pin'
+    'dotted-circle'
+    'spade'
+    'paddle'
 
 All available selectors:
     * (all handles)
@@ -130,15 +136,34 @@ Notes:
     size-extra: 1px;
 }
 
-.inkscape-node-smooth,
-.inkscape-node-symmetrical,
+.inkscape-node-smooth {
+    shape: "rounded-square";
+    size-extra: 2px;
+}
+
+.inkscape-node-symmetrical {
+    shape: "rounded-square-dot";
+    size-extra: 2px;
+}
+
+.inkscape-node-auto {
+    shape: "dotted-circle";
+    scale: 2.256758; /* 4 / sqrt(PI) */
+    size-extra: 2px;
+}
+
+.inkscape-node-control {
+    scale: 3;
+    shape: "pin";
+    size-extra: 2px;
+}
+
 .inkscape-anchor, /* various drawing tools */
 .inkscape-sizer {
     shape: "square";
     size-extra: 2px;
 }
 
-.inkscape-node-auto,
 .inkscape-margin, /* page tool */
 .inkscape-move { /* LPE chamfer fillet */
     shape: "circle";

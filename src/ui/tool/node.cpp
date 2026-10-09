@@ -172,7 +172,7 @@ double Handle::_saved_length = 0.0;
 bool Handle::_drag_out = false;
 
 Handle::Handle(NodeSharedData const &data, Geom::Point const &initial_pos, Node *parent)
-    : ControlPoint(data.desktop, initial_pos, SP_ANCHOR_CENTER, Inkscape::CANVAS_ITEM_CTRL_TYPE_ROTATE,
+    : ControlPoint(data.desktop, initial_pos, SP_ANCHOR_CENTER, Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_CONTROL,
                    data.handle_group)
     , _handle_line(make_canvasitem<CanvasItemCurve>(data.handle_line_group))
     , _parent(parent)
@@ -291,6 +291,15 @@ void Handle::setPosition(Geom::Point const &p)
 {
     ControlPoint::setPosition(p);
     _handle_line->set_coords(_parent->position(), position());
+
+    // Orient the handle's shape away from the node, along the handle
+    // direction. Compute the angle in canvas space so it stays correct
+    // under view flips.
+    Geom::Point const dir = _desktop->d2w(position()) - _desktop->d2w(_parent->position());
+    if (dir.length() > 1e-4) {
+        // The knot shapes point in the negative x direction.
+        _canvas_item_ctrl->set_angle(std::atan2(dir.y(), dir.x()) + M_PI);
+    }
 
     // update degeneration info and visibility
     if (Geom::are_near(position(), _parent->position()))

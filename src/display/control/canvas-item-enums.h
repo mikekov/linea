@@ -39,6 +39,12 @@ enum CanvasItemCtrlShape {
     CANVAS_ITEM_CTRL_SHAPE_TRIANGLE_ANGLED,
     CANVAS_ITEM_CTRL_SHAPE_CORNER_BL,
     CANVAS_ITEM_CTRL_SHAPE_CORNER_TR,
+    CANVAS_ITEM_CTRL_SHAPE_RSQUARE, // Square with rounded corners.
+    CANVAS_ITEM_CTRL_SHAPE_DCIRCLE, // Circle with a dot inside.
+    CANVAS_ITEM_CTRL_SHAPE_SPADE,   // A spade-like shape
+    CANVAS_ITEM_CTRL_SHAPE_PADDLE,  // Circle with a rounded tab on the right.
+    CANVAS_ITEM_CTRL_SHAPE_RSQUARE_DOT, // Rounded square with a dot inside.
+    CANVAS_ITEM_CTRL_SHAPE_PIN,         // Circle with a sharp tip on the right.
 };
 
 enum CanvasItemCtrlType {
@@ -60,6 +66,7 @@ enum CanvasItemCtrlType {
     CANVAS_ITEM_CTRL_TYPE_MARKER,
     CANVAS_ITEM_CTRL_TYPE_MESH,
     CANVAS_ITEM_CTRL_TYPE_LPE,
+    CANVAS_ITEM_CTRL_TYPE_NODE_CONTROL,
     CANVAS_ITEM_CTRL_TYPE_NODE_AUTO,
     CANVAS_ITEM_CTRL_TYPE_NODE_CUSP,
     CANVAS_ITEM_CTRL_TYPE_NODE_SMOOTH,

@@ -367,9 +367,82 @@ void draw_circle(Cairo::Context &cr, double size, double pixel_width)
     cr.arc(center, center, size / 2.0, 0, 2 * M_PI);
 }
 
+void draw_dotted_circle(Cairo::Context& cr, double size, double pixel_width) {
+    const double center = pixel_width * 0.5;
+    cr.arc(center, center, size / 2.0, 0, 2 * M_PI);
+    // Dot in the middle: radius no larger than the stroke width, so the
+    // stroke pass paints it solid.
+    cr.begin_new_sub_path();
+    cr.arc(center, center, std::max(1.0, std::round(size * 0.08)), 0, 2 * M_PI);
+    cr.arc(center, center, std::max(1.0, std::round(size * 0.04)), 0, 2 * M_PI);
+}
+
 void draw_square(Cairo::Context &cr, double size)
 {
     cr.rectangle(0, 0, size, size);
+}
+
+void draw_rounded_square(Cairo::Context& cr, double size, double radius) {
+    // Corner radius snapped to the pixel grid (size is integral).
+    const double r = std::round(radius);
+    cr.arc(r, r, r, M_PI, 1.5 * M_PI);            // top left
+    cr.arc(size - r, r, r, -0.5 * M_PI, 0);       // top right
+    cr.arc(size - r, size - r, r, 0, 0.5 * M_PI); // bottom right
+    cr.arc(r, size - r, r, 0.5 * M_PI, M_PI);     // bottom left
+    cr.close_path();
+}
+
+void draw_spade(Cairo::Context& cr, double size) {
+    // Spade / drop silhouette: the left side is one semicircle (the two left
+    // corner arcs share the same center and radius), the right side is flat
+    // with slightly rounded corners, so the shape reads as a circle with a
+    // squared-off right side.
+    const double rl = size / 2;
+    const double side = size * 0.8;
+    const double rs = std::round(size * 0.1);                   // right (small) corner radius
+    cr.arc(rl, rl, rl, M_PI, 1.5 * M_PI);            // top left
+    cr.arc(side - rs, rs, rs, -0.5 * M_PI, 0);       // top right
+    cr.arc(side - rs, size - rs, rs, 0, 0.5 * M_PI); // bottom right
+    cr.arc(rl, size - rl, rl, 0.5 * M_PI, M_PI);     // bottom left
+    cr.close_path();
+}
+
+void draw_paddle(Cairo::Context& cr, double size) {
+    // Circle with a short rounded tab sticking out on the right, drawn as a
+    // single outline so no seam is stroked where the tab meets the circle.
+    const double s = size / 2.0;
+    const double R = s * 0.75;                              // circle radius - small enough to leave room for the tab
+    const double ht = std::round(s + size * 0.12) - s;      // tab half-height, snapped so its edges land on pixels
+    const double xi = s + std::sqrt(R * R - ht * ht);       // where the tab edges meet the circle
+    const double a = std::atan2(ht, xi - s);                // seam angle on the circle
+    cr.move_to(size - ht, s - ht);
+    cr.arc(size - ht, s, ht, -0.5 * M_PI, 0.5 * M_PI); // rounded cap
+    cr.line_to(xi, s + ht);
+    cr.arc(s, s, R, a, 2 * M_PI - a);                  // circle, skipping the arc hidden by the tab
+    cr.close_path();
+}
+
+void draw_dotted_rounded_square(Cairo::Context& cr, double size, double radius) {
+    draw_rounded_square(cr, size, radius);
+    // Dot in the middle: radius no larger than the stroke width, so the
+    // stroke pass paints it solid.
+    const double center = size / 2.0;
+    cr.begin_new_sub_path();
+    cr.arc(center, center, std::max(1.0, std::round(size * 0.08)), 0, 2 * M_PI);
+    cr.arc(center, center, std::max(1.0, std::round(size * 0.04)), 0, 2 * M_PI);
+}
+
+void draw_pin(Cairo::Context& cr, double size) {
+    // Teardrop: a circle with a sharp tip on the right. The tip edges are
+    // tangent lines from the tip to the circle, so the outline is a single
+    // continuous path with no seam where they meet.
+    const double s = size / 2.0;
+    const double R = s * 0.8;              // circle radius
+    const double a = std::acos(R / s);     // tangent angle from the tip
+    cr.move_to(size, s);                   // tip
+    cr.line_to(s + R * std::cos(a), s + R * std::sin(a)); // lower tangent point
+    cr.arc(s, s, R, a, 2 * M_PI - a);      // circle around the left side
+    cr.close_path();                       // back to the tip
 }
 
 void draw_diamond(Cairo::Context &cr, double size)
@@ -476,8 +549,32 @@ void draw_cairo_path(CanvasItemCtrlShape shape, Cairo::Context &cr, double size,
             draw_circle(cr, size, width);
             break;
 
+        case CANVAS_ITEM_CTRL_SHAPE_DCIRCLE:
+            draw_dotted_circle(cr, size, width);
+            break;
+
         case CANVAS_ITEM_CTRL_SHAPE_SQUARE:
             draw_square(cr, size);
+            break;
+
+        case CANVAS_ITEM_CTRL_SHAPE_RSQUARE:
+            draw_rounded_square(cr, size, size * 0.22);
+            break;
+
+        case CANVAS_ITEM_CTRL_SHAPE_SPADE:
+            draw_spade(cr, size);
+            break;
+
+        case CANVAS_ITEM_CTRL_SHAPE_PADDLE:
+            draw_paddle(cr, size);
+            break;
+
+        case CANVAS_ITEM_CTRL_SHAPE_RSQUARE_DOT:
+            draw_dotted_rounded_square(cr, size, size * 0.22);
+            break;
+
+        case CANVAS_ITEM_CTRL_SHAPE_PIN:
+            draw_pin(cr, size);
             break;
 
         case CANVAS_ITEM_CTRL_SHAPE_DIAMOND:

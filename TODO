@@ -29,7 +29,7 @@ x dropper icon is low res
 - disable qactions that need document when there isn't one anymore
 - Esc to dismiss notification bar!
 x closing the last doc may leave left panel expanded, if there was a seleciton active before doc close
-- TextPanel is a work in progress, remove current item
+x TextPanel is a work in progress, remove current item
 - add Blender-like shortcuts (for object manipulation)
 - implement add/remove scripts, read them from local files
 - undo/redo is buggy
@@ -39,8 +39,8 @@ x font selector - add header with sorting, filtering, search bar
 - add color fonts entry in a font browser categories
 - add support for color fonts
 x add 'home' button to switch to "no document" and show welcome page
-- editing layer transform matrix does not apply it
-- node 'position' is not being refreshed
+x editing layer transform matrix does not apply it
+x node 'position' is not being refreshed
 
 ## Missing features
 
