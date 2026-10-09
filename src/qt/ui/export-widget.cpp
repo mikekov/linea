@@ -11,6 +11,7 @@
 #include <QGridLayout>
 #include <QIcon>
 #include <QMenu>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -117,7 +118,20 @@ ExportWidget::ExportWidget(QWidget* parent)
     _ui->setupUi(this);
     updateExportButtonVisibility();
 
+    _ui->titleLabel->setCursor(Qt::PointingHandCursor);
+    _ui->titleLabel->installEventFilter(this);
     connect(_ui->addExportButton, &QPushButton::clicked, this, &ExportWidget::addSingleExport);
+}
+
+bool ExportWidget::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == _ui->titleLabel && event->type() == QEvent::MouseButtonRelease) {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            addSingleExport();
+            return true;
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 ExportWidget::~ExportWidget() = default;

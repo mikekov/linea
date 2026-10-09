@@ -8,6 +8,7 @@
 
 #include <QEvent>
 #include <QLineEdit>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -157,6 +158,8 @@ FilterWidget::FilterWidget(QWidget* parent)
     _ui->filterButton->setVisible(false);
     _ui->removeButton->setVisible(false);
 
+    _ui->headerLabel->setCursor(Qt::PointingHandCursor);
+    _ui->headerLabel->installEventFilter(this);
     connect(_ui->galleryButton, &QPushButton::clicked, this, &FilterWidget::onGalleryButtonClicked);
     connect(_ui->editorButton, &QPushButton::clicked, this, &FilterWidget::onEditorButtonClicked);
     connect(_ui->addButton, &QPushButton::clicked, this, &FilterWidget::onAddButtonClicked);
@@ -498,6 +501,14 @@ void FilterWidget::onFilterButtonClicked() {
 }
 
 bool FilterWidget::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == _ui->headerLabel && event->type() == QEvent::MouseButtonRelease) {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            onAddButtonClicked();
+            return true;
+        }
+    }
+
     if (watched == _searchEdit && event->type() == QEvent::KeyPress) {
         if (handlePopupTreeKey(static_cast<QKeyEvent*>(event), _addList, _addPopup,
                                [this](QTreeWidgetItem* item) {

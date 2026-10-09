@@ -189,7 +189,7 @@
             <number>1</number>
           </property>
           <property name="singleStep">
-            <double>0.100000</double>
+            <double>1.0</double>
           </property>
           <property name="suffix">
             <string>°</string>
@@ -214,7 +214,7 @@
             <number>1</number>
           </property>
           <property name="singleStep">
-            <double>0.100000</double>
+            <double>1.0</double>
           </property>
           <property name="suffix">
             <string>°</string>

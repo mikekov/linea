@@ -10,6 +10,7 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QIcon>
+#include <QMouseEvent>
 #include <QSizePolicy>
 #include <QStackedWidget>
 
@@ -417,6 +418,10 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     strip.addBtn = isFill ? _ui->fillAdd : _ui->strokeAdd;
     strip.clearBtn = isFill ? _ui->fillClear : _ui->strokeClear;
     strip.clearBtn->setVisible(false);
+    strip.emptyLabel = isFill ? _ui->fillLabel2 : _ui->strokeLabel2;
+    strip.emptyLabel->setVisible(false);
+    strip.emptyLabel->setCursor(Qt::PointingHandCursor);
+    strip.emptyLabel->installEventFilter(this);
 
     // Create PaintSelector popup
     strip.selector = PaintSelector::create(false, isFill, true, this).release();
@@ -424,6 +429,19 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     strip.popup->setContent(strip.selector);
 
     connect(strip.paintBtn, &QPushButton::clicked, this, [&strip]() { strip.popup->showBelowWidget(strip.paintBtn); });
+}
+
+bool StylePanel::eventFilter(QObject* watched, QEvent* event) {
+    PaintStrip* strip = nullptr;
+    if (watched == _fill.emptyLabel) strip = &_fill;
+    else if (watched == _stroke.emptyLabel) strip = &_stroke;
+
+    if (strip && event->type() == QEvent::MouseButtonRelease &&
+        static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
+        strip->addBtn->click();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 // --- Stroke widgets ---
@@ -737,6 +755,7 @@ void StylePanel::bind(Props::Binder& binder) {
     binder.visibleWhen(_fill.alpha, editable && fillDefined);
     binder.visibleWhen(_fill.clearBtn, editable && fillDefined);
     binder.visibleWhen(_fill.addBtn, editable && fillNotDefined);
+    binder.visibleWhen(_fill.emptyLabel, editable && fillNotDefined);
 
     // "Stroke is defined" — same structure as fill.
     auto strokeDefined = [](const Props::SelectionState& s) {
@@ -757,6 +776,7 @@ void StylePanel::bind(Props::Binder& binder) {
     binder.visibleWhen(_stroke.alpha, editable && strokeDefined);
     binder.visibleWhen(_stroke.clearBtn, editable && strokeDefined);
     binder.visibleWhen(_stroke.addBtn, editable && strokeNotDefined);
+    binder.visibleWhen(_stroke.emptyLabel, editable && strokeNotDefined);
 
     // Stroke attribute widgets: visible only when stroke is defined.
     for (auto w : _strokeWidgets) {

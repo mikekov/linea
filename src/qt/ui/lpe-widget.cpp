@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <algorithm>
@@ -115,6 +116,8 @@ LpeWidget::LpeWidget(QWidget* parent)
     , _ui(std::make_unique<Ui::LpeWidget>()) {
     _ui->setupUi(this);
     _ui->listLayout->addStretch();
+    _ui->headerLabel->setCursor(Qt::PointingHandCursor);
+    _ui->headerLabel->installEventFilter(this);
     connect(_ui->addButton, &QPushButton::clicked, this, &LpeWidget::onAddButtonClicked);
 }
 
@@ -426,6 +429,14 @@ void LpeWidget::showLpeParams(int index, QWidget* anchorWidget) {
 }
 
 bool LpeWidget::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == _ui->headerLabel && event->type() == QEvent::MouseButtonRelease) {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            onAddButtonClicked();
+            return true;
+        }
+    }
+
     // Keyboard navigation for the add-LPE popup: while the search box has
     // focus, arrow up/down move the list selection and Enter applies it.
     if (watched == _searchEdit && event->type() == QEvent::KeyPress) {

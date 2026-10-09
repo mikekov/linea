@@ -53,6 +53,9 @@ public:
 
     void bind(Props::Binder& binder);
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
     void addSingleExport();
     void removeSingleExport(QWidget* task);

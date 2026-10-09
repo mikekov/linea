@@ -20,6 +20,7 @@ class SPItem;
 class SPObject;
 class QComboBox;
 class QPushButton;
+class QLabel;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -62,6 +63,9 @@ public:
     // Declarative binding through a Binder
     void bind(Props::Binder& binder);
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
     class PaintButton;
 
@@ -72,6 +76,7 @@ private:
         NumberEdit* alpha = nullptr;
         QPushButton* addBtn = nullptr;
         QPushButton* clearBtn = nullptr;
+        QLabel* emptyLabel = nullptr;
         PaintSelector* selector = nullptr;
         PopupMenu* popup = nullptr;
 

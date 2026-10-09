@@ -28,7 +28,7 @@ x dropper icon is low res
 - tool panels: pass null desk and doc to hidden ones, only init visible
 - disable qactions that need document when there isn't one anymore
 - Esc to dismiss notification bar!
-x closing the last doc may leave left panel expanded, if there was a seleciton active before doc close
+x closing the last doc may leave left panel expanded, if there was a selection active before doc close
 x TextPanel is a work in progress, remove current item
 - add Blender-like shortcuts (for object manipulation)
 - implement add/remove scripts, read them from local files
@@ -156,7 +156,7 @@ x missing app icon
 ## Glitches
 
 - hide DPI entry for bitmap image, keep it for SVG only
-- layer selection shouldn't be reflected on the canvas quite as easily or not at all
+x layer selection shouldn't be reflected on the canvas quite as easily or not at all
 - blend mode combo -> add separators betwen items to group them
 - fix multiline edit rounded corners
 x use inkscape-window-* and zoom/position attributes to position loaded doc
