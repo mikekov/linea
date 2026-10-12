@@ -37,12 +37,31 @@ fi
 # may contain absolute SDK include paths, so selecting a different SDK through
 # xcrun produces a mixed libc++/system-header build after an OS upgrade.
 BREW_ENV=$(brew --env 2>/dev/null)
-BREW_SDKROOT=$(printf '%s\n' "$BREW_ENV" | sed -n 's/^export HOMEBREW_SDKROOT="\(.*\)"$/\1/p')
+BREW_SDKROOT=$(printf '%s\n' "$BREW_ENV" | sed -n 's/^export HOMEBREW_SDKROOT=//p' | tr -d '"')
 CURRENT_SDK=$(xcrun --show-sdk-path 2>/dev/null)
 SDKROOT="$BREW_SDKROOT"
 if [ -z "$SDKROOT" ] || [ ! -d "$SDKROOT" ]; then
     SDKROOT="$CURRENT_SDK"
 fi
+
+# Hard fail when Homebrew and the active toolchain disagree on the SDK.
+# Homebrew's .pc files contain absolute SDK include paths written at install
+# time; mixing them with a different SDK puts C headers before libc++'s and
+# the build fails with missing <stddef.h>/nullptr_t errors. This script can
+# align CMAKE_OSX_SYSROOT with one SDK but cannot rewrite the .pc files, so
+# the SDKs must match.
+BREW_RESOLVED=$([ -n "$BREW_SDKROOT" ] && cd "$BREW_SDKROOT" 2>/dev/null && pwd -P)
+CURRENT_RESOLVED=$([ -n "$CURRENT_SDK" ] && cd "$CURRENT_SDK" 2>/dev/null && pwd -P)
+if [ -n "$BREW_RESOLVED" ] && [ -n "$CURRENT_RESOLVED" ] && [ "$BREW_RESOLVED" != "$CURRENT_RESOLVED" ]; then
+    echo "error: SDK mismatch." >&2
+    echo "  Homebrew SDKROOT: $BREW_RESOLVED" >&2
+    echo "  xcrun SDK:        $CURRENT_RESOLVED" >&2
+    echo "Select the Command Line Tools to match Homebrew:" >&2
+    echo "  sudo xcode-select -s /Library/Developer/CommandLineTools" >&2
+    echo "or export HOMEBREW_SDKROOT=$CURRENT_RESOLVED to force the other SDK." >&2
+    exit 1
+fi
+
 if [ -n "$SDKROOT" ] && [ -d "$SDKROOT" ]; then
     SDKROOT=$(cd "$SDKROOT" && pwd -P)
     SDK_VERSION=$(basename "$SDKROOT" | sed -n 's/^MacOSX\([0-9][0-9]*\)\(\.[0-9][0-9]*\)*\.sdk$/\1/p')
@@ -54,6 +73,7 @@ if [ -n "$SDKROOT" ] && [ -d "$SDKROOT" ]; then
         export PKG_CONFIG_LIBDIR="$BREW_PREFIX/lib/pkgconfig:$BREW_PREFIX/share/pkgconfig:/usr/lib/pkgconfig:$BREW_PREFIX/Library/Homebrew/os/mac/pkgconfig/${SDK_VERSION}"
     fi
     CMAKE_OSX_SYSROOT="$SDKROOT"
+    echo "Using SDK: $CMAKE_OSX_SYSROOT"
 fi
 
 # icu4c is keg-only, so its .pc files are not on the default pkg-config
