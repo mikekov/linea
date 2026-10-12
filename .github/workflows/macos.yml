@@ -1,9 +1,10 @@
 name: macOS build
 
 on:
-  push:
-  pull_request:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 concurrency:
   group: macos-${{ github.ref }}
@@ -121,3 +122,10 @@ jobs:
           name: linea-macos15
           path: build-release/install/linea.zip
           if-no-files-found: error
+
+      # Release assets are publicly downloadable (artifacts require login).
+      - name: Publish release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build-release/install/linea.zip
