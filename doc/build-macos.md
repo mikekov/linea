@@ -18,6 +18,7 @@ Install packages:
 brew install \
     bdw-gc \
     boost \
+    cairo \
     cairomm \
     ccache \
     cmake \
@@ -30,6 +31,7 @@ brew install \
     lcms2 \
     libepoxy \
     libxslt \
+    meson \
     ninja \
     pango \
     pangomm \

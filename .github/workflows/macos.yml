@@ -1,0 +1,87 @@
+name: macOS build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Homebrew .pc files bake in the CLT SDK; point xcode-select at it so
+      # brew's SDKROOT and xcrun's SDK agree (configure.sh hard-fails otherwise).
+      - name: Select CLT toolchain
+        run: sudo xcode-select -s /Library/Developer/CommandLineTools
+
+      # Bottle downloads are the slow part of brew install; cache them.
+      - name: Cache Homebrew downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: brew-${{ runner.os }}-${{ hashFiles('.github/workflows/macos.yml') }}
+          restore-keys: |
+            brew-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          brew install \
+              bdw-gc \
+              boost \
+              cairo \
+              cairomm \
+              ccache \
+              cmake \
+              double-conversion \
+              gettext \
+              glibmm \
+              gsl \
+              icu4c \
+              imagemagick \
+              lcms2 \
+              libepoxy \
+              libxslt \
+              lzo \
+              meson \
+              ninja \
+              pango \
+              pangomm \
+              pkg-config \
+              poppler \
+              potrace \
+              qt6
+          brew link gettext || true
+
+      - name: Configure
+        run: |
+          export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$(brew --prefix)/opt/libxslt/lib/pkgconfig"
+          export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$(brew --prefix)/opt/libxml2/lib/pkgconfig"
+          ./configure.sh -r
+
+      - name: Build
+        run: ninja -C build-release -k 0
+
+      - name: Package app bundle
+        # macdeployqt misses QtSvg references on the first pass; run install
+        # twice as documented in doc/build-macos.md.
+        run: |
+          ninja -C build-release install
+          ninja -C build-release install
+
+      - name: Archive app bundle
+        # ditto preserves symlinks inside the bundle (Qt frameworks depend on
+        # them); a plain zip flattens them and breaks the app.
+        run: |
+          cd build-release/install
+          ditto -c -k --sequesterRsrc --keepParent linea.app linea.zip
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: linea-macos15
+          path: build-release/install/linea.zip

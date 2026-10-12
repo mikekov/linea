@@ -357,7 +357,7 @@ else()
     ExternalProject_Add(cairo
         URL https://cairographics.org/releases/cairo-1.18.6.tar.xz
         URL_HASH SHA256=1c767308174337a74694da0f3ec069c271452163a1ef4540964c50c301f157d4
-        CONFIGURE_COMMAND meson setup . ../cairo -Dfontconfig=enabled -Dfreetype=enabled --prefix=${CMAKE_CURRENT_BINARY_DIR}/deps-cairo --libdir lib
+        CONFIGURE_COMMAND meson setup . ../cairo -Dfontconfig=enabled -Dfreetype=enabled -Dlzo=disabled --prefix=${CMAKE_CURRENT_BINARY_DIR}/deps-cairo --libdir lib
         BUILD_COMMAND meson compile
         INSTALL_COMMAND meson install
         STEP_TARGETS install
