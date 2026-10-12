@@ -5,9 +5,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: macos-15
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +40,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ccache-${{ runner.os }}-${{ github.sha }}
+          key: ccache-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             ccache-${{ runner.os }}-
 
@@ -57,7 +62,6 @@ jobs:
               lcms2 \
               libepoxy \
               libxslt \
-              lzo \
               meson \
               ninja \
               pango \
@@ -66,7 +70,9 @@ jobs:
               poppler \
               potrace \
               qt6
-          brew link gettext || true
+          # gettext is keg-only; without --force brew link refuses and the
+          # Intl package is never found. Fail loudly rather than || true.
+          brew link --force gettext
 
       - name: Configure
         run: |
@@ -77,12 +83,30 @@ jobs:
       - name: Build
         run: ninja -C build-release -k 0
 
+      - name: ccache stats
+        if: always()
+        run: ccache -s
+
       - name: Package app bundle
         # macdeployqt misses QtSvg references on the first pass; run install
         # twice as documented in doc/build-macos.md.
         run: |
           ninja -C build-release install
           ninja -C build-release install
+
+      - name: Verify bundle is relocatable
+        # Any /opt/homebrew reference means macdeployqt missed a dependency;
+        # the app would launch on this runner but break on user machines.
+        run: |
+          cd build-release/install
+          bad=0
+          while IFS= read -r f; do
+            if otool -L "$f" 2>/dev/null | grep -q /opt/homebrew; then
+              echo "::error file=$f::references /opt/homebrew, not bundled"
+              bad=1
+            fi
+          done < <(find linea.app -type f)
+          exit "$bad"
 
       - name: Archive app bundle
         # ditto preserves symlinks inside the bundle (Qt frameworks depend on
@@ -96,3 +120,4 @@ jobs:
         with:
           name: linea-macos15
           path: build-release/install/linea.zip
+          if-no-files-found: error
