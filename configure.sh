@@ -89,9 +89,15 @@ if [ -n "$ICU_PREFIX" ] && [ -d "$ICU_PREFIX/lib/pkgconfig" ]; then
     export PKG_CONFIG_PATH="$ICU_PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 fi
 
+CCACHE_ARGS=()
+if command -v ccache >/dev/null 2>&1; then
+    CCACHE_ARGS=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+fi
+
 cmake --fresh -S "$ROOT_DIR" \
     -B "$BUILD_DIR" \
     -G Ninja \
+    "${CCACHE_ARGS[@]}" \
     ${CMAKE_OSX_SYSROOT:+-DCMAKE_OSX_SYSROOT="$CMAKE_OSX_SYSROOT"} \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
     -DWITH_ASAN="$WITH_ASAN" \
