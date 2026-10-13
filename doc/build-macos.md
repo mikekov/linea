@@ -23,6 +23,7 @@ brew install \
     ccache \
     cmake \
     double-conversion \
+    dylibbundler \
     gettext \
     glibmm \
     gsl \

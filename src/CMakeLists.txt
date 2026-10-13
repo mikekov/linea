@@ -515,4 +515,173 @@ if(APPLE)
             message(FATAL_ERROR \"macdeployqt failed with code \${result}\")
         endif()
     ")
+
+    # macdeployqt deploys a plugin but sometimes skips frameworks that only
+    # that plugin needs (seen: iconengines/libqsvgicon.dylib needs QtSvg).
+    # Copy every referenced-but-absent Qt framework from Homebrew so plugin
+    # dependencies are complete; the passes below fix ids and signatures.
+    install(CODE "
+        file(GLOB_RECURSE _machos LIST_DIRECTORIES false
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/*.dylib\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/*.framework/*\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/PlugIns/*.dylib\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/MacOS/*\")
+        foreach(_f IN LISTS _machos)
+            execute_process(COMMAND otool -L \"\${_f}\"
+                OUTPUT_VARIABLE _deps ERROR_QUIET)
+            string(REGEX MATCHALL \"@rpath/[A-Za-z0-9_]+\\\\.framework/\" _fwrefs \"\${_deps}\")
+            foreach(_r IN LISTS _fwrefs)
+                string(REGEX REPLACE \"@rpath/|/\" \"\" _fw \"\${_r}\")
+                if(NOT EXISTS \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/\${_fw}\"
+                        AND EXISTS \"${HOMEBREW_PREFIX}/lib/\${_fw}\")
+                    message(STATUS \"Deploying framework macdeployqt missed: \${_fw}\")
+                    execute_process(COMMAND ditto
+                        \"${HOMEBREW_PREFIX}/lib/\${_fw}\"
+                        \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/\${_fw}\")
+                endif()
+            endforeach()
+        endforeach()
+    ")
+
+    # macdeployqt also skips Qt plugins whose framework deps it didn't resolve
+    # at deploy time (seen: imageformats/libqsvg.dylib — the icon set is SVG
+    # rendered through that plugin, so the app shows no icons without it).
+    # Nothing LC_LOAD-references plugins (they're dlopened), so no dep scan
+    # can detect this; copy the known-needed one and rewrite its deps to
+    # bundle-relative paths.
+    install(CODE "
+        set(_qsvg \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/PlugIns/imageformats/libqsvg.dylib\")
+        if(NOT EXISTS \"\${_qsvg}\"
+                AND EXISTS \"${HOMEBREW_PREFIX}/share/qt/plugins/imageformats/libqsvg.dylib\")
+            message(STATUS \"Deploying plugin macdeployqt missed: imageformats/libqsvg.dylib\")
+            # copy, not file(COPY): the Homebrew plugin is a symlink into
+            # Cellar and file(COPY) would install the dangling link itself
+            execute_process(COMMAND ${CMAKE_COMMAND} -E copy
+                \"${HOMEBREW_PREFIX}/share/qt/plugins/imageformats/libqsvg.dylib\"
+                \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/PlugIns/imageformats/libqsvg.dylib\")
+            execute_process(COMMAND otool -L \"\${_qsvg}\"
+                OUTPUT_VARIABLE _deps ERROR_QUIET)
+            string(REGEX MATCHALL \"/opt/[^ )]+|/usr/local/[^ )]+\" _refs \"\${_deps}\")
+            set(_changes \"-id\" \"@executable_path/../PlugIns/imageformats/libqsvg.dylib\")
+            foreach(_r IN LISTS _refs)
+                if(_r MATCHES \"([^/]+\\\\.framework/.*)$\")
+                    list(APPEND _changes \"-change\" \"\${_r}\"
+                        \"@executable_path/../Frameworks/\${CMAKE_MATCH_1}\")
+                else()
+                    get_filename_component(_n \"\${_r}\" NAME)
+                    list(APPEND _changes \"-change\" \"\${_r}\"
+                        \"@executable_path/../Frameworks/\${_n}\")
+                endif()
+            endforeach()
+            execute_process(COMMAND install_name_tool \${_changes}
+                -add_rpath \"@loader_path/../../Frameworks\" \"\${_qsvg}\")
+        endif()
+    ")
+
+    # macdeployqt only handles Qt frameworks; every non-Qt Homebrew dependency
+    # (glibmm, cairomm, pango, poppler, ...) still references /opt/homebrew
+    # absolute paths. dylibbundler copies them into Frameworks/ and rewrites
+    # those references to @executable_path-relative ones so the bundle is
+    # relocatable. -b fixes all dylibs already inside the bundle too.
+    install(CODE "
+        execute_process(
+            COMMAND \"dylibbundler\" -b
+                -x \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/MacOS/linea\"
+                -d \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks\"
+                -p \"@executable_path/../Frameworks\"
+                -s \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks\"
+                -s \"${CMAKE_BINARY_DIR}/lib\"
+            RESULT_VARIABLE result
+            TIMEOUT 300
+            INPUT_FILE /dev/null
+        )
+        if(NOT result EQUAL 0)
+            message(FATAL_ERROR \"dylibbundler failed with code \${result}\")
+        endif()
+    ")
+
+    # dylibbundler only rewrites deps of the files it copies itself; Mach-O
+    # files deployed by macdeployqt or the copy passes above can keep both
+    # stale LC_ID_DYLIB ids and absolute LC_LOAD deps pointing at Homebrew.
+    # A leftover dep loads the Homebrew copy alongside the bundled one
+    # (seen: QtPdf loading a second QtCore — Qt's per-library singletons like
+    # the :/ resource registry then split in two, silently breaking icons).
+    # Rewrite every remaining absolute ref, dep or id, to a bundle-relative
+    # path: framework binaries keep the @rpath convention macdeployqt uses,
+    # plain dylibs match dylibbundler's @executable_path/../Frameworks/.
+    install(CODE "
+        file(GLOB_RECURSE _machos LIST_DIRECTORIES false
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/*.dylib\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/*.framework/*\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/PlugIns/*.dylib\")
+        foreach(_f IN LISTS _machos)
+            execute_process(COMMAND otool -D \"\${_f}\"
+                OUTPUT_VARIABLE _id ERROR_QUIET)
+            execute_process(COMMAND otool -L \"\${_f}\"
+                OUTPUT_VARIABLE _deps ERROR_QUIET)
+            # whitespace-split otool output into path tokens; avoids regex
+            # char-class/escaping pitfalls (\\n inside install(CODE) is
+            # literal 'n' and truncates matches mid-path)
+            separate_arguments(_idtoks UNIX_COMMAND \"\${_id}\")
+            separate_arguments(_toks UNIX_COMMAND \"\${_deps}\")
+            set(_args \"\")
+            set(_idr \"\")
+            foreach(_t IN LISTS _idtoks)
+                if(_t MATCHES \"^/opt/|^/usr/local/\")
+                    set(_idr \"\${_t}\")
+                    file(RELATIVE_PATH _rel
+                        \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks\" \"\${_f}\")
+                    if(_rel MATCHES \"\\\\.framework/\")
+                        list(APPEND _args -id \"@rpath/\${_rel}\")
+                    else()
+                        list(APPEND _args -id \"@executable_path/../Frameworks/\${_rel}\")
+                    endif()
+                endif()
+            endforeach()
+            foreach(_t IN LISTS _toks)
+                if(_t MATCHES \"^/opt/|^/usr/local/\" AND NOT _t STREQUAL \"\${_idr}\")
+                    if(_t MATCHES \"([^/]+\\\\.framework/.*)$\")
+                        list(APPEND _args -change \"\${_t}\"
+                            \"@executable_path/../Frameworks/\${CMAKE_MATCH_1}\")
+                    else()
+                        get_filename_component(_n \"\${_t}\" NAME)
+                        list(APPEND _args -change \"\${_t}\"
+                            \"@executable_path/../Frameworks/\${_n}\")
+                    endif()
+                endif()
+            endforeach()
+            if(_args)
+                execute_process(COMMAND install_name_tool \${_args} \"\${_f}\"
+                    RESULT_VARIABLE _rc ERROR_QUIET)
+                if(NOT _rc EQUAL 0)
+                    message(WARNING \"install_name_tool failed on \${_f}\")
+                endif()
+            endif()
+        endforeach()
+    ")
+
+    # Rewriting load commands above invalidates the code signature of every
+    # modified Mach-O file; an arm64 dylib with a stale signature is killed
+    # by the kernel (CODESIGNING "Invalid Page") when dyld maps it. Ad-hoc
+    # re-sign inside-out: bundled dylibs and plugins first, the .app last so
+    # its seal covers the whole bundle. Unsigned bundles are fine for local
+    # and CI artifact builds; Developer ID signing stays a manual step.
+    install(CODE "
+        file(GLOB_RECURSE _machos LIST_DIRECTORIES false
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/*.dylib\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/Frameworks/*.framework/*\"
+            \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/PlugIns/*.dylib\")
+        foreach(_f IN LISTS _machos)
+            execute_process(COMMAND codesign --force --sign - \"\${_f}\"
+                OUTPUT_QUIET ERROR_QUIET)
+        endforeach()
+        execute_process(
+            COMMAND codesign --force --sign -
+                \"\${CMAKE_INSTALL_PREFIX}/linea.app/Contents/MacOS/linea\"
+            RESULT_VARIABLE result
+        )
+        if(NOT result EQUAL 0)
+            message(FATAL_ERROR \"codesign failed with code \${result}\")
+        endif()
+    ")
 endif()

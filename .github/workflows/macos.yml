@@ -55,6 +55,7 @@ jobs:
               ccache \
               cmake \
               double-conversion \
+              dylibbundler \
               gettext \
               glibmm \
               gsl \
@@ -96,18 +97,44 @@ jobs:
           ninja -C build-release install
 
       - name: Verify bundle is relocatable
-        # Any /opt/homebrew reference means macdeployqt missed a dependency;
-        # the app would launch on this runner but break on user machines.
+        # Every LC_LOAD_DYLIB ref inside the bundle must resolve: /opt/homebrew
+        # means a dep wasn't bundled; a dangling @executable_path/@rpath ref
+        # crashes at launch (dyld "Library not loaded").
         run: |
-          cd build-release/install
-          bad=0
-          while IFS= read -r f; do
-            if otool -L "$f" 2>/dev/null | grep -q /opt/homebrew; then
-              echo "::error file=$f::references /opt/homebrew, not bundled"
-              bad=1
-            fi
-          done < <(find linea.app -type f)
-          exit "$bad"
+          python3 - <<'PYEOF'
+          import os, re, subprocess, sys
+
+          app = "build-release/install/linea.app"
+          exe_dir = os.path.join(app, "Contents", "MacOS")
+          frameworks = os.path.join(app, "Contents", "Frameworks")
+          bad = False
+
+          for root, _, files in os.walk(app):
+              for name in files:
+                  f = os.path.join(root, name)
+                  out = subprocess.run(["otool", "-L", f],
+                                       capture_output=True, text=True).stdout
+                  for ref in re.findall(r"@(?:executable|loader|r)path/\S+|/opt/\S+|/usr/local/\S+", out):
+                      if "/opt/" in ref or "/usr/local/" in ref:
+                          ok = False  # unbundled external dep
+                      elif ref.startswith("@rpath/"):
+                          ok = os.path.exists(os.path.join(frameworks, ref[7:]))
+                      elif ref.startswith("@loader_path/"):
+                          ok = os.path.exists(os.path.join(root, ref[13:]))
+                      else:
+                          ok = os.path.exists(os.path.join(exe_dir, ref[17:]))
+                      if not ok:
+                          print(f"::error file={f}::unresolved {ref}")
+                          bad = True
+
+          sys.exit(1 if bad else 0)
+          PYEOF
+
+      # dylibbundler/install_name_tool rewrites invalidate signatures; a
+      # stale ad-hoc signature is a launch-time crash (CODESIGNING Invalid
+      # Page) that otool checks can't see.
+      - name: Verify bundle signature
+        run: codesign --verify --deep --strict build-release/install/linea.app
 
       - name: Archive app bundle
         # ditto preserves symlinks inside the bundle (Qt frameworks depend on
