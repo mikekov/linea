@@ -10,6 +10,10 @@ concurrency:
   group: macos-${{ github.ref }}
   cancel-in-progress: true
 
+# action-gh-release needs to create releases and upload assets.
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-15
