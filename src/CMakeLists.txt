@@ -414,6 +414,10 @@ if(APPLE)
         MACOSX_BUNDLE_BUNDLE_NAME "Linea"
         MACOSX_BUNDLE_GUI_IDENTIFIER "org.linea-draw.Linea"
         MACOSX_BUNDLE_ICON_FILE "linea.icns"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/CMakeScripts/MacOSXBundleInfo.plist.in"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${LINEA_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${LINEA_VERSION}"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${LINEA_VERSION}"
         # @rpath dependencies (liblinea_base, bundled brew libs) resolve via the
         # bundle's Frameworks directory at runtime and during macdeployqt.
         INSTALL_RPATH "@executable_path/../Frameworks"

@@ -5,6 +5,7 @@
  */
 
 #include <QApplication>
+#include <QFileOpenEvent>
 #include <QPalette>
 #include <QStyleHints>
 #include <QtGui/qrgb.h>
@@ -34,6 +35,28 @@
 #include "preferences.h"
 #include "theme.h"
 #include "util/statics.h"
+
+// macOS delivers "Open With", Dock-icon drops and document double-clicks as
+// QFileOpenEvent on the application object, not via argv.
+class FileOpenFilter : public QObject {
+public:
+    using QObject::QObject;
+
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        if (event->type() != QEvent::FileOpen) {
+            return QObject::eventFilter(watched, event);
+        }
+        auto openEvent = static_cast<QFileOpenEvent*>(event);
+        QString path = openEvent->file();
+        if (path.isEmpty() && openEvent->url().isLocalFile()) {
+            path = openEvent->url().toLocalFile();
+        }
+        if (!path.isEmpty()) {
+            LINEA_APP.openDocument(Gio::File::create_for_path(path.toStdString()));
+        }
+        return true;
+    }
+};
 
 int main(int argc, char* argv[]) {
     try {
@@ -72,6 +95,7 @@ int main(int argc, char* argv[]) {
         set_xdg_env();
         Inkscape::Application::create(true);
         LineaApplication::create();
+        app.installEventFilter(new FileOpenFilter(&app));
         Inkscape::AutoSave::getInstance().init(&LineaApplication::instance());
 
         auto setTheme = []{

@@ -1031,6 +1031,22 @@ void SPDesktopWidget::dropEvent(QDropEvent* event) {
         return;
     }
 
+    std::vector<std::string> paths;
+    for (const auto& url : mime->urls()) {
+        if (!url.isLocalFile()) continue;
+        paths.push_back(url.toLocalFile().toStdString());
+    }
+
+    // Welcome page is up (no desktop): open dropped files as documents
+    // instead of inserting them at a drop point.
+    if (!paths.empty() && !_desktop) {
+        for (const auto& path : paths) {
+            LINEA_APP.openDocument(Gio::File::create_for_path(path));
+        }
+        event->acceptProposedAction();
+        return;
+    }
+
     auto canvas = _desktop ? _desktop->getCanvas() : nullptr;
     if (!canvas) {
         event->ignore();
@@ -1057,12 +1073,6 @@ void SPDesktopWidget::dropEvent(QDropEvent* event) {
         Inkscape::DocumentUndo::done(_desktop->getDocument(), RC_("Undo", "Drop Symbol"), "");
         event->acceptProposedAction();
         return;
-    }
-
-    std::vector<std::string> paths;
-    for (const auto& url : event->mimeData()->urls()) {
-        if (!url.isLocalFile()) continue;
-        paths.push_back(url.toLocalFile().toStdString());
     }
 
     if (paths.empty() || !ink_drop_files(_desktop, paths, dt_pos)) {
