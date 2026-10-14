@@ -35,7 +35,7 @@ public:
     void setMaxLines(int lines);
     int maxLines() const { return _maxLines; }
     // narrowest console width, in character columns; <= 0 removes the floor
-    void setMinColumns(int columns) { _minColumns = qMax(0, columns); }
+    void setMinColumns(int columns);
     int minColumns() const { return _minColumns; }
 
 protected:
@@ -54,6 +54,10 @@ private:
     void updateResizeStep();
     // recompute the maximum height from maxLines() and the console font
     void updateMaxHeight();
+    // recompute the minimum width from minColumns() and the console font
+    void updateMinWidth();
+    // console text width in pixels for minColumns() columns
+    int minInnerWidth() const;
     // fixed extra space around the console: layout margins + visible header
     QSize chromeSize() const;
     // console area for a panel size: chrome removed, clamped to >= 1 row

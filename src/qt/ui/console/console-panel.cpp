@@ -50,11 +50,25 @@ void ConsolePanel::updateResizeStep() {
     const QFontMetricsF fm(_ui->console->font());
     setResizeStep(QSize(fm.horizontalAdvance(u'M'), _ui->console->lineHeight()));
     updateMaxHeight();
+    updateMinWidth();
 }
 
 void ConsolePanel::setMaxLines(int lines) {
     _maxLines = lines;
     updateMaxHeight();
+}
+
+void ConsolePanel::setMinColumns(int columns) {
+    _minColumns = qMax(0, columns);
+    updateMinWidth();
+}
+
+int ConsolePanel::minInnerWidth() const {
+    return _minColumns * _ui->console->fontMetrics().horizontalAdvance(u'M');
+}
+
+void ConsolePanel::updateMinWidth() {
+    setMinimumWidth(_minColumns > 0 ? minInnerWidth() + chromeSize().width() : 0);
 }
 
 QSize ConsolePanel::chromeSize() const {
@@ -73,8 +87,7 @@ QSize ConsolePanel::chromeSize() const {
 QSize ConsolePanel::innerSize(QSize panelSize) const {
     QSize inner = (panelSize - chromeSize()).expandedTo(QSize(0, 0));
     // never smaller than one row tall or minColumns() wide
-    const QFontMetrics fm = _ui->console->fontMetrics();
-    inner.setWidth(qMax(inner.width(), _minColumns * fm.horizontalAdvance(u'M')));
+    inner.setWidth(qMax(inner.width(), minInnerWidth()));
     inner.setHeight(qMax(inner.height(), qCeil(_ui->console->lineHeight())));
     return inner;
 }

@@ -61,8 +61,10 @@ QRect OverlayLayout::calculatePanelGeometry(const PanelInfo& panel, QRect& rect)
         int w = panelWidth();
         int h = panelHeight();
         if (panel.widget) {
-            w = std::clamp(w, panel.widget->minimumWidth(),
-                           std::min(availableWidth, panel.widget->maximumWidth()));
+            // min width wins over available space, so the panel is centered
+            // (overflowing both sides equally) rather than widened by Qt on the right only
+            const int minW = panel.widget->minimumWidth();
+            w = std::clamp(w, minW, std::max(minW, std::min(availableWidth, panel.widget->maximumWidth())));
             h = std::clamp(h, panel.widget->minimumHeight(), panel.widget->maximumHeight());
         }
         const int x = rect.left() + margins.left + (availableWidth - w) / 2;
@@ -161,17 +163,28 @@ QRect OverlayLayout::calculatePanelGeometry(const PanelInfo& panel, QRect& rect)
 }
 
 void OverlayLayout::setGeometry(const QRect& rect) {
+    if (rect.isEmpty()) return;
+    
     QLayout::setGeometry(rect);
     auto docked = rect;
     auto area = rect;
     auto center = rect;
 
     for (auto mode : {Mode::Docked, Mode::Floating}) {
-        area = rect;
+        // floating panels are laid out over the canvas, i.e. the space left after docked panels
+        area = mode == Mode::Docked ? rect : center;
         for (auto& panel : _panels) {
             if (!panel.widget || panel.mode != mode) continue;
 
             if (!panel.widget->isVisible() && panel.mode == Mode::Docked) continue;
+
+            if (panel.overlap) {
+                // overlapping panel ignores its siblings: positioned against the full layout rect
+                // and consuming none of the shared area
+                auto full = rect;
+                panel.widget->setGeometry(calculatePanelGeometry(panel, full));
+                continue;
+            }
 
             QRect geom = calculatePanelGeometry(panel, area);
             panel.widget->setGeometry(geom);
@@ -282,4 +295,15 @@ void OverlayLayout::setPanelMode(QWidget* panel, Mode mode) {
     }
 }
 
+void OverlayLayout::setPanelOverlap(QWidget* panel, bool overlap) {
+    for (auto& p : _panels) {
+        if (p.widget == panel) {
+            if (p.overlap != overlap) {
+                p.overlap = overlap;
+                invalidate();
+            }
+            break;
+        }
+    }
+}
 } // namespace Linea::UI

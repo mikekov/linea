@@ -54,6 +54,9 @@ public:
 
     Mode panelMode(QWidget* panel) const;
     void setPanelMode(QWidget* panel, Mode mode);
+    
+    // true to allow panel to overlap its sibling panels
+    void setPanelOverlap(QWidget* panel, bool overlap);
 
 private:
     struct PanelInfo;
@@ -66,6 +69,7 @@ private:
         PanelMargins margins;
         bool scaleHeight = false;
         Mode mode = Mode::Docked;
+        bool overlap = false;
     };
 
     QList<QLayoutItem*> _items;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
  * @file
- * Qt6 entry point for minimal Inkscape viewer.
+ * Entry point for Linea.
  */
 
 #include <QApplication>
@@ -23,7 +23,6 @@
 #include <giomm/file.h>
 
 #include "auto-save.h"
-#include "document.h"
 #include "helper/gettext.h"
 #include "inkgc/gc-core.h"
 #include "inkscape.h"

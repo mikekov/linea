@@ -269,22 +269,9 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     _notificationBar->setFixedSize(400, 40);
     _overlayLayout->setPanelPosition(_notificationBar, OverlayLayout::Position::Center, QSize(400, 40), false, {0, 0, PANEL_MARGIN + 70, 0});
     _overlayLayout->setPanelMode(_notificationBar, OverlayLayout::Mode::Floating);
+    // do not constrain notification panel - let it overlap other panels
+    _overlayLayout->setPanelOverlap(_notificationBar, true);
     _notificationBar->hide();
-
-    // _notificationBar->setText("<b>Document saved</b>", "test notification");
-    // _notificationBar->setIcon(QIcon(":/icons/warning-white"));
-    // _notificationBar->setSeverity("error");
-    // _notificationBar->showBar();
-
-    // _chromeButton = new QToolButton(_canvasContainer);
-    // _chromeButton->setProperty("class", "attention-button");
-    // _chromeButton->setIcon(QIcon(":/icons/edit-undo"));
-    // _chromeButton->setToolTip(tr("Restore dialogs"));
-    // _chromeButton->setVisible(false);
-    // _chromeButton->setFixedSize(24, 24);
-    // _overlayLayout->setPanelPosition(_chromeButton, OverlayLayout::Position::Right, QSize(24, 24), false, {3, 3, 3, 3});
-    // _overlayLayout->setPanelMode(_chromeButton, OverlayLayout::Mode::Floating);
-    // connect(_chromeButton, &QToolButton::clicked, this, [this](bool) { toggleDialogs(); });
 
     // Adjust panel top margins to account for ruler height
     updatePanelMargins();
@@ -790,13 +777,12 @@ void SPDesktopWidget::toggleScrollbars() {
 void SPDesktopWidget::updatePanelMargins() {
     const bool rulers = _rulersShown();
     const int extra = rulers ? _canvasFrame->rulerSize() : 0;
-    const int tabStrip = _tabStrip->isVisible() ? _tabStrip->height() : 0;
     constexpr int margin = PANEL_MARGIN;
-    auto top_margin = dialogsDocked() ? extra + tabStrip : margin + extra + tabStrip;
-    // Base margins: {left, right, top, bottom} — add ruler + tab strip to top
-    _overlayLayout->setPanelMargins(_leftPanel, {margin + extra, 0, margin + extra + tabStrip, margin});
-    _overlayLayout->setPanelMargins(_rightPanel, {0, margin, margin + extra + tabStrip, margin});
-    _overlayLayout->setPanelMargins(_toolbar, {0, 0, top_margin, 0}, false);
+    auto topMargin = dialogsDocked() ? extra : margin + extra;
+    // Base margins: {left, right, top, bottom} — add ruler to top
+    _overlayLayout->setPanelMargins(_leftPanel, {margin + extra, 0, margin + extra, margin});
+    _overlayLayout->setPanelMargins(_rightPanel, {0, margin, margin + extra, margin});
+    _overlayLayout->setPanelMargins(_toolbar, {0, 0, topMargin, 0}, false);
     // The welcome page is a docked Center panel, already starting below the
     // tab strip; rulers are hidden while it is visible, so no extra margin.
     _overlayLayout->setPanelMargins(_welcomePage, {margin, margin, margin, margin});
