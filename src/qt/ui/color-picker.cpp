@@ -179,7 +179,7 @@ void ColorPicker::constructPopup() {
     _color_selector->setInkWarningVisible(false);
     _color_selector->setColorManagedVisible(false);
     _color_selector->setDropperVisible(false);
-    _color_selector->setFixedWidth(260);
+    _color_selector->setFixedWidth(220);
     _popup->setContent(_color_selector);
 }
 

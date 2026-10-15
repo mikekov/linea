@@ -5,15 +5,15 @@
 
 #include "color-notebook.h"
 
-#include <QGridLayout>
-#include <QHBoxLayout>
-#include <QIcon>
+#include <QCursor>
+#include <QMenu>
 #include <QPushButton>
 #include <QSignalBlocker>
-#include <QToolButton>
 
+#include "color-clipboard-menu.h"
 #include "color-entry.h"
 #include "color-page.h"
+#include "color-preview.h"
 #include "colors/manager.h"
 #include "colors/spaces/base.h"
 #include "desktop.h"
@@ -21,16 +21,15 @@
 #include "inkscape.h"
 #include "preferences.h"
 #include "ui/tools/dropper-tool.h"
+#include "ui_color-notebook.h"
 
 namespace Linea::UI {
 
-static constexpr int XPAD = 2;
-static constexpr int YPAD = 1;
-
 ColorNotebook::ColorNotebook(SPDesktop* desktop, std::shared_ptr<ColorHolder> colors, QWidget* parent)
     : QWidget(parent)
+    , _ui(std::make_unique<Ui::ColorNotebook>())
     , _colors(std::move(colors)) {
-    setObjectName("ColorNotebook");
+    _ui->setupUi(this);
     initUI();
 
     if (!desktop) {
@@ -55,70 +54,41 @@ void ColorNotebook::setDocument(SPDocument* document) {
 }
 
 void ColorNotebook::setLabel(const QString& label) {
-    _label->setText(label);
+    _ui->label->setText(label);
 }
 
 void ColorNotebook::setSwitcherVisible(bool visible) {
-    _combo->setVisible(visible);
+    _ui->combo->setVisible(visible);
 }
 
 void ColorNotebook::setInkWarningVisible(bool visible) {
-    _toomuchink->setVisible(visible);
+    _ui->tooMuchInk->setVisible(visible);
 }
 
 void ColorNotebook::setColorManagedVisible(bool visible) {
-    _colormanaged->setVisible(visible);
+    _ui->colorManaged->setVisible(visible);
 }
 
 void ColorNotebook::setDropperVisible(bool visible) {
-    _btn_picker->setVisible(visible);
+    _ui->btnPicker->setVisible(visible);
 }
 
 void ColorNotebook::initUI() {
-    _main_layout = new QGridLayout(this);
-    _main_layout->setContentsMargins(0, 0, 0, 0);
-    int row = 0;
-
-    // Button box with label and combo
-    _buttonbox = new QWidget();
-    auto buttonLayout = new QHBoxLayout(_buttonbox);
-    buttonLayout->setContentsMargins(XPAD, YPAD, XPAD, YPAD);
-    buttonLayout->setSpacing(4);
-
-    _label = new QLabel();
-    _label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    auto labelFont = _label->font();
-    labelFont.setBold(true);
-    _label->setFont(labelFont);
-    buttonLayout->addWidget(_label, 1, Qt::AlignVCenter);
-
-    _combo = new IconComboBox();
-    _combo->setFocusPolicy(Qt::NoFocus);
-    _combo->setToolTip(tr("Choose style of color selection"));
-
     _pickers = Inkscape::Colors::Manager::get().spaces(Inkscape::Colors::Space::Traits::Picker);
 
     // Add all universal (non-document icc profile) color spaces
     for (int i = 0; i < _pickers.size(); i++) {
         auto& space = _pickers[i];
         auto mode_name = QString::fromStdString(space->getName());
-        _combo->addRow(QString::fromStdString(space->getIcon()), mode_name, i);
-
-        // Connect combo selection to space switching
-        connect(_combo, &IconComboBox::currentChanged, this, [this](int id) {
-            if (id >= 0 && id < _pickers.size()) {
-                switchToSpace(_pickers[id]);
-            }
-        });
+        _ui->combo->addRow(QString::fromStdString(space->getIcon()), mode_name, i);
     }
 
-    buttonLayout->addWidget(_combo, 0, Qt::AlignVCenter);
-    _main_layout->addWidget(_buttonbox, row++, 0);
-
-    // Color page container
-    _current_page = nullptr;
-    _main_layout->setRowStretch(row, 1);
-    row++;
+    // Connect combo selection to space switching
+    connect(_ui->combo, &IconComboBox::currentChanged, this, [this](int id) {
+        if (id >= 0 && id < _pickers.size()) {
+            switchToSpace(_pickers[id]);
+        }
+    });
 
     // Restore the last active page from preferences, defaulting to HSL
     auto prefs = Inkscape::Preferences::get();
@@ -135,53 +105,26 @@ void ColorNotebook::initUI() {
         switchToSpace(_pickers[0]);
     }
 
-    // Combo (space switcher) is hidden by default; callers can show it.
-    _combo->setVisible(false);
+    // color swatch: shows the current color, click opens copy/paste options
+    _ui->swatch->setStyle(ColorPreview::Simple);
+    _ui->swatch->setFrame(true);
+    _ui->swatch->setCheckerboardTileSize(4);
+    _ui->swatch->setCursor(Qt::PointingHandCursor);
+    _ui->swatch->setToolTip(tr("Click for copy/paste options"));
+    connect(_ui->swatch, &ColorPreview::clicked, this, [this] {
+        _swatchMenu->popup(QCursor::pos());
+    });
 
-    // Bottom bar with color management icons, picker, and RGB entry
-    auto bottomBar = new QWidget();
-    auto bottomLayout = new QHBoxLayout(bottomBar);
-    bottomLayout->setContentsMargins(XPAD, 8, XPAD, YPAD);
-    bottomLayout->setSpacing(4);
+    wireColorHolder();
 
-    // Color management icons
-    _colormanaged = new QLabel();
-    _colormanaged->setPixmap(QIcon(":/icons/color-management").pixmap(16, 16));
-    _colormanaged->setToolTip(tr("Color Managed"));
-    _colormanaged->setEnabled(false);
-    bottomLayout->addWidget(_colormanaged);
-
-    _outofgamut = new QLabel();
-    _outofgamut->setPixmap(QIcon(":/icons/out-of-gamut-icon").pixmap(16, 16));
-    _outofgamut->setToolTip(tr("Out of gamut!"));
-    _outofgamut->setEnabled(false);
-    bottomLayout->addWidget(_outofgamut);
-
-    _toomuchink = new QLabel();
-    _toomuchink->setPixmap(QIcon(":/icons/too-much-ink-icon").pixmap(16, 16));
-    _toomuchink->setToolTip(tr("Too much ink!"));
-    _toomuchink->setEnabled(false);
-    bottomLayout->addWidget(_toomuchink);
-
-    // Color picker button
-    _btn_picker = new QPushButton();
-    _btn_picker->setIcon(QIcon(":/icons/color-picker"));
-    _btn_picker->setToolTip(tr("Pick colors from image"));
-    bottomLayout->addWidget(_btn_picker);
-
-    // RGB label and entry
-    auto rgbLabel = new QLabel(tr("RGB"));
-    bottomLayout->addWidget(rgbLabel);
-
-    _rgba_entry = new ColorEntry;
-    _rgba_entry->setColorHolder(_colors);
-    _rgba_entry->setMaximumWidth(100);
-    bottomLayout->addWidget(_rgba_entry, 1);
-
-    _main_layout->addWidget(bottomBar, row++, 0);
+    // out-of-gamut warning icon
+    _ui->rgbaEntry->outOfGamutSignal().connect([this](const std::string& msg) {
+        _ui->outOfGamut->setToolTip(msg.empty() ? tr("Out of gamut!") : QString::fromStdString(msg));
+        _ui->outOfGamut->setVisible(!msg.empty());
+    });
 
     // Connect dropper button
-    connect(_btn_picker, &QPushButton::clicked, this, [this]() {
+    connect(_ui->btnPicker, &QPushButton::clicked, this, [this]() {
         // Set the dropper into a "one click" mode, so it reverts to the previous tool after a click
         if (_onetimepick) {
             _onetimepick.disconnect();
@@ -196,10 +139,32 @@ void ColorNotebook::initUI() {
     });
 }
 
+// Bind _colors to the UI: hex entry, swatch display, and the swatch's
+// copy/paste menu. Called on construction and again whenever setCurrentColor
+// swaps in a different holder.
+void ColorNotebook::wireColorHolder() {
+    if (!_colors) return;
+
+    _ui->rgbaEntry->setColorHolder(_colors);
+    _colorChanged = _colors->signal_changed.connect([this] { updateSwatch(); });
+    updateSwatch();
+
+    delete _swatchMenu;
+    _swatchMenu = createColorClipboardMenu(_colors, [this] {
+        return _current_space ? _current_space->getType() : Inkscape::Colors::Space::Type::NONE;
+    }, this);
+}
+
+void ColorNotebook::updateSwatch() {
+    if (!_colors || _colors->isEmpty()) return;
+
+    _ui->swatch->setRgba32(_colors->getOrDefault().toRGBA());
+}
+
 void ColorNotebook::switchToSpace(std::shared_ptr<Inkscape::Colors::Space::AnySpace>& space) {
     // Delete current page if exists
     if (_current_page) {
-        _main_layout->removeWidget(_current_page);
+        _ui->mainLayout->removeWidget(_current_page);
         delete _current_page;
         _current_page = nullptr;
     }
@@ -207,14 +172,14 @@ void ColorNotebook::switchToSpace(std::shared_ptr<Inkscape::Colors::Space::AnySp
     // Create new page for the selected space
     _current_space = space;
     _current_page = new ColorPage(space, _colors);
-    _main_layout->addWidget(_current_page, 1, 0); // Add at row 1
+    _ui->mainLayout->addWidget(_current_page, 1, 0); // Add at row 1
     _current_page->show();
 
     // Sync combo selection, blocking currentChanged to avoid recursion
     for (int i = 0; i < _pickers.size(); i++) {
         if (_pickers[i] == space) {
-            QSignalBlocker blocker(_combo);
-            _combo->setActiveById(i);
+            QSignalBlocker blocker(_ui->combo);
+            _ui->combo->setActiveById(i);
             break;
         }
     }
@@ -228,7 +193,7 @@ void ColorNotebook::setCurrentColor(std::shared_ptr<ColorHolder>& colors) {
     if (colors == _colors) return;
 
     _colors = colors;
-    _rgba_entry->setColorHolder(_colors);
+    wireColorHolder();
     // ColorPage binds the holder at construction — rebuild it on the new holder
     if (_current_space) {
         switchToSpace(_current_space);

@@ -102,6 +102,7 @@ target_sources(linea_base PRIVATE
     ui/icon-combobox.cpp
     ui/extension-selector.cpp
     ui/color-notebook.cpp
+    ui/color-notebook.ui
     ui/color-picker.cpp
     ui/color-plate.cpp
     ui/color-preview.cpp

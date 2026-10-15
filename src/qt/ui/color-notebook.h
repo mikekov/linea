@@ -6,21 +6,19 @@
 #ifndef LINEA_UI_COLOR_NOTEBOOK_H
 #define LINEA_UI_COLOR_NOTEBOOK_H
 
-#include <QGridLayout>
-#include <QLabel>
-#include <QPushButton>
 #include <QWidget>
 #include <memory>
 
 #include "color-holder.h"
 
+class QMenu;
 class SPDesktop;
 class SPDocument;
 
+namespace Ui { class ColorNotebook; }
+
 namespace Linea::UI {
 
-class IconComboBox;
-class ColorEntry;
 class ColorPage;
 
 class ColorNotebook : public QWidget {
@@ -43,21 +41,17 @@ public:
 
 private:
     void initUI();
+    void wireColorHolder();
+    void updateSwatch();
     void switchToSpace(std::shared_ptr<Inkscape::Colors::Space::AnySpace>& space);
     void setDocument(SPDocument* document);
 
+    std::unique_ptr<Ui::ColorNotebook> _ui;
     std::shared_ptr<ColorHolder> _colors;
     std::shared_ptr<Inkscape::Colors::Space::AnySpace> _current_space;
     ColorPage* _current_page = nullptr;
-    IconComboBox* _combo = nullptr;
-    QWidget* _buttonbox = nullptr;
-    QLabel* _label = nullptr;
-    ColorEntry* _rgba_entry = nullptr;
-    QLabel* _colormanaged = nullptr;
-    QLabel* _outofgamut = nullptr;
-    QLabel* _toomuchink = nullptr;
-    QPushButton* _btn_picker = nullptr;
-    QGridLayout* _main_layout = nullptr;
+    QMenu* _swatchMenu = nullptr;
+    sigc::scoped_connection _colorChanged;
     std::vector<std::shared_ptr<Inkscape::Colors::Space::AnySpace>> _pickers;
     SPDocument* _document = nullptr;
     sigc::scoped_connection _doc_replaced_connection;
