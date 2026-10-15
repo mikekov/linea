@@ -17,6 +17,7 @@
 #include "preferences.h"
 #include "qt/ui/handle-preview.h"
 #include "qt/ui/theme.h"
+#include "ui/util.h"
 
 namespace Linea::UI {
 
@@ -80,6 +81,14 @@ SettingsDialog::SettingsDialog(QWidget* parent)
     connect(_ui->monoFontCheck, &QCheckBox::toggled, this, [prefs](bool checked) {
         prefs->setBool(mono_font_pref, checked);
     });
+
+    if (prefs->getBool(Inkscape::UI::PANEL_BORDER_PREF, false)) {
+        _ui->panelBorderRadio->setChecked(true);
+    } else {
+        _ui->panelShadowRadio->setChecked(true);
+    }
+    connect(_ui->panelBorderRadio, &QRadioButton::clicked, this, [prefs] { prefs->setBool(Inkscape::UI::PANEL_BORDER_PREF, true); });
+    connect(_ui->panelShadowRadio, &QRadioButton::clicked, this, [prefs] { prefs->setBool(Inkscape::UI::PANEL_BORDER_PREF, false); });
 }
 
 SettingsDialog::~SettingsDialog() = default;

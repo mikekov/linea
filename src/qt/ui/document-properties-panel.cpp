@@ -47,6 +47,7 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
     // Wrap the entire stacked widget in a single scroll area
     auto scrollArea = new QScrollArea(this);
     scrollArea->setWidget(_stackedWidget);
+    scrollArea->viewport()->setAutoFillBackground(false);
     scrollArea->setWidgetResizable(true);
     scrollArea->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     scrollArea->setFrameShape(QFrame::NoFrame);

@@ -361,8 +361,12 @@ namespace Inkscape::UI {
 // the surface will be freed when the QImage is destroyed.
 QImage cairo_surface_to_qimage(cairo_surface_t* surface);
 
-// Qt widget utilities: drop shadow
+// Qt widget utilities: drop shadow / overlay panel framing
+inline constexpr auto PANEL_BORDER_PREF = "/options/panel-border";
+
 void add_drop_shadow(QWidget* widget, int offset_x = 0, int offset_y = 1, int blur_radius = 16, int alpha = 90);
+
+void style_overlay_panel(QWidget* panel, QWidget* container);
 
 struct OverrideCursor {
     OverrideCursor(Qt::CursorShape shape) {

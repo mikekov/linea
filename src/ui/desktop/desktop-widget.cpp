@@ -262,7 +262,6 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
 
     // Create toolbar and place in center overlay
     _toolbar = new MainToolbar(_canvasContainer);
-    Inkscape::UI::add_drop_shadow(_toolbar);
     _overlayLayout->setPanelPosition(_toolbar, OverlayLayout::Position::Center, QSize(0, 0), false, {0, 0, PANEL_MARGIN, 0});
 
     _notificationBar = new NotificationBar(_canvasContainer);

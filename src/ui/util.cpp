@@ -18,31 +18,17 @@
 #include <glibmm/regex.h>
 #include <glibmm/spawn.h>
 #include <cairomm/cairomm.h>
-// #include <gtkmm/cssprovider.h>
-// #include <gtkmm/image.h>
-// #include <gtkmm/popover.h>
-// #include <gtkmm/revealer.h>
-// #include <gtkmm/spinbutton.h>
-// #include <gtkmm/textbuffer.h>
-// #include <gtkmm/togglebutton.h>
-// #include <gtkmm/tooltip.h>
-// #include <gtkmm/togglebutton.h>
 #include <QMessageBox>
+#include <QStyle>
 #include <QWidget>
 #include <QGraphicsDropShadowEffect>
 #include <2geom/bezier.h>
-// #include <cairo.h>
 
-#include "defocus-target.h"
 #include "desktop.h"
 #include "inkscape.h"
 #include "linea-window.h"
-// #include "ui/dialog-run.h"
-#include "colors/utils.h" // color to hex string
-// #include "ui/dialog-run.h"
+#include "preferences.h"
 #include "util/numeric/converters.h"
-// #include "widget/generic/spin-button.h"
-// #include "widget/generic/spin-scale.h"
 
 // NOTE: Include windows stuff last, as it #defines ERROR leading to compilation errors
 #if (defined (_WIN32) || defined (_WIN64))
@@ -790,6 +776,28 @@ void add_drop_shadow(QWidget* widget, int offset_x, int offset_y, int blur_radiu
     shadow->setBlurRadius(blur_radius);
     shadow->setColor(QColor(0, 0, 0, alpha));
     widget->setGraphicsEffect(shadow);
+}
+
+void style_overlay_panel(QWidget* panel, QWidget* container) {
+    if (!panel || !container) return;
+
+    auto apply = [panel, container]() {
+        const bool use_border = Inkscape::Preferences::get()->getBool(PANEL_BORDER_PREF, true);
+        if (use_border) {
+            panel->setGraphicsEffect(nullptr);
+        } else if (!panel->graphicsEffect()) {
+            add_drop_shadow(panel);
+        }
+        container->setProperty("border", use_border);
+        container->style()->unpolish(container);
+        container->style()->polish(container);
+        container->update();
+    };
+
+    apply();
+
+    auto observer = std::shared_ptr(Inkscape::Preferences::get()->createObserver(PANEL_BORDER_PREF, apply));
+    QObject::connect(container, &QObject::destroyed, panel, [observer]() {});
 }
 
 } // namespace Inkscape::UI

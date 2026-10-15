@@ -25,10 +25,9 @@ CollapsiblePanel::CollapsiblePanel(QWidget* parent)
     _ui->containerWidget->setProperty("class", "overlay-panel");
     _ui->containerWidget->setProperty("rounded", true);
     _ui->headerWidget->setProperty("class", "panel-header");
-    // _ui->toggleButton->setProperty("class", "panel-toggle");
     _ui->contentWidget->setProperty("class", "panel-content");
 
-    Inkscape::UI::add_drop_shadow(this);
+    Inkscape::UI::style_overlay_panel(this, _ui->containerWidget);
 
     setResizeStep(QSize(10, 10));
 
@@ -79,6 +78,7 @@ void CollapsiblePanel::setContentWidget(QWidget* content) {
     }
 
     if (content) {
+        content->setSizePolicy(content->sizePolicy().horizontalPolicy(), QSizePolicy::Ignored);
         _ui->contentWidget->layout()->addWidget(content);
         content->show();
 
@@ -109,6 +109,7 @@ void CollapsiblePanel::setCollapsed(bool collapsed) {
     }
 
     _collapsed = collapsed;
+    _animation->stop();
 
     if (collapsed) {
         _animation->setStartValue(height());

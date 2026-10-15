@@ -229,6 +229,7 @@ static char const preferences_skeleton[] =
   </group>
 
   <group id="options"
+     panel-border="1"
      rotationlock="1">
     <group id="renderingcache" size="512" />
     <group id="rendering" request_opengl="1"  />

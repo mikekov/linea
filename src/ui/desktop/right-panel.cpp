@@ -80,7 +80,6 @@ void RightPanel::buildUi() {
     contentLayout->addWidget(_panelStack);
 
     setContentWidget(content);
-    setContentMargins(0, 0, 0, 0);
 }
 
 void RightPanel::buildHeader() {

@@ -250,14 +250,69 @@
             </widget>
           </item>
           <item row="7" column="0" colspan="2">
-            <widget class="QCheckBox" name="monoFontCheck">
+            <layout class="QHBoxLayout" name="monoFontRow">
+              <item>
+                <widget class="QCheckBox" name="monoFontCheck">
+                  <property name="text">
+                    <string>Monospaced font</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>Use a monospaced font for the XML tree and attribute editor</string>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+
+          <item row="8" column="0">
+            <widget class="QLabel" name="panelsLabel">
               <property name="text">
-                <string>Monospaced font</string>
+                <string>Panels</string>
               </property>
-              <property name="toolTip">
-                <string>Use a monospaced font for the XML tree and attribute editor</string>
+              <property name="class" stdset="0">
+                <string>settings-label</string>
               </property>
             </widget>
+          </item>
+          <item row="9" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="panelBorderRow">
+              <item>
+                <widget class="QRadioButton" name="panelShadowRadio">
+                  <property name="text">
+                    <string>Drop shadow</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>Draw a drop shadow around panels (slow!)</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">panelBorderGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <widget class="QRadioButton" name="panelBorderRadio">
+                  <property name="text">
+                    <string>Plain border</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>Draw a plain border around panels (fast)</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">panelBorderGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <spacer name="panelBorderSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                  </property>
+                </spacer>
+              </item>
+            </layout>
           </item>
 
         </layout>
@@ -289,6 +344,7 @@
   <buttongroups>
     <buttongroup name="themeGroup"/>
     <buttongroup name="renderingGroup"/>
+    <buttongroup name="panelBorderGroup"/>
   </buttongroups>
   <connections>
     <connection>

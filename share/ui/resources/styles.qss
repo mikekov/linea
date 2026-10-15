@@ -233,10 +233,23 @@ QLabel[smallLabel="true"] {
     border: 1px solid palette(midlight);
 }
 
-.toolbar-widget {
+/* Overlay panels with rounded corners - reusable class */
+.toolbar-widget,
+.overlay-panel {
     background: palette(window);
+    border: none;
     border-radius: 8px;
     color: palette(window-text);
+}
+
+.toolbar-widget[border="true"],
+.overlay-panel[border="true"] {
+    border: 1px solid palette(mid);
+}
+
+.overlay-panel .toolbar-widget {
+    background: transparent;
+    border: none;
 }
 
 .toolbar-widget[rounded="false"] {
@@ -248,6 +261,15 @@ QLabel[smallLabel="true"] {
 .toolbar-buttons QToolButton {
     /* max-height: 30px; */
     /* max-width: 30px; */
+}
+
+.overlay-panel[rounded="false"] {
+    border-radius: 0px;
+}
+
+.overlay-panel[rounded="false"] .panel-header,
+.overlay-panel[rounded="false"] .panel-content {
+    border-radius: 0px;
 }
 
 /* Welcome page panels */
@@ -280,22 +302,6 @@ QListWidget[class="welcome-recent-files"]::item:hover {
 
 QListWidget[class="welcome-recent-files"]::item:pressed {
     background-color: palette(highlight);
-}
-
-/* Overlay panels with rounded corners - reusable class */
-.overlay-panel {
-    background: palette(window);
-    border-radius: 8px;
-    color: palette(window-text);
-}
-
-.overlay-panel[rounded="false"] {
-    border-radius: 0px;
-}
-
-.overlay-panel[rounded="false"] .panel-header,
-.overlay-panel[rounded="false"] .panel-content {
-    border-radius: 0px;
 }
 
 /* Notification severity icon backgrounds */

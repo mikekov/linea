@@ -209,8 +209,6 @@ Toolbar::Toolbar(QWidget* parent)
     , _ui(std::make_unique<Ui::Toolbar>())
     , _button_size(BTN_H) {
     _ui->setupUi(this);
-    _ui->containerWidget->setProperty("class", "toolbar-widget");
-    _ui->containerWidget->setProperty("rounded", true);
 
     _flow_layout = new FlowLayout(_ui->containerWidget, -1, 0, 0);
     _flow_layout->setContentsMargins(5, 5, 5, 5);
@@ -252,6 +250,10 @@ int Toolbar::heightForWidth(int width) const {
 
 QSize Toolbar::sizeForWidth(int width) const {
     return _flow_layout->sizeForWidth(width);
+}
+
+QWidget* Toolbar::containerWidget() const {
+    return _ui ? _ui->containerWidget : nullptr;
 }
 
 Toolbar::~Toolbar() = default;

@@ -98,7 +98,6 @@ std::vector<CustomMenuItem> recentFilesMenu() {
 LeftPanel::LeftPanel(QWidget* parent)
     : CollapsiblePanel(parent) {
     setResizableEdge(Qt::RightEdge);
-    setContentMargins(6, 0, 6, 6);
     setMinimumWidth(210);
 
     buildUi();
@@ -173,7 +172,6 @@ void LeftPanel::buildUi() {
     contentLayout->addWidget(_stackedWidget);
 
     setContentWidget(content);
-    setContentMargins(0, 0, 0, 0);
     _stackedWidget->setCurrentIndex(0);
 }
 

@@ -89,6 +89,9 @@ public:
     int heightForWidth(int width) const override;
     QSize sizeForWidth(int width) const;
 
+protected:
+    QWidget* containerWidget() const;
+
 private:
     std::unique_ptr<Ui::Toolbar> _ui;
     FlowLayout* _flow_layout = nullptr;

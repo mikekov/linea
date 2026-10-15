@@ -8,12 +8,17 @@
 #include <array>
 #include "actions/action-registry.h"
 #include "paint-indicator.h"
+#include "ui/util.h"
 
 namespace Linea::UI {
 
 MainToolbar::MainToolbar(QWidget* parent)
     : Toolbar(parent)
 {
+    containerWidget()->setProperty("class", "toolbar-widget");
+    containerWidget()->setProperty("rounded", true);
+    Inkscape::UI::style_overlay_panel(this, containerWidget());
+
     auto& a = ActionRegistry::get();
 
     _current_shape_action = a.action("tool-rect");
