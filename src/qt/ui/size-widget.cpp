@@ -12,6 +12,8 @@
 
 #include "size-widget.h"
 
+#include <cmath>
+
 #include "number-edit.h"
 #include "number-range.h"
 #include "popup-menu.h"
@@ -77,6 +79,7 @@ void SizeWidget::bind(Props::Binder& binder) {
     // object-attributes.cpp's translate/transform).
     auto applyTransform = [this, desktop, editor](double x, double y, double w, double h) {
         if (_update.pending() || !desktop) return;
+
         auto prefs = Preferences::get();
         bool transform_stroke = prefs->getBool("/options/transform/stroke", true);
         bool preserve_transform = prefs->getBool("/options/preservetransform/value", false);
@@ -102,6 +105,17 @@ void SizeWidget::bind(Props::Binder& binder) {
     binder.track(connect(_ui->heightEdit, &NumberEdit::valueChanged, this,
         [this, applyTransform](double h) {
             applyTransform(_ui->xEdit->value(), _ui->yEdit->value(), _ui->widthEdit->value(), h);
+        }));
+
+    binder.track(connect(_ui->roundButton, &QPushButton::clicked, this,
+        [this, applyTransform]() {
+            {
+                auto scoped = _update.block();
+                _ui->xEdit->setValue(std::round(_ui->xEdit->value()));
+                _ui->yEdit->setValue(std::round(_ui->yEdit->value()));
+            }
+            applyTransform(_ui->xEdit->value(), _ui->yEdit->value(),
+                           _ui->widthEdit->value(), _ui->heightEdit->value());
         }));
 
     // Visible when there's a selection, but not when only a lone <svg> is selected.

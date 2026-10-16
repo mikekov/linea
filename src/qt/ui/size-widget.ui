@@ -39,6 +39,7 @@
           </property>
         </widget>
       </item>
+
       <item row="1" column="0">
         <widget class="Linea::UI::NumberEdit" name="xEdit">
           <property name="label">
@@ -53,6 +54,19 @@
           </property>
         </widget>
       </item>
+      <item row="1" column="2">
+        <widget class="QPushButton" name="roundButton">
+          <property name="toolTip">
+            <string>Round values to the nearest integer</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/rounding</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
       <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="dimensionsLabel">
           <property name="text">
