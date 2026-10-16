@@ -22,6 +22,7 @@
 #include <vector>
 #include <limits>
 #include <glibmm.h>
+#include <glibmm/i18n.h>
 
 #include "attributes.h"
 #include "attribute-rel-util.h"
@@ -438,6 +439,14 @@ std::vector<SPObject*> SPObject::ancestorList(bool root_to_tip)
 
 gchar const *SPObject::label() const {
     return _label;
+}
+
+const char* SPObject::typeName() const {
+    return "object";
+}
+
+const char* SPObject::displayName() const {
+    return _("Object");
 }
 
 gchar const *SPObject::defaultLabel() const {

@@ -103,6 +103,8 @@ public:
     std::string getDefaultLabel() const;
     std::string getLabel() const;
     std::string getSizeLabel() const;
+    const char* typeName() const override;
+    const char* displayName() const override;
 
     Geom::Translate getDesktopAffine() const;
 

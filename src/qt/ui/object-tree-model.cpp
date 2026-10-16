@@ -28,6 +28,7 @@
 #include "object/sp-line.h"
 #include "object/sp-metadata.h"
 #include "object/sp-namedview.h"
+#include "object/sp-page.h"
 #include "object/sp-path.h"
 #include "object/sp-polygon.h"
 #include "object/sp-polyline.h"
@@ -126,11 +127,12 @@ inline QIcon composeOverlay(const QIcon& base, unsigned clipmask, double opacity
     return QIcon(combined);
 }
 
-inline QIcon objectIcon(SPItem* item) {
-    if (!item) return {};
+inline QIcon objectIcon(SPObject* obj) {
+    if (!obj) return {};
 
-    QIcon base = baseIconForType(item->typeName());
-    const unsigned clipmask = (item->getClipObject() ? 1U : 0U) | (item->getMaskObject() ? 2U : 0U);
+    QIcon base = baseIconForType(obj->typeName());
+    auto item = cast<SPItem>(obj);
+    const unsigned clipmask = item ? ((item->getClipObject() ? 1U : 0U) | (item->getMaskObject() ? 2U : 0U)) : 0U;
     return composeOverlay(base, clipmask, iconOpacity);
 }
 
@@ -268,6 +270,7 @@ private:
     // sibling = sibling->prev();" walk — bounded by how many untracked
     // siblings sit in between, not a scan of the whole children list.
     int rowOfNearestTrackedSibling(Inkscape::XML::Node* sibling) const;
+    int targetRowAfter(Inkscape::XML::Node* prev) const;
 
     void notifyChildAdded(Inkscape::XML::Node&, Inkscape::XML::Node& child, Inkscape::XML::Node* prev) override;
     void notifyChildRemoved(Inkscape::XML::Node&, Inkscape::XML::Node& child, Inkscape::XML::Node*) override;
@@ -401,6 +404,14 @@ int ObjectNodeWatcher::rowOfNearestTrackedSibling(Inkscape::XML::Node* sibling) 
     return -1;
 }
 
+int ObjectNodeWatcher::targetRowAfter(Inkscape::XML::Node* prev) const {
+    int nearest = rowOfNearestTrackedSibling(prev);
+    if (_item->reverseOrder()) {
+        return nearest < 0 ? static_cast<int>(_item->children().size()) : nearest;
+    }
+    return nearest + 1;
+}
+
 // Add a single new child in response to notifyChildAdded, exactly like
 // ObjectWatcher::addChild + moveChild: no rescan of the other children,
 // just a row computed from the `prev` sibling the notification gave us
@@ -430,9 +441,10 @@ void ObjectNodeWatcher::insertChildNode(Inkscape::XML::Node& childNode, Inkscape
         }
     }
 
-    int row = rowOfNearestTrackedSibling(prev);
-    if (row < 0) row = static_cast<int>(_item->children().size());
-    insertChildAt(row, childNode);
+    insertChildAt(targetRowAfter(prev), childNode);
+    if (!_item->reverseOrder()) {
+        updateRow();
+    }
 }
 
 // Remove a single child in response to notifyChildRemoved, mirroring
@@ -461,6 +473,10 @@ void ObjectNodeWatcher::removeChildNode(Inkscape::XML::Node& childNode) {
     _model->beginRemoveRows(parentIndex, row, row);
     _item->removeChild(row);
     _model->endRemoveRows();
+
+    if (!_item->reverseOrder()) {
+        updateRow();
+    }
 }
 
 // Reposition a single already-tracked child in response to
@@ -470,14 +486,13 @@ void ObjectNodeWatcher::moveChildNode(Inkscape::XML::Node& childNode, Inkscape::
     if (!childItem) return; // not shown/tracked, nothing to reposition
 
     int oldRow = childItem->row();
-    int size = static_cast<int>(_item->children().size());
 
     // rowOfNearestTrackedSibling() reports positions in the *current* list,
-    // which still includes childItem itself; if the sibling it found sits
+    // which still includes childItem itself; if the target position sits
     // after childItem's current position, its row will shift down by one
     // once childItem is removed below, so account for that here.
-    int rawRow = rowOfNearestTrackedSibling(newPrev);
-    int newRow = rawRow < 0 ? size - 1 : (rawRow > oldRow ? rawRow - 1 : rawRow);
+    int target = targetRowAfter(newPrev);
+    int newRow = target > oldRow ? target - 1 : target;
 
     if (newRow == oldRow) return;
 
@@ -491,6 +506,10 @@ void ObjectNodeWatcher::moveChildNode(Inkscape::XML::Node& childNode, Inkscape::
     _item->insertChild(newRow, std::move(item));
 
     _model->endMoveRows();
+
+    if (!_item->reverseOrder()) {
+        updateRow();
+    }
 }
 
 void ObjectNodeWatcher::notifyChildAdded(Inkscape::XML::Node&, Inkscape::XML::Node& child, Inkscape::XML::Node* prev) {
@@ -630,6 +649,7 @@ void ObjectTreeModel::buildTree(SPDocument* document) {
     beginResetModel();
 
     _namedViewWatcher.reset();
+    _defsWatcher.reset();
     _rootWatcher.reset();
     _rootItem.reset();
     _nodeToItem.clear();
@@ -672,7 +692,13 @@ void ObjectTreeModel::buildVirtualDocumentProps() {
     docPropsPtr->addChild(std::move(display));
 
     auto pages = std::make_unique<ObjectTreeItem>(VirtualNodeType::Pages, QObject::tr("Pages"), docPropsPtr);
+    pages->setReverseOrder(false);
+    auto pagesPtr = pages.get();
     docPropsPtr->addChild(std::move(pages));
+    if (auto defs = _document->getDefs()) {
+        addVisibleChildren(pagesPtr, defs, false);
+        _defsWatcher = std::make_unique<ObjectNodeWatcher>(this, pagesPtr, defs->getRepr());
+    }
 
     auto about = std::make_unique<ObjectTreeItem>(VirtualNodeType::About, QObject::tr("About"), docPropsPtr);
     docPropsPtr->addChild(std::move(about));
@@ -687,8 +713,12 @@ void ObjectTreeModel::buildVirtualDocumentProps() {
     docPropsPtr->addChild(std::move(guides));
 }
 
+bool ObjectTreeModel::isContainerObject(SPObject* object) {
+    return is<SPGroup>(object) || is<SPDefs>(object);
+}
+
 int ObjectTreeModel::visibleChildCount(SPObject* parentObject) const {
-    if (!parentObject || !is<SPGroup>(parentObject)) return 0;
+    if (!parentObject || !isContainerObject(parentObject)) return 0;
 
     return static_cast<int>(std::count_if(parentObject->children.begin(), parentObject->children.end(), [this](auto& child) {
         return shouldShowObject(&child) && passesFiltersRecursive(&child);
@@ -697,10 +727,10 @@ int ObjectTreeModel::visibleChildCount(SPObject* parentObject) const {
 
 void ObjectTreeModel::addVisibleChildren(ObjectTreeItem* parentItem, SPObject* parentObject, bool useDummy) {
     if (!parentObject) return;
-    // Only groups (and their subclasses like SPRoot) are containers in the tree.
-    // SPUse, for example, stores the referenced object as a child but should not
-    // list it underneath.
-    if (!is<SPGroup>(parentObject)) return;
+    // Only groups (and their subclasses like SPRoot) and defs (for SPPage views)
+    // are containers in the tree. SPUse, for example, stores the referenced
+    // object as a child but should not list it underneath.
+    if (!isContainerObject(parentObject)) return;
 
     if (useDummy) {
         bool hasVisibleChildren = false;
@@ -718,21 +748,19 @@ void ObjectTreeModel::addVisibleChildren(ObjectTreeItem* parentItem, SPObject* p
     // entire trees so all matching items are visible (matches GTK behavior).
     bool textFiltering = !_filterText.isEmpty();
 
-    // SVG paints later siblings on top, so the tree lists children in reverse
-    // document order to keep the topmost object at the top.
-    for (auto child = parentObject->children.rbegin(); child != parentObject->children.rend(); ++child) {
-        if (!shouldShowObject(&*child)) continue;
-        if (!passesFiltersRecursive(&*child)) continue;
+    auto processChild = [&](SPObject& child) {
+        if (!shouldShowObject(&child)) return;
+        if (!passesFiltersRecursive(&child)) return;
 
-        auto childItem = std::make_unique<ObjectTreeItem>(_document, &*child, parentItem);
+        auto childItem = std::make_unique<ObjectTreeItem>(_document, &child, parentItem);
         auto childPtr = childItem.get();
         parentItem->addChild(std::move(childItem));
         _nodeToItem[childPtr->node()] = childPtr;
 
         bool childUseDummy = false;
-        if (auto group = dynamic_cast<SPGroup*>(&*child)) {
+        if (auto group = dynamic_cast<SPGroup*>(&child)) {
             bool hasVisibleGrandchildren = false;
-            for (auto& gc : child->children) {
+            for (auto& gc : child.children) {
                 if (shouldShowObject(&gc) && passesFiltersRecursive(&gc)) {
                     hasVisibleGrandchildren = true;
                     break;
@@ -745,7 +773,19 @@ void ObjectTreeModel::addVisibleChildren(ObjectTreeItem* parentItem, SPObject* p
         if (childUseDummy) {
             childPtr->setHasDummyChild(true);
         } else {
-            addVisibleChildren(childPtr, &*child, false);
+            addVisibleChildren(childPtr, &child, false);
+        }
+    };
+
+    // SVG paints later siblings on top, so reverseOrder items list children in
+    // reverse document order to keep the topmost object at the top.
+    if (parentItem->reverseOrder()) {
+        for (auto child = parentObject->children.rbegin(); child != parentObject->children.rend(); ++child) {
+            processChild(*child);
+        }
+    } else {
+        for (auto& child : parentObject->children) {
+            processChild(child);
         }
     }
 }
@@ -754,6 +794,8 @@ bool ObjectTreeModel::shouldShowObject(SPObject* object) {
     if (!object) return false;
     auto node = object->getRepr();
     if (!node) return false;
+
+    if (is<SPDefs>(object->parent)) return is<SPPage>(object);
 
     if (is<SPDefs>(object)) return false;
     if (is<SPNamedView>(object)) return false;
@@ -775,9 +817,9 @@ bool ObjectTreeModel::shouldShowObject(SPObject* object) {
 }
 
 bool ObjectTreeModel::isVisibleItemType(SPObject* object) {
-    // The object tree represents every drawable SPItem. Keep this test broad
-    // so new item types are not silently omitted from the tree.
-    return is<SPItem>(object);
+    // The object tree represents every drawable SPItem, plus SPPage views.
+    // Keep this test broad so new item types are not silently omitted from the tree.
+    return is<SPItem>(object) || is<SPPage>(object);
 }
 
 bool ObjectTreeModel::passesFilters(SPObject* object) const {
@@ -826,7 +868,7 @@ bool ObjectTreeModel::passesFiltersRecursive(SPObject* object) const {
 }
 
 bool ObjectTreeModel::hasVisibleDescendants(SPObject* object) const {
-    if (!object || !is<SPGroup>(object)) return false;
+    if (!object || !isContainerObject(object)) return false;
 
     for (auto& child : object->children) {
         if (shouldShowObject(&child) && passesFilters(&child)) return true;
@@ -904,6 +946,14 @@ void ObjectTreeModel::expandToReveal(QTreeView* view, SPObject* object) {
         auto index = indexForObject(ancestor);
         if (!index.isValid()) continue;
         view->expand(index);
+    }
+
+    std::vector<QModelIndex> parentIndexes;
+    for (auto p = indexForObject(object).parent(); p.isValid(); p = p.parent()) {
+        parentIndexes.push_back(p);
+    }
+    for (auto it = parentIndexes.rbegin(); it != parentIndexes.rend(); ++it) {
+        view->expand(*it);
     }
 }
 
@@ -1043,35 +1093,34 @@ QVariant ObjectTreeModel::data(const QModelIndex& index, int role) const {
     const int col = index.column();
 
     if (col == ColumnVisible) {
+        if (!itemObj) return {};
         if (role == Qt::DecorationRole) {
-            bool hidden = itemObj ? itemObj->isHidden() : false;
-            return visibilityIcon(hidden);
+            return visibilityIcon(itemObj->isHidden());
         }
-        if (role == IsHiddenRole) return itemObj ? itemObj->isHidden() : false;
+        if (role == IsHiddenRole) return itemObj->isHidden();
         if (role == AncestorHiddenRole) return ancestorState(obj, false);
         return QVariant();
     }
 
     if (col == ColumnLocked) {
+        if (!itemObj) return {};
         if (role == Qt::DecorationRole) {
-            bool locked = itemObj ? !itemObj->isSensitive() : false;
-            return lockIcon(locked);
+            return lockIcon(!itemObj->isSensitive());
         }
-        if (role == IsLockedRole) return itemObj ? !itemObj->isSensitive() : false;
+        if (role == IsLockedRole) return !itemObj->isSensitive();
         if (role == AncestorLockedRole) return ancestorState(obj, true);
         return QVariant();
     }
 
     switch (role) {
         case Qt::DecorationRole:
-            return itemObj ? objectIcon(itemObj) : QVariant();
+            return col == ColumnLabel ? objectIcon(obj) : QVariant();
         case Qt::DisplayRole:
         case Qt::EditRole:
         case PlainTextRole: {
-            if (itemObj) {
-                // user-defined label takes priority
-                if (auto label = itemObj->label()) return QString::fromUtf8(label);
-            }
+            if (col != ColumnLabel) return {};
+            // user-defined label takes priority
+            if (auto label = obj->label()) return QString::fromUtf8(label);
             return get_synthetic_object_name(obj);
         }
         case ObjectRole:
@@ -1081,9 +1130,9 @@ QVariant ObjectTreeModel::data(const QModelIndex& index, int role) const {
             return group && group->layerMode() == SPGroup::LAYER;
         }
         case IsHiddenRole:
-            return itemObj ? itemObj->isHidden() : false;
+            return itemObj ? QVariant(itemObj->isHidden()) : QVariant();
         case IsLockedRole:
-            return itemObj ? !itemObj->isSensitive() : false;
+            return itemObj ? QVariant(!itemObj->isSensitive()) : QVariant();
         default:
             return QVariant();
     }
@@ -1106,7 +1155,7 @@ Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex& index) const {
     auto obj = item->object();
     Qt::ItemFlags f = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     if (obj) f |= Qt::ItemIsEditable;
-    if (index.parent().isValid() && obj) f |= Qt::ItemIsDragEnabled;
+    if (index.parent().isValid() && is<SPItem>(obj)) f |= Qt::ItemIsDragEnabled;
 
     // Only groups and layers can receive dropped children (OnItem drop).
     if (obj && is<SPGroup>(obj)) f |= Qt::ItemIsDropEnabled;
@@ -1230,6 +1279,8 @@ void ObjectTreeModel::itemExpanded(const QModelIndex& index) {
     if (item->isVirtual()) {
         if (item->virtualType() == VirtualNodeType::DocumentProps) {
             _documentExpanded = true;
+        } else if (item->virtualType() == VirtualNodeType::Pages) {
+            _pagesExpanded = true;
         }
         return;
     }
@@ -1275,6 +1326,8 @@ void ObjectTreeModel::itemCollapsed(const QModelIndex& index) {
     if (item->isVirtual()) {
         if (item->virtualType() == VirtualNodeType::DocumentProps) {
             _documentExpanded = false;
+        } else if (item->virtualType() == VirtualNodeType::Pages) {
+            _pagesExpanded = false;
         }
         return;
     }
@@ -1299,7 +1352,10 @@ void ObjectTreeModel::restoreExpandedRecursive(QTreeView* view, ObjectTreeItem* 
         if (!index.isValid()) continue;
 
         if (child->isVirtual()) {
-            if (child->virtualType() == VirtualNodeType::DocumentProps && _documentExpanded) {
+            const bool expandVirtual =
+                (child->virtualType() == VirtualNodeType::DocumentProps && _documentExpanded) ||
+                (child->virtualType() == VirtualNodeType::Pages && (_pagesExpanded || !_filterText.isEmpty()));
+            if (expandVirtual) {
                 view->expand(index);
                 restoreExpandedRecursive(view, child.get());
             }

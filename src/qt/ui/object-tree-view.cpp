@@ -500,7 +500,7 @@ void ObjectTreeView::contextMenuEvent(QContextMenuEvent* event) {
     auto item = cast<SPItem>(object);
     auto selection = _desktop->getSelection();
     bool isLayer = item && Inkscape::LayerManager::asLayer(item);
-    if (item && !isLayer && !selection->includes(object)) {
+    if (!isLayer && !selection->includes(object)) {
         selectObject(object);
         Q_EMIT objectsSelected({object}, event->modifiers(), false);
     }
@@ -623,17 +623,28 @@ bool ObjectTreeView::pruneVirtualSelection() {
     auto rows = selectionModel()->selectedRows();
     if (rows.size() <= 1) return false;
 
-    QItemSelection virtualRows;
+    bool hasItems = false;
     for (const auto& idx : rows) {
-        if (idx.data(ObjectTreeModel::VirtualTypeRole).toInt() !=
-            static_cast<int>(VirtualNodeType::None)) {
-            virtualRows.select(idx, idx);
+        if (is<SPItem>(_model->objectForIndex(idx))) {
+            hasItems = true;
+            break;
         }
     }
-    if (virtualRows.isEmpty()) return false;
+
+    const auto current = currentIndex().siblingAtColumn(0);
+    QItemSelection toDeselect;
+    for (const auto& idx : rows) {
+        const bool isVirtual = idx.data(ObjectTreeModel::VirtualTypeRole).toInt() !=
+                               static_cast<int>(VirtualNodeType::None);
+        const bool isItem = !isVirtual && is<SPItem>(_model->objectForIndex(idx));
+        if (isVirtual || (!isItem && (hasItems || idx != current))) {
+            toDeselect.select(idx, idx);
+        }
+    }
+    if (toDeselect.isEmpty()) return false;
 
     auto guard = _pruningVirtuals.block();
-    selectionModel()->select(virtualRows,
+    selectionModel()->select(toDeselect,
                              QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
     return true;
 }

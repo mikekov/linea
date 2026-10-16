@@ -640,6 +640,14 @@ std::string SPPage::getSizeLabel() const
     return _size_label;
 }
 
+const char* SPPage::typeName() const {
+    return "tool-pages";
+}
+
+const char* SPPage::displayName() const {
+    return _("Page");
+}
+
 /**
  * Copy non-size attributes from the given page.
  */

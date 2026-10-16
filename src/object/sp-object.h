@@ -375,6 +375,9 @@ public:
      */
     char const *defaultLabel() const;
 
+    virtual const char* typeName() const;
+    virtual const char* displayName() const;
+
     /**
      * Sets the author-visible label for this object.
      *

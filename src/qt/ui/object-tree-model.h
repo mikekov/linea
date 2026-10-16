@@ -78,6 +78,11 @@ public:
     bool hasDummyChild() const { return _hasDummyChild; }
     void setHasDummyChild(bool hasDummy) { _hasDummyChild = hasDummy; }
 
+    // Whether children are listed in reverse XML order (true for layers/groups,
+    // false for forward-ordered collections like Pages).
+    bool reverseOrder() const { return _reverseOrder; }
+    void setReverseOrder(bool reverse) { _reverseOrder = reverse; }
+
     // Back-pointer to the watcher observing this item, if any.
     // Set by ObjectNodeWatcher constructor, cleared by destructor.
     ObjectNodeWatcher* watcher() const { return _watcher; }
@@ -91,6 +96,7 @@ private:
     VirtualNodeType _virtualType;
     QString _label;
     bool _hasDummyChild = false;
+    bool _reverseOrder = true;
     ObjectNodeWatcher* _watcher = nullptr;
 };
 
@@ -206,6 +212,7 @@ private:
     // Add visible children of an object to the tree
     void addVisibleChildren(ObjectTreeItem* parentItem, SPObject* parentObject, bool useDummy = false);
     int visibleChildCount(SPObject* parentObject) const;
+    static bool isContainerObject(SPObject* object);
 
     // Find if an object passes the current filters (layers-only + text search).
     // Text search is recursive: an item passes if it or any descendant matches.
@@ -219,11 +226,13 @@ private:
     SPDocument* _document = nullptr;
     std::unique_ptr<ObjectTreeItem> _rootItem;
     std::unique_ptr<ObjectNodeWatcher> _rootWatcher;
+    std::unique_ptr<ObjectNodeWatcher> _defsWatcher;
     std::unique_ptr<NamedViewWatcher> _namedViewWatcher;
     std::unordered_map<Inkscape::XML::Node*, ObjectTreeItem*> _nodeToItem;
 
-    // Whether the Document virtual node is expanded, persisted across rebuilds.
+    // Whether the Document and Pages virtual nodes are expanded, persisted across rebuilds.
     bool _documentExpanded = true;
+    bool _pagesExpanded = true;
 
     // When true, itemExpanded/itemCollapsed don't set SPItem::isExpanded,
     // so filter-driven expansions don't persist as user intent.

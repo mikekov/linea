@@ -27,6 +27,7 @@
 #include "desktop.h"
 #include "inkscape.h"
 #include "linea-window.h"
+#include "object/sp-page.h"
 #include "preferences.h"
 #include "util/numeric/converters.h"
 
@@ -627,8 +628,15 @@ QString get_synthetic_object_name(const SPObject* object) {
         if (id) return name + " " + QString::fromUtf8(id);
         return name;
     }
-    if (id) return QStringLiteral("#") + QString::fromUtf8(id);
-    if (auto repr = object->getRepr()) return QStringLiteral("<") + QString::fromUtf8(repr->name()) + QStringLiteral(">");
+    if (auto page = cast<SPPage>(object)) {
+        return QString::fromStdString(page->getDefaultLabel());
+    }
+    if (id) {
+        return QStringLiteral("#") + QString::fromUtf8(id);
+    }
+    if (auto repr = object->getRepr()) {
+        return QStringLiteral("<") + QString::fromUtf8(repr->name()) + QStringLiteral(">");
+    }
     return QStringLiteral("object");
 }
 

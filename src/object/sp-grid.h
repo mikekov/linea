@@ -100,8 +100,8 @@ public:
     Geom::Point get_gap() const { return Geom::Point(_gap_x.computed, _gap_y.computed); }
     Geom::Point get_margin() const { return Geom::Point(_margin_x.computed, _margin_y.computed); }
 
-    const char *typeName() const;
-    const char *displayName() const;
+    const char* typeName() const override;
+    const char* displayName() const override;
 
     GridType getType() const { return _grid_type; }
     const char *getSVGType() const;

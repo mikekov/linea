@@ -22,6 +22,7 @@
 #include "object/sp-item-group.h"
 #include "object/sp-item.h"
 #include "object/sp-namedview.h"
+#include "object/sp-page.h"
 #include "qt/ui/layer-selector.h"
 #include "qt/ui/panel-switch.h"
 #include "qt/ui/separator.h"
@@ -241,7 +242,11 @@ void LeftPanel::connectSignals() {
                 lm.setCurrentLayer(layer);
                 _desktop->getSelection()->clear();
             } else {
+                bool const wasSelected = _desktop->getSelection()->single() == obj;
                 _desktop->getSelection()->set(obj);
+                if (auto page = cast<SPPage>(obj); page && (!wasSelected || reselected)) {
+                    _desktop->getDocument()->getPageManager().zoomToPage(_desktop, page);
+                }
             }
         } else {
             _desktop->getSelection()->setList(objects);
