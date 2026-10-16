@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QResizeEvent>
 #include <QStyle>
+#include <QStyleOptionButton>
 #include <QWidgetAction>
 #include <QEvent>
 
@@ -207,31 +208,63 @@ void IconComboBox::keyPressEvent(QKeyEvent* event) {
     QPushButton::keyPressEvent(event);
 }
 
-void IconComboBox::updateButtonDisplay() {
+std::pair<QString, QIcon> IconComboBox::displayContent() const {
     if (_current_id == -1) {
-        setText(tr("Select..."));
-        setIcon(QIcon());
-        return;
+        return {tr("Select..."), QIcon()};
     }
 
-    // Display based on header type
-    QString displayText;
-    QIcon displayIcon;
+    const QIcon icon = _current_icon_name.isEmpty()
+        ? QIcon()
+        : QIcon(QString(":/icons/%1").arg(_current_icon_name));
 
     switch (_header_type) {
-        case ImageLabel:
-            displayText = _current_label;
-            displayIcon = QIcon(QString(":/icons/%1").arg(_current_icon_name));
-            break;
-        case ImageOnly:
-            displayText = "";
-            displayIcon = QIcon(QString(":/icons/%1").arg(_current_icon_name));
-            break;
-        case LabelOnly:
-            displayText = _current_label;
-            displayIcon = QIcon();
-            break;
+        case ImageOnly: return {QString(), icon};
+        case LabelOnly: return {_current_label, QIcon()};
+        default: return {_current_label, icon};
     }
+}
+
+// QPushButton::sizeHint() measures the elided text set by updateButtonDisplay();
+// report the hint for the full label so layouts allocate enough room for it.
+QSize IconComboBox::sizeHint() const {
+    auto [text, icon] = displayContent();
+    return hintForContent(text, icon);
+}
+
+// The label elides when space is tight; the smallest useful form is icon + arrow.
+QSize IconComboBox::minimumSizeHint() const {
+    auto [text, icon] = displayContent();
+    return hintForContent(QString(), icon);
+}
+
+QSize IconComboBox::hintForContent(const QString& text, const QIcon& icon) const {
+    QStyleOptionButton opt;
+    initStyleOption(&opt);
+    opt.text = text;
+    opt.icon = icon;
+
+    // Content size, mirroring QPushButton::sizeHint()
+    int w = 0;
+    int h = 0;
+    if (!icon.isNull()) {
+        w += opt.iconSize.width() + 4;
+        h = qMax(h, opt.iconSize.height());
+    }
+    const QSize sz = opt.fontMetrics.size(Qt::TextShowMnemonic, text.isEmpty() ? QStringLiteral("XXXX") : text);
+    if (!text.isEmpty() || !w) {
+        w += sz.width();
+    }
+    if (!text.isEmpty() || !h) {
+        h = qMax(h, sz.height());
+    }
+    opt.rect.setSize(QSize(w, h)); // PM_MenuButtonIndicator depends on the height
+    w += style()->pixelMetric(QStyle::PM_MenuButtonIndicator, &opt, this);
+
+    return style()->sizeFromContents(QStyle::CT_PushButton, &opt, QSize(w, h), this);
+}
+
+void IconComboBox::updateButtonDisplay() {
+    auto [displayText, displayIcon] = displayContent();
 
     // Elide text to leave room for arrow indicator and icon
     if (!displayText.isEmpty()) {

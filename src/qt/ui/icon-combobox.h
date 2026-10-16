@@ -7,6 +7,8 @@
 #ifndef LINEA_UI_ICON_COMBOBOX_H
 #define LINEA_UI_ICON_COMBOBOX_H
 
+#include <utility>
+
 #include <QIcon>
 #include <QMap>
 #include <QMenu>
@@ -46,6 +48,9 @@ public:
     // Get the current active item's id
     int getActiveRowId() const;
 
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
     // Show/hide a specific row by id
     void setRowVisible(int id, bool visible = true);
 
@@ -60,6 +65,11 @@ Q_SIGNALS:
     void currentChanged(int id);
 
 private:
+    // Label and icon the closed button should display for the current selection
+    std::pair<QString, QIcon> displayContent() const;
+    // Push-button hint for the given content (QPushButton::sizeHint() only
+    // measures the elided text currently shown on the button)
+    QSize hintForContent(const QString& text, const QIcon& icon) const;
     void updateButtonDisplay();
     bool eventFilter(QObject* watched, QEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;

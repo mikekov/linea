@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "colors/manager.h"
+#include "colors/utils.h"
 #include "spaces/base.h"
 #include "spaces/components.h"
 
@@ -119,7 +120,13 @@ double Color::get(unsigned index) const
  */
 std::string Color::toString(bool opacity) const
 {
-    return _space->toString(_values, opacity);
+    auto str = _space->toString(_values, opacity);
+    if (str.empty()) {
+        // Picker-only spaces without CSS syntax (OkHsl, OkHsv, HSLuv, ...)
+        // serialize as their sRGB hex equivalent rather than an empty string.
+        return rgba_to_hex(toRGBA(), opacity && hasOpacity());
+    }
+    return str;
 }
 
 /**

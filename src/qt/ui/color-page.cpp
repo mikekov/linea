@@ -134,9 +134,16 @@ ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, bool
 }
 
 void ColorPage::showEvent(QShowEvent* event) {
-    _specific_colors->clear();
-    if (auto color = _selected_colors->get()) {
-        _specific_colors->set(*color);
+    {
+        // Refreshing the space-specific holder is a display sync, not a user
+        // edit — it must not propagate back into _selected_colors. A page
+        // shown for the first time still has live connections (only hideEvent
+        // blocks them), so block explicitly for the sync.
+        auto scoped = SignalBlocker{_specific_changed_connection};
+        _specific_colors->clear();
+        if (auto color = _selected_colors->get()) {
+            _specific_colors->set(*color);
+        }
     }
     _specific_changed_connection.unblock();
     _selected_changed_connection.unblock();

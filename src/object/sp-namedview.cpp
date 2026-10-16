@@ -144,7 +144,7 @@ void SPNamedView::set_clip_to_page(SPDesktop* desktop, bool enable) {
     }
 }
 
-static auto const default_desk_color = Inkscape::Colors::Color{0xe1e1e1, false};
+static auto const default_desk_color = Inkscape::Colors::Color{0xe1e1e1ff, false};
 static auto const default_guide_color = Inkscape::Colors::Color{0x6aabcbff, false};
 static auto const default_guide_hi_color = Inkscape::Colors::Color{0xfd7e14ff, false};
 
