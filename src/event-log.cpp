@@ -29,6 +29,7 @@ EventLog::EventLog(SPDocument* document, QObject* parent)
     , _lastEvent{nullptr}
     , _lastSaved{nullptr} {
     _root.children.push_back(std::make_unique<Node>());
+    _root.children.front()->parent = &_root;
     _firstEvent = _root.children.front().get();
     _currentEvent = _lastEvent = _lastSaved = _firstEvent;
     _firstEvent->iconName = QStringLiteral("document-new");
