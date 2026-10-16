@@ -694,12 +694,12 @@ std::shared_ptr<Cairo::ImageSurface const> draw_uncached(RenderParams const &p)
     bool needs_2_passes = draw_cairo_path_2nd_pass(p.shape, cr, size, total_size - effective_outline, p.angle);
 
     // Outline.
-    ink_cairo_set_source_color(cr.cobj(), Colors::Color(p.outline));
+    ink_cairo_set_source_color(cr.cobj(), Colors::Color::rgba(p.outline));
     cr.set_line_width(effective_outline);
     cr.stroke_preserve();
 
     // Fill.
-    ink_cairo_set_source_color(cr.cobj(), Colors::Color(p.fill));
+    ink_cairo_set_source_color(cr.cobj(), Colors::Color::rgba(p.fill));
     cr.fill_preserve();
 
     if (needs_2_passes) {
@@ -708,7 +708,7 @@ std::shared_ptr<Cairo::ImageSurface const> draw_uncached(RenderParams const &p)
     }
 
     // Stroke.
-    ink_cairo_set_source_color(cr.cobj(), Colors::Color(p.stroke));
+    ink_cairo_set_source_color(cr.cobj(), Colors::Color::rgba(p.stroke));
     cr.set_line_width(stroke_width);
     cr.stroke();
 
@@ -716,7 +716,7 @@ std::shared_ptr<Cairo::ImageSurface const> draw_uncached(RenderParams const &p)
         cr.begin_new_path();
         draw_cairo_path_2nd_pass(p.shape, cr, size, total_size - effective_outline, p.angle);
 
-        auto color = Colors::Color(p.stroke);
+        auto color = Colors::Color::rgba(p.stroke);
         color.addOpacity(0.5);
         ink_cairo_set_source_color(cr.cobj(), color);
         cr.set_line_width(stroke_width);

@@ -61,7 +61,7 @@ Paint fromMIMEData(std::span<char const> data, char const *mime_type)
     if (std::strcmp(mime_type, mimeX_COLOR) == 0) {
         if (data.size() != 8)
             throw ColorError("Data is the wrong size for color mime type");
-        return Color{SP_RGBA32_U_COMPOSE(data[0], data[2], data[4], data[6])};
+        return Color::rgba(SP_RGBA32_U_COMPOSE(data[0], data[2], data[4], data[6]));
     }
 
     auto const str = std::string{data.data(), data.size()};

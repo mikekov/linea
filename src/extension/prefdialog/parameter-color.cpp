@@ -117,7 +117,7 @@ std::string ParamColor::value_to_string() const
 void ParamColor::string_to_value(const std::string &in)
 {
     // Parse color. If parsing fails, return black.
-    static const auto black = Colors::Color(0, false);
+    static const auto black = Colors::Color::rgb(0);
     set(Colors::Color::parse(in).value_or(black));
 }
 

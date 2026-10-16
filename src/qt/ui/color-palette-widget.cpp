@@ -182,7 +182,7 @@ void ColorPaletteWidget::paintColor(QPainter* painter, const Geom::IntRect& rect
         none ? _currentStroke.none : _currentStroke.solid && _currentStroke.solid->rgb() == rgb.rgb();
 
     if (is_fill || is_stroke) {
-        auto color = c ? *c : Inkscape::Colors::Color(0xffffffffu);
+        auto color = c ? *c : Inkscape::Colors::Color::white();
         const auto lightness = Inkscape::Colors::get_perceptual_lightness(color);
         auto [gray, alpha] = Inkscape::Colors::get_contrasting_color(lightness);
 

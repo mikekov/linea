@@ -27,7 +27,35 @@ class Color final
 public:
     Color(std::shared_ptr<Space::AnySpace> space, std::vector<double> colors);
     Color(Space::Type space_type, std::vector<double> values);
-    explicit Color(uint32_t color, bool alpha = true);
+
+    /**
+     * Construct an opaque RGB color from a packed 0xRRGGBB integer.
+     * The result has no alpha channel (hasOpacity() is false).
+     */
+    static Color rgb(std::uint32_t rgb);
+
+    /**
+     * Construct an RGB color from a packed 0xRRGGBBAA integer.
+     * The result has an alpha channel.
+     */
+    static Color rgba(std::uint32_t rgba);
+
+    /**
+     * Construct an RGB color from a packed 0xRRGGBB integer and an
+     * opacity between 0.0 and 1.0. The result has an alpha channel.
+     */
+    static Color rgba(std::uint32_t rgb, double opacity);
+
+    /**
+     * Canonical opaque black/white in RGB space (alpha channel = 1).
+     */
+    static const Color& black();
+    static const Color& white();
+
+    /**
+     * Canonical transparent black in RGB space (alpha channel = 0).
+     */
+    static const Color& transparent();
 
     static std::optional<Color> parse(char const *value);
     static std::optional<Color> parse(std::string const &value);
@@ -50,7 +78,6 @@ public:
     bool set(unsigned int index, double value);
     bool set(Color const &other, bool keep_space = true);
     bool set(std::string const &parsable, bool keep_space = true);
-    bool set(uint32_t rgba, bool opacity = true);
 
     bool hasOpacity() const;
     void enableOpacity(bool enabled);

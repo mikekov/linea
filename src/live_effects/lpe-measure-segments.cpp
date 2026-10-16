@@ -72,7 +72,7 @@ LPEMeasureSegments::LPEMeasureSegments(LivePathEffectObject *lpeobject) :
     Effect(lpeobject),
     unit(_("Unit"), _("Unit of measurement"), "unit", &wr, this, "mm"),
     orientation(_("Orientation"), _("Orientation of the line and labels"), "orientation", OMConverter, &wr, this, OM_PARALLEL, false),
-    coloropacity(_("Color and opacity"), _("Set color and opacity of the dimensions"), "coloropacity", &wr, this, Colors::Color(0x000000ff)),
+    coloropacity(_("Color and opacity"), _("Set color and opacity of the dimensions"), "coloropacity", &wr, this, Colors::Color::black()),
     fontbutton(_("Font"), _("Select font for labels"), "fontbutton", &wr, this),
     precision(_("Precision"), _("Number of digits after the decimal point"), "precision", &wr, this, 2),
     fix_overlaps(_("Merge overlaps °"), _("Minimum angle at which overlapping dimension lines are merged into one, use 180° to disable merging"), "fix_overlaps", &wr, this, 0),
@@ -107,7 +107,7 @@ LPEMeasureSegments::LPEMeasureSegments(LivePathEffectObject *lpeobject) :
     centers(_("Add object center"), _("Add the projected object center"), "centers", &wr, this, false),
     maxmin(_("Only max and min"), _("Compute only max/min projection values"), "maxmin", &wr, this, false),
     helpdata(_("Help"), _("Measure segments help"), "helpdata", &wr, this, "", "")
-    , color(0x000000ff)
+    , color(Colors::Color::black())
 {
     //set to true the parameters you want to be changed his default values
     registerParameter(&unit);

@@ -24,8 +24,8 @@ namespace Linea::UI {
 
 ColorButton::ColorButton(QWidget* parent)
     : QPushButton(parent)
-    , _color(Inkscape::Colors::Color(0))
-    , _committedColor(Inkscape::Colors::Color(0))
+    , _color(Inkscape::Colors::Color::transparent())
+    , _committedColor(Inkscape::Colors::Color::transparent())
     , _alpha(true)
 {
     init();

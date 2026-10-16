@@ -1456,7 +1456,7 @@ Cairo::RefPtr<Cairo::Pattern> ink_cairo_pattern_create_slanting_stripes(uint32_t
     auto surface = Cairo::ImageSurface::create(Cairo::ImageSurface::Format::ARGB32, width, 1);
     auto context = Cairo::Context::create(surface);
     context->rectangle(0, 0, line_width / 2.0, 1);
-    ink_cairo_set_source_color(context, Colors::Color(color));
+    ink_cairo_set_source_color(context, Colors::Color::rgba(color));
     context->fill();
     context->paint();
 
@@ -1484,7 +1484,10 @@ Cairo::RefPtr<Cairo::Pattern> create_checkerboard_pattern(uint32_t dark, uint32_
 }
 
 Cairo::RefPtr<Cairo::Pattern> ink_cairo_pattern_create_checkerboard(guint32 rgba, bool use_alpha, int size) {
-    auto color_a = Colors::Color(rgba, use_alpha);
+    auto color_a = Colors::Color::rgba(rgba);
+    if (!use_alpha) {
+        color_a.enableOpacity(false);
+    }
     auto color_b = Inkscape::Colors::make_contrasted_color(color_a, 1.0);
     // Once the second color is generated, the original doesn't need alpha
     color_a.enableOpacity(false);

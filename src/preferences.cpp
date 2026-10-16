@@ -982,7 +982,7 @@ Colors::Color Preferences::Entry::getColor(std::string const &def) const
         return *res;
     }
     // Transparent black is the default's default
-    return Colors::Color(0x00000000);
+    return Colors::Color::transparent();
 }
 
 int Preferences::Entry::getInt(int def) const

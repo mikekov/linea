@@ -583,7 +583,7 @@ static bool fit_item(SPDesktop *desktop,
         }
         double opacity = 1.0;
         gchar color_string[32]; *color_string = 0;
-        auto color = Colors::Color(rgba);
+        auto color = Colors::Color::rgba(rgba);
         bool invisible = color.getOpacity() < 1e-6;
 
         if(!over_transparent && invisible){
@@ -747,7 +747,7 @@ static bool fit_item(SPDesktop *desktop,
             if(!pick_center){
                 rgba = rgba2;
             }
-            auto color = Colors::Color(rgba);
+            auto color = Colors::Color::rgba(rgba);
             if (pick_inverse_value) {
                 color.invert();
             }

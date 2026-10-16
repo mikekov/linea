@@ -54,7 +54,7 @@ Colors::Color checkerboard_darken(Colors::Color color);
 
 inline std::array<float, 3> checkerboard_darken(uint32_t rgba)
 {
-    auto const color = checkerboard_darken(Colors::Color{rgba});
+    auto const color = checkerboard_darken(Colors::Color::rgba(rgba));
     return {(float)color[0], (float)color[1], (float)color[2]};
 }
 

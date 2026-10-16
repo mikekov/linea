@@ -272,7 +272,7 @@ void LaTeXTextRenderer::sp_text_render(SPText *textobj)
         g_warning("LaTeXTextRenderer::sp_text_render: baselineAnchorPoint unset, text position will be wrong. Please report the issue.");
     }
 
-    Inkscape::Colors::Color color(0xff); // default to full opacity black
+    Inkscape::Colors::Color color = Inkscape::Colors::Color::black(); // default to full opacity black
     if (style->fill.set && style->fill.isColor()) {
         color = style->fill.getColor();
         color.addOpacity(style->fill_opacity.as_double());

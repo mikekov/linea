@@ -311,7 +311,7 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
     if (!support_fill_rule) {
         _ui.fillRuleButton->hide();
     }
-    _color->set(Color(0x000000ff));
+    _color->set(Color::black());
 
     auto types_layout = qobject_cast<QHBoxLayout*>(_ui.typesWidget->layout());
 
@@ -662,7 +662,7 @@ void PaintSelectorImpl::updateFromPaintProps(const Linea::PaintProp& paint) {
     case PaintMode::Solid:
     case PaintMode::CssSwatch:
         // set through setColor
-        setColor(paint.color.value_or(Inkscape::Colors::Color(0x000000ff)));
+        setColor(paint.color.value_or(Inkscape::Colors::Color::black()));
         break;
     case PaintMode::Gradient:
         set_gradient(paint.gradient, paint.selected_stop);

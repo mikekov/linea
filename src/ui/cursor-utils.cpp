@@ -240,8 +240,8 @@ load_svg_cursor(Gtk::Widget &widget,
     auto params = CursorInputParams{
         // .icon_theme = Gtk::IconTheme::get_for_display(widget.get_display()),
         .file_name = file_name,
-        .fill = maybe_fill.value_or(Colors::Color(0xffffffff)),
-        .stroke = maybe_stroke.value_or(Colors::Color(0x000000ff))
+        .fill = maybe_fill.value_or(Colors::Color::white()),
+        .stroke = maybe_stroke.value_or(Colors::Color::black())
     };
 
 #if GTKMM_CHECK_VERSION(4, 16, 0) // Use new scaling cursor API if possible.
@@ -296,8 +296,8 @@ QCursor load_svg_cursor_qt(const std::string& file_name, double device_pixel_rat
         .theme_name = "Dash",
         // .icon_theme = Gtk::IconTheme::get_for_display(widget.get_display()),
         .file_name = file_name,
-        .fill = fill.value_or(Colors::Color(0xffffffff)),
-        .stroke = stroke.value_or(Colors::Color(0x000000ff))
+        .fill = fill.value_or(Colors::Color::white()),
+        .stroke = stroke.value_or(Colors::Color::black())
     };
     auto res = render_svg_cursor(device_pixel_ratio, params);
 

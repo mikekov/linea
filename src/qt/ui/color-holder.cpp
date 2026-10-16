@@ -32,7 +32,7 @@ void ColorHolder::set(Color color) {
 Color ColorHolder::getOrDefault() const {
     if (_color) return *_color;
 
-    Color black(0x000000ffu);
+    Color black = Color::black();
     if (_space) {
         black.convert(_space);
     }

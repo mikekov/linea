@@ -22,7 +22,7 @@ Cairo::RefPtr<Cairo::Pattern> rgba_to_pattern(std::uint32_t const rgba)
     int constexpr w = 6;
     int constexpr h = 6;
 
-    auto color = Colors::Color(rgba);
+    auto color = Colors::Color::rgba(rgba);
     auto dark = checkerboard_darken(color);
     color.enableOpacity(false);
 

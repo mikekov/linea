@@ -134,11 +134,11 @@ void CanvasItemQuad::_render(Inkscape::CanvasItemBuffer &buf) const
         cairo_set_operator(buf.cr->cobj(), CAIRO_OPERATOR_DIFFERENCE);
     }
 
-    ink_cairo_set_source_color(buf.cr, Colors::Color(_fill));
+    ink_cairo_set_source_color(buf.cr, Colors::Color::rgba(_fill));
     buf.cr->fill_preserve();
 
     buf.cr->set_line_width(1);
-    ink_cairo_set_source_color(buf.cr, Colors::Color(_stroke));
+    ink_cairo_set_source_color(buf.cr, Colors::Color::rgba(_stroke));
     buf.cr->stroke_preserve();
     buf.cr->begin_new_path();
 

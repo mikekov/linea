@@ -43,10 +43,10 @@ static auto rendermode_to_renderflags(RenderMode mode)
 
 Drawing::Drawing()
     : _grayscale_matrix(std::vector<double>(grayscale_matrix.begin(), grayscale_matrix.end()))
-    , _outline_color{0xFF}
-    , _clip_outline_color{0xFF}
-    , _mask_outline_color{0xFF}
-    , _image_outline_color{0xFF}
+    , _outline_color(Colors::Color::black())
+    , _clip_outline_color(Colors::Color::black())
+    , _mask_outline_color(Colors::Color::black())
+    , _image_outline_color(Colors::Color::black())
 {}
 
 Drawing::~Drawing()
@@ -334,7 +334,7 @@ Colors::Color Drawing::averageColor(Geom::PathVector const &path, bool evenodd) 
 {
     auto area = path.boundsExact();
     if (!area || area->hasZeroArea()) {
-        return Colors::Color(0x0); // Transparent black sRGB
+        return Colors::Color::transparent(); // Transparent black sRGB
     }
 
     // Scale the graphic so there's a predictable number of pixels to choose from

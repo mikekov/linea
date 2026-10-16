@@ -55,7 +55,7 @@ void updateGuideWidget(GuideWidget* widget, SPGuide* guide) {
     widget->setGuideId(guide->getId() ? QString::fromUtf8(guide->getId()) : QString());
     widget->setLabel(guide->getLabel() ? QString::fromUtf8(guide->getLabel()) : QString());
 
-    auto color = Inkscape::Colors::Color(guide->getColor());
+    auto color = Inkscape::Colors::Color::rgba(guide->getColor());
     widget->setColor(color);
 
     auto point = guide->getPoint();
@@ -85,8 +85,8 @@ GuidesPanel::GuidesPanel(QWidget* parent)
     _ui->guideHighlightColor->setUseTransparency(true);
 
     // Set initial colours before any update() call.
-    _ui->guideColor->setColor(Inkscape::Colors::Color(0x0000ff99));
-    _ui->guideHighlightColor->setColor(Inkscape::Colors::Color(0xff000099));
+    _ui->guideColor->setColor(Inkscape::Colors::Color::rgba(0x0000ff, 0.6));
+    _ui->guideHighlightColor->setColor(Inkscape::Colors::Color::rgba(0xff0000, 0.6));
 
     connect(_ui->newGuideButton, &QPushButton::clicked, this, [this]() {
         if (!_namedview || !_namedview->document) return;

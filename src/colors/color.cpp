@@ -44,11 +44,42 @@ Color::Color(Space::Type space_type, std::vector<double> values)
 {}
 
 /**
- * Compatibility layer for making blind RGB colors
+ * Construct an opaque RGB color from a packed 0xRRGGBB integer.
  */
-Color::Color(uint32_t rgba, bool opacity)
-    : Color(Space::Type::RGB, rgba_to_values(rgba, opacity))
-{}
+Color Color::rgb(std::uint32_t rgb) {
+    return Color(Space::Type::RGB, rgba_to_values(rgb << 8, false));
+}
+
+/**
+ * Construct an RGB color from a packed 0xRRGGBBAA integer.
+ */
+Color Color::rgba(std::uint32_t rgba) {
+    return Color(Space::Type::RGB, rgba_to_values(rgba, true));
+}
+
+/**
+ * Construct an RGB color from a packed 0xRRGGBB integer and an opacity.
+ */
+Color Color::rgba(std::uint32_t rgb, double opacity) {
+    auto values = rgba_to_values(rgb << 8, false);
+    values.push_back(opacity);
+    return Color(Space::Type::RGB, std::move(values));
+}
+
+const Color& Color::black() {
+    static const Color instance(Space::Type::RGB, {0.0, 0.0, 0.0, 1.0});
+    return instance;
+}
+
+const Color& Color::white() {
+    static const Color instance(Space::Type::RGB, {1.0, 1.0, 1.0, 1.0});
+    return instance;
+}
+
+const Color& Color::transparent() {
+    static const Color instance(Space::Type::RGB, {0.0, 0.0, 0.0, 0.0});
+    return instance;
+}
 
 /**
  * Construct a color in the given color space.
@@ -377,27 +408,6 @@ bool Color::set(unsigned int index, double value)
     auto const changed = std::abs(_values[index] - value) >= 0.001;
     _values[index] = value;
     return changed;
-}
-
-/**
- * Set this color from an RGBA unsigned int.
- *
- * @arg rgba - The RGBA color encoded as a single unsigned integer, 8bpc
- * @arg opacity - True if the opacity (Alpha) should be stored too.
- *
- * @returns true if the new value if different from the old value
- */
-bool Color::set(uint32_t rgba, bool opacity)
-{
-    if (*_space != Space::Type::RGB) {
-        // Ensure we are in RGB
-        _space = assert_nonnull(Manager::get().find(Space::Type::RGB));
-    } else if (rgba == toRGBA(opacity)) {
-        return false; // nothing to do.
-    }
-    _name = "";
-    _values = std::move(rgba_to_values(rgba, opacity));
-    return true;
 }
 
 /**

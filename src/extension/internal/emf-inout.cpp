@@ -1117,7 +1117,7 @@ Emf::select_pen(PEMF_CALLBACK_DATA d, int index)
         d->level = cur_level;
         d->dc[d->level].style.stroke_width.value = pen_width;
     }
-    d->dc[d->level].style.stroke.setColor(Colors::Color(U_RGB_COMPOSE(pEmr->lopn.lopnColor), false));
+    d->dc[d->level].style.stroke.setColor(Colors::Color::rgb(U_RGB_COMPOSE(pEmr->lopn.lopnColor)));
 }
 
 void
@@ -1238,7 +1238,7 @@ Emf::select_extpen(PEMF_CALLBACK_DATA d, int index)
     d->dc[d->level].stroke_set = true;
 
     if (pEmr->elp.elpPenStyle == U_PS_NULL) { // draw nothing, but fill out all the values with something
-        d->dc[d->level].style.stroke.setColor(Colors::Color(U_RGB_COMPOSE(d->dc[d->level].textColor), false));
+        d->dc[d->level].style.stroke.setColor(Colors::Color::rgb(U_RGB_COMPOSE(d->dc[d->level].textColor)));
         d->dc[d->level].style.stroke_width.value = 0;
         d->dc[d->level].stroke_set = false;
         d->dc[d->level].stroke_mode = DRAW_PAINT;
@@ -1260,7 +1260,7 @@ Emf::select_extpen(PEMF_CALLBACK_DATA d, int index)
         }
 
         if(     pEmr->elp.elpBrushStyle == U_BS_SOLID){
-            d->dc[d->level].style.stroke.setColor(Colors::Color(U_RGB_COMPOSE(pEmr->elp.elpColor), false));
+            d->dc[d->level].style.stroke.setColor(Colors::Color::rgb(U_RGB_COMPOSE(pEmr->elp.elpColor)));
             d->dc[d->level].stroke_mode = DRAW_PAINT;
             d->dc[d->level].stroke_set  = true;
         }
@@ -1276,7 +1276,7 @@ Emf::select_extpen(PEMF_CALLBACK_DATA d, int index)
             d->dc[d->level].stroke_set  = true;
         }
         else { // U_BS_PATTERN and anything strange that falls in, stroke is solid textColor
-            d->dc[d->level].style.stroke.setColor(Colors::Color(U_RGB_COMPOSE(d->dc[d->level].textColor)));
+            d->dc[d->level].style.stroke.setColor(Colors::Color::rgba(U_RGB_COMPOSE(d->dc[d->level].textColor), 1.0));
             d->dc[d->level].stroke_mode = DRAW_PAINT;
             d->dc[d->level].stroke_set  = true;
         }
@@ -1295,7 +1295,7 @@ Emf::select_brush(PEMF_CALLBACK_DATA d, int index)
         if(iType == U_EMR_CREATEBRUSHINDIRECT){
             PU_EMRCREATEBRUSHINDIRECT pEmr = (PU_EMRCREATEBRUSHINDIRECT) d->emf_obj[index].lpEMFR;
             if(     pEmr->lb.lbStyle == U_BS_SOLID){
-                d->dc[d->level].style.fill.setColor(Colors::Color(U_RGB_COMPOSE(pEmr->lb.lbColor), false));
+                d->dc[d->level].style.fill.setColor(Colors::Color::rgb(U_RGB_COMPOSE(pEmr->lb.lbColor)));
                 d->dc[d->level].fill_mode    = DRAW_PAINT;
                 d->dc[d->level].fill_set     = true;
             }
@@ -1310,7 +1310,7 @@ Emf::select_brush(PEMF_CALLBACK_DATA d, int index)
             PU_EMRCREATEDIBPATTERNBRUSHPT pEmr = (PU_EMRCREATEDIBPATTERNBRUSHPT) d->emf_obj[index].lpEMFR;
             tidx = add_image(d, (void *) pEmr, pEmr->cbBits, pEmr->cbBmi, pEmr->iUsage, pEmr->offBits, pEmr->offBmi);
             if(tidx == U_EMR_INVALID){  // This happens if createmonobrush has a DIB that isn't monochrome
-                d->dc[d->level].style.fill.setColor(Colors::Color(U_RGB_COMPOSE(d->dc[d->level].textColor), false));
+                d->dc[d->level].style.fill.setColor(Colors::Color::rgb(U_RGB_COMPOSE(d->dc[d->level].textColor)));
                 d->dc[d->level].fill_mode = DRAW_PAINT;
             }
             else {
@@ -2460,7 +2460,7 @@ std::cout << "BEFORE DRAW"
                                 val = 255.0 / 255.0;
                                 break;
                         }
-                        d->dc[d->level].style.fill.setColor(Colors::Color(SP_RGBA32_F_COMPOSE(val, val, val, 1.0), false));
+                        d->dc[d->level].style.fill.setColor(Colors::Color(Colors::Space::Type::RGB, {val, val, val}));
                         d->dc[d->level].fill_mode = DRAW_PAINT;
                         d->dc[d->level].fill_set = true;
                         break;
@@ -2475,7 +2475,7 @@ std::cout << "BEFORE DRAW"
                         float val = index == U_BLACK_PEN ? 0 : 1;
                         d->dc[d->level].style.stroke_dasharray.set = false;
                         d->dc[d->level].style.stroke_width.value = 1.0;
-                        d->dc[d->level].style.stroke.setColor(Colors::Color(SP_RGBA32_F_COMPOSE(val, val, val, 1.0), false));
+                        d->dc[d->level].style.stroke.setColor(Colors::Color(Colors::Space::Type::RGB, {val, val, val}));
 
                         d->dc[d->level].stroke_mode = DRAW_PAINT;
                         d->dc[d->level].stroke_set = true;

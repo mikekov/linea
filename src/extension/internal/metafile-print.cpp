@@ -34,7 +34,7 @@ namespace Internal {
 U_COLORREF toColorRef(std::optional<Colors::Color> color)
 {
     // Make sure it's RGB first, if wmf can support other color formats, this can be changed.
-    auto c = color ? *color->converted(Colors::Space::Type::RGB) : Colors::Color(0x000000ff);
+    auto c = color ? *color->converted(Colors::Space::Type::RGB) : Colors::Color::black();
     return U_RGBA(255 * c[0], 255 * c[1], 255 * c[2], 255 * c[3]);
 }
 

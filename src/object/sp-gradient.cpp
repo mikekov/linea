@@ -1248,7 +1248,7 @@ Color SPGradient::getPreviewAverageColor()
     try {
         return grad.finish();
     } catch (std::logic_error const &) {
-        return Color{0x0};
+        return Color::transparent();
     }
 }
 

@@ -27,7 +27,7 @@ LPEPowerMask::LPEPowerMask(LivePathEffectObject *lpeobject)
     , hide_mask(_("Hide mask"), _("Hide mask"), "hide_mask", &wr, this, false)
     , background(_("Add background to mask"), _("Add background to mask"), "background", &wr, this, true)
     , background_color(_("Background color and opacity"), _("Set color and opacity of the background"),
-                       "background_color", &wr, this, Colors::Color(0xffffffff))
+                       "background_color", &wr, this, Colors::Color::white())
 {
     // Register parameters (order matters for UI)
     registerParameter(&invert);

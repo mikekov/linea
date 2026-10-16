@@ -680,7 +680,7 @@ void PatternEditor::updateWidgetsFromPattern(const PatternItemPtr& pattern) {
         _ui->colorPicker->setColor(*item.color);
         _ui->colorPicker->setEnabled(true);
     } else {
-        _ui->colorPicker->setColor(Inkscape::Colors::Color(0x0));
+        _ui->colorPicker->setColor(Inkscape::Colors::Color::transparent());
         _ui->colorPicker->setEnabled(false);
         _ui->colorPicker->close();
     }

@@ -1495,8 +1495,7 @@ void SPIColor::setColor(Colors::Color const &other)
 
 Colors::Color const &SPIColor::getColor() const
 {
-    static auto default_color = Colors::Color(0x0); // Transparent RGB black
-    return _color ? *_color : default_color;
+    return _color ? *_color : Colors::Color::transparent();
 }
 
 // Used for 'color', 'text-decoration-color', 'flood-color', 'lighting-color', and 'stop-color'.
@@ -1762,7 +1761,7 @@ SPIPaint::read( gchar const *str ) {
                 // which case a value of 'currentColor' is meaningless, thus we shouldn't reach
                 // here.
                 std::cerr << "SPIPaint::read(): value is 'currentColor' but 'color' not available." << std::endl;
-                setColor(Colors::Color(0x000000ff));
+                setColor(Colors::Color::black());
             }
         } else if (streq(str, "context-fill")) {
             set = true;
@@ -1823,10 +1822,9 @@ void SPIPaint::setColor(Colors::Color const &other)
 
 Colors::Color const &SPIPaint::getColor() const
 {
-    static auto default_color = Colors::Color(0x0); // Transparent RGB black
     if (_color)
         return *_color;
-    return default_color;
+    return Colors::Color::transparent();
 }
 
 void
@@ -1849,7 +1847,7 @@ SPIPaint::reset( bool init ) {
     href.reset();
 
     if (init && id() == SPAttr::FILL) {
-        _color = Colors::Color(0x000000ff); // 'black' is default for 'fill'
+        _color = Colors::Color::black(); // 'black' is default for 'fill'
     }
 }
 

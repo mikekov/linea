@@ -1749,7 +1749,7 @@ QByteArray ClipboardManagerImpl::_onGet(char const *mime_type)
 
         if ((*out)->is_raster()) {
             double dpi = Inkscape::Util::Quantity::convert(1, "in", "px");
-            Inkscape::Colors::Color bgcolor{0x00000000};
+            Inkscape::Colors::Color bgcolor = Inkscape::Colors::Color::transparent();
 
             auto origin = Geom::Point(_clipboardSPDoc->getRoot()->x.computed, _clipboardSPDoc->getRoot()->y.computed);
             auto area = Geom::Rect(origin, origin + _clipboardSPDoc->getDimensions());

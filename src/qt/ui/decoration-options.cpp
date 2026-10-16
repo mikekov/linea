@@ -168,7 +168,7 @@ void DecorationOptions::setDecorationColor(const std::optional<Inkscape::Colors:
     const QSignalBlocker bDefault(_ui->decorColorDefault);
     const QSignalBlocker bCustom(_ui->decorColorCustom);
 
-    _ui->decorationColor->setColor(color.value_or(Inkscape::Colors::Color(0)));
+    _ui->decorationColor->setColor(color.value_or(Inkscape::Colors::Color::transparent()));
     if (mixed) {
         _ui->decorColorDefault->setChecked(false);
         _ui->decorColorCustom->setChecked(false);

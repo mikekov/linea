@@ -1006,7 +1006,7 @@ Wmf::select_pen(PWMF_CALLBACK_DATA d, int index)
         d->level = cur_level;
     }
     d->dc[d->level].style.stroke_width.value = pen_width;
-    d->dc[d->level].style.stroke.setColor(Colors::Color(U_RGB_COMPOSE(up.Color), false));
+    d->dc[d->level].style.stroke.setColor(Colors::Color::rgb(U_RGB_COMPOSE(up.Color)));
 }
 
 
@@ -1028,7 +1028,7 @@ Wmf::select_brush(PWMF_CALLBACK_DATA d, int index)
         (void) U_WMRCREATEBRUSHINDIRECT_get(record, &membrush);
         memcpy(&lb, membrush, U_SIZE_WLOGBRUSH);
         if(lb.Style == U_BS_SOLID){
-            d->dc[d->level].style.fill.setColor(Colors::Color(U_RGB_COMPOSE(lb.Color)));
+            d->dc[d->level].style.fill.setColor(Colors::Color::rgba(U_RGB_COMPOSE(lb.Color), 1.0));
             d->dc[d->level].fill_mode    = DRAW_PAINT;
             d->dc[d->level].fill_set     = true;
         }
@@ -1060,7 +1060,7 @@ Wmf::select_brush(PWMF_CALLBACK_DATA d, int index)
                 tidx = add_bm16_image(d, Bm16, px);
             }
             if(tidx == U_WMR_INVALID){  // Problem with the image, for instance, an unsupported bitmap16 type
-                d->dc[d->level].style.fill.setColor(Colors::Color(U_RGB_COMPOSE(d->dc[d->level].textColor), false));
+                d->dc[d->level].style.fill.setColor(Colors::Color::rgb(U_RGB_COMPOSE(d->dc[d->level].textColor)));
                 d->dc[d->level].fill_mode = DRAW_PAINT;
             }
             else {
@@ -1081,7 +1081,7 @@ Wmf::select_brush(PWMF_CALLBACK_DATA d, int index)
         if(U_WMRCREATEPATTERNBRUSH_get(record, &Bm16h, &cbPx, &px)){
             tidx = add_bm16_image(d, Bm16h, px);
             if(tidx == 0xFFFFFFFF){  // Problem with the image, for instance, an unsupported bitmap16 type
-                d->dc[d->level].style.fill.setColor(Colors::Color(U_RGB_COMPOSE(d->dc[d->level].textColor), false));
+                d->dc[d->level].style.fill.setColor(Colors::Color::rgb(U_RGB_COMPOSE(d->dc[d->level].textColor)));
                 d->dc[d->level].fill_mode = DRAW_PAINT;
             }
             else {
@@ -1183,7 +1183,7 @@ Wmf::delete_object(PWMF_CALLBACK_DATA d, int index)
             d->dc[d->level].style.stroke_linejoin.computed = SP_STROKE_LINEJOIN_MITER; // U_PS_JOIN_MITER;
             d->dc[d->level].stroke_set                     = true;
             d->dc[d->level].style.stroke_width.value       = 1.0;
-            d->dc[d->level].style.stroke.setColor(Colors::Color(0x000000ff));
+            d->dc[d->level].style.stroke.setColor(Colors::Color::black());
         }
         else if(index == d->dc[d->level].active_brush){
             d->dc[d->level].active_brush                   = -1;
@@ -3074,7 +3074,7 @@ std::unique_ptr<SPDocument> Wmf::open(Inkscape::Extension::Input *, char const *
     d.dc[0].style.stroke_linecap.computed      = SP_STROKE_LINECAP_SQUARE; // U_PS_ENDCAP_SQUARE;
     d.dc[0].style.stroke_linejoin.computed     = SP_STROKE_LINEJOIN_MITER; // U_PS_JOIN_MITER;
     d.dc[0].style.stroke_width.value           = 1.0; // will be reset to something reasonable once WMF drawing size is known
-    d.dc[0].style.stroke.setColor(Colors::Color(0x000000ff));
+    d.dc[0].style.stroke.setColor(Colors::Color::black());
     d.dc[0].stroke_set                         = true;
 
     // Default brush is none - no fill. WMF files that do not specify a brush are unlikely to look very good!

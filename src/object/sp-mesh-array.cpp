@@ -1036,7 +1036,7 @@ static Inkscape::Colors::Color default_color(SPItem *item)
     } else {
         std::cerr << " SPMeshNodeArray: default_color(): No style" << std::endl;
     }
-    return Inkscape::Colors::Color(0x800080ff);
+    return Inkscape::Colors::Color::rgba(0x800080, 1.0);
 }
 
 /**
@@ -1079,7 +1079,7 @@ void SPMeshNodeArray::create( SPMeshGradient *mg, SPItem *item, Geom::OptRect bb
     Inkscape::Colors::Color color = default_color( item );
 
     // Set some corners to white so we can see the mesh.
-    auto white = Inkscape::Colors::Color(0xffffffff);
+    auto white = Inkscape::Colors::Color::white();
     if (color == white) {
         // If default color is white, set other color to black.
         white.set("black");
@@ -1739,7 +1739,7 @@ void SPMeshNodeArray::bicubic(SPMeshNodeArray * const smooth, SPMeshType const t
                     auto op = smooth->nodes[(i*8+k)*3 ][(j*8+l)*3]->color->getOpacity();
                     // Every third node is a corner node
                     smooth->nodes[(i*8+k)*3 ][(j*8+l)*3]->color->set(
-                        Inkscape::Colors::Color(SP_RGBA32_F_COMPOSE(r[0][k][l], r[1][k][l], r[2][k][l], op))
+                        Inkscape::Colors::Color::rgba(SP_RGBA32_F_COMPOSE(r[0][k][l], r[1][k][l], r[2][k][l], op))
                     );
                 }
             }

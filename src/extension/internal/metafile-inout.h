@@ -27,12 +27,13 @@
 #include "extension/implementation/implementation.h"
 #include "colors/utils.h"
 
-constexpr uint32_t U_RGB_COMPOSE(U_COLORREF c)
-{
-    return SP_RGBA32_U_COMPOSE(U_RGBAGetR(c), U_RGBAGetG(c), U_RGBAGetB(c), 0xff);
+// this produces a 0x00RRGGBB value from a U_COLORREF
+constexpr uint32_t U_RGB_COMPOSE(U_COLORREF c) {
+    return (U_RGBAGetR(c) << 16) | (U_RGBAGetG(c) << 8) | U_RGBAGetB(c);
 }
-constexpr uint32_t U_RGBA_COMPOSE(U_COLORREF c)
-{
+
+// this produces a 0xRRGGBBAA value from a U_COLORREF
+constexpr uint32_t U_RGBA_COMPOSE(U_COLORREF c) {
     return SP_RGBA32_U_COMPOSE(U_RGBAGetR(c), U_RGBAGetG(c), U_RGBAGetB(c), U_RGBAGetA(c));
 }
 

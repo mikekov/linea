@@ -150,7 +150,7 @@ void CanvasItemText::_render(Inkscape::CanvasItemBuffer &buf) const
             buf.cr->arc(x + radius, y + radius, radius, M_PI, 3*M_PI_2);
         }
         buf.cr->set_line_width(2);
-        ink_cairo_set_source_color(buf.cr, Colors::Color(_background));
+        ink_cairo_set_source_color(buf.cr, Colors::Color::rgba(_background));
         buf.cr->fill();
     }
 
@@ -161,7 +161,7 @@ void CanvasItemText::_render(Inkscape::CanvasItemBuffer &buf) const
     // the extents may be different than the existing one
     _layout->add_to_cairo_context(buf.cr);
 
-    ink_cairo_set_source_color(buf.cr, Colors::Color(_fill));
+    ink_cairo_set_source_color(buf.cr, Colors::Color::rgba(_fill));
     buf.cr->fill();
     buf.cr->restore();
 }

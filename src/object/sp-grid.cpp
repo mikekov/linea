@@ -40,8 +40,8 @@
 using Inkscape::Util::UnitTable;
 
 // default colors
-static const auto GRID_DEFAULT_MAJOR_COLOR = Inkscape::Colors::Color{0x6aabcbff}.withOpacity(0.36);
-static const auto GRID_DEFAULT_MINOR_COLOR = Inkscape::Colors::Color{0x6aabcbff}.withOpacity(0.18);
+static const auto GRID_DEFAULT_MAJOR_COLOR = Inkscape::Colors::Color::rgba(0x6aabcb, 0.36);
+static const auto GRID_DEFAULT_MINOR_COLOR = Inkscape::Colors::Color::rgba(0x6aabcb, 0.18);
 
 SPGrid::SPGrid()
     : _visible(true)

@@ -17,13 +17,13 @@
 
 namespace Inkscape {
 
-Color const CanvasPage::DEFAULT_BACKGROUND_COLOR{0xffffffff};
-Color const CanvasPage::DEFAULT_BORDER_COLOR{0x0000001a};
-Color const CanvasPage::DEFAULT_CANVAS_COLOR{0xffffffff};
-Color const CanvasPage::DEFAULT_MARGIN_COLOR{0x1699d751};
-Color const CanvasPage::DEFAULT_BLEED_COLOR{0xbe310e31};
-Color const CanvasPage::DEFAULT_SHADOW_COLOR{0x000000a0};
-Color const CanvasPage::DEFAULT_SHADOW_COLOR_LIGHT{0xffffffa0};
+const Color CanvasPage::DEFAULT_BACKGROUND_COLOR = Color::white();
+const Color CanvasPage::DEFAULT_BORDER_COLOR = Color::rgba(0x000000, 0.10);
+const Color CanvasPage::DEFAULT_CANVAS_COLOR = Color::white();
+const Color CanvasPage::DEFAULT_MARGIN_COLOR = Color::rgba(0x1699d7, 0.30);
+const Color CanvasPage::DEFAULT_BLEED_COLOR = Color::rgba(0xbe310e, 0.20);
+const Color CanvasPage::DEFAULT_SHADOW_COLOR = Color::rgba(0x000000, 0.20);
+const Color CanvasPage::DEFAULT_SHADOW_COLOR_LIGHT = Color::rgba(0xffffff, 0.60);
 
 CanvasPage::CanvasPage()
     : _background_color(DEFAULT_BACKGROUND_COLOR)

@@ -161,7 +161,7 @@ std::unique_ptr<SPDocument> GimpGrad::open(Inkscape::Extension::Input *, char co
             goto error;
         }
 
-        Color prev_color(0x0);
+        Color prev_color = Color::transparent();
         Glib::ustring outsvg("<svg><defs><linearGradient>\n");
         long n_segs_found = 0;
         double prev_right = 0.0;

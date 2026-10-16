@@ -194,9 +194,9 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     using ColorItem = Inkscape::UI::Dialog::PaletteFileData::ColorItem;
     std::vector<ColorItem> basicColors{
         ColorItem{Inkscape::UI::Dialog::PaletteFileData::None{}},
-        ColorItem{Inkscape::Colors::Color(0x000000ff, false)},
-        ColorItem{Inkscape::Colors::Color(0x7f7f7fff, false)},
-        ColorItem{Inkscape::Colors::Color(0xffffffff, false)},
+        ColorItem{Inkscape::Colors::Color::rgb(0x000000)},
+        ColorItem{Inkscape::Colors::Color::rgb(0x7f7f7f)},
+        ColorItem{Inkscape::Colors::Color::rgb(0xffffff)},
     };
     _colorPalette->setBasicColors(std::move(basicColors));
 

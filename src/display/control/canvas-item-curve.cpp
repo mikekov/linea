@@ -177,7 +177,7 @@ void CanvasItemCurve::_render(Inkscape::CanvasItemBuffer &buf) const
     buf.cr->set_line_width(background_width);
     buf.cr->stroke_preserve();
 
-    ink_cairo_set_source_color(buf.cr, Colors::Color(_stroke));
+    ink_cairo_set_source_color(buf.cr, Colors::Color::rgba(_stroke));
     buf.cr->set_line_width(_width);
     buf.cr->stroke();
 

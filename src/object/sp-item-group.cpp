@@ -1120,7 +1120,7 @@ Inkscape::Colors::Color SPGroup::highlight_color() const {
         char const * oid = defaultLabel();
         if (oid && *oid) {
             // Color based on the last few bits of the label or object id.
-            return Inkscape::Colors::Color(default_highlights[oid[(strlen(oid) - 1)] % default_highlights.size()]);
+            return Inkscape::Colors::Color::rgba(default_highlights[oid[(strlen(oid) - 1)] % default_highlights.size()]);
         }
     }
     return SPItem::highlight_color();

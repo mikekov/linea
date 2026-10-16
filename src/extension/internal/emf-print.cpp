@@ -281,7 +281,7 @@ unsigned int PrintEmf::begin(Inkscape::Extension::Print *mod, SPDocument *doc)
         g_error("Fatal programming error in PrintEmf::begin at U_EMRSETTEXTALIGN_set");
     }
 
-    htextcolor_rgb = Color(0x000000ff);
+    htextcolor_rgb = Color::black();
     rec = U_EMRSETTEXTCOLOR_set(U_RGB(0, 0, 0));
     if (!rec || emf_append((PU_ENHMETARECORD)rec, et, U_REC_FREE)) {
         g_error("Fatal programming error in PrintEmf::begin at U_EMRSETTEXTCOLOR_set");

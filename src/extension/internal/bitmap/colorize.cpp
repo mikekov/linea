@@ -23,7 +23,7 @@ namespace Internal {
 namespace Bitmap {
 
 Colorize::Colorize()
-    : _color(0x000000ff)
+    : _color(Colors::Color::black())
 {}
 
 void

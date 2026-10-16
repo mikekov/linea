@@ -23,7 +23,7 @@ namespace Linea::UI {
 ColorPicker::ColorPicker(QWidget* parent)
     : QPushButton(parent)
     , _colors(std::make_shared<ColorHolder>(nullptr, _use_transparency)) {
-    _colors->set(Inkscape::Colors::Color(0x000000FFu));
+    _colors->set(Inkscape::Colors::Color::black());
     init();
 }
 
@@ -139,7 +139,7 @@ void ColorPicker::setUseTransparency(bool use_transparency) {
 
 Inkscape::Colors::Color ColorPicker::getCurrentColor() const {
     if (_colors->isEmpty()) {
-        return Inkscape::Colors::Color(0x0);
+        return Inkscape::Colors::Color::transparent();
     }
     return _colors->getOrDefault();
 }

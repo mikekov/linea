@@ -449,7 +449,7 @@ int InkFileExportCmd::do_export_vector(SPDocument *doc, std::string const &expor
 }
 
 Inkscape::Colors::Color InkFileExportCmd::get_bgcolor(SPDocument *doc) {
-    Inkscape::Colors::Color bgcolor(0xffffffff);
+    Inkscape::Colors::Color bgcolor = Inkscape::Colors::Color::white();
     if (!export_background.empty()) {
         // override the page color
         if (auto c = Inkscape::Color::parse(export_background)) {

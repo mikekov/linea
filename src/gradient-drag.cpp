@@ -301,8 +301,7 @@ bool GrDrag::styleSet(SPCSSAttr const *css, bool switch_style)
 
 Inkscape::Colors::Color GrDrag::getColor()
 {
-    if (selected.empty())
-        return Color(0x000000ff);
+    if (selected.empty()) return Color::black();
 
     Inkscape::Colors::ColorSet colors;
     for(auto d : selected) { //for all selected draggers

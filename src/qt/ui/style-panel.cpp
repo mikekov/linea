@@ -149,7 +149,7 @@ void StylePanel::PaintButton::setPreview(const Linea::mixed_property<Linea::Pain
     } else if (p.mode == PaintMode::LegacySwatch && p.server) {
         // Swatch: single flat color from the first stop
         auto swatch = cast<SPGradient>(p.server);
-        Colors::Color color(0);
+        Colors::Color color = Colors::Color::transparent();
         if (swatch) {
             if (auto vect = swatch->getVector()) {
                 if (auto stop = vect->getFirstStop()) {
@@ -345,7 +345,7 @@ void StylePanel::PaintStrip::bind(Props::Binder& binder) {
 
     // ---- Write: Add button (set default flat color) ----
     binder.track(connect(addBtn, &QPushButton::clicked, paintBtn, [this, editor, fill](bool) {
-        Color color(0x909090ff);
+        Color color = Color::rgba(0x909090, 1.0);
         auto css = make_paint_css(fill, color);
         editor->apply(PaintEditDelegate::CssOp{css}, fill ? "change-fill" : "change-stroke",
                       fill ? RC_("Undo", "Set fill color") : RC_("Undo", "Set stroke color"));

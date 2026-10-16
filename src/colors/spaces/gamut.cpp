@@ -12,8 +12,8 @@ namespace Inkscape::Colors {
 
 const auto oklab_space = Manager::get().find(Space::Type::OKLAB);
 const auto oklch_space = Manager::get().find(Space::Type::OKLCH);
-const Color COLORS_WHITE = Color(0xffffffff, false);
-const Color COLORS_BLACK = Color(0x000000ff, false);
+const Color COLORS_WHITE = Color::rgb(0xffffff);
+const Color COLORS_BLACK = Color::rgb(0x000000);
 
 namespace {
 
