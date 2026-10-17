@@ -44,7 +44,7 @@ void draw_darrow(Cairo::Context &cr, double size, double angle)
     }
 
     // Length of arrowhead (not including stroke).
-    double delta = (size - 1) / 4.0; // Use unscaled width.
+    double delta = (size - 1) / 3.5; // Use unscaled width.
     if (!align_45) {
         delta = round(delta + tip_x) - tip_x;
     }
@@ -98,7 +98,7 @@ void draw_darrow(Cairo::Context &cr, double size, double angle)
 void draw_carrow(Cairo::Context &cr, double size)
 {
     // Length of arrowhead (not including stroke).
-    double delta = (size - 3) / 4.0; // Use unscaled width.
+    double delta = (size - 3) / 3.5; // Use unscaled width.
 
     // Tip of arrow
     double tip_x =         1.5;  // Edge, allow room for stroke when rotated.
@@ -373,7 +373,7 @@ void draw_dotted_circle(Cairo::Context& cr, double size, double pixel_width) {
     // Dot in the middle: radius no larger than the stroke width, so the
     // stroke pass paints it solid.
     cr.begin_new_sub_path();
-    cr.arc(center, center, std::max(1.0, std::round(size * 0.08)), 0, 2 * M_PI);
+    cr.arc(center, center, std::max(1.0, std::round(size * 0.10)), 0, 2 * M_PI);
     cr.arc(center, center, std::max(1.0, std::round(size * 0.04)), 0, 2 * M_PI);
 }
 
@@ -428,7 +428,7 @@ void draw_dotted_rounded_square(Cairo::Context& cr, double size, double radius) 
     // stroke pass paints it solid.
     const double center = size / 2.0;
     cr.begin_new_sub_path();
-    cr.arc(center, center, std::max(1.0, std::round(size * 0.08)), 0, 2 * M_PI);
+    cr.arc(center, center, std::max(1.0, std::round(size * 0.12)), 0, 2 * M_PI);
     cr.arc(center, center, std::max(1.0, std::round(size * 0.04)), 0, 2 * M_PI);
 }
 

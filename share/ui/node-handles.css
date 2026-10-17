@@ -89,14 +89,15 @@ Notes:
 
 * {
     fill: white;
-    stroke: black;
+    fill-opacity: 0.7;
+    stroke: #3489ba;
     outline: white;
     stroke-width: 1.0px;
     outline-width: 1.45px;
     outline-opacity: 75%;
     scale: 2.0;
     size-extra: 1px; /* extra space to fine-tune handle size */
-    stroke-scale: 0.10; /* factor for scaling stroke with handle size or 0 to disable scaling */
+    stroke-scale: 0.0; /* factor for scaling stroke with handle size or 0 to disable scaling */
 }
 
 *:selected,
@@ -153,7 +154,7 @@ Notes:
 }
 
 .inkscape-node-control {
-    scale: 3;
+    scale: 2.8;
     shape: "pin";
     size-extra: 2px;
 }
@@ -201,7 +202,10 @@ Notes:
 .inkscape-adj-handle, .inkscape-adj-skew, .inkscape-adj-rotate,
 .inkscape-adj-salign, .inkscape-adj-calign, .inkscape-adj-malign,
 .inkscape-adj-center {
-    fill: black;
+    fill-opacity: 1;
+    fill: #565656;
+    stroke-width: 0px;
+    outline-width: 1.0px;
     size-extra: 7px;
     stroke-scale: 0;
 }

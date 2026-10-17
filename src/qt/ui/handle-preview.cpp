@@ -30,7 +30,7 @@ namespace Linea::UI {
 // The canvas is never shown, so it stays inactive and all its redraw paths
 // (schedule_redraw, redraw_area, GL init) are no-ops.
 QPixmap draw_handles_preview(double device_scale) {
-    constexpr int step = 28; // selected to make handles fit at highest size
+    constexpr int step = 26; // selected to make handles fit at highest size
     constexpr auto types = std::to_array({
         Inkscape::CANVAS_ITEM_CTRL_TYPE_ADJ_SKEW,
         Inkscape::CANVAS_ITEM_CTRL_TYPE_ADJ_ROTATE,
@@ -63,7 +63,7 @@ QPixmap draw_handles_preview(double device_scale) {
         auto position = Geom::Point{static_cast<Geom::Coord>(step * i++), h / 2.0};
         auto handle = new Inkscape::CanvasItemCtrl(root, type, position);
 
-        if (type == Inkscape::CANVAS_ITEM_CTRL_TYPE_ADJ_SKEW) handle->set_hover();
+        // if (type == Inkscape::CANVAS_ITEM_CTRL_TYPE_ADJ_SKEW) handle->set_hover();
         if (type == Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_CUSP ||
             type == Inkscape::CANVAS_ITEM_CTRL_TYPE_NODE_SMOOTH) handle->set_selected();
         if (type == Inkscape::CANVAS_ITEM_CTRL_TYPE_POINTER) handle->set_angle(M_PI);
