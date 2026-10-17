@@ -185,6 +185,24 @@ bool isDarkPalette(const QWidget& widget) {
     return getLuminance(bg) < 0.5;
 }
 
+void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness, const QWidget& widget) {
+    double const radius = size / 2.0;
+    QColor const ring = widget.palette().color(QPalette::Window);
+
+    // translucent contrast stroke: black on light themes, white on dark
+    bool const dark = isDarkPalette(widget);
+    float const x = dark ? 1.0f : 0.0f;
+    float const alpha = dark ? 0.40f : 0.25f;
+    QColor const stroke(static_cast<int>(x * 255), static_cast<int>(x * 255),
+                        static_cast<int>(x * 255), static_cast<int>(alpha * 255));
+
+    p.setPen(QPen(stroke, thickness + 2.0));
+    p.setBrush(Qt::NoBrush);
+    p.drawEllipse(center, radius, radius);
+    p.setPen(QPen(ring, thickness));
+    p.drawEllipse(center, radius, radius);
+}
+
 /**
  * Convert single Geom::Curve to QPainterPath operations.
  * Ported from Cairo feed_curve_to_cairo.

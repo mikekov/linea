@@ -70,6 +70,13 @@ void drawPageShadow(QPainter& p, const QRectF& rect, double size = 6.0,
 bool isDarkPalette(const QWidget& widget);
 
 /**
+ * Draw a thumb ring centered at the location, colored from the widget's
+ * palette: theme background ring with a translucent black/white stroke.
+ * Used by color sliders and plates, each with its own ring size.
+ */
+void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness, const QWidget& widget);
+
+/**
  * Create a size-independent QLinearGradient from an SPGradient.
  * Coordinates are in object-bounding mode and color stops are normalized.
  */

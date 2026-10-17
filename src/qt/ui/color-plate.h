@@ -65,7 +65,7 @@ private:
     void fireColorChanged();
     void rebuildPlate();
 
-    int _padding = 4;
+    int _padding = 5;
     double _radius = 4.0;
     bool _disc = true;
     bool _drag = false;

@@ -239,23 +239,6 @@ static void fillCheckerRow(uint32_t* buf, int w, int y,
     }
 }
 
-/**
- * Draw a slider thumb ring at the given location.
- */
-static void drawSliderThumb(QPainter& p, const QPointF& location, double size, double thickness, const QColor& fill, const QColor& stroke) {
-    double radius = size / 2.0;
-    QPointF center = location;
-
-    // outer stroke
-    p.setPen(QPen(stroke, thickness + 2.0));
-    p.setBrush(::Qt::NoBrush);
-    p.drawEllipse(center, radius, radius);
-
-    // inner ring
-    p.setPen(QPen(fill, thickness));
-    p.drawEllipse(center, radius, radius);
-}
-
 // ---------------------------------------------------------------------------
 // paintEvent
 // ---------------------------------------------------------------------------
@@ -360,17 +343,7 @@ void ColorSlider::paintEvent(QPaintEvent* /*event*/) {
     double thumbX = area.left() + value * area.width();
     double thumbY = area.top() + area.height() / 2.0;
 
-    // Get theme background color
-    QColor ring = palette().color(QPalette::Window);
-
-    // Calculate stroke color based on luminance
-    bool ringDark = getLuminance(ring) < 0.5;
-    float x = ringDark ? 1.0f : 0.0f;
-    float alpha = ringDark ? 0.40f : 0.25f;
-    QColor stroke(static_cast<int>(x * 255), static_cast<int>(x * 255),
-                  static_cast<int>(x * 255), static_cast<int>(alpha * 255));
-
-    drawSliderThumb(p, QPointF(thumbX, thumbY), _ring_size, _ring_thickness, ring, stroke);
+    drawThumbRing(p, QPointF(thumbX, thumbY), _ring_size, _ring_thickness, *this);
 }
 
 } // namespace Linea::UI

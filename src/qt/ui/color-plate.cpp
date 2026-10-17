@@ -19,6 +19,9 @@ namespace Linea::UI {
 
 using namespace Inkscape::Colors;
 
+constexpr double RING_SIZE = 8;
+constexpr double RING_THICKNESS = 1.5;
+
 // ---------------------------------------------------------------------------
 // helper functions
 // ---------------------------------------------------------------------------
@@ -259,17 +262,13 @@ void ColorPlate::paintEvent(QPaintEvent*) {
     bool dark = palette().color(QPalette::Window).lightness() < 128;
     drawStandardBorder(p, area, dark, _radius, devicePixelRatio(), _disc);
 
-    // indicator dot
+    // indicator ring
     if (_indicator) {
         QRectF active = getActiveArea();
         QPointF pt    = localToScreen(active, *_indicator);
         p.save();
         p.setRenderHint(QPainter::Antialiasing);
-        p.setPen(QPen(Qt::white, 2));
-        p.setBrush(Qt::NoBrush);
-        p.drawEllipse(pt, 5.0, 5.0);
-        p.setPen(QPen(Qt::black, 1));
-        p.drawEllipse(pt, 5.0, 5.0);
+        drawThumbRing(p, pt, RING_SIZE, RING_THICKNESS, *this);
         p.restore();
     }
 }
