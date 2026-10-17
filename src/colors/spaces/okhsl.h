@@ -14,6 +14,7 @@
 
 #include <2geom/angle.h>
 
+#include "ok-color.h" // ACHROMATIC_CHROMA
 #include "oklab.h"
 #include "oklch.h" // max_chroma
 
@@ -66,7 +67,7 @@ public:
 
         // Compute the chroma.
         double const absolute_chroma = std::hypot(o[1], o[2]);
-        if (absolute_chroma < 1e-7) {
+        if (absolute_chroma < ok_color::ACHROMATIC_CHROMA) {
             // It would be numerically unstable to calculate the hue for this
             // color, so we set the hue and saturation to zero (grayscale color).
             o[2] = o[0];

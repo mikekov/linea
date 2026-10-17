@@ -54,7 +54,7 @@ QImage buildColorPlate(int resolution, const Color& base, int ch1, int ch2) {
     auto color = base;
     color.addOpacity();
     for (int iy = 0; iy <= resolution; ++iy) {
-        auto* line = reinterpret_cast<QRgb*>(img.scanLine(iy));
+        auto line = reinterpret_cast<QRgb*>(img.scanLine(iy));
         double y = iy / double(resolution);
         color.set(ch2, 1.0 - y);
         for (int ix = 0; ix <= resolution; ++ix) {
@@ -76,7 +76,7 @@ QImage buildColorWheel(int resolution, const Color& base, int ch1, int ch2) {
     double rsqr  = std::pow(1.0 + 1.0 / radius, 2);
     Color color  = base;
     for (int iy = -radius; iy <= radius; ++iy) {
-        auto* line = reinterpret_cast<QRgb*>(img.scanLine(iy + radius));
+        auto line = reinterpret_cast<QRgb*>(img.scanLine(iy + radius));
         double y   = iy / limit;
         for (int ix = -radius; ix <= radius; ++ix) {
             double x = ix / limit;
@@ -101,10 +101,19 @@ ColorPlate::ColorPlate(QWidget* parent)
 
 void ColorPlate::setBaseColor(Color color, int fixedChannel, int varChannel1, int varChannel2) {
     color.setOpacity(1);
-    bool needsRebuild = (_baseColor.getSpace() != color.getSpace()) ||
-                        (std::fabs(_fixedChannelVal - color[fixedChannel]) > 0.005) ||
-                        (_channel1 != varChannel1) ||
-                        (_channel2 != varChannel2);
+
+    const auto type = color.getSpace() ? color.getSpace()->getType() : Space::Type::NONE;
+    const bool fixed_is_hue = fixedChannel == 0 && (type == Space::Type::HSV || type == Space::Type::OKHSV);
+
+    double fixed_diff = std::fabs(_fixedChannelVal - color[fixedChannel]);
+    if (fixed_is_hue && _fixedChannelVal >= 0.0) {
+        fixed_diff = std::min(fixed_diff, 1.0 - fixed_diff); // hue wraps around
+    }
+
+    bool needsRebuild = _baseColor.getSpace() != color.getSpace() ||
+                        fixed_diff > 0.005 ||
+                        _channel1 != varChannel1 ||
+                        _channel2 != varChannel2;
     _baseColor = std::move(color);
     if (needsRebuild) {
         _fixedChannelVal = _baseColor[fixedChannel];

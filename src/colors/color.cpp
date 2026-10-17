@@ -30,6 +30,25 @@ static decltype(auto) assert_nonnull(T &&t)
     return std::forward<T>(t);
 }
 
+// Channel index of the normalized (0..1) hue for polar color spaces, or -1
+// when the space has no hue channel. In all of these spaces channel 1 is the
+// saturation/chroma channel.
+static int hue_channel(Space::Type type) {
+    switch (type) {
+        case Space::Type::HSL:
+        case Space::Type::HSV:
+        case Space::Type::HSLUV:
+        case Space::Type::OKHSL:
+        case Space::Type::OKHSV:
+            return 0;
+        case Space::Type::LCH:
+        case Space::Type::OKLCH:
+            return 2;
+        default:
+            return -1;
+    }
+}
+
 } // namespace
 
 /**
@@ -215,7 +234,20 @@ bool Color::convert(std::shared_ptr<Space::AnySpace> to_space)
     }
 
     if (_space != to_space) {
+        const int src_hue_channel = hue_channel(_space->getType());
+        const double src_hue = src_hue_channel >= 0 ? _values[src_hue_channel] : 0.0;
+
         _space->convert(_values, to_space);
+
+        // Hue is undefined for achromatic colors; each space's conversion
+        // either resets it to zero or derives it from float residue, which
+        // makes the same gray show different hues in different spaces.
+        // Carry the source hue over instead, so it survives space switches.
+        const int dst_hue_channel = hue_channel(to_space->getType());
+        if (dst_hue_channel >= 0 && src_hue_channel >= 0 && _values[1] <= Space::ACHROMATIC_CHROMA) {
+            _values[dst_hue_channel] = src_hue;
+        }
+
         _space = std::move(to_space);
         assert(_space->isValidData(_values));
     }

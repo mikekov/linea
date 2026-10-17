@@ -25,6 +25,11 @@
 
 namespace ok_color {
 
+// Absolute OKLab chroma below which a color is achromatic and its hue is
+// undefined; a/b residue of this magnitude is what the OKLab matrices leave
+// for achromatic inputs.
+constexpr float ACHROMATIC_CHROMA = 0.001f;
+
 struct Lab { float L; float a; float b; };
 struct RGB { float r; float g; float b; };
 struct HSV { float h; float s; float v; };

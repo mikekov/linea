@@ -99,7 +99,7 @@ public:
         double s = 0;
         double l = (max + min) / 2.0;
 
-        if (delta != 0) {
+        if (delta > ACHROMATIC_RGB_DELTA) {
             if (l <= 0.5)
                 s = delta / (max + min);
             else

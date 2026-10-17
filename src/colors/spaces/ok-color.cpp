@@ -545,7 +545,7 @@ HSL srgb_to_okhsl(RGB rgb)
 		});
 
 	float C = sqrtf(lab.a * lab.a + lab.b * lab.b);
-	if (C == 0) {
+	if (C <= ACHROMATIC_CHROMA) {
 		return {0, 0, lab.L};
 	}
 
@@ -646,7 +646,7 @@ HSV srgb_to_okhsv(RGB rgb)
 		});
 
 	float C = sqrtf(lab.a * lab.a + lab.b * lab.b);
-	if (C == 0) {
+	if (C <= ACHROMATIC_CHROMA) {
 		return {0, 0, lab.L};
 	}
 

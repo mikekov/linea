@@ -45,6 +45,14 @@ namespace Space {
 
 class Components;
 
+// Thresholds below which a color counts as achromatic and its hue becomes
+// undefined. Profile conversions go through matrices whose coefficients do
+// not cancel exactly, so grays carry a residue of ~1e-6 in chromatic
+// channels; these must be tolerances, not exact-zero tests, or the residue
+// surfaces as an arbitrary hue.
+constexpr double ACHROMATIC_CHROMA = 0.002;   // normalized (0..1) saturation/chroma channel
+constexpr double ACHROMATIC_RGB_DELTA = 1e-5; // sRGB channel delta/saturation
+
 class AnySpace : public std::enable_shared_from_this<AnySpace>
 {
 public:

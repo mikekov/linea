@@ -13,6 +13,7 @@
 
 #include <2geom/angle.h>
 
+#include "ok-color.h"
 #include "oklab.h"
 
 namespace Inkscape::Colors::Space {
@@ -63,7 +64,7 @@ public:
 
         // Convert a, b to polar coordinates c, h.
         double c = std::hypot(o[1], o[2]);
-        if (c > 0.001) {
+        if (c > ok_color::ACHROMATIC_CHROMA) {
             Geom::Angle const hue_angle = std::atan2(o[2], o[1]);
             o[2] = Geom::deg_from_rad(hue_angle.radians0()) / HUE_SCALE;
         } else {

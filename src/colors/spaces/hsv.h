@@ -95,7 +95,7 @@ public:
         o[2] = max;
         o[1] = max > 0 ? delta / max : 0.0;
 
-        if (o[1] != 0.0) {
+        if (o[1] > ACHROMATIC_RGB_DELTA) {
             if (r == max) {
                 o[0] = (g - b) / delta;
             } else if (g == max) {
