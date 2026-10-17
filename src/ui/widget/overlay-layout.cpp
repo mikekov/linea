@@ -55,11 +55,12 @@ QRect OverlayLayout::calculatePanelGeometry(const PanelInfo& panel, QRect& rect)
     };
 
     if (panel.position == Position::Bottom) {
-        // Bottom-anchored, horizontally centered strip: uses the widget's
-        // current size, so drag-resized width/height persist across relayouts.
+        // Bottom-anchored, horizontally centered strip: lays out at the panel's
+        // requested size. The widget's own size can be smaller if a previous
+        // pass clamped it to a narrow rect, so it is not the source of truth.
         const int availableWidth = rect.width() - margins.left - margins.right;
-        int w = panelWidth();
-        int h = panelHeight();
+        int w = panel.size.width() > 0 ? panel.size.width() : panelWidth();
+        int h = panel.size.height() > 0 ? panel.size.height() : panelHeight();
         if (panel.widget) {
             // min width wins over available space, so the panel is centered
             // (overflowing both sides equally) rather than widened by Qt on the right only
@@ -239,6 +240,16 @@ void OverlayLayout::setPanelPosition(QWidget* panel, Position pos, const QSize& 
     panel->resize(size); // establish initial size as requested
     PanelInfo info{panel, pos, size, margins, scaleHeight};
     _panels.append(info);
+}
+
+void OverlayLayout::setPanelSize(QWidget* panel, const QSize& size) {
+    for (auto& p : _panels) {
+        if (p.widget == panel) {
+            p.size = size;
+            break;
+        }
+    }
+    updatePanelGeometry();
 }
 
 void OverlayLayout::setPanelMargins(QWidget* panel, const PanelMargins& margins, bool scaleHeight) {

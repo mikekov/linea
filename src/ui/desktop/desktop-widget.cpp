@@ -238,11 +238,19 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     _consolePanel->setMaxLines(20);
     _consolePanel->setMinColumns(24);
     _consolePanel->console()->showPrompt("> ");
-    _overlayLayout->setPanelPosition(_consolePanel, OverlayLayout::Position::Bottom, QSize(600, 60), true,
+    auto prefs = Inkscape::Preferences::get();
+    QSize const consoleSize(prefs->getInt("/options/console/width", 600),
+                            prefs->getInt("/options/console/height", 60));
+    _consolePanel->setPreferredSize(consoleSize);
+    _overlayLayout->setPanelPosition(_consolePanel, OverlayLayout::Position::Bottom, consoleSize, true,
                                      {PANEL_MARGIN, PANEL_MARGIN, 0, PANEL_MARGIN});
     _overlayLayout->setPanelMode(_consolePanel, OverlayLayout::Mode::Floating);
     connect(_consolePanel, &ConsolePanel::resized, this,
-            [this](QSize) { _overlayLayout->updatePanelGeometry(); });
+            [this, prefs](QSize size) {
+                _overlayLayout->setPanelSize(_consolePanel, size);
+                prefs->setInt("/options/console/width", size.width());
+                prefs->setInt("/options/console/height", size.height());
+            });
     connect(_consolePanel, &ConsolePanel::closeRequested, _consolePanel, &QWidget::hide);
 
     // command interpreter backing the console; resolves the active

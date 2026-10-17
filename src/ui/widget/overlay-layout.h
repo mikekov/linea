@@ -48,6 +48,8 @@ public:
 
     void setPanelPosition(QWidget* panel, Position pos, const QSize& initialSize, bool scaleHeight, const PanelMargins& margins = PanelMargins{});
     void setPanelMargins(QWidget* panel, const PanelMargins& margins, bool scaleHeight = true);
+    // the panel's requested size; layout may display it smaller when space is tight
+    void setPanelSize(QWidget* panel, const QSize& size);
 
     QRect targetGeometry(QWidget* panel) const;
     void updatePanelGeometry();

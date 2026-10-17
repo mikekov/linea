@@ -38,6 +38,11 @@ public:
     void setMinColumns(int columns);
     int minColumns() const { return _minColumns; }
 
+    // the size the panel should snap to when shown: the layout may shrink the
+    // widget to fit a narrow window, but it snaps back to the preferred size
+    void setPreferredSize(const QSize& size) { _preferredSize = size; }
+    QSize preferredSize() const { return _preferredSize; }
+
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void showEvent(QShowEvent* event) override;
@@ -64,6 +69,7 @@ private:
     QSize innerSize(QSize panelSize) const;
 
     std::unique_ptr<Ui::ConsolePanel> _ui;
+    QSize _preferredSize;
     int _maxLines = 0;
     int _minColumns = 0;
 };

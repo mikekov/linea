@@ -36,6 +36,8 @@ ConsolePanel::ConsolePanel(QWidget* parent)
     // re-measures the real row pitch once the document has rows
     _ui->console->installEventFilter(this);
     connect(_ui->console->document(), &QTextDocument::contentsChanged, this, &ConsolePanel::updateResizeStep);
+    // emitted sizes are user- or snap-driven, so they are the preferred size
+    connect(this, &ConsolePanel::resized, this, [this](QSize size) { _preferredSize = size; });
     updateResizeStep();
 }
 
@@ -94,8 +96,11 @@ QSize ConsolePanel::innerSize(QSize panelSize) const {
 
 void ConsolePanel::showEvent(QShowEvent* event) {
     ResizableEdgeWidget::showEvent(event);
-    // programmatic sizes bypass snapResize(); snap to the grid when shown
-    const QSize inner = innerSize(size());
+    // programmatic sizes bypass snapResize(); snap to the grid when shown.
+    // The widget itself may have been shrunk to fit a narrow window while it
+    // was hidden, so snap the preferred size, not the widget's size.
+    const QSize base = _preferredSize.isValid() ? _preferredSize : size();
+    const QSize inner = innerSize(base);
     const QSize target = snapAxes(inner, Qt::LeftEdge | Qt::RightEdge | Qt::TopEdge | Qt::BottomEdge) + chromeSize();
     resize(target);
     // the layout placed us for the pre-snap size; re-anchor to the snapped size
