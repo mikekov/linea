@@ -236,7 +236,7 @@
 
       <!-- Row 4: absorbs any extra height; nothing above should stretch -->
       <item row="4" column="0">
-        <spacer name="bottomSpacer">
+        <spacer name="bottomSpacer2">
           <property name="orientation">
             <enum>Qt::Orientation::Vertical</enum>
           </property>
