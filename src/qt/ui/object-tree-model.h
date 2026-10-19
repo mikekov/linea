@@ -232,7 +232,7 @@ private:
 
     // Whether the Document and Pages virtual nodes are expanded, persisted across rebuilds.
     bool _documentExpanded = true;
-    bool _pagesExpanded = true;
+    bool _pagesExpanded = false;
 
     // When true, itemExpanded/itemCollapsed don't set SPItem::isExpanded,
     // so filter-driven expansions don't persist as user intent.
