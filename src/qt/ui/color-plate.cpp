@@ -5,11 +5,12 @@
 
 #include "color-plate.h"
 
-#include <algorithm>
-#include <cmath>
+#include <QApplication>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
-#include <QMouseEvent>
+#include <algorithm>
+#include <cmath>
 
 #include "colors/color.h"
 #include "colors/spaces/base.h"
@@ -21,6 +22,47 @@ using namespace Inkscape::Colors;
 
 constexpr double RING_SIZE = 8;
 constexpr double RING_THICKNESS = 1.5;
+// presses this far outside the plate still pick the nearest edge color —
+// the tolerance the widget padding used to provide, now covering popup
+// margins and layout spacing around the plate
+constexpr double PICK_MARGIN = 10;
+
+// The color indicator is drawn by a dedicated widget parented to the
+// top-level window rather than by the plate itself: a widget cannot paint
+// outside its own bounds, but the indicator may legitimately hang over the
+// plate's edge — e.g. into a surrounding popup's margins.
+class IndicatorOverlay : public QWidget {
+public:
+    explicit IndicatorOverlay(QWidget* parent)
+        : QWidget(parent) {
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        const int side = static_cast<int>(std::ceil(RING_SIZE + RING_THICKNESS + 6));
+        setFixedSize(side, side);
+    }
+
+    void placeAt(const QPointF& hostCenter) {
+        const int half = width() / 2;
+        const QPoint topLeft(qRound(hostCenter.x()) - half, qRound(hostCenter.y()) - half);
+        const QPointF center = hostCenter - QPointF(topLeft);
+        if (pos() != topLeft) {
+            move(topLeft);
+        }
+        if (_center != center) {
+            _center = center;
+            update();
+        }
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        drawThumbRing(p, _center, RING_SIZE, RING_THICKNESS, *this);
+    }
+
+private:
+    QPointF _center;
+};
 
 // ---------------------------------------------------------------------------
 // helper functions
@@ -30,7 +72,7 @@ namespace {
 
 void setColorHelper(Color& color, int channel1, int channel2, double x, double y, bool disc) {
     if (disc) {
-        double dist  = std::hypot(x, y);
+        double dist = std::hypot(x, y);
         double angle = (std::atan2(x, y) + M_PI) / (2 * M_PI);
         color.set(channel1, angle);
         color.set(channel2, dist);
@@ -72,15 +114,15 @@ QImage buildColorPlate(int resolution, const Color& base, int ch1, int ch2) {
 // Build a circular (disc) wheel image
 QImage buildColorWheel(int resolution, const Color& base, int ch1, int ch2) {
     int radius = resolution / 2;
-    int size   = radius * 2 + 1;
+    int size = radius * 2 + 1;
     QImage img(size, size, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
     double limit = radius;
-    double rsqr  = std::pow(1.0 + 1.0 / radius, 2);
-    Color color  = base;
+    double rsqr = std::pow(1.0 + 1.0 / radius, 2);
+    Color color = base;
     for (int iy = -radius; iy <= radius; ++iy) {
         auto line = reinterpret_cast<QRgb*>(img.scanLine(iy + radius));
-        double y   = iy / limit;
+        double y = iy / limit;
         for (int ix = -radius; ix <= radius; ++ix) {
             double x = ix / limit;
             if (x * x + y * y > rsqr) continue;
@@ -96,10 +138,15 @@ QImage buildColorWheel(int resolution, const Color& base, int ch1, int ch2) {
 // ---------------------------------------------------------------------------
 
 ColorPlate::ColorPlate(QWidget* parent)
-    : QWidget(parent)
-{
+    : QWidget(parent) {
     setMouseTracking(false);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    qApp->installEventFilter(this);
+}
+
+ColorPlate::~ColorPlate() {
+    qApp->removeEventFilter(this);
+    delete _indicatorOverlay;
 }
 
 void ColorPlate::setBaseColor(Color color, int fixedChannel, int varChannel1, int varChannel2) {
@@ -113,9 +160,7 @@ void ColorPlate::setBaseColor(Color color, int fixedChannel, int varChannel1, in
         fixed_diff = std::min(fixed_diff, 1.0 - fixed_diff); // hue wraps around
     }
 
-    bool needsRebuild = _baseColor.getSpace() != color.getSpace() ||
-                        fixed_diff > 0.005 ||
-                        _channel1 != varChannel1 ||
+    bool needsRebuild = _baseColor.getSpace() != color.getSpace() || fixed_diff > 0.005 || _channel1 != varChannel1 ||
                         _channel2 != varChannel2;
     _baseColor = std::move(color);
     if (needsRebuild) {
@@ -129,7 +174,7 @@ void ColorPlate::setBaseColor(Color color, int fixedChannel, int varChannel1, in
 
 void ColorPlate::setDisc(bool disc) {
     if (_disc == disc) return;
-    _disc  = disc;
+    _disc = disc;
     _plate = {};
     update();
 }
@@ -153,7 +198,7 @@ void ColorPlate::moveIndicatorTo(const Color& color) {
     auto pt = getColorCoordinates(color[_channel1], color[_channel2], _disc);
     if (_indicator && *_indicator == pt) return;
     _indicator = pt;
-    update();
+    syncIndicatorOverlay();
 }
 
 // ---------------------------------------------------------------------------
@@ -169,43 +214,43 @@ QRectF ColorPlate::getActiveArea() const {
     return getArea().adjusted(1, 1, -1, -1);
 }
 
-QPointF ColorPlate::screenToLocal(const QRectF& active, QPointF pt, bool* inside) const {
-    if (inside) *inside = active.contains(pt);
-    // clamp to active area
-    double x = std::clamp(pt.x(), active.left(),  active.right());
-    double y = std::clamp(pt.y(), active.top(),   active.bottom());
-    // normalize to 0..1
-    double nx = (x - active.left()) / active.width();
-    double ny = (y - active.top())  / active.height();
-
+// maps a position to plate coordinates, clamping onto the nearest pickable
+// point — clicks past the colored area pick the nearest edge color
+QPointF ColorPlate::screenToLocal(const QRectF& active, QPointF pt) const {
     if (_disc) {
+        double nx = (pt.x() - active.left()) / active.width();
+        double ny = (pt.y() - active.top()) / active.height();
         double min = std::min(active.width(), active.height());
-        double sx  = min / active.width();
-        double sy  = min / active.height();
-        double cx  = (nx * 2 - 1) / sx;
-        double cy  = (ny * 2 - 1) / sy;
+        double sx = min / active.width();
+        double sy = min / active.height();
+        double cx = (nx * 2 - 1) / sx;
+        double cy = (ny * 2 - 1) / sy;
         double dist = std::hypot(cx, cy);
         if (dist > 1.0) {
-            cx /= dist; cy /= dist;
-            if (inside) *inside = false;
+            cx /= dist;
+            cy /= dist;
         }
         return {cx, cy};
     }
+    // clamp to active area
+    double x = std::clamp(pt.x(), active.left(), active.right());
+    double y = std::clamp(pt.y(), active.top(), active.bottom());
+    // normalize to 0..1
+    double nx = (x - active.left()) / active.width();
+    double ny = (y - active.top()) / active.height();
     return {nx, ny};
 }
 
 QPointF ColorPlate::localToScreen(const QRectF& active, QPointF local) const {
     if (_disc) {
         double min = std::min(active.width(), active.height());
-        double sx  = min / active.width();
-        double sy  = min / active.height();
-        double nx  = (local.x() * sx + 1) / 2;
-        double ny  = (local.y() * sy + 1) / 2;
-        return {active.left() + nx * active.width(),
-                active.top()  + ny * active.height()};
+        double sx = min / active.width();
+        double sy = min / active.height();
+        double nx = (local.x() * sx + 1) / 2;
+        double ny = (local.y() * sy + 1) / 2;
+        return {active.left() + nx * active.width(), active.top() + ny * active.height()};
     }
-    return {active.left() + local.x() * active.width(),
-            active.top()  + local.y() * active.height()};
+    return {active.left() + local.x() * active.width(), active.top() + local.y() * active.height()};
 }
 
 Color ColorPlate::getColorAt(const QPointF& local) const {
@@ -214,10 +259,39 @@ Color ColorPlate::getColorAt(const QPointF& local) const {
     return color;
 }
 
+void ColorPlate::syncIndicatorOverlay() {
+    auto host = window();
+    const bool show = _indicator.has_value() && isVisible() && host;
+    if (!show) {
+        if (_indicatorOverlay) {
+            _indicatorOverlay->hide();
+        }
+        return;
+    }
+    if (!_indicatorOverlay || _indicatorOverlay->parentWidget() != host) {
+        delete _indicatorOverlay;
+        _indicatorOverlay = new IndicatorOverlay(host);
+    }
+    const QPointF center = mapTo(host, localToScreen(getActiveArea(), *_indicator));
+    _indicatorOverlay->placeAt(center);
+    _indicatorOverlay->show();
+    _indicatorOverlay->raise();
+}
+
 void ColorPlate::fireColorChanged() {
     if (!_indicator) return;
     auto color = getColorAt(*_indicator);
     _signal_color_changed.emit(color);
+}
+
+void ColorPlate::select(const QPointF& local) {
+    _indicator = local;
+    syncIndicatorOverlay();
+    fireColorChanged();
+}
+
+void ColorPlate::pickAt(QPointF pos) {
+    select(screenToLocal(getActiveArea(), pos));
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +299,7 @@ void ColorPlate::fireColorChanged() {
 // ---------------------------------------------------------------------------
 
 void ColorPlate::rebuildPlate() {
-    constexpr int resolution = 128;
+    constexpr int resolution = 256;
     if (_disc) {
         _plate = buildColorWheel(resolution, _baseColor, _channel1, _channel2);
     } else {
@@ -246,7 +320,7 @@ void ColorPlate::paintEvent(QPaintEvent*) {
     QPainterPath clip;
     if (_disc) {
         double sz = std::min(area.width(), area.height());
-        QRectF circle(area.center().x() - sz/2, area.center().y() - sz/2, sz, sz);
+        QRectF circle(area.center().x() - sz / 2, area.center().y() - sz / 2, sz, sz);
         clip.addEllipse(circle);
     } else {
         clip.addRoundedRect(area, _radius, _radius);
@@ -262,46 +336,79 @@ void ColorPlate::paintEvent(QPaintEvent*) {
     bool dark = palette().color(QPalette::Window).lightness() < 128;
     drawStandardBorder(p, area, dark, _radius, devicePixelRatio(), _disc);
 
-    // indicator ring
-    if (_indicator) {
-        QRectF active = getActiveArea();
-        QPointF pt    = localToScreen(active, *_indicator);
-        p.save();
-        p.setRenderHint(QPainter::Antialiasing);
-        drawThumbRing(p, pt, RING_SIZE, RING_THICKNESS, *this);
-        p.restore();
+    syncIndicatorOverlay();
+}
+
+void ColorPlate::hideEvent(QHideEvent* event) {
+    _drag = false;
+    if (_indicatorOverlay) {
+        _indicatorOverlay->hide();
     }
+    QWidget::hideEvent(event);
+}
+
+void ColorPlate::moveEvent(QMoveEvent* event) {
+    QWidget::moveEvent(event);
+    syncIndicatorOverlay();
+}
+
+void ColorPlate::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    syncIndicatorOverlay();
 }
 
 // ---------------------------------------------------------------------------
 // mouse events
 // ---------------------------------------------------------------------------
 
+// left presses in the dead space around the plate (popup margins, layout
+// spacing) still pick the nearest edge color — like the old padding did.
+// Those events are delivered to the plate's ancestors, so catch them here.
+bool ColorPlate::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == this || !isVisible() || !watched->isWidgetType()) {
+        return QWidget::eventFilter(watched, event);
+    }
+    switch (event->type()) {
+        case QEvent::MouseButtonPress: {
+            auto me = static_cast<QMouseEvent*>(event);
+            auto w = static_cast<QWidget*>(watched);
+            if (me->button() != Qt::LeftButton || _drag || !w->isAncestorOf(this)) break;
+            const QPointF pos = mapFromGlobal(me->globalPosition());
+            if (!QRectF(rect()).adjusted(-PICK_MARGIN, -PICK_MARGIN, PICK_MARGIN, PICK_MARGIN).contains(pos)) break;
+            _drag = true;
+            pickAt(pos);
+            return true;
+        }
+        case QEvent::MouseMove:
+            if (_drag) {
+                pickAt(mapFromGlobal(static_cast<QMouseEvent*>(event)->globalPosition()));
+                return true;
+            }
+            break;
+        case QEvent::MouseButtonRelease:
+            if (_drag && static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
+                _drag = false;
+                return true;
+            }
+            break;
+        default:
+            break;
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 void ColorPlate::mousePressEvent(QMouseEvent* e) {
     if (e->button() != Qt::LeftButton) return QWidget::mousePressEvent(e);
 
-    QRectF active = getActiveArea();
-    bool inside = false;
-    auto local = screenToLocal(active, e->position(), &inside);
-    if (inside) {
-        _indicator = local;
-        _drag = true;
-        update();
-        fireColorChanged();
-        e->accept();
-    } else {
-        _indicator = {};
-        _drag = false;
-    }
+    _drag = true;
+    pickAt(e->position());
+    e->accept();
 }
 
 void ColorPlate::mouseMoveEvent(QMouseEvent* e) {
     if (!_drag || !(e->buttons() & Qt::LeftButton)) return QWidget::mouseMoveEvent(e);
 
-    QRectF active = getActiveArea();
-    _indicator = screenToLocal(active, e->position());
-    update();
-    fireColorChanged();
+    pickAt(e->position());
     e->accept();
 }
 
