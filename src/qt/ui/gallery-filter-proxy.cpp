@@ -10,13 +10,15 @@ GalleryFilterProxyModel::GalleryFilterProxyModel(QObject* parent)
     : QSortFilterProxyModel(parent) {}
 
 void GalleryFilterProxyModel::setSearchText(const QString& text) {
+    beginFilterChange();
     _searchText = text.trimmed();
-    invalidateFilter();
+    endFilterChange(QSortFilterProxyModel::Direction::Rows);
 }
 
 void GalleryFilterProxyModel::setCategory(const QString& category) {
+    beginFilterChange();
     _category = category;
-    invalidateFilter();
+    endFilterChange(QSortFilterProxyModel::Direction::Rows);
 }
 
 bool GalleryFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {

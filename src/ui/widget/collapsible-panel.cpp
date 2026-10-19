@@ -8,6 +8,7 @@
 #include "ui/widget/overlay-layout.h"
 #include "ui_collapsible-panel.h"
 #include "ui/util.h"
+#include "qt/util/motion.h"
 
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -83,7 +84,7 @@ void CollapsiblePanel::setContentWidget(QWidget* content) {
         content->show();
 
         // Add spacer at bottom to keep content at top
-        // auto* spacer = new QSpacerItem(20, 0, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
+        // auto spacer = new QSpacerItem(20, 0, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
         // _ui->contentWidget->layout()->addItem(spacer);
     }
 
@@ -110,6 +111,7 @@ void CollapsiblePanel::setCollapsed(bool collapsed) {
 
     _collapsed = collapsed;
     _animation->stop();
+    _animation->setDuration(effectiveAnimationDuration(_animationDuration));
 
     if (collapsed) {
         _animation->setStartValue(height());

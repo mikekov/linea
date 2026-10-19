@@ -13,6 +13,7 @@
 #include <QToolButton>
 
 #include "qt/ui/icon-widget.h"
+#include "qt/util/motion.h"
 #include "ui_notification-bar.h"
 
 namespace Linea::UI {
@@ -118,6 +119,7 @@ void NotificationBar::showBar() {
 
 void NotificationBar::fadeOut() {
     _timer->stop();
+    _fadeAnimation->setDuration(effectiveAnimationDuration(_fadeDuration));
     _fadeAnimation->setStartValue(_effect->opacity());
     _fadeAnimation->setEndValue(0.0);
     _fadeAnimation->start();

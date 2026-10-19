@@ -8,6 +8,8 @@
 #include <QPainter>
 #include <QPropertyAnimation>
 
+#include "qt/util/motion.h"
+
 namespace Linea::UI {
 
 SwitchWidget::SwitchWidget(QWidget* parent)
@@ -93,6 +95,7 @@ void SwitchWidget::nextCheckState() {
 
 void SwitchWidget::startAnimation(bool checked) {
     _animation->stop();
+    _animation->setDuration(effectiveAnimationDuration(120));
     _animation->setStartValue(_position);
     _animation->setEndValue(checked ? 1.0 : 0.0);
     _animation->start();

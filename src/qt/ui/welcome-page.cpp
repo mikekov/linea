@@ -27,6 +27,7 @@
 #include "preferences.h"
 #include "qt/ui/eliding-label.h"
 #include "qt/ui/icon-widget.h"
+#include "qt/util/motion.h"
 #include "ui_welcome-page.h"
 
 namespace Linea::UI {
@@ -86,6 +87,7 @@ void WelcomePage::setSearchExpanded(bool expanded) {
     if (_ui->recentFilesSearch->width() == width) return;
 
     _searchAnimation->stop();
+    _searchAnimation->setDuration(effectiveAnimationDuration(180));
     _ui->recentFilesSearch->setMinimumWidth(min_width);
     _searchAnimation->setStartValue(_ui->recentFilesSearch->width());
     _searchAnimation->setEndValue(width);
