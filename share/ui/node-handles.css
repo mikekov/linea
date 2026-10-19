@@ -308,6 +308,7 @@ Notes:
    stroke: #277fff;
    stroke-width: 1px;
    outline-width: 1px;
+   outline-opacity: 0.75;
 }
 
 /* select tool while holding "Alt" key */
@@ -316,6 +317,7 @@ Notes:
    stroke: #277fff;
    stroke-width: 1px;
    outline-width: 1px;
+   outline-opacity: 0.75;
 }
 
 .inkscape-selection-path.paint-bucket {
