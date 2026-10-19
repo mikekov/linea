@@ -1,7 +1,5 @@
 # TODO
 
-x zoom page width is weird - should be centered
-x pixel perfect icons: disabled and x2 checked together
 - guidelines: selected guide to show in bold?
 - guidelines: selected guide delete by pressing delete key
 - custom popup menus to watch actions toggle and update labels accordingly
@@ -13,49 +11,31 @@ x pixel perfect icons: disabled and x2 checked together
 - Enter should go to focus number edit first, active text frame next
 - navigating virtual nodes - something is stealing focus
 - Align buttons do not work
-x page labels are not visible / not showing up
 - add 'quit instantly' action, make 'quit' check for unsaved changes
 - add spell checker (including in context menu)
 - expose recolor functionality when selection is > 1
 - have modes of operation? so the main toolbar can adjust automatically
-x support page editing in DescriptionWidget
 - node tool buttons operate on paths but ignore other 'nodes' in shapes; add enableWhen rule to them
 - separate tools ui from object ui somehow, label maybe, like Appearance
-x allow closing last doc, show background page with recent files, templates, crash docs/recovery
 - spray tool - add reset to defaults btn
-x text subselection doesn't update font!
-x dropper icon is low res
 - tool panels: pass null desk and doc to hidden ones, only init visible
 - disable qactions that need document when there isn't one anymore
 - Esc to dismiss notification bar!
-x closing the last doc may leave left panel expanded, if there was a selection active before doc close
-x TextPanel is a work in progress, remove current item
 - add Blender-like shortcuts (for object manipulation)
 - implement add/remove scripts, read them from local files
 - undo/redo is buggy
-x open path first/last point to use triangle handle
-x text panel - add text edit popup with simple editor and search
-x font selector - add header with sorting, filtering, search bar
 - add color fonts entry in a font browser categories
 - add support for color fonts
-x add 'home' button to switch to "no document" and show welcome page
-x editing layer transform matrix does not apply it
-x node 'position' is not being refreshed
 
 ## Missing features
 
-x path panel with d data
-x obj to bitmap command
 - recolor panel
 
 ## UI Panels & Dialogs, widgets
 
-x add obj tree panel toolbar
-x obj tree add context menu
 - settings dlg
 - shortcut customization in settings
 - dedicated layer edit panel
-x add layer selector above/below obj tree view
 - add missing panels for spiral props, path props, etc.
 - add panel for groups and clones
 - add page support (page size, margins)
@@ -64,14 +44,11 @@ x add layer selector above/below obj tree view
 - bmp trace panel - abort btn is todo
 - add pin options to popups in appearance panel to dock them somewhere
 - tabstrip port sucks - make tabitems draw themselves and style them
-x list individual pages in object tree view, add export option to them?
-x add export strip in obj properties?
 - add btn to round up coordinates of position and wire it up
-x add notification bar for showing errors
-x add a way to show notifications?
 - handle old checkerboard attribute to set page color transparency
 - radio and check buttons have different accent color than the rest
 - enter/esc in shape tool should switch to select tool
+- list individual pages under 'Pages' node?
 
 ## Tools
 
@@ -80,11 +57,9 @@ x add a way to show notifications?
 
 ## Color & Paint
 
-x color roundtrip is not faithful - examine and fix
 - add support for setting color_interpolation style attribute
 - ColorPicker -> add a mode with some predefined colors to choose from
 - ColorPicker: add missing current color preview
-x color picker - add easy to use color copy/paste
 - more comprehensive set of palette colors across all color groups (UI theme cleanup)
 - add swatches in flat color picker
 - add swatch edit panel (virtual node)
@@ -130,36 +105,20 @@ x color picker - add easy to use color copy/paste
 - impl extension run btn
 - add missing extension icons
 - make pref dialog use PopupMenu instead of or in addition to dialog window
-x marker transparency, direction, etc not reflected in preview
 - click on marker clear when none is assigned, and the list of markers disappears
 - 'corners' lpe in rect panel doesn't work
 - triangle knot is not pixel aligned (the one used in 'corners' lpe)
-x LPEs - add flatten, show/hide?
 
 ## Fonts & Text
 
 - add font collections, font filtering, sorting, etc
-x sorting and filtering can be added to the font list popup
 - fix text panel underline options
-x connect font list popup to a combo, sync font selection
-
-## Canvas & Rendering
-
-x add context menu to canvas
-
-## App & Platform
-
-x missing 'About' dialog
-x missing app icon
-- multiwindow not supported and not planned
 
 ## Glitches
 
 - hide DPI entry for bitmap image, keep it for SVG only
-x layer selection shouldn't be reflected on the canvas quite as easily or not at all
 - blend mode combo -> add separators betwen items to group them
 - fix multiline edit rounded corners
-x use inkscape-window-* and zoom/position attributes to position loaded doc
 - page tool - wrong page is being adjusted after switching to "Pages"
 
 ## Feature requests
@@ -173,4 +132,3 @@ x use inkscape-window-* and zoom/position attributes to position loaded doc
 - add guide and grid default colors to css file; rename node-handles.css or add a new one?
 - text tool / text frame: there's no text editor other than on-canvas
 - display units -> option to use doc units (default to doc instead of explicit choice)
-x add command palette
