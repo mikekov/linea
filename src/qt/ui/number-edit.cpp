@@ -4,6 +4,7 @@
  */
 
 #include "number-edit.h"
+#include "util/expression-evaluator.h"
 #include "util/numeric/converters.h"
 #include <QDoubleSpinBox>
 #include <QGuiApplication>
@@ -50,6 +51,24 @@ protected:
             return QDoubleSpinBox::textFromValue(value);
         }
         return Inkscape::Util::formatTrimmed(value, decimals());
+    }
+
+    QValidator::State validate(QString& text, int& pos) const override {
+        auto state = QDoubleSpinBox::validate(text, pos);
+        if (state != QValidator::Invalid || !_evaluator || text.trimmed().isEmpty()) {
+            return state;
+        }
+        // With an evaluator installed, accept expressions and unit suffixes:
+        // evaluatable input is Acceptable, anything else Intermediate so it
+        // can still be typed but won't commit.
+        QString stripped = stripPrefixSuffix(text);
+        try {
+            _evaluator(stripped);
+            return QValidator::Acceptable;
+        }
+        catch (...) {
+            return QValidator::Intermediate;
+        }
     }
 
     double valueFromText(const QString& text) const override {
@@ -166,6 +185,11 @@ NumberEdit::NumberEdit(QWidget* parent)
     // Use old-style macros to avoid assertObjectType runtime check across library boundaries
     connect(_spinBox, SIGNAL(valueChanged(double)), this, SLOT(onSpinBoxValueChanged(double)));
     connect(_spinBox, SIGNAL(editingFinished()), this, SIGNAL(editingFinished()));
+
+    setEvaluator([](const QString& text) {
+        const QByteArray utf8 = text.toUtf8();
+        return Inkscape::Util::ExpressionEvaluator{utf8.constData()}.evaluate().value;
+    });
 }
 
 NumberEdit::~NumberEdit() = default;
@@ -327,9 +351,10 @@ bool NumberEdit::eventFilter(QObject* watched, QEvent* event) {
             _preEditValue = value();
         }
         else if (event->type() == QEvent::KeyPress) {
-            auto* keyEvent = static_cast<QKeyEvent*>(event);
+            auto keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
                 _editing = false;
+                _spinBox->interpretText();
                 Q_EMIT editingFinished();
                 Q_EMIT activate();
                 keyEvent->accept();

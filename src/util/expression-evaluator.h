@@ -30,12 +30,12 @@
 #ifndef INKSCAPE_UTIL_EXPRESSION_EVALUATOR_H
 #define INKSCAPE_UTIL_EXPRESSION_EVALUATOR_H
 
-#include "util/units.h"
-
 #include <exception>
 #include <sstream>
 #include <string>
 #include <glib.h>
+
+#include "util/units.h"
 
 /**
  * @file
@@ -91,40 +91,33 @@ class Unit;
  * @param value         In reference units.
  * @param dimension     mm has a dimension of 1, mm^2 has a dimension of 2, etc.
  */
-class EvaluatorQuantity
-{
+class EvaluatorQuantity {
 public:
-    EvaluatorQuantity(double value = 0, unsigned int dimension = 0);
-    
+    EvaluatorQuantity(double value = 0, int dimension = 0);
+
     double value;
-    unsigned int dimension;
+    int dimension;
 };
 
 /**
  * TokenType
  */
-enum {
-  TOKEN_NUM        = 30000,
-  TOKEN_IDENTIFIER = 30001,
-  TOKEN_ANY        = 40000,
-  TOKEN_END        = 50000
-};
+enum { TOKEN_NUM = 30000, TOKEN_IDENTIFIER = 30001, TOKEN_ANY = 40000, TOKEN_END = 50000 };
 typedef int TokenType;
 
 /**
  * EvaluatorToken
  */
-class EvaluatorToken
-{
+class EvaluatorToken {
 public:
     EvaluatorToken();
-    
+
     TokenType type;
-    
+
     union {
         double fl;
         struct {
-            const char *c;
+            const char* c;
             int size;
         };
     } value;
@@ -135,39 +128,38 @@ public:
  * @param string    NULL terminated input string to evaluate
  * @param unit      Unit output should be in
  */
-class ExpressionEvaluator
-{
+class ExpressionEvaluator {
 public:
-    ExpressionEvaluator(const char *string, Unit const *unit = nullptr);
-    
+    ExpressionEvaluator(const char* string, const Unit* unit = nullptr);
+
     EvaluatorQuantity evaluate();
 
 private:
-    const char *string;
-    Unit const *unit;
-    
+    const char* string;
+    const Unit* unit;
+
     EvaluatorToken current_token;
-    const char *start_of_current_token;
-    
+    const char* start_of_current_token;
+
     EvaluatorQuantity evaluateExpression();
     EvaluatorQuantity evaluateTerm();
     EvaluatorQuantity evaluateExpTerm();
     EvaluatorQuantity evaluateSignedFactor();
     EvaluatorQuantity evaluateFactor();
-    
-    bool acceptToken(TokenType token_type, EvaluatorToken *consumed_token);
+
+    bool acceptToken(TokenType token_type, EvaluatorToken* consumed_token);
     void parseNextToken();
     void acceptTokenCount(int count, TokenType token_type);
-    void isExpected(TokenType token_type, EvaluatorToken *value);
-    
+    void isExpected(TokenType token_type, EvaluatorToken* value);
+
     void movePastWhiteSpace();
-    
+
     static bool isUnitIdentifierStart(gunichar c);
-    static int getIdentifierSize(const char *s, int start);
-    
-    static bool resolveUnit(const char *identifier, EvaluatorQuantity *result, Unit const *unit);
-    
-    void throwError(const char *msg);
+    static int getIdentifierSize(const char* s, int start);
+
+    static bool resolveUnit(const char* identifier, EvaluatorQuantity* result, const Unit* unit);
+
+    void throwError(const char* msg);
 };
 
 /**
@@ -175,23 +167,22 @@ private:
  */
 class EvaluatorException : public std::exception {
 public:
-    EvaluatorException(const char *message, const char *at_position) {
+    EvaluatorException(const char* message, const char* at_position) {
         std::ostringstream os;
-        const char *token = at_position ? at_position : "<End of input>";
+        const char* token = at_position ? at_position : "<End of input>";
         os << "Expression evaluator error: " << message << " at '" << token << "'";
         msgstr = os.str();
     }
 
     ~EvaluatorException() noexcept override = default; // necessary to destroy the string object!!!
 
-    const char *what() const noexcept override {
-        return msgstr.c_str();
-    }
+    const char* what() const noexcept override { return msgstr.c_str(); }
+
 protected:
     std::string msgstr;
 };
 
-}
-}
+} // namespace Util
+} // namespace Inkscape
 
 #endif // INKSCAPE_UTIL_EXPRESSION_EVALUATOR_H

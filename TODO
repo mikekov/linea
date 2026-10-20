@@ -30,6 +30,7 @@
 ## Missing features
 
 - recolor panel
+- math expressions for number edit widget
 
 ## UI Panels & Dialogs, widgets
 
@@ -76,6 +77,8 @@
 - gradient edit -where did the cursors go; no "add" cursor
 - remember custom height of the pattern editor in paint selector
 - page/border colors -> use and configure default colors instead of baked in
+- pattern preview - changing color doesn't update the preview
+- cannot assign new stroke mixed thickness selection
 
 ## Snapping, Grid & Units
 

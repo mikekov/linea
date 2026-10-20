@@ -131,9 +131,6 @@ private Q_SLOTS:
     void onSpinBoxValueChanged(double v);
 
 private:
-    bool evaluateAndSet(const QString& text);
-    QString formatValue(double value) const;
-
     QHBoxLayout* _layout = nullptr;
     QLabel* _indicator = nullptr;
     QDoubleSpinBox* _spinBox = nullptr;
