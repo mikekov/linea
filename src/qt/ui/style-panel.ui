@@ -79,6 +79,9 @@
           <property name="toolTip">
             <string>Fill opacity</string>
           </property>
+          <property name="icon">
+            <string>opacity</string>
+          </property>
         </widget>
       </item>
       <item row="1" column="2">
@@ -175,6 +178,9 @@
           </property>
           <property name="toolTip">
             <string>Stroke opacity</string>
+          </property>
+          <property name="icon">
+            <string>opacity</string>
           </property>
         </widget>
       </item>
