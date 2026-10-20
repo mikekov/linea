@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>GridOptionsForm</class>
+  <widget class="QWidget" name="GridOptionsForm">
+    <layout class="QVBoxLayout" name="optionsLayout">
+      <property name="leftMargin">
+        <number>2</number>
+      </property>
+      <property name="topMargin">
+        <number>2</number>
+      </property>
+      <property name="rightMargin">
+        <number>10</number>
+      </property>
+      <property name="bottomMargin">
+        <number>2</number>
+      </property>
+      <property name="spacing">
+        <number>8</number>
+      </property>
+      <item>
+        <widget class="QCheckBox" name="snapVisibleCheck">
+          <property name="text">
+            <string>Snap to visible grid lines only</string>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QCheckBox" name="dottedCheck">
+          <property name="text">
+            <string>Show dots instead of lines</string>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QCheckBox" name="clipToPageCheck">
+          <property name="text">
+            <string>Clip to page</string>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QCheckBox" name="behindDrawingCheck">
+          <property name="toolTip">
+            <string>If set, the grid is rendered behind the drawing. Otherwise, it is rendered on top of it.</string>
+          </property>
+          <property name="text">
+            <string>Render behind drawing</string>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QCheckBox" name="angleYVerticalCheck">
+          <property name="toolTip">
+            <string>If set, y-axis will be vertical. Otherwise, it will be calculated from x and z angles.</string>
+          </property>
+          <property name="text">
+            <string>Y axis vertical</string>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QFrame" name="swapAxesSeparator">
+          <property name="frameShape">
+            <enum>QFrame::HLine</enum>
+          </property>
+          <property name="frameShadow">
+            <enum>QFrame::Sunken</enum>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="QPushButton" name="swapAxesButton">
+          <property name="toolTip">
+            <string>Swap axonometric grid axes</string>
+          </property>
+          <property name="text">
+            <string>Swap axes</string>
+          </property>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+</ui>

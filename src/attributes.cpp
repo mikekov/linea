@@ -162,6 +162,7 @@ static SPStyleProp const props[] = {
     {SPAttr::DOTTED, "dotted"},
     {SPAttr::SNAP_TO_VISIBLE_ONLY, "snapvisiblegridlinesonly"},
     {SPAttr::CLIP_TO_PAGE, "cliptopage"},
+    {SPAttr::BEHIND_DRAWING, "behinddrawing"},
     /* SPImage */
     {SPAttr::X, "x"},
     {SPAttr::Y, "y"},

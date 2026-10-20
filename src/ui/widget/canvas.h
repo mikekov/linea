@@ -147,6 +147,8 @@ GTK-specific end */
     CanvasItemGroup* canvasGroupDrawing() const;
     CanvasItemGroup* canvasGroupGrids() const;
     CanvasItemGroup* getCanvasGrids() const { return canvasGroupGrids(); }
+    CanvasItemGroup* canvasGroupGridsBelow() const;
+    CanvasItemGroup* getCanvasGridsBelow() const { return canvasGroupGridsBelow(); }
     CanvasItemGroup* canvasGroupGuides() const;
     CanvasItemGroup* getCanvasGuides() const { return canvasGroupGuides(); }
     CanvasItemGroup* canvasGroupTemp() const;
@@ -379,6 +381,7 @@ GTK-specific end */
     CanvasItemGroup* _canvas_group_controls = nullptr;
     CanvasItemGroup* _canvas_group_drawing = nullptr;
     CanvasItemGroup* _canvas_group_grids = nullptr;
+    CanvasItemGroup* _canvas_group_grids_below = nullptr;
     CanvasItemGroup* _canvas_group_guides = nullptr;
     CanvasItemGroup* _canvas_group_temp = nullptr;
     CanvasItemGroup* _canvas_group_sketch = nullptr;

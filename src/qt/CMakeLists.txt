@@ -254,6 +254,7 @@ target_sources(linea_base PRIVATE
     ui/style-panel.ui
     util/drawing-utils.cpp
     util/drawing-utils.h
+    ui/grid-options.ui
     ui/grid-widget.cpp
     ui/grid-widget.h
     ui/grid-widget.ui

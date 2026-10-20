@@ -14,13 +14,14 @@
 
 #include "grid-widget.h"
 
+#include "ui_grid-options.h"
 #include "ui_grid-widget.h"
 
 #include <cmath>
 #include <glibmm/i18n.h>
-#include <QAction>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -33,6 +34,7 @@
 #include "alignment-selector.h"
 #include "color-button.h"
 #include "number-edit.h"
+#include "popup-menu.h"
 #include "unit-tracker.h"
 
 #include "document.h"
@@ -96,7 +98,7 @@ void GridWidget::connectSpin(NumberEdit* spin, const char* prop, bool unitless) 
         }
         repr()->setAttributeCssDouble(prop, value_in_px);
         Inkscape::DocumentUndo::done(_grid->document,
-            RC_("Undo", "Change grid dimensions"), "grid-dimensions");
+            RC_("Undo", "Change grid dimensions"), "");
     });
 }
 
@@ -111,28 +113,14 @@ void GridWidget::setupWidgets() {
     _tracker = new UnitTracker(Inkscape::Util::UNIT_TYPE_LINEAR, this);
     _tracker->attachPopup(_ui->unitButton);
 
-    // --- Options menu (snap visible, dotted, clip to page) ---
-    auto optionsMenu = new QMenu(this);
-    auto addCheckboxAction = [this, optionsMenu](const char* text) {
-        auto checkbox = new QCheckBox(QString::fromUtf8(_(text)), this);
-        checkbox->setStyleSheet("QCheckBox { padding: 4px 8px; }");
-        auto action = new QWidgetAction(optionsMenu);
-        action->setDefaultWidget(checkbox);
-        optionsMenu->addAction(action);
-        return checkbox;
-    };
-
-    _snapVisibleCheck = addCheckboxAction("Snap to visible grid lines only");
-    _dottedCheck = addCheckboxAction("Show dots instead of lines");
-    _clipToPageCheck = addCheckboxAction("Clip to page");
-    _angleYVerticalCheck = addCheckboxAction("Y axis vertical");
-    _angleYVerticalCheck->setToolTip(QString::fromUtf8(
-        _("If set, y-axis will be vertical. Otherwise, it will be calculated from x and z angles.")));
-    _swapAxesAction = optionsMenu->addAction(QString::fromUtf8(_("Swap axes")));
-    _swapAxesAction->setToolTip(QString::fromUtf8(_("Swap axonometric grid axes")));
-
-    connect(_ui->optionsButton, &QPushButton::clicked, this, [this, optionsMenu]() {
-        optionsMenu->popup(_ui->optionsButton->mapToGlobal(_ui->optionsButton->rect().bottomLeft()));
+    // --- Options popup (snap visible, dotted, clip to page) ---
+    _optionsPopup = new PopupMenu(this);
+    auto optContent = new QWidget;
+    _optionsUi = std::make_unique<Ui::GridOptionsForm>();
+    _optionsUi->setupUi(optContent);
+    _optionsPopup->setContent(optContent);
+    connect(_ui->optionsButton, &QPushButton::clicked, this, [this]() {
+        _optionsPopup->showBelowWidget(_ui->optionsButton);
     });
 
     // --- Angle popup menu (aspect ratio entry) ---
@@ -165,7 +153,7 @@ void GridWidget::setupWidgets() {
                 _ui->angleZ->setValue(ang);
                 if (_grid->document) {
                     Inkscape::DocumentUndo::done(_grid->document,
-                        RC_("Undo", "Change grid dimensions"), "grid-angle");
+                        RC_("Undo", "Change grid dimensions"), "");
                 }
             }
         }
@@ -214,7 +202,7 @@ void GridWidget::setupWidgets() {
         _ui->gridTypeCombo,
         _ui->visibleToggle, _ui->colorButton, _ui->optionsButton,
         _ui->alignButton, _ui->anglePopupButton, _ui->unitButton,
-        _snapVisibleCheck, _dottedCheck, _clipToPageCheck, _angleYVerticalCheck,
+        _optionsUi->snapVisibleCheck, _optionsUi->dottedCheck, _optionsUi->clipToPageCheck, _optionsUi->behindDrawingCheck, _optionsUi->angleYVerticalCheck,
         _alignmentSelector,
     };
 }
@@ -251,7 +239,7 @@ void GridWidget::connectSignals() {
         updateSubordinateWidgets(enabled);
         if (_grid && _grid->document) {
             Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid enabled state"), "grid-enabled");
+                RC_("Undo", "Change grid enabled state"), "");
         }
     });
 
@@ -262,7 +250,7 @@ void GridWidget::connectSignals() {
         repr()->setAttributeBoolean("visible", visible);
         if (_grid && _grid->document) {
             Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid visibility"), "grid-visible");
+                RC_("Undo", "Change grid visibility"), "");
         }
     });
 
@@ -294,49 +282,31 @@ void GridWidget::connectSignals() {
 
         if (_grid->document) {
             Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid color"), "grid-color");
+                RC_("Undo", "Change grid color"), "");
         }
         update();
     });
 
     // Options checkboxes
-    connect(_snapVisibleCheck, &QCheckBox::toggled, this, [this](bool active) {
-        if (_update.pending()) return;
-        repr()->setAttributeBoolean("snapvisiblegridlinesonly", active);
-        if (_grid && _grid->document) {
-            Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid snap settings"), "grid-snap");
-        }
-    });
+    auto connectCheck = [this](QCheckBox* check, const char* attr,
+                               Inkscape::Util::Internal::ContextString undoLabel) {
+        connect(check, &QCheckBox::toggled, this, [this, attr, undoLabel](bool active) {
+            if (_update.pending()) return;
+            repr()->setAttributeBoolean(attr, active);
+            if (_grid && _grid->document) {
+                Inkscape::DocumentUndo::done(_grid->document, undoLabel, "");
+            }
+        });
+    };
 
-    connect(_dottedCheck, &QCheckBox::toggled, this, [this](bool active) {
-        if (_update.pending()) return;
-        repr()->setAttributeBoolean("dotted", active);
-        if (_grid && _grid->document) {
-            Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid dotted setting"), "grid-dotted");
-        }
-    });
+    connectCheck(_optionsUi->snapVisibleCheck,    "snapvisiblegridlinesonly", RC_("Undo", "Change grid snap settings"));
+    connectCheck(_optionsUi->dottedCheck,         "dotted",                   RC_("Undo", "Change grid dotted setting"));
+    connectCheck(_optionsUi->clipToPageCheck,     "cliptopage",               RC_("Undo", "Change grid clip-to-page setting"));
+    connectCheck(_optionsUi->behindDrawingCheck,  "behinddrawing",            RC_("Undo", "Change grid z-order"));
+    connectCheck(_optionsUi->angleYVerticalCheck, "angleyvertical",           RC_("Undo", "Change grid Y-axis mode"));
 
-    connect(_clipToPageCheck, &QCheckBox::toggled, this, [this](bool active) {
-        if (_update.pending()) return;
-        repr()->setAttributeBoolean("cliptopage", active);
-        if (_grid && _grid->document) {
-            Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid clip-to-page setting"), "grid-clip-to-page");
-        }
-    });
-
-    connect(_angleYVerticalCheck, &QCheckBox::toggled, this, [this](bool active) {
-        if (_update.pending()) return;
-        repr()->setAttributeBoolean("angleyvertical", active);
-        if (_grid && _grid->document) {
-            Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Change grid Y-axis mode"), "grid-angle-y");
-        }
-    });
-
-    connect(_swapAxesAction, &QAction::triggered, this, [this]() {
+    connect(_optionsUi->swapAxesButton, &QPushButton::clicked, this, [this]() {
+        _optionsPopup->hide();
         if (_update.pending() || !_grid) return;
 
         auto cur_angle_x = _grid->getAngleX();
@@ -359,7 +329,7 @@ void GridWidget::connectSignals() {
 
         if (_grid->document) {
             Inkscape::DocumentUndo::done(_grid->document,
-                RC_("Undo", "Swap grid axes"), "grid-swap-axes");
+                RC_("Undo", "Swap grid axes"), "");
         }
         update();
     });
@@ -458,14 +428,15 @@ void GridWidget::update() {
     _ui->angleZ->setVisible(axonometric);
     _ui->angleLabel->setVisible(axonometric);
     _ui->anglePopupButton->setVisible(axonometric);
-    _angleYVerticalCheck->setVisible(axonometric);
-    _swapAxesAction->setVisible(axonometric);
+    _optionsUi->angleYVerticalCheck->setVisible(axonometric);
+    _optionsUi->swapAxesSeparator->setVisible(axonometric);
+    _optionsUi->swapAxesButton->setVisible(axonometric);
 
     if (axonometric) {
         _ui->angleX->setValue(_grid->getAngleX());
         _ui->angleZ->setValue(_grid->getAngleZ());
-        QSignalBlocker blocker(_angleYVerticalCheck);
-        _angleYVerticalCheck->setChecked(_grid->isAngleYVertical());
+        QSignalBlocker blocker(_optionsUi->angleYVerticalCheck);
+        _optionsUi->angleYVerticalCheck->setChecked(_grid->isAngleYVertical());
     }
 
     _ui->gapX->setVisible(modular);
@@ -511,20 +482,24 @@ void GridWidget::update() {
         _ui->visibleToggle->setChecked(_grid->isVisible());
     }
     {
-        QSignalBlocker b3(_dottedCheck);
-        _dottedCheck->setChecked(_grid->isDotted());
+        QSignalBlocker b3(_optionsUi->dottedCheck);
+        _optionsUi->dottedCheck->setChecked(_grid->isDotted());
     }
     {
-        QSignalBlocker b4(_snapVisibleCheck);
-        _snapVisibleCheck->setChecked(_grid->getSnapToVisibleOnly());
+        QSignalBlocker b4(_optionsUi->snapVisibleCheck);
+        _optionsUi->snapVisibleCheck->setChecked(_grid->getSnapToVisibleOnly());
     }
     {
-        QSignalBlocker b5(_clipToPageCheck);
-        _clipToPageCheck->setChecked(_grid->isClipToPage());
+        QSignalBlocker b5(_optionsUi->clipToPageCheck);
+        _optionsUi->clipToPageCheck->setChecked(_grid->isClipToPage());
+    }
+    {
+        QSignalBlocker b6(_optionsUi->behindDrawingCheck);
+        _optionsUi->behindDrawingCheck->setChecked(_grid->getBehindDrawing());
     }
 
     // Dotted checkbox only relevant for rectangular
-    _dottedCheck->setVisible(rectangular);
+    _optionsUi->dottedCheck->setVisible(rectangular);
 
     // Spacing X hidden for axonometric
     _ui->spacingX->setVisible(!axonometric);

@@ -3205,6 +3205,8 @@ void Canvas::setupCanvasItems() {
 
     // Page background and foreground
     _canvas_group_pages_bg = new CanvasItemGroup(root);
+    // Group for grids rendered behind the drawing
+    _canvas_group_grids_below = new CanvasItemGroup(root);
     // Group for actual SVG drawing
     _canvas_group_drawing = new CanvasItemGroup(root);
     // page border
@@ -3224,6 +3226,7 @@ void Canvas::setupCanvasItems() {
     _canvas_group_drawing ->set_name("CanvasItemGroup:Drawing" ); // The actual SVG drawing.
     _canvas_group_pages_fg->set_name("CanvasItemGroup:PagesFg" ); // Page borders, when on top.
     _canvas_group_grids   ->set_name("CanvasItemGroup:Grids"   ); // Grids.
+    _canvas_group_grids_below->set_name("CanvasItemGroup:GridsBelow"); // Grids rendered behind the drawing.
     _canvas_group_guides  ->set_name("CanvasItemGroup:Guides"  ); // Guides.
     _canvas_group_sketch  ->set_name("CanvasItemGroup:Sketch"  ); // Temporary items before becoming permanent.
     _canvas_group_temp    ->set_name("CanvasItemGroup:Temp"    ); // Temporary items that disappear by themselves.
@@ -3238,6 +3241,7 @@ void Canvas::setupCanvasItems() {
 CanvasItemGroup* Canvas::canvasGroupControls() const { return _canvas_group_controls; }
 CanvasItemGroup* Canvas::canvasGroupDrawing() const { return _canvas_group_drawing; }
 CanvasItemGroup* Canvas::canvasGroupGrids() const { return _canvas_group_grids; }
+CanvasItemGroup* Canvas::canvasGroupGridsBelow() const { return _canvas_group_grids_below; }
 CanvasItemGroup* Canvas::canvasGroupGuides() const { return _canvas_group_guides; }
 CanvasItemGroup* Canvas::canvasGroupTemp() const { return _canvas_group_temp; }
 CanvasItemGroup* Canvas::canvasGroupSketch() const { return _canvas_group_sketch; }

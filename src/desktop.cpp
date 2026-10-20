@@ -1595,6 +1595,10 @@ Inkscape::CanvasItemGroup* SPDesktop::getCanvasGrids() const {
     return _canvas ? _canvas->getCanvasGrids() : nullptr;
 }
 
+Inkscape::CanvasItemGroup* SPDesktop::getCanvasGridsBelow() const {
+    return _canvas ? _canvas->getCanvasGridsBelow() : nullptr;
+}
+
 Inkscape::CanvasItemGroup* SPDesktop::getCanvasPagesBg() const {
     return _canvas ? _canvas->getCanvasPagesBg() : nullptr;
 }

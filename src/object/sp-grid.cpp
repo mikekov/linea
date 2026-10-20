@@ -49,6 +49,7 @@ SPGrid::SPGrid()
     , _dotted(false)
     , _snap_to_visible_only(true)
     , _cliptopage(true)
+    , _behind_drawing(true)
     , _legacy(false)
     , _angle_y_vertical(true)
     , _major_color{GRID_DEFAULT_MAJOR_COLOR}
@@ -108,6 +109,7 @@ void SPGrid::build(SPDocument *doc, Inkscape::XML::Node *repr)
     readAttr(SPAttr::DOTTED);
     readAttr(SPAttr::SNAP_TO_VISIBLE_ONLY);
     readAttr(SPAttr::CLIP_TO_PAGE);
+    readAttr(SPAttr::BEHIND_DRAWING);
 
     _checkOldGrid(doc, repr);
 
@@ -257,6 +259,11 @@ void SPGrid::set(SPAttr key, const gchar* value)
             break;
         case SPAttr::CLIP_TO_PAGE:
             _cliptopage.read(value);
+            requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
+            break;
+        case SPAttr::BEHIND_DRAWING:
+            _behind_drawing.read(value);
+            _syncViewGroups();
             requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
             break;
         default:
@@ -473,6 +480,30 @@ void SPGrid::_recreateViews()
     }
 }
 
+// move views to the grids group matching the current z-order setting
+void SPGrid::_syncViewGroups() {
+    auto namedview = document->getNamedView();
+    if (!namedview) {
+        return;
+    }
+    for (auto& view : views) {
+        auto parent = view->get_parent();
+        for (auto desktop : namedview->getViewList()) {
+            if (!desktop) {
+                continue;
+            }
+            if (parent != desktop->getCanvasGrids() && parent != desktop->getCanvasGridsBelow()) {
+                continue;
+            }
+            auto target = _behind_drawing ? desktop->getCanvasGridsBelow() : desktop->getCanvasGrids();
+            if (parent != target) {
+                view = create_view(_grid_type, target);
+            }
+            break;
+        }
+    }
+}
+
 // update internal state on XML change
 void SPGrid::modified(unsigned int flags)
 {
@@ -543,13 +574,15 @@ void SPGrid::show(SPDesktop *desktop)
 
     // check if there is already a canvasitem on this desktop linking to this grid
     for (auto &view : views) {
-        if (desktop->getCanvasGrids() == view->get_parent()) {
+        if (desktop->getCanvasGrids() == view->get_parent() ||
+            desktop->getCanvasGridsBelow() == view->get_parent()) {
             return;
         }
     }
 
     // create designated canvasitem for this grid
-    views.emplace_back(create_view(_grid_type, desktop->getCanvasGrids()));
+    auto canvasgrids = _behind_drawing ? desktop->getCanvasGridsBelow() : desktop->getCanvasGrids();
+    views.emplace_back(create_view(_grid_type, canvasgrids));
 
     requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
 }
@@ -560,7 +593,8 @@ void SPGrid::hide(SPDesktop const *desktop)
 
     for (auto it = views.begin(); it != views.end(); ++it) {
         auto view = it->get();
-        if (view->get_parent() == desktop->getCanvasGrids()) {
+        if (view->get_parent() == desktop->getCanvasGrids() ||
+            view->get_parent() == desktop->getCanvasGridsBelow()) {
             views.erase(it);
             break;
         }
@@ -678,7 +712,8 @@ void SPGrid::setSVGType(char const *svgtype)
 Inkscape::CanvasItemGrid *SPGrid::getAssociatedView(SPDesktop const *desktop)
 {
     for (auto &view : views) {
-        if (desktop->getCanvasGrids() == view->get_parent()) {
+        if (desktop->getCanvasGrids() == view->get_parent() ||
+            desktop->getCanvasGridsBelow() == view->get_parent()) {
             return view.get();
         }
     }
@@ -775,6 +810,12 @@ void SPGrid::setSnapToVisibleOnly(bool v)
 void SPGrid::setClipToPage(bool v)
 {
     getRepr()->setAttributeBoolean("cliptopage", v);
+
+    requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
+}
+
+void SPGrid::setBehindDrawing(bool v) {
+    getRepr()->setAttributeBoolean("behinddrawing", v);
 
     requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
 }

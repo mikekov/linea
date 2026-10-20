@@ -206,6 +206,7 @@ public:
     Inkscape::CanvasItemCatchall* getCanvasCatchall() const;
     Inkscape::CanvasItemGroup* getCanvasSketch() const;
     Inkscape::CanvasItemGroup* getCanvasGrids() const;
+    Inkscape::CanvasItemGroup* getCanvasGridsBelow() const;
     Inkscape::CanvasItemGroup* getCanvasPagesBg() const;
     Inkscape::CanvasItemGroup* getCanvasPagesFg() const;
     Inkscape::CanvasItemDrawing* getCanvasDrawing() const { return _canvasDrawing; }

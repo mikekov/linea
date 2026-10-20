@@ -161,6 +161,7 @@ enum class SPAttr {
     DOTTED,
     SNAP_TO_VISIBLE_ONLY,
     CLIP_TO_PAGE,
+    BEHIND_DRAWING,
     /* SPImage, SPRect, etc. */
     X,
     Y,

@@ -24,13 +24,12 @@
 #include <sigc++/scoped_connection.h>
 
 QT_BEGIN_NAMESPACE
-class QAction;
-class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
 namespace Ui {
 class GridWidget;
+class GridOptionsForm;
 }
 QT_END_NAMESPACE
 
@@ -41,6 +40,7 @@ namespace Linea::UI {
 
 class AlignmentSelector;
 class NumberEdit;
+class PopupMenu;
 class UnitTracker;
 
 /**
@@ -89,12 +89,9 @@ private:
     // Angle popup entry
     QLineEdit* _aspectRatioEntry = nullptr;
 
-    // Options popover widgets
-    QCheckBox* _snapVisibleCheck = nullptr;
-    QCheckBox* _dottedCheck = nullptr;
-    QCheckBox* _clipToPageCheck = nullptr;
-    QCheckBox* _angleYVerticalCheck = nullptr;
-    QAction* _swapAxesAction = nullptr;
+    // Options popover
+    PopupMenu* _optionsPopup = nullptr;
+    std::unique_ptr<Ui::GridOptionsForm> _optionsUi;
 
     // Subordinate widgets (disabled when grid is disabled)
     std::vector<QWidget*> _subordinateWidgets;

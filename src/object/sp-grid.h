@@ -73,6 +73,9 @@ public:
     bool isClipToPage() const { return _cliptopage; }
     void setClipToPage(bool v);
 
+    bool getBehindDrawing() const { return _behind_drawing; }
+    void setBehindDrawing(bool v);
+
     Inkscape::Colors::Color const &getMajorColor() const { return _major_color; }
     void setMajorColor(Inkscape::Colors::Color const &color);
 
@@ -133,12 +136,14 @@ protected:
 private:
     void _checkOldGrid(SPDocument *doc, Inkscape::XML::Node *repr);
     void _recreateViews();
+    void _syncViewGroups();
 
     SVGBool _visible;
     SVGBool _enabled;
     SVGBool _snap_to_visible_only;
     SVGBool _dotted;
     SVGBool _cliptopage;
+    SVGBool _behind_drawing;
     SVGLength _origin_x;
     SVGLength _origin_y;
     SVGLength _spacing_x;
