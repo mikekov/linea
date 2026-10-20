@@ -9,6 +9,7 @@
 #ifndef LINEA_STYLE_UTILS_H
 #define LINEA_STYLE_UTILS_H
 
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -80,7 +81,13 @@ PaintProp classify_paint(const SPIPaint& paint, double opacity);
 struct StrokeWidthProp {
     double value    = 1.0;
     bool   hairline = false;
-    bool operator == (const StrokeWidthProp&) const = default;
+    // value is derived (stroke_width * i2dt.descrim()); transforms that are
+    // equivalent on paper can differ by float noise, so compare with the
+    // same tolerance the GTK query path uses in desktop-style.cpp.
+    static constexpr double same_value_tolerance = 1e-3;
+    bool operator == (const StrokeWidthProp& other) const {
+        return hairline == other.hairline && std::fabs(value - other.value) <= same_value_tolerance;
+    }
 };
 
 // Value type for stroke-dasharray + dashoffset.

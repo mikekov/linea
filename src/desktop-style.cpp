@@ -683,7 +683,7 @@ objects_query_strokewidth (const std::vector<SPItem*> &objects, SPStyle *style_r
         double sw = style->stroke_width.computed * i2d.descrim();
 
         if (!std::isnan(sw)) {
-            if (prev_sw != -1 && fabs(sw - prev_sw) > 1e-3)
+            if (prev_sw != -1 && fabs(sw - prev_sw) > Linea::StrokeWidthProp::same_value_tolerance)
                 same_sw = false;
             prev_sw = sw;
 
