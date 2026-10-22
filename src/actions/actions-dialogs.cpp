@@ -26,6 +26,7 @@
 #include "qt/ui/about-widget.h"
 #include "qt/ui/dialog/scripting-dialog.h"
 #include "qt/ui/filter/filter-editor.h"
+#include "ui/desktop/desktop-widget.h"
 
 #if 0 // GTK action definitions — kept for reference, replaced by Qt table below
 #include <giomm.h>  // Not <gtkmm.h>! To eventually allow a headless version!
@@ -229,6 +230,13 @@ static void open_scripting(LineaWindow* win) {
 static void open_extension_gallery(LineaWindow* /*win*/) {}
 static void toggle_dialogs(LineaWindow* wnd) { wnd->toggleDialogs(); }
 static bool dialogs_floating(LineaWindow* wnd) { return wnd->dialogsFloating(); }
+static void toggle_xml_tree(LineaWindow* wnd) {
+    if (auto dtw = wnd ? wnd->getDesktopWidget() : nullptr) dtw->toggleXmlTree();
+}
+static bool xml_tree_shown(LineaWindow* wnd) {
+    auto dtw = wnd ? wnd->getDesktopWidget() : nullptr;
+    return dtw && dtw->xmlTreeShown();
+}
 static void toggle_home_page(LineaWindow* wnd) { wnd->toggleHomePage(); }
 static bool is_home_page_visible(LineaWindow* wnd) { return wnd->isHomePageVisible(); }
 
@@ -270,6 +278,9 @@ static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
      N_("Edit and run scripts"), "dialog-scripts", open_scripting},
     {"toggle-panel-docking", N_("Toggle All Dialogs"), SECTION,
      N_("Dock or collapse all dialogs"), "panel-left", toggle_dialogs, dialogs_floating, nullptr, nullptr, "panel-left-2" },
+    {"dialog-toggle-xml", N_("Toggle XML Tree"), SECTION,
+     N_("Switch between object tree and XML tree"), "document-metadata",
+     toggle_xml_tree, xml_tree_shown, nullptr, nullptr, "go-back"},
     {"toggle-home-page", N_("Toggle Home Page"), SECTION,
      N_("Toggle the home page with recent files, templates, and crash recovery"), "home", toggle_home_page, is_home_page_visible, nullptr, nullptr, "home-2"},
     {"about-linea", N_("About Linea"), ABOUT_SECTION,

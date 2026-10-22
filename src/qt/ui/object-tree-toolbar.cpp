@@ -38,8 +38,10 @@ ObjectTreeToolbar::ObjectTreeToolbar(QWidget* parent)
         // "layer-rename",
     });
     _ui->toolbar->addSplitMenuButton(actions, "layer-new");
-    _ui->toolbar->addButton("layer-raise");
-    _ui->toolbar->addButton("layer-lower");
+    // _ui->toolbar->addButton("layer-raise");
+    // _ui->toolbar->addButton("layer-lower");
+    _ui->toolbar->addStretch();
+    _ui->toolbar->addButton("dialog-toggle-xml");
 
     // Action buttons emit signals for the client to handle
     // connect(_ui->moveUpButton, &QToolButton::clicked, this, &ObjectTreeToolbar::moveUpRequested);
@@ -47,10 +49,6 @@ ObjectTreeToolbar::ObjectTreeToolbar(QWidget* parent)
 }
 
 ObjectTreeToolbar::~ObjectTreeToolbar() = default;
-
-LayerSelector* ObjectTreeToolbar::getLayerSelector() {
-    return _ui->layerSelector;
-}
 
 void ObjectTreeToolbar::connectToView(ObjectTreeView* view) {
     _view = view;

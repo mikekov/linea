@@ -109,6 +109,9 @@ public:
     // color palette on the right
     void toggleColorPalette();
     bool colorPaletteVisible() const { return _colorPaletteVisible; }
+    // object tree / XML tree switch in the left panel
+    void toggleXmlTree();
+    bool xmlTreeShown() const;
     // console panel at the bottom
     Linea::UI::ConsolePanel* consolePanel() const { return _consolePanel; }
     void toggleConsolePanel();

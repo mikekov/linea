@@ -288,17 +288,6 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     auto& registry = ActionRegistry::get();
 
     //TODO: remove actions from here
-
-    auto toggle_xml_tree = registry.createToggleAction(
-        {"toggle-svg-tree", "Switch ", "Switch between XML tree and object tree", "document-metadata"},
-        [this](bool on) {
-            _leftPanel->switchWidget()->setCurrentIndex(on ? 1 : 0);
-        },
-        [this]() -> bool {
-            return _leftPanel->switchWidget()->currentIndex() == 1;
-        }, "dialog-objects");
-    window()->addAction(toggle_xml_tree);
-
     window()->addAction(
         registry.createAction(ActionMeta{"open-settings", "Open Settings", "Open the settings dialog", "settings"}, [this] {
             auto dialog = std::make_unique<Linea::UI::XmlSettingsDialog>(this);
@@ -335,12 +324,10 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
         _rightPanel->propertiesPanel()->showProperties(type);
     });
 
-    // Sync toggle-svg-tree action when panel switch changes
-    connect(_leftPanel, &LeftPanel::panelSwitchChanged, this, [this](int index) {
-        if (auto action = ActionRegistry::get().action("toggle-svg-tree")) {
-            action->setChecked(index == 1);
-        }
-    });
+    // Sync dialog-toggle-xml (and any other stateful action) when the panel
+    // switch is clicked directly.
+    connect(_leftPanel, &LeftPanel::panelSwitchChanged, this,
+            [] { ActionRegistry::get().syncAllActions(); });
 
     setAcceptDrops(true);
 
@@ -922,8 +909,7 @@ void SPDesktopWidget::saveSettings() {
     }
     _settings->setValue("colorPaletteTileSize", static_cast<int>(options->tileSize()));
 
-    auto toggleSvgTreeAction = ActionRegistry::get().action("toggle-svg-tree");
-    _settings->setValue("toggleSvgTree", toggleSvgTreeAction->isChecked());
+    _settings->setValue("toggleSvgTree", xmlTreeShown());
 
     _settings->endGroup();
     _settings->sync();
@@ -952,12 +938,8 @@ void SPDesktopWidget::restoreSettings() {
     _canvasFrame->setRulersVisible(rulersVisible);
     dockPanels(dockedDialogs);
 
-    _leftPanel->switchWidget()->setCurrentIndex(toggleSvgTree ? 1 : 0);
+    _leftPanel->showXmlTree(toggleSvgTree);
     _rightPanel->switchWidget()->setCurrentIndex(showDialog);
-
-    //TODO: fix this action
-    auto toggleSvgTreeAction = ActionRegistry::get().action("toggle-svg-tree");
-    toggleSvgTreeAction->setChecked(toggleSvgTree);
 
     // Restore color palette selection and tile size. We set the options widget
     // state for UI consistency and apply directly to the palette widget, since
@@ -988,6 +970,15 @@ void SPDesktopWidget::toggleColorPalette() {
     _colorPalettePanel->setVisible(dialogsDocked() && _colorPaletteVisible);
     _overlayLayout->invalidate();
     _overlayLayout->activate();
+}
+
+void SPDesktopWidget::toggleXmlTree() {
+    if (!_leftPanel) return;
+    _leftPanel->showXmlTree(!xmlTreeShown());
+}
+
+bool SPDesktopWidget::xmlTreeShown() const {
+    return _leftPanel && _leftPanel->xmlTreeShown();
 }
 
 void SPDesktopWidget::toggleConsolePanel() {

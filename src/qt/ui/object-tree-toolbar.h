@@ -42,8 +42,6 @@ public:
     // based on the view's selection.
     void connectToView(ObjectTreeView* view);
 
-    LayerSelector* getLayerSelector();
-
 Q_SIGNALS:
     void moveUpRequested();
     void moveDownRequested();

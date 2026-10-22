@@ -28,7 +28,6 @@ class XmlTreeWidget;
 class ObjectTreeView;
 class ObjectTreeToolbar;
 class LayerSelector;
-class PanelSwitch;
 
 class LeftPanel : public CollapsiblePanel {
     Q_OBJECT
@@ -42,7 +41,10 @@ public:
 
     ObjectTreeView* objectTreeView() const { return _objectTreeView; }
     XmlTreeWidget* xmlTreeWidget() const { return _xmlTreeWidget; }
-    PanelSwitch* switchWidget() const { return _panelSwitch; }
+
+    /// Switch the stacked view between object tree and XML tree.
+    void showXmlTree(bool on);
+    bool xmlTreeShown() const;
 
     /// Update content for a new active desktop (or null to clear).
     void setDesktop(SPDesktop* desktop);
@@ -70,8 +72,7 @@ private:
     QWidget* _objectTreeContainer = nullptr;
     ObjectTreeToolbar* _objectTreeToolbar = nullptr;
     ObjectTreeView* _objectTreeView = nullptr;
-    LayerSelector* _layerSelector = nullptr;
-    PanelSwitch* _panelSwitch = nullptr;
+    // LayerSelector* _layerSelector = nullptr;
     QLineEdit* _searchEdit = nullptr;
 
     SPDesktop* _desktop = nullptr;

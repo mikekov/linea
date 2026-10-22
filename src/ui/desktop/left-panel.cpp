@@ -24,7 +24,6 @@
 #include "object/sp-namedview.h"
 #include "object/sp-page.h"
 #include "qt/ui/layer-selector.h"
-#include "qt/ui/panel-switch.h"
 #include "qt/ui/separator.h"
 #include "qt/ui/xml-tree-widget.h"
 #include "selection.h"
@@ -127,7 +126,7 @@ void LeftPanel::buildUi() {
     _objectTreeView->setProperty("class", "widget-frame");
     objectTreeLayout->addWidget(_objectTreeView);
 
-    _layerSelector = _objectTreeToolbar->getLayerSelector();
+    // _layerSelector = _objectTreeToolbar->getLayerSelector();
 
     _objectTreeToolbar->connectToView(_objectTreeView);
 
@@ -143,32 +142,24 @@ void LeftPanel::buildUi() {
     contentLayout->setContentsMargins(0, 0, 0, 0);
     contentLayout->setSpacing(0);
 
-    // Panel switch + search box in a horizontal row.
+    // Search box in a horizontal row.
     auto switchRow = new QHBoxLayout();
     switchRow->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 4);
     switchRow->setSpacing(4);
-
-    _panelSwitch = new PanelSwitch(content);
-    _panelSwitch->setContentsMargins(0, 0, 0, 0);
-    switchRow->addWidget(_panelSwitch);
-    _panelSwitch->addButton("dialog-objects", {}, tr("Objects"));
-    _panelSwitch->addButton("document-metadata", {}, tr("XML Tree"));
-    _panelSwitch->setCurrentIndex(0);
-
-    switchRow->addStretch();
+    // switchRow->addStretch();
 
     _searchEdit = new QLineEdit(content);
     _searchEdit->setPlaceholderText(tr("Search\u2026"));
     _searchEdit->setClearButtonEnabled(true);
-    _searchEdit->setMaximumWidth(120);
+    // _searchEdit->setMaximumWidth(120);
     _searchEdit->setToolTip(tr("Filter tree contents"));
     switchRow->addWidget(_searchEdit);
 
     contentLayout->addLayout(switchRow);
 
-    auto separator = new Separator(content);
-    separator->setContentsMargins(0, 0, 0, 4);
-    contentLayout->addWidget(separator);
+    // auto separator = new Separator(content);
+    // separator->setContentsMargins(0, 0, 0, 4);
+    // contentLayout->addWidget(separator);
 
     contentLayout->addWidget(_stackedWidget);
 
@@ -192,22 +183,29 @@ void LeftPanel::buildHeader() {
     setHeader(tb);
 }
 
-void LeftPanel::connectSignals() {
-    connect(_panelSwitch, &PanelSwitch::currentChanged, _stackedWidget, &QStackedWidget::setCurrentIndex);
-    connect(_panelSwitch, &PanelSwitch::currentChanged, this, &LeftPanel::panelSwitchChanged);
+void LeftPanel::showXmlTree(bool on) {
+    int index = on ? 1 : 0;
+    if (!_stackedWidget || _stackedWidget->currentIndex() == index) return;
+    _stackedWidget->setCurrentIndex(index);
+    Q_EMIT panelSwitchChanged(index);
+}
 
+bool LeftPanel::xmlTreeShown() const {
+    return _stackedWidget && _stackedWidget->currentIndex() == 1;
+}
+
+void LeftPanel::connectSignals() {
     // Search box filters both object tree and XML tree.
     connect(_searchEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
-        if (_objectTreeView) {
-            _objectTreeView->setFilterText(text);
-            if (_desktop) {
-                _objectTreeView->selectObjects(_desktop->getSelection()->objects());
-            }
+        _objectTreeView->setFilterText(text);
+        if (_desktop) {
+            _objectTreeView->selectObjects(_desktop->getSelection()->objects());
         }
-        if (_xmlTreeWidget) _xmlTreeWidget->setFilterText(text);
+        _xmlTreeWidget->setFilterText(text);
     });
 
     // Layer selector
+#if 0
     connect(_layerSelector, &LayerSelector::populateLayers, this, [this](QTreeWidget* tree) {
         if (!_desktop) return;
         auto& lm = _desktop->layerManager();
@@ -221,7 +219,7 @@ void LeftPanel::connectSignals() {
             _objectTreeView->collapseAllExcept(obj);
         }
     });
-
+#endif
     // Object tree selection
     connect(_objectTreeView, &ObjectTreeView::objectsSelected, this,
             [this](std::vector<SPObject*> objects, Qt::KeyboardModifiers modifiers, bool reselected) {
@@ -339,8 +337,8 @@ void LeftPanel::setDesktop(SPDesktop* desktop) {
 
     // Update current layer in object tree view when it changes
     auto updateLayerButton = [this](SPObject* layer) {
-        auto label = layer ? layer->label() : nullptr;
-        _layerSelector->setCurrentLayer(QString::fromUtf8(label ? label : "-"));
+        // auto label = layer ? layer->label() : nullptr;
+        // _layerSelector->setCurrentLayer(QString::fromUtf8(label ? label : "-"));
     };
     auto currentLayer = desktop->layerManager().currentLayer();
     _objectTreeView->setCurrentLayer(currentLayer);
@@ -376,7 +374,7 @@ void LeftPanel::clear() {
 
     _xmlTreeWidget->setDocument(nullptr);
     _objectTreeView->buildTree(nullptr);
-    _layerSelector->setCurrentLayer({});
+    // _layerSelector->setCurrentLayer({});
     _desktop = nullptr;
 }
 

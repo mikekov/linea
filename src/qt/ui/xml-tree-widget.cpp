@@ -17,6 +17,7 @@
 #include <functional>
 #include <glibmm/i18n.h>
 
+#include "actions/action-registry.h"
 #include "attribute-edit-widget.h"
 #include "document-undo.h"
 #include "document.h"
@@ -74,8 +75,16 @@ XmlTreeWidget::XmlTreeWidget(QWidget* parent)
     connect(_ui->deleteButton, &QToolButton::clicked, this, &XmlTreeWidget::onDeleteNode);
     connect(_ui->unindentButton, &QToolButton::clicked, this, &XmlTreeWidget::onUnindentNode);
     connect(_ui->indentButton, &QToolButton::clicked, this, &XmlTreeWidget::onIndentNode);
-    connect(_ui->raiseButton, &QToolButton::clicked, this, &XmlTreeWidget::onRaiseNode);
-    connect(_ui->lowerButton, &QToolButton::clicked, this, &XmlTreeWidget::onLowerNode);
+    // connect(_ui->raiseButton, &QToolButton::clicked, this, &XmlTreeWidget::onRaiseNode);
+    // connect(_ui->lowerButton, &QToolButton::clicked, this, &XmlTreeWidget::onLowerNode);
+    // Bind like Toolbar::connectAction for iconToggle actions: setDefaultAction
+    // would re-sync checkable/checked from the action on every changed() signal.
+    auto toggleXml = ActionRegistry::get().action("dialog-toggle-xml");
+    connect(_ui->goBackButton, &QToolButton::clicked, toggleXml, &QAction::trigger);
+    // connect(toggleXml, &QAction::changed, _ui->goBackButton,
+    //         [this, toggleXml] { _ui->goBackButton->setIcon(toggleXml->icon()); });
+    // _ui->goBackButton->setIcon(toggleXml->icon());
+
     connect(_ui->splitter, &QSplitter::splitterMoved, this, &XmlTreeWidget::savePanePosition);
 
     connect(_treeView, &XmlTreeView::nodeSelected, this, &XmlTreeWidget::onNodeSelected);
@@ -159,8 +168,8 @@ void XmlTreeWidget::updateButtons() {
     _ui->deleteButton->setEnabled(hasNode && !rootNode && mutableNode);
 
     // Raise/lower.
-    _ui->raiseButton->setEnabled(hasNode && node->parent() && node->parent()->firstChild() != node);
-    _ui->lowerButton->setEnabled(hasNode && node->next() != nullptr);
+    // _ui->raiseButton->setEnabled(hasNode && node->parent() && node->parent()->firstChild() != node);
+    // _ui->lowerButton->setEnabled(hasNode && node->next() != nullptr);
 
     // Unindent: node is at least three levels deep.
     bool unindentable = false;

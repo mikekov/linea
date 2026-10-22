@@ -164,7 +164,8 @@
                 </property>
               </widget>
             </item>
-            <item>
+
+            <!-- <item>
               <widget class="QToolButton" name="raiseButton">
                 <property name="toolTip">
                   <string>Raise node</string>
@@ -199,7 +200,8 @@
                   <enum>Qt::ToolButtonIconOnly</enum>
                 </property>
               </widget>
-            </item>
+            </item> -->
+
             <item>
               <spacer name="horizontalSpacer">
                 <property name="orientation">
@@ -235,6 +237,26 @@
                 </property>
               </widget>
             </item>
+
+            <item>
+              <widget class="QToolButton" name="goBackButton">
+                <property name="toolTip">
+                  <string>Return to object tree</string>
+                </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/go-back</normaloff>
+                  </iconset>
+                </property>
+                <property name="autoRaise">
+                  <bool>true</bool>
+                </property>
+                <property name="toolButtonStyle">
+                  <enum>Qt::ToolButtonIconOnly</enum>
+                </property>
+              </widget>
+            </item>
+
           </layout>
         </widget>
       </item>
