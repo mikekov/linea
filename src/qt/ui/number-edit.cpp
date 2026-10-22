@@ -6,6 +6,7 @@
 #include "number-edit.h"
 #include "util/expression-evaluator.h"
 #include "util/numeric/converters.h"
+#include <cmath>
 #include <QDoubleSpinBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -13,9 +14,135 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPainter>
 #include <QStyle>
+#include <QStyleOption>
 
 namespace Linea::UI {
+
+// A transparent overlay placed over the spinbox's line edit: while the field
+// is unfocused it fades out fraction digits past the first few by painting a
+// background-colored gradient over them. Because it is a child widget painted
+// after the line edit, the text itself is always drawn by Qt at its native
+// position — nothing is repainted or relaid out.
+class FadeOverlay : public QWidget {
+public:
+    explicit FadeOverlay(QLineEdit* edit)
+        : QWidget(edit)
+        , _edit(edit)
+    {
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setGeometry(edit->rect());
+        edit->installEventFilter(this);
+    }
+
+    void setKeptDigits(int n) {
+        if (_keptDigits == n) return;
+        _keptDigits = n;
+        update();
+    }
+
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        if (watched == _edit && event->type() == QEvent::Resize) {
+            setGeometry(_edit->rect());
+        }
+        return false;
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        if (_edit->hasFocus() || _edit->hasSelectedText()) return;
+
+        QString shown = _edit->displayText();
+        int sep = shown.indexOf(locale().decimalPoint());
+        if (sep < 0) return;
+
+        // Fraction digits run until the first non-digit after the separator,
+        // so a trailing suffix is never covered by the overlay.
+        int frac_end = sep + 1;
+        while (frac_end < shown.size() && shown[frac_end].isDigit()) {
+            ++frac_end;
+        }
+        int fade_from = sep + 1 + _keptDigits;
+        if (fade_from >= frac_end) return;
+
+        QStyleOptionFrame option;
+        option.initFrom(_edit);
+        QRect contents = _edit->style()->subElementRect(
+            QStyle::SE_LineEditContents, &option, _edit);
+
+        // Locate the text origin from the leftmost visible character:
+        // cursorPositionAt reads the line control's real layout, so
+        // scrolling and alignment are already accounted for. Coordinates
+        // past the edges are fine — the clip rect bounds the painting.
+        auto fm = _edit->fontMetrics();
+        int y = contents.center().y();
+        int anchor = _edit->cursorPositionAt(QPoint(contents.x(), y));
+        if (anchor >= frac_end) return; // fraction scrolled fully off-screen
+
+        // cursorPositionAt snaps to the nearest char boundary, so the x
+        // where it flips past `anchor` is that character's midpoint.
+        int lo = contents.x(), hi = contents.right();
+        if (hi < lo) return;
+
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+            if (_edit->cursorPositionAt(QPoint(mid, y)) <= anchor) {
+                lo = mid + 1;
+            }
+            else {
+                hi = mid;
+            }
+        }
+        int text_x = lo - fm.horizontalAdvance(shown[anchor]) / 2
+                        - fm.horizontalAdvance(shown.left(anchor));
+        int fade_x = text_x + fm.horizontalAdvance(shown.left(fade_from));
+        int fade_end = text_x + fm.horizontalAdvance(shown.left(frac_end));
+        if (fade_end <= fade_x) return;
+
+        auto group = _edit->isEnabled() ? QPalette::Active : QPalette::Disabled;
+        // The visible background is painted by the ancestor NumberEdit's
+        // stylesheet (palette(base)); the line edit's own Base is unreliable
+        // because the QLineEdit stylesheet rule rebuilds its palette from the
+        // standard palette, losing themed colors.
+        QColor bg;
+        for (auto p = _edit->parentWidget(); p; p = p->parentWidget()) {
+            if (p->property("class").toString() == "NumberEdit") {
+                bg = p->palette().color(group, QPalette::Base);
+                break;
+            }
+        }
+        if (!bg.isValid()) bg = palette().color(group, QPalette::Base);
+
+        // The ramp spans a fixed pixel width so the k-th faded digit maps
+        // to the same gradient slice no matter how many digits the
+        // fraction has — otherwise a lone faded digit would swallow the
+        // whole ramp. Pad spread keeps everything past ramp_x fully masked.
+        constexpr int ramp_chars = 3;
+        int ramp_x = fade_x + ramp_chars * fm.horizontalAdvance(u'0');
+
+        // Ease-out: alpha rises quickly then settles to opaque, so the
+        // fraction tail vanishes fast instead of smearing through a long
+        // half-transparent middle.
+        auto ease = [](double t) { return 1.0 - std::pow(1.0 - t, 2.0); };
+        QLinearGradient gradient(fade_x, 0, ramp_x, 0);
+        constexpr int fade_stops = 8;
+        for (int i = 0; i <= fade_stops; ++i) {
+            const double t = double(i) / fade_stops;
+            QColor c = bg;
+            c.setAlphaF(ease(t));
+            gradient.setColorAt(t, c);
+        }
+
+        QPainter painter(this);
+        painter.setClipRect(contents);
+        painter.fillRect(QRect(fade_x, contents.top(), fade_end - fade_x, contents.height()), gradient);
+    }
+
+private:
+    QLineEdit* _edit;
+    int _keptDigits = 0;
+};
 
 // Internal spinbox class to access protected lineEdit() and handle formatting
 class NumberEdit::SpinBox : public QDoubleSpinBox {
@@ -73,19 +200,36 @@ protected:
 
     double valueFromText(const QString& text) const override {
         if (_evaluator) {
+            // QDoubleSpinBox::valueFromText re-validates internally and
+            // returns minimum() for input its own validator rejects — e.g.
+            // more fraction digits than decimals() — so parse ourselves for
+            // anything beyond strictly-native input.
             QString stripped = stripPrefixSuffix(text);
             bool numberOk = false;
-            stripped.toDouble(&numberOk);
+            // parse using C-locale first, then fall back to system locale
+            double value = stripped.toDouble(&numberOk);
             if (!numberOk) {
-                try {
-                    return _evaluator(stripped);
-                }
-                catch (...) {
-                    // Fall through to default parsing
-                }
+                value = locale().toDouble(stripped, &numberOk);
+            }
+            if (numberOk) {
+                return value;
+            }
+            try {
+                return _evaluator(stripped);
+            }
+            catch (...) {
+                // Fall through to native parsing only for text Qt accepts
+                // itself (e.g. specialValueText)
             }
         }
-        return QDoubleSpinBox::valueFromText(text);
+        // Malformed input must never collapse to minimum()/maximum() —
+        // return the unchanged value so interpretText() becomes a no-op.
+        int pos = 0;
+        QString copy = text;
+        if (QDoubleSpinBox::validate(copy, pos) == QValidator::Acceptable) {
+            return QDoubleSpinBox::valueFromText(text);
+        }
+        return value();
     }
 
     void stepBy(int steps) override {
@@ -180,6 +324,7 @@ NumberEdit::NumberEdit(QWidget* parent)
     _spinBox->installEventFilter(this);
     if (auto le = static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit()) {
         le->installEventFilter(this);
+        _fadeOverlay = new FadeOverlay(le);
     }
 
     // Use old-style macros to avoid assertObjectType runtime check across library boundaries
@@ -188,6 +333,7 @@ NumberEdit::NumberEdit(QWidget* parent)
 
     setEvaluator([](const QString& text) {
         const QByteArray utf8 = text.toUtf8();
+        // TODO: handle locale specific input
         return Inkscape::Util::ExpressionEvaluator{utf8.constData()}.evaluate().value;
     });
 }
@@ -231,6 +377,20 @@ void NumberEdit::setTrimZeros(bool trim) {
     _trimZeros = trim;
     static_cast<NumberEdit::SpinBox*>(_spinBox)->setTrimZeros(trim);
     _spinBox->setValue(_spinBox->value()); // Refresh display
+}
+
+void NumberEdit::setFadeFraction(bool fade) {
+    _fadeFraction = fade;
+    if (_fadeOverlay) {
+        _fadeOverlay->setVisible(fade);
+    }
+}
+
+void NumberEdit::setKeptFractionDigits(int n) {
+    _keptFractionDigits = n;
+    if (_fadeOverlay) {
+        _fadeOverlay->setKeptDigits(n);
+    }
 }
 
 void NumberEdit::setHasFrame(bool hasFrame) {

@@ -251,6 +251,9 @@
           <property name="icon">
             <string>stroke-widths</string>
           </property>
+          <property name="keptFractionDigits">
+            <number>1</number>
+          </property>
         </widget>
       </item>
       <item row="4" column="1">

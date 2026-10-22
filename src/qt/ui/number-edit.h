@@ -26,6 +26,8 @@ class QIcon;
 
 namespace Linea::UI {
 
+class FadeOverlay;
+
 /**
  * Enhanced numeric input widget with optional label/icon and extended features.
  *
@@ -45,6 +47,8 @@ class NumberEdit : public QWidget {
     Q_PROPERTY(double singleStep READ singleStep WRITE setSingleStep)
     Q_PROPERTY(bool trimZeros READ trimZeros WRITE setTrimZeros)
     Q_PROPERTY(bool hasFrame READ hasFrame WRITE setHasFrame)
+    Q_PROPERTY(bool fadeFraction READ fadeFraction WRITE setFadeFraction)
+    Q_PROPERTY(int keptFractionDigits READ keptFractionDigits WRITE setKeptFractionDigits)
 
 public:
     // Nested spinbox class (defined in .cpp)
@@ -70,6 +74,13 @@ public:
 
     void setHasFrame(bool hasFrame);
     bool hasFrame() const { return _hasFrame; }
+
+    // ----------- Fraction fade -----------
+
+    void setFadeFraction(bool fade);
+    bool fadeFraction() const { return _fadeFraction; }
+    void setKeptFractionDigits(int n);
+    int keptFractionDigits() const { return _keptFractionDigits; }
 
     // ----------- Callbacks -----------
 
@@ -134,9 +145,12 @@ private:
     QHBoxLayout* _layout = nullptr;
     QLabel* _indicator = nullptr;
     QDoubleSpinBox* _spinBox = nullptr;
+    FadeOverlay* _fadeOverlay = nullptr;
 
     bool _trimZeros = true;
     bool _hasFrame = true;
+    bool _fadeFraction = true;
+    int _keptFractionDigits = 0;
     bool _editing = false;
     bool _mixedMode = false;
     double _preEditValue = 0.0;

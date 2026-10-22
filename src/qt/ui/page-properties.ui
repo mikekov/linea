@@ -410,6 +410,9 @@
                 <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
                 </property>
+                <property name="fadeFraction">
+                  <bool>false</bool>
+                </property>
               </widget>
             </item>
             <item row="16" column="2">
@@ -595,12 +598,18 @@
                 <property name="label">
                   <string>W</string>
                 </property>
+                <property name="fadeFraction">
+                  <bool>false</bool>
+                </property>
               </widget>
             </item>
             <item row="24" column="1">
               <widget class="Linea::UI::NumberEdit" name="viewboxHeight">
                 <property name="label">
                   <string>H</string>
+                </property>
+                <property name="fadeFraction">
+                  <bool>false</bool>
                 </property>
               </widget>
             </item>
