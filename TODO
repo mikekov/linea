@@ -107,6 +107,7 @@
 - filter editor connection editing does not work
 - impl extension run btn
 - add missing extension icons
+- impl open extension gallery (open does nothing); same for filter gallery
 - make pref dialog use PopupMenu instead of or in addition to dialog window
 - click on marker clear when none is assigned, and the list of markers disappears
 - 'corners' lpe in rect panel doesn't work
