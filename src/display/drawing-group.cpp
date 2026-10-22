@@ -106,10 +106,15 @@ void DrawingGroup::_clipItem(DrawingContext &dc, RenderContext &rc, Geom::IntRec
     }
 }
 
-DrawingItem *DrawingGroup::_pickItem(Geom::Point const &p, double delta, Geom::OptIntRect const &area_world, unsigned flags)
-{
-    for (auto &i : _children) {
-        DrawingItem *picked = i.pick(p, delta, area_world, flags);
+DrawingItem* DrawingGroup::_pickItem(const Geom::Point& p, double delta, const Geom::OptIntRect& area_world,
+                                     unsigned flags) {
+    // When the group is picked as a unit (e.g. <use> clones), its children are
+    // rendering artifacts, not objects: their sensitive flag (e.g. a locked
+    // original) must not block picking the group. Hidden children are already
+    // excluded because the group box only unions visible children.
+    unsigned child_flags = _pick_children ? flags : (flags | PICK_STICKY);
+    for (auto& i : _children) {
+        DrawingItem* picked = i.pick(p, delta, area_world, child_flags);
         if (picked) {
             return _pick_children ? picked : this;
         }

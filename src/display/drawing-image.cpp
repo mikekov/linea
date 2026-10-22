@@ -239,8 +239,9 @@ DrawingItem *DrawingImage::_pickItem(Geom::Point const &p, double delta, Geom::O
         Geom::Point tp = p * _ctm.inverse();
         Geom::Rect r = bounds();
 
-        if (!r.contains(tp))
+        if (!r.contains(tp)) {
             return nullptr;
+        }
 
         double vw = width * _scale[Geom::X];
         double vh = height * _scale[Geom::Y];

@@ -767,20 +767,30 @@ bool SelectTool::root_handler(CanvasEvent const &event)
                             }
                         } else { // click without shift, simply deselect, unless with Alt or something was cancelled
                             if (!(rb_escaped) && !(drag_escaped) && !force_drag) {
+                                // Re-pick at the point like upstream handleClick: the routing pick
+                                // may have failed (e.g. insensitive child inside a clone).
+                                auto local_item = sp_event_context_find_item(_desktop, event.pos, force_drag, false);
                                 auto document = _desktop->getDocument();
-                                auto point = _desktop->w2d(event.pos);
-                                auto& page_manager = document->getPageManager();
-                                auto page = page_manager.findPageAt(point);
+                                if (local_item) {
+                                    if (!selection->includes(local_item)) {
+                                        _seltrans->resetState();
+                                        selection->set(local_item);
+                                    }
+                                } else {
+                                    auto point = _desktop->w2d(event.pos);
+                                    auto& page_manager = document->getPageManager();
+                                    auto page = page_manager.findPageAt(point);
 
-                                if (page) {
-                                    selection->set(page);
-                                }
-                                else if (page_manager.isPointInViewport(point)) {
-                                    selection->set(document->getRoot());
-                                }
-                                else {
-                                    if (!selection->isEmpty()) {
-                                        selection->clear();
+                                    if (page) {
+                                        selection->set(page);
+                                    }
+                                    else if (page_manager.isPointInViewport(point)) {
+                                        selection->set(document->getRoot());
+                                    }
+                                    else {
+                                        if (!selection->isEmpty()) {
+                                            selection->clear();
+                                        }
                                     }
                                 }
                             }
