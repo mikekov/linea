@@ -177,7 +177,20 @@ void Preferences::_load()
         Inkscape::GC::release(prefs_read);
         _writable = true;
     } else {
-        _reportError(errMsg, not_saved);
+        // The file exists but is unreadable (e.g. truncated by an interrupted
+        // write). Back it up and start from the skeleton so that new settings
+        // can still be saved.
+        gchar* backup = g_strconcat(_prefs_filename.c_str(), ".broken", nullptr);
+        if (g_rename(_prefs_filename.c_str(), backup) == 0) {
+            gchar *msg = g_strdup_printf(_("Unreadable preferences file was backed up to %s."), backup);
+            _reportError(Glib::ustring(errMsg) + " " + msg, "");
+            g_free(msg);
+        } else {
+            _reportError(errMsg, "");
+        }
+        g_free(backup);
+        g_file_set_contents(_prefs_filename.c_str(), preferences_skeleton, PREFERENCES_SKELETON_SIZE, nullptr);
+        _writable = true;
     }
 }
 
@@ -283,8 +296,22 @@ void Preferences::save()
         // from one run of the program to the next, so can not be stored.
         // There are many other factors, so ask if you would like to learn them. - JAC
         Glib::ustring utf8name = Glib::filename_to_utf8(_prefs_filename);
-        if (!utf8name.empty()) {
-            sp_repr_save_file(_prefs_doc, utf8name.c_str());
+        if (utf8name.empty()) {
+            return;
+        }
+        // Write to a temp file and rename over the target: fopen("w") in
+        // sp_repr_save_file truncates in place, so a crash mid-write would
+        // leave a zero-byte preferences.xml that then disables saving forever.
+        std::string tmpname = _prefs_filename + ".tmp";
+        Glib::ustring tmp_utf8 = Glib::filename_to_utf8(tmpname);
+        if (!tmp_utf8.empty() && sp_repr_save_file(_prefs_doc, tmp_utf8.c_str())) {
+            gchar *target = g_filename_from_utf8(utf8name.c_str(), -1, nullptr, nullptr, nullptr);
+            gchar *tmp_native = g_filename_from_utf8(tmp_utf8.c_str(), -1, nullptr, nullptr, nullptr);
+            if (target && tmp_native) {
+                g_rename(tmp_native, target);
+            }
+            g_free(target);
+            g_free(tmp_native);
         }
     }
 }
