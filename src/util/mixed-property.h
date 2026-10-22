@@ -43,12 +43,15 @@ public:
 
     // Merge a new observed value into this property.
     // Call once per visited item; order matters only for the stored value on Mixed.
+    // Types may provide same_value(other) to classify near-equal values as
+    // one value (e.g. transform-derived stroke widths differing by float
+    // noise); otherwise exact operator== decides Mixed.
     template<typename U>
     void merge(U&& v) {
         if (_state == PropState::Unset) {
             _value = std::forward<U>(v);
             _state = PropState::Single;
-        } else if (_state == PropState::Single && _value != v) {
+        } else if (_state == PropState::Single && !same_as(_value, v)) {
             _state = PropState::Mixed;
         }
     }
@@ -65,6 +68,14 @@ public:
     }
 
 private:
+    static bool same_as(const T& a, const T& b) {
+        if constexpr (requires { a.same_value(b); }) {
+            return a.same_value(b);
+        } else {
+            return a == b;
+        }
+    }
+
     enum class PropState {
         Unset,   // no items visited yet
         Single,  // all items agree on the value

@@ -81,13 +81,17 @@ PaintProp classify_paint(const SPIPaint& paint, double opacity);
 struct StrokeWidthProp {
     double value    = 1.0;
     bool   hairline = false;
-    // value is derived (stroke_width * i2dt.descrim()); transforms that are
-    // equivalent on paper can differ by float noise, so compare with the
-    // same tolerance the GTK query path uses in desktop-style.cpp.
+    // same_value drives mixed_property::merge classification only: value is
+    // derived (stroke_width * i2dt.descrim()), and transforms equivalent on
+    // paper can differ by float noise, so near-equal widths must not flip a
+    // multi-select to Mixed. operator== stays exact — the state delta uses
+    // it to decide whether the displayed value changed, and there a real
+    // difference (0.9991 vs 1.0) must propagate to the UI.
     static constexpr double same_value_tolerance = 1e-3;
-    bool operator == (const StrokeWidthProp& other) const {
+    bool same_value(const StrokeWidthProp& other) const {
         return hairline == other.hairline && std::fabs(value - other.value) <= same_value_tolerance;
     }
+    bool operator == (const StrokeWidthProp& other) const = default;
 };
 
 // Value type for stroke-dasharray + dashoffset.
