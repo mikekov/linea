@@ -53,29 +53,29 @@ void RightPanel::buildUi() {
 
     _propertiesPanel = new DocumentPropertiesPanel(nullptr, SIDE_PADDING, SIDE_PADDING);
 
-    _symbolsWidget = new SymbolsWidget();
-    _symbolsWidget->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 0);
-    _symbolsSource = new StockSymbolsSource(_symbolsWidget, nullptr);
+    // _symbolsWidget = new SymbolsWidget();
+    // _symbolsWidget->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 0);
+    // _symbolsSource = new StockSymbolsSource(_symbolsWidget, nullptr);
 
     auto content = new QWidget();
     auto contentLayout = new QVBoxLayout(content);
     contentLayout->setContentsMargins(0, 0, 0, 0);
     contentLayout->setSpacing(0);
 
-    _panelSwitch = new PanelSwitch(content);
-    _panelSwitch->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 4);
-    contentLayout->addWidget(_panelSwitch);
-    _panelSwitch->addButton("properties", {}, tr("Properties"));
-    _panelSwitch->addButton("symbols", {}, tr("Symbols"));
-    _panelSwitch->setCurrentIndex(0);
+    // _panelSwitch = new PanelSwitch(content);
+    // _panelSwitch->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 4);
+    // contentLayout->addWidget(_panelSwitch);
+    // _panelSwitch->addButton("properties", {}, tr("Properties"));
+    // _panelSwitch->addButton("symbols", {}, tr("Symbols"));
+    // _panelSwitch->setCurrentIndex(0);
 
-    auto separator = new Separator(content);
-    separator->setContentsMargins(0, 0, 0, 4);
-    contentLayout->addWidget(separator);
+    // auto separator = new Separator(content);
+    // separator->setContentsMargins(0, 0, 0, 4);
+    // contentLayout->addWidget(separator);
 
     _panelStack = new QStackedWidget(content);
     _panelStack->addWidget(_propertiesPanel);
-    _panelStack->addWidget(_symbolsWidget);
+    // _panelStack->addWidget(_symbolsWidget);
     _panelStack->setCurrentIndex(0);
     contentLayout->addWidget(_panelStack);
 
@@ -84,18 +84,19 @@ void RightPanel::buildUi() {
 
 void RightPanel::buildHeader() {
     auto tb = new Toolbar();
-    auto ext = tb->addButton("dialog-open-extension-gallery");
-    auto extensionPopup = new PopupMenu();
-    auto extensionGallery = new ExtensionGallery;
-    extensionGallery->setFixedSize(640, 460);
-    extensionPopup->setContent(extensionGallery);
-    connect(ext, &QToolButton::clicked, this, [extensionPopup, ext]() {
-        extensionPopup->showBelowWidget(ext);
-    });
-    connect(extensionGallery, &ExtensionGallery::itemActivated, extensionPopup,
-            [extensionPopup](const QString&) { extensionPopup->hide(); });
-    connect(extensionGallery, &ExtensionGallery::actionRequested, extensionPopup,
-            [extensionPopup](const QString&) { extensionPopup->hide(); });
+
+    // auto ext = tb->addButton("dialog-open-extension-gallery");
+    // auto extensionPopup = new PopupMenu();
+    // auto extensionGallery = new ExtensionGallery;
+    // extensionGallery->setFixedSize(640, 460);
+    // extensionPopup->setContent(extensionGallery);
+    // connect(ext, &QToolButton::clicked, this, [extensionPopup, ext]() {
+    //     extensionPopup->showBelowWidget(ext);
+    // });
+    // connect(extensionGallery, &ExtensionGallery::itemActivated, extensionPopup,
+    //         [extensionPopup](const QString&) { extensionPopup->hide(); });
+    // connect(extensionGallery, &ExtensionGallery::actionRequested, extensionPopup,
+    //         [extensionPopup](const QString&) { extensionPopup->hide(); });
 
     tb->addStretch();
 // temp --------------------------------
@@ -203,7 +204,7 @@ void RightPanel::buildHeader() {
 }
 
 void RightPanel::connectSignals() {
-    connect(_panelSwitch, &PanelSwitch::currentChanged, _panelStack, &QStackedWidget::setCurrentIndex);
+    // connect(_panelSwitch, &PanelSwitch::currentChanged, _panelStack, &QStackedWidget::setCurrentIndex);
 }
 
 void RightPanel::setDesktop(SPDesktop* desktop) {

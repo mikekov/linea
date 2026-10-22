@@ -17,10 +17,10 @@ class SPDesktop;
 namespace Linea::UI {
 
 class DocumentPropertiesPanel;
-class SymbolsWidget;
-class StockSymbolsSource;
+// class SymbolsWidget;
+// class StockSymbolsSource;
 class NumberEdit;
-class PanelSwitch;
+// class PanelSwitch;
 
 class RightPanel : public CollapsiblePanel {
     Q_OBJECT
@@ -33,8 +33,8 @@ public:
     void buildHeader();
 
     DocumentPropertiesPanel* propertiesPanel() const { return _propertiesPanel; }
-    SymbolsWidget* symbolsWidget() const { return _symbolsWidget; }
-    PanelSwitch* switchWidget() const { return _panelSwitch; }
+    // SymbolsWidget* symbolsWidget() const { return _symbolsWidget; }
+    // PanelSwitch* switchWidget() const { return _panelSwitch; }
 
     /// Zoom controls (accessed by desktop-widget for zoom display updates).
     void updateZoom(double zoom);
@@ -59,10 +59,10 @@ private:
     void connectSignals();
 
     DocumentPropertiesPanel* _propertiesPanel = nullptr;
-    SymbolsWidget* _symbolsWidget = nullptr;
-    StockSymbolsSource* _symbolsSource = nullptr;
+    // SymbolsWidget* _symbolsWidget = nullptr;
+    // StockSymbolsSource* _symbolsSource = nullptr;
     QStackedWidget* _panelStack = nullptr;
-    PanelSwitch* _panelSwitch = nullptr;
+    // PanelSwitch* _panelSwitch = nullptr;
     QToolButton* _zoomButton = nullptr;
     NumberEdit* _zoomEdit = nullptr;
     QToolButton* _rotationButton = nullptr;

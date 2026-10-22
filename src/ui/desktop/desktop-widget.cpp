@@ -896,7 +896,7 @@ void SPDesktopWidget::saveSettings() {
     _settings->setValue("colorPaletteWidth", _colorPalettePanel->width());
     _settings->setValue("consolePanelSize", _consolePanel->size());
     _settings->setValue("colorPaletteVisible", _colorPaletteVisible);
-    _settings->setValue("showDialogIndex", _rightPanel->switchWidget()->currentIndex());
+    // _settings->setValue("showDialogIndex", _rightPanel->switchWidget()->currentIndex());
     _settings->setValue("dockedDialogs", dialogsDocked());
     _settings->setValue("rulersVisible", _canvasFrame->rulersVisible());
 
@@ -923,7 +923,7 @@ void SPDesktopWidget::restoreSettings() {
     const QSize consoleSize = _settings->value("consolePanelSize", QSize(600, 60)).toSize();
     _colorPaletteVisible = _settings->value("colorPaletteVisible", true).toBool();
     bool toggleSvgTree = _settings->value("toggleSvgTree", false).toBool();
-    int showDialog = _settings->value("showDialogIndex", 0).toInt();
+    // int showDialog = _settings->value("showDialogIndex", 0).toInt();
     bool dockedDialogs = _settings->value("dockedDialogs", false).toBool();
     bool rulersVisible = _settings->value("rulersVisible", true).toBool();
     QString paletteId = _settings->value("colorPaletteId").toString();
@@ -939,7 +939,7 @@ void SPDesktopWidget::restoreSettings() {
     dockPanels(dockedDialogs);
 
     _leftPanel->showXmlTree(toggleSvgTree);
-    _rightPanel->switchWidget()->setCurrentIndex(showDialog);
+    // _rightPanel->switchWidget()->setCurrentIndex(showDialog);
 
     // Restore color palette selection and tile size. We set the options widget
     // state for UI consistency and apply directly to the palette widget, since
