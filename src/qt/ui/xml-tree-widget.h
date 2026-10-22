@@ -17,6 +17,7 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QActionGroup;
 class QMenu;
+class QToolButton;
 QT_END_NAMESPACE
 
 class SPDocument;
@@ -96,12 +97,26 @@ private:
     bool isMutable(Inkscape::XML::Node* node) const;
     bool isTreeRoot(Inkscape::XML::Node* node) const;
     void buildXmlTree();
+    void reselectNode(Inkscape::XML::Node* node);
+
+    struct MoveNodeFlags {
+        bool raise = false;
+        bool lower = false;
+        bool indent = false;
+        bool unindent = false;
+        bool any() const { return raise || lower || indent || unindent; }
+    };
+    MoveNodeFlags moveNodeFlags() const;
 
     SPDocument* _document = nullptr;
     XmlTreeView* _treeView = nullptr;
     AttributeEditWidget* _attrEdit = nullptr;
     QMenu* _layoutMenu = nullptr;
     QActionGroup* _layoutGroup = nullptr;
+    QToolButton* _newElementButton = nullptr;
+    QToolButton* _deleteButton = nullptr;
+    QToolButton* _moveButton = nullptr;
+    QToolButton* _layoutButton = nullptr;
     std::unique_ptr<Ui::XmlTreeWidget> _ui;
     OperationBlocker _update;
     Inkscape::Pref<bool> _mono_font{"/dialogs/xml/mono-font", true};

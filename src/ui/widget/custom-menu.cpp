@@ -89,6 +89,19 @@ public:
         , onTrigger(std::move(trigger)) {}
 
     bool eventFilter(QObject* obj, QEvent* event) override {
+        if (auto widget = qobject_cast<QWidget*>(obj); widget && !widget->isEnabled()) {
+            switch (event->type()) {
+                case QEvent::HoverEnter:
+                case QEvent::HoverLeave:
+                case QEvent::MouseButtonPress:
+                case QEvent::MouseButtonRelease:
+                case QEvent::MouseButtonDblClick:
+                    return true;
+                default:
+                    break;
+            }
+            return QObject::eventFilter(obj, event);
+        }
         if (event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverLeave) {
             if (auto widget = qobject_cast<QWidget*>(obj)) {
                 widget->setProperty("hovered", event->type() == QEvent::HoverEnter);
@@ -205,10 +218,12 @@ struct MenuItemFrame {
 MenuItemFrame createStyledMenuItemFrame(QMenu* menu, QMenu* rootMenu, bool supportCheckMarks,
                                         QAction* action, const QIcon& icon, QSize iconSize,
                                         const QString& title, const QString& description,
-                                        std::function<void()> onTrigger = {}) {
+                                        std::function<void()> onTrigger = {}, bool enabled = true) {
     auto widgetAction = new QWidgetAction(menu);
+    widgetAction->setEnabled(enabled);
     auto frame = new QFrame(menu);
-    frame->setCursor(Qt::PointingHandCursor);
+    frame->setEnabled(enabled);
+    frame->setCursor(enabled ? Qt::PointingHandCursor : Qt::ArrowCursor);
     frame->setAttribute(Qt::WA_Hover);
     frame->setProperty("class", "custom-tool-item");
     frame->installEventFilter(new MenuItemEventFilter(action, rootMenu, frame, std::move(onTrigger)));
@@ -299,9 +314,11 @@ size_t buildMenuItems(QMenu* menu, std::span<const CustomMenuItem> items, size_t
 
         auto action_id = item.action;
         auto action = action_id.empty() ? nullptr : registry.action(action_id);
+        const bool enabled = item.enabled && (!action || action->isEnabled());
         auto [widgetAction, frame, hbox, checkIcon] =
             createStyledMenuItemFrame(menu, ctx.rootMenu, ctx.supportCheckMarks,
-                                      action, item.icon, item.iconSize, item.title, item.description, item.onTrigger);
+                                      action, item.icon, item.iconSize, item.title, item.description,
+                                      item.onTrigger, enabled);
 
         if (checkIcon) {
             ctx.checkIcons.emplace_back(action, checkIcon);

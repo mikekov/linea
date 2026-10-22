@@ -41,6 +41,10 @@ public:
     // set button size before adding any buttons
     void setDefaultButtonSize(int size);
 
+    // Size a button that shows a menu indicator: fixed toolbar height, but
+    // width is free to grow so the icon and indicator are not squished.
+    void setMenuButtonSize(QToolButton* button);
+
     // set margins around the toolbar
     void setMargins(int left, int top, int right, int bottom);
 
@@ -48,6 +52,11 @@ public:
     QToolButton* addButton(const std::string& action_id);
 
     QToolButton* addPushButton(const QString& label);
+
+    // Add a single icon button bound to a callback (for buttons without a
+    // registered action).
+    QToolButton* addCallbackButton(const QIcon& icon, const QString& tooltip,
+                                   std::function<void()> on_trigger);
 
     // Add a tool group (main button + arrow popup) for a set of actions.
     // current_action tracks which action is currently active for that group.
@@ -66,6 +75,11 @@ public:
     // Add a drop down button whose menu is rebuilt from `builder` each time
     // it is about to show. Use for dynamic content (e.g. recent files).
     QToolButton* addDynamicDropDownButton(std::function<std::vector<Linea::UI::CustomMenuItem>()> builder);
+
+    // Add an icon button that opens a menu rebuilt from `builder` each time
+    // it is about to show.
+    QToolButton* addDynamicMenuButton(std::function<std::vector<Linea::UI::CustomMenuItem>()> builder,
+                                      const QIcon& icon, const QString& tooltip);
 
     // spring to push buttons to the right edge
     void addStretch();
@@ -111,6 +125,8 @@ private:
 
     QToolButton* createMenuButton(std::span<const char* const> action_ids, const QString& label);
     QToolButton* createArrowButton(QWidget* parent);
+    void attachDynamicMenu(QToolButton* button,
+                           std::function<std::vector<Linea::UI::CustomMenuItem>()> builder);
     QToolButton* createComboButton(std::span<const char* const> action_ids, QAction* button_action,
                                    bool supportCheckMarks);
     void createToolGroup(std::span<const char* const> action_ids, QAction*& current_action);

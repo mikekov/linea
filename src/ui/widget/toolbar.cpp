@@ -86,6 +86,13 @@ void Toolbar::setButtonSize(QToolButton* button) {
     button->setIconSize(QSize(16, 16));
 }
 
+void Toolbar::setMenuButtonSize(QToolButton* button) {
+    button->setFixedHeight(_button_size);
+    button->setIconSize(QSize(16, 16));
+    button->setMaximumWidth(QWIDGETSIZE_MAX);
+    button->setMinimumWidth(_button_size);
+}
+
 void Toolbar::bindAction(QToolButton* button, QAction* action) {
     button->setIcon(action->icon());
     bool iconToggle = action->property("iconToggle").toBool();
@@ -291,11 +298,12 @@ QToolButton* Toolbar::addDropDownButton(std::span<const Linea::UI::CustomMenuIte
     return nullptr;
 }
 
-QToolButton* Toolbar::addDynamicDropDownButton(std::function<std::vector<Linea::UI::CustomMenuItem>()> builder) {
-    auto button = createArrowButton(this);
+void Toolbar::attachDynamicMenu(QToolButton* button,
+                                std::function<std::vector<Linea::UI::CustomMenuItem>()> builder) {
     auto menu = new QMenu(button);
     menu->setObjectName("customToolMenu");
     button->setMenu(menu);
+    button->setPopupMode(QToolButton::InstantPopup);
     Linea::UI::installRightAlignedMenuFilter(menu, ARROW_BTN_W);
 
     // Rebuild the menu from the builder each time it's about to show.
@@ -323,7 +331,23 @@ QToolButton* Toolbar::addDynamicDropDownButton(std::function<std::vector<Linea::
 
         createCustomMenuInto(menu, items, true);
     });
+}
 
+QToolButton* Toolbar::addDynamicDropDownButton(std::function<std::vector<Linea::UI::CustomMenuItem>()> builder) {
+    auto button = createArrowButton(this);
+    attachDynamicMenu(button, std::move(builder));
+    _flow_layout->insertWidget(_insert_pos++, button);
+    return button;
+}
+
+QToolButton* Toolbar::addDynamicMenuButton(std::function<std::vector<Linea::UI::CustomMenuItem>()> builder,
+                                           const QIcon& icon, const QString& tooltip) {
+    auto button = new QToolButton(this);
+    button->setIcon(icon);
+    button->setToolTip(tooltip);
+    button->setAutoRaise(true);
+    setMenuButtonSize(button);
+    attachDynamicMenu(button, std::move(builder));
     _flow_layout->insertWidget(_insert_pos++, button);
     return button;
 }
@@ -344,6 +368,18 @@ QToolButton* Toolbar::addPushButton(const QString& label) {
     auto button = new QToolButton(this);
     button->setText(label);
     setButtonSize(button);
+    _flow_layout->insertWidget(_insert_pos++, button);
+    return button;
+}
+
+QToolButton* Toolbar::addCallbackButton(const QIcon& icon, const QString& tooltip,
+                                        std::function<void()> on_trigger) {
+    auto button = new QToolButton(this);
+    button->setIcon(icon);
+    button->setToolTip(tooltip);
+    button->setAutoRaise(true);
+    setButtonSize(button);
+    connect(button, &QToolButton::clicked, button, std::move(on_trigger));
     _flow_layout->insertWidget(_insert_pos++, button);
     return button;
 }

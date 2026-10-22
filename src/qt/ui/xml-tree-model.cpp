@@ -246,7 +246,10 @@ void NodeWatcher::moveChild(Inkscape::XML::Node* child, Inkscape::XML::Node* pre
     }
 
     auto parentIndex = _model->indexForItem(_item);
-    if (!_model->beginMoveRows(parentIndex, oldRow, oldRow, parentIndex, newRow)) {
+    // beginMoveRows expects the destination row in pre-removal coordinates;
+    // newRow is post-removal, so a forward move needs one extra row.
+    const int destRow = newRow > oldRow ? newRow + 1 : newRow;
+    if (!_model->beginMoveRows(parentIndex, oldRow, oldRow, parentIndex, destRow)) {
         return;
     }
 
@@ -259,7 +262,7 @@ void NodeWatcher::moveChild(Inkscape::XML::Node* child, Inkscape::XML::Node* pre
     _childWatchers.erase(childWatcherIt);
 
     auto childItem = _item->removeChild(oldRow);
-    _item->insertChild(newRow > oldRow ? newRow - 1 : newRow, std::move(childItem));
+    _item->insertChild(newRow, std::move(childItem));
     _childWatchers[child] = std::move(childWatcher);
 
     _model->endMoveRows();

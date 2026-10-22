@@ -15,7 +15,7 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
       <property name="spacing">
-        <number>0</number>
+        <number>4</number>
       </property>
       <property name="leftMargin">
         <number>0</number>
@@ -30,234 +30,7 @@
         <number>0</number>
       </property>
       <item>
-        <widget class="QWidget" name="toolbarWidget">
-          <property name="class" stdset="0">
-            <string>toolbar-buttons</string>
-          </property>
-          <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-            </sizepolicy>
-          </property>
-          <layout class="QHBoxLayout" name="toolbarLayout">
-            <property name="spacing">
-              <number>0</number>
-            </property>
-            <property name="leftMargin">
-              <number>0</number>
-            </property>
-            <property name="topMargin">
-              <number>0</number>
-            </property>
-            <property name="rightMargin">
-              <number>0</number>
-            </property>
-            <property name="bottomMargin">
-              <number>4</number>
-            </property>
-            <item>
-              <widget class="QToolButton" name="newElementButton">
-                <property name="toolTip">
-                  <string>New element node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/xml-element-new</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QToolButton" name="newTextButton">
-                <property name="toolTip">
-                  <string>New text node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/xml-text-new</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QToolButton" name="duplicateButton">
-                <property name="toolTip">
-                  <string>Duplicate node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/xml-node-duplicate</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QToolButton" name="deleteButton">
-                <property name="toolTip">
-                  <string>Delete node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/xml-node-delete</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QToolButton" name="unindentButton">
-                <property name="toolTip">
-                  <string>Unindent node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/format-indent-less</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QToolButton" name="indentButton">
-                <property name="toolTip">
-                  <string>Indent node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/format-indent-more</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-
-            <!-- <item>
-              <widget class="QToolButton" name="raiseButton">
-                <property name="toolTip">
-                  <string>Raise node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/move-up</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QToolButton" name="lowerButton">
-                <property name="toolTip">
-                  <string>Lower node</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/move-down</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item> -->
-
-            <item>
-              <spacer name="horizontalSpacer">
-                <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeType">
-                  <enum>QSizePolicy::Expanding</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                  <size>
-                    <width>0</width>
-                    <height>0</height>
-                  </size>
-                </property>
-              </spacer>
-            </item>
-            <item>
-              <widget class="QToolButton" name="layoutButton">
-                <property name="toolTip">
-                  <string>Panel layout</string>
-                </property>
-                <property name="class" stdset="0">
-                  <string>no-menu-arrow</string>
-                </property>
-                <property name="visible">
-                  <bool>false</bool>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-
-            <item>
-              <widget class="QToolButton" name="goBackButton">
-                <property name="toolTip">
-                  <string>Return to object tree</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/go-back</normaloff>
-                  </iconset>
-                </property>
-                <property name="autoRaise">
-                  <bool>true</bool>
-                </property>
-                <property name="toolButtonStyle">
-                  <enum>Qt::ToolButtonIconOnly</enum>
-                </property>
-              </widget>
-            </item>
-
-          </layout>
+        <widget class="Linea::UI::Toolbar" name="toolbar">
         </widget>
       </item>
       <item>
@@ -310,6 +83,13 @@
       </item>
     </layout>
   </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::Toolbar</class>
+      <extends>QWidget</extends>
+      <header>ui/widget/toolbar.h</header>
+    </customwidget>
+  </customwidgets>
   <resources/>
   <connections/>
 </ui>

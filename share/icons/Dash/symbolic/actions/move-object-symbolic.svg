@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" version="2.0" id="svg1" inkscape:version="1.5-dev-linea (31cf81f, 2026-10-22, custom)" sodipodi:docname="move-object-symbolic.svg" standalone="no" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <defs id="defs1" />
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.1" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:zoom="2" inkscape:cx="7.75" inkscape:cy="7.75" inkscape:window-width="1539" inkscape:window-height="991" inkscape:window-maximized="0" inkscape:current-layer="svg1">
+    <inkscape:grid type="xygrid" id="grid1" units="px" originx="0" originy="0" spacingx="1" spacingy="1" empcolor="#6aabcb" empopacity="0.3607843137" color="#6aabcb" opacity="0.1803921569" empspacing="4" enabled="true" visible="true" />
+  </sodipodi:namedview>
+  <path id="Union-4" style="fill:#000000" d="M 8 0.29296875 L 5.29296875 3 L 6 3.70703125 L 7.5 2.20703125 L 7.5 5 L 8.5 5 L 8.5 2.20703125 L 10 3.70703125 L 10.70703125 3 L 8 0.29296875 z M 3 5.29296875 L 0.29296875 8 L 3 10.70703125 L 3.70703125 10 L 2.20703125 8.5 L 5 8.5 L 5 7.5 L 2.20703125 7.5 L 3.70703125 6 L 3 5.29296875 z M 13 5.29296875 L 12.29296875 6 L 13.79296875 7.5 L 11 7.5 L 11 8.5 L 13.79296875 8.5 L 12.29296875 10 L 13 10.70703125 L 15.70703125 8 L 13 5.29296875 z M 7.5 11 L 7.5 13.79296875 L 6 12.29296875 L 5.29296875 13 L 8 15.70703125 L 10.70703125 13 L 10 12.29296875 L 8.5 13.79296875 L 8.5 11 L 7.5 11 z " />
+  <circle style="fill:#000000" id="path1" cx="8" cy="8" r="1.395265597" />
+</svg>

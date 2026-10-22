@@ -69,21 +69,53 @@ XmlTreeWidget::XmlTreeWidget(QWidget* parent)
     setupLayoutMenu();
     restoreLayout();
 
-    connect(_ui->newElementButton, &QToolButton::clicked, this, &XmlTreeWidget::onNewElement);
-    connect(_ui->newTextButton, &QToolButton::clicked, this, &XmlTreeWidget::onNewText);
-    connect(_ui->duplicateButton, &QToolButton::clicked, this, &XmlTreeWidget::onDuplicateNode);
-    connect(_ui->deleteButton, &QToolButton::clicked, this, &XmlTreeWidget::onDeleteNode);
-    connect(_ui->unindentButton, &QToolButton::clicked, this, &XmlTreeWidget::onUnindentNode);
-    connect(_ui->indentButton, &QToolButton::clicked, this, &XmlTreeWidget::onIndentNode);
-    // connect(_ui->raiseButton, &QToolButton::clicked, this, &XmlTreeWidget::onRaiseNode);
-    // connect(_ui->lowerButton, &QToolButton::clicked, this, &XmlTreeWidget::onLowerNode);
-    // Bind like Toolbar::connectAction for iconToggle actions: setDefaultAction
-    // would re-sync checkable/checked from the action on every changed() signal.
+    _ui->toolbar->setDefaultButtonSize(24);
+    _ui->toolbar->setMargins(0, 0, 0, 0);
+
+    _newElementButton = _ui->toolbar->addCallbackButton(
+        QIcon(":/icons/xml-element-new"), tr("New element node"), [this] { onNewElement(); });
+
+    const Linea::UI::CustomMenuItem menu_items[] = {
+        {.title = tr("New text node"), .icon = QIcon(":/icons/xml-text-new"),
+         .onTrigger = [this] { onNewText(); }},
+        {.title = tr("Duplicate node"), .icon = QIcon(":/icons/xml-node-duplicate"),
+         .onTrigger = [this] { onDuplicateNode(); }},
+    };
+    _ui->toolbar->addDropDownButton(menu_items, "");
+
+    _deleteButton = _ui->toolbar->addCallbackButton(
+        QIcon(":/icons/xml-node-delete"), tr("Delete node"), [this] { onDeleteNode(); });
+
+    _moveButton = _ui->toolbar->addDynamicMenuButton(
+        [this] {
+            const auto flags = moveNodeFlags();
+            return std::vector<Linea::UI::CustomMenuItem>{
+                {.title = tr("Raise node"), .icon = QIcon(":/icons/move-up"),
+                 .onTrigger = [this] { onRaiseNode(); }, .enabled = flags.raise},
+                {.title = tr("Lower node"), .icon = QIcon(":/icons/move-down"),
+                 .onTrigger = [this] { onLowerNode(); }, .enabled = flags.lower},
+                {.title = tr("Indent node"), .icon = QIcon(":/icons/format-indent-more"),
+                 .onTrigger = [this] { onIndentNode(); }, .enabled = flags.indent},
+                {.title = tr("Unindent node"), .icon = QIcon(":/icons/format-indent-less"),
+                 .onTrigger = [this] { onUnindentNode(); }, .enabled = flags.unindent},
+            };
+        },
+        QIcon(":/icons/move-object"), tr("Move node"));
+
+    _ui->toolbar->addStretch();
+
+    _layoutButton = _ui->toolbar->addCallbackButton(
+        QIcon(":/icons/layout-auto"), tr("Panel layout"), []{});
+    _layoutButton->setMenu(_layoutMenu);
+    _ui->toolbar->setMenuButtonSize(_layoutButton);
+    _layoutButton->setPopupMode(QToolButton::InstantPopup);
+    _layoutButton->hide();
+    updateLayoutIcon();
+
+    auto goBackButton = _ui->toolbar->addCallbackButton(
+        QIcon(":/icons/go-back"), tr("Return to the object tree"), []{});
     auto toggleXml = ActionRegistry::get().action("dialog-toggle-xml");
-    connect(_ui->goBackButton, &QToolButton::clicked, toggleXml, &QAction::trigger);
-    // connect(toggleXml, &QAction::changed, _ui->goBackButton,
-    //         [this, toggleXml] { _ui->goBackButton->setIcon(toggleXml->icon()); });
-    // _ui->goBackButton->setIcon(toggleXml->icon());
+    connect(goBackButton, &QToolButton::clicked, toggleXml, &QAction::trigger);
 
     connect(_ui->splitter, &QSplitter::splitterMoved, this, &XmlTreeWidget::savePanePosition);
 
@@ -111,7 +143,7 @@ void XmlTreeWidget::setDocument(SPDocument* document) {
 }
 
 void XmlTreeWidget::setSelectedNode(Inkscape::XML::Node* node) {
-    _treeView->selectNode(node);
+    reselectNode(node);
 }
 
 void XmlTreeWidget::setSyntaxStyle(const Linea::UI::Syntax::XMLStyles& style) {
@@ -155,6 +187,51 @@ void XmlTreeWidget::onNodeSelected(Inkscape::XML::Node* node) {
     Q_EMIT nodeSelected(node);
 }
 
+void XmlTreeWidget::reselectNode(Inkscape::XML::Node* node) {
+    _treeView->selectNode(node);
+    // Re-selecting the already-current index emits no selectionChanged; a
+    // transient deselect during the move may also have cleared _selectedNode.
+    if (node != _selectedNode) {
+        onNodeSelected(node);
+        return;
+    }
+    updateButtons();
+}
+
+XmlTreeWidget::MoveNodeFlags XmlTreeWidget::moveNodeFlags() const {
+    auto node = _selectedNode;
+    const bool hasNode = node != nullptr;
+    const bool mutableNode = isMutable(node);
+
+    MoveNodeFlags flags;
+
+    // Raise/lower.
+    flags.raise = hasNode && node->parent() && node->parent()->firstChild() != node;
+    flags.lower = hasNode && node->next() != nullptr;
+
+    // Unindent: node is at least three levels deep.
+    if (hasNode) {
+        auto parent = node->parent();
+        auto grandparent = parent ? parent->parent() : nullptr;
+        flags.unindent = grandparent && grandparent->parent();
+    }
+
+    // Indent: previous sibling is an element.
+    if (hasNode && mutableNode && node->parent()) {
+        auto parent = node->parent();
+        if (parent->firstChild() != node) {
+            for (auto prev = parent->firstChild(); prev; prev = prev->next()) {
+                if (prev->next() == node) {
+                    flags.indent = prev->type() == Inkscape::XML::NodeType::ELEMENT_NODE;
+                    break;
+                }
+            }
+        }
+    }
+
+    return flags;
+}
+
 void XmlTreeWidget::updateButtons() {
     auto node = _selectedNode;
     const bool hasNode = node != nullptr;
@@ -162,40 +239,9 @@ void XmlTreeWidget::updateButtons() {
     const bool mutableNode = isMutable(node);
     const bool rootNode = isTreeRoot(node);
 
-    _ui->newElementButton->setEnabled(isElement);
-    _ui->newTextButton->setEnabled(isElement);
-    _ui->duplicateButton->setEnabled(mutableNode);
-    _ui->deleteButton->setEnabled(hasNode && !rootNode && mutableNode);
-
-    // Raise/lower.
-    // _ui->raiseButton->setEnabled(hasNode && node->parent() && node->parent()->firstChild() != node);
-    // _ui->lowerButton->setEnabled(hasNode && node->next() != nullptr);
-
-    // Unindent: node is at least three levels deep.
-    bool unindentable = false;
-    if (hasNode) {
-        auto parent = node->parent();
-        auto grandparent = parent ? parent->parent() : nullptr;
-        if (grandparent && grandparent->parent()) {
-            unindentable = true;
-        }
-    }
-    _ui->unindentButton->setEnabled(unindentable);
-
-    // Indent: previous sibling is an element.
-    bool indentable = false;
-    if (hasNode && mutableNode && node->parent()) {
-        auto parent = node->parent();
-        if (parent->firstChild() != node) {
-            for (auto prev = parent->firstChild(); prev; prev = prev->next()) {
-                if (prev->next() == node) {
-                    indentable = prev->type() == Inkscape::XML::NodeType::ELEMENT_NODE;
-                    break;
-                }
-            }
-        }
-    }
-    _ui->indentButton->setEnabled(indentable);
+    _newElementButton->setEnabled(isElement);
+    _deleteButton->setEnabled(hasNode && !rootNode && mutableNode);
+    _moveButton->setEnabled(moveNodeFlags().any());
 }
 
 bool XmlTreeWidget::isMutable(Inkscape::XML::Node* node) const {
@@ -255,7 +301,7 @@ void XmlTreeWidget::onNewElement() {
     auto newNode = xmlDoc->createElement(tagName.toUtf8().constData());
     _selectedNode->appendChild(newNode);
     Inkscape::GC::release(newNode);
-    _treeView->selectNode(newNode);
+    reselectNode(newNode);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Create new element node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -276,7 +322,7 @@ void XmlTreeWidget::onNewText() {
     auto textNode = xmlDoc->createTextNode("");
     _selectedNode->appendChild(textNode);
     Inkscape::GC::release(textNode);
-    _treeView->selectNode(textNode);
+    reselectNode(textNode);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Create new text node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -298,7 +344,7 @@ void XmlTreeWidget::onDuplicateNode() {
     auto dup = _selectedNode->duplicate(xmlDoc);
     parent->addChild(dup, _selectedNode);
     Inkscape::GC::release(dup);
-    _treeView->selectNode(dup);
+    reselectNode(dup);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Duplicate node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -335,16 +381,10 @@ void XmlTreeWidget::onRaiseNode() {
         return;
     }
 
-    Inkscape::XML::Node* ref = nullptr;
-    for (auto before = parent->firstChild(); before; before = before->next()) {
-        if (before->next() == _selectedNode) {
-            ref = before;
-            break;
-        }
-    }
-
-    parent->changeOrder(_selectedNode, ref);
-    _treeView->selectNode(_selectedNode);
+    auto node = _selectedNode;
+    auto prev = node->prev();
+    parent->changeOrder(node, prev ? prev->prev() : nullptr);
+    reselectNode(node);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Raise node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -362,8 +402,9 @@ void XmlTreeWidget::onLowerNode() {
         return;
     }
 
-    parent->changeOrder(_selectedNode, _selectedNode->next());
-    _treeView->selectNode(_selectedNode);
+    auto node = _selectedNode;
+    parent->changeOrder(node, node->next());
+    reselectNode(node);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Lower node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -400,7 +441,7 @@ void XmlTreeWidget::onIndentNode() {
     parent->removeChild(node);
     prev->addChild(node, ref);
     Inkscape::GC::release(node);
-    _treeView->selectNode(node);
+    reselectNode(node);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Indent node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -424,7 +465,7 @@ void XmlTreeWidget::onUnindentNode() {
     parent->removeChild(node);
     grandparent->addChild(node, parent);
     Inkscape::GC::release(node);
-    _treeView->selectNode(node);
+    reselectNode(node);
 
     Inkscape::DocumentUndo::done(_document, RC_("Undo/XML Editor", "Unindent node"),
                                  Glib::ustring(INKSCAPE_ICON("dialog-xml-editor")));
@@ -444,9 +485,6 @@ void XmlTreeWidget::setupLayoutMenu() {
     }
 
     connect(_layoutMenu, &QMenu::triggered, this, &XmlTreeWidget::onLayoutChanged);
-    connect(_ui->layoutButton, &QToolButton::clicked, this, [this]() {
-        _layoutMenu->popup(_ui->layoutButton->mapToGlobal(QPoint(0, _ui->layoutButton->height())));
-    });
 }
 
 void XmlTreeWidget::onLayoutChanged(QAction* action) {
@@ -492,6 +530,9 @@ void XmlTreeWidget::resizeEvent(QResizeEvent* event) {
 }
 
 void XmlTreeWidget::updateLayoutIcon() {
+    if (!_layoutButton) {
+        return;
+    }
     const char* icon = "layout-auto";
     switch (_layout) {
         case DialogLayout::Horizontal:
@@ -503,7 +544,7 @@ void XmlTreeWidget::updateLayoutIcon() {
         default:
             break;
     }
-    _ui->layoutButton->setIcon(QIcon(QString::fromUtf8(":/icons/") + icon));
+    _layoutButton->setIcon(QIcon(QString::fromUtf8(":/icons/") + icon));
 
     const auto actions = _layoutGroup->actions();
     const int index = static_cast<int>(_layout);

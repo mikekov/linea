@@ -27,6 +27,7 @@ struct CustomMenuItem {
     QIcon icon;
     std::function<void()> onTrigger;
     QSize iconSize = QSize(16, 16);
+    bool enabled = true;
 
     // Submenu control. When submenuStart is true this item opens a new submenu
     // (title is the submenu label); subsequent items are added to it until an
