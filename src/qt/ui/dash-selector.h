@@ -18,14 +18,12 @@
 
 QT_BEGIN_NAMESPACE
 class QPushButton;
-class QLineEdit;
 QT_END_NAMESPACE
 
 namespace Linea::UI {
 
 class DrawingArea;
 class PopupMenu;
-class NumberEdit;
 class DashPatternItem;
 
 } // namespace Linea::UI
@@ -39,7 +37,7 @@ QT_END_NAMESPACE
 namespace Linea::UI {
 
 /**
- * Widget for selecting dash patterns and setting the dash offset.
+ * Widget for selecting dash patterns.
  *
  * The widget displays a button showing the current dash pattern.
  * Clicking the button opens a popup menu with a grid of predefined
@@ -61,19 +59,18 @@ public:
     /// Get the current dash offset
     double getOffset() const { return _offset; }
 
-    /// Get the custom dash pattern from the pattern entry field
-    std::vector<double> getCustomDashPattern() const;
-
     /// Set a placeholder text (shown when pattern is mixed/undefined)
     void setPlaceholder(const QString& placeholder);
+
+    /// Parse dash pattern from string
+    static std::vector<double> parseDashPattern(const QString& input);
+
+    /// Format dash pattern to string
+    static QString formatDashPattern(const std::vector<double>& pattern);
 
 Q_SIGNALS:
     /// Emitted when dash pattern changes
     void dashChanged();
-    /// Emitted when offset changes
-    void offsetChanged();
-    /// Emitted when custom pattern text changes
-    void patternChanged();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -83,10 +80,7 @@ private:
     void buildPopupMenu();
     void createPatternGrid();
     void updateButtonDisplay();
-    void updatePatternEntry();
     void onPatternItemClicked(int index);
-    void onOffsetValueChanged(double value);
-    void onPatternTextChanged();
 
     // Load predefined dash patterns from preferences
     void loadDashPatterns();
@@ -102,7 +96,6 @@ private:
 
     // UI from .ui file
     std::unique_ptr<Ui::DashSelectorPopup> _popupUi;
-    QLineEdit* _patternEdit = nullptr;
 
     // Main button
     QPushButton* _dashButton = nullptr;
@@ -112,9 +105,6 @@ private:
     PopupMenu* _popup = nullptr;
     QWidget* _popupContent = nullptr;
     std::vector<DashPatternItem*> _patternItems;
-
-    // References to UI widgets
-    NumberEdit* _offsetEdit = nullptr;
 
     bool _compact = false;
     OperationBlocker _update;

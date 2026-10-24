@@ -22,12 +22,13 @@
 
 #include "util/units.h"
 
-class QComboBox;
 class QMenu;
 class QPushButton;
+class QWidget;
 
 namespace Linea::UI {
 
+class IconComboBox;
 class NumberEdit;
 
 using Inkscape::Util::Quantity;
@@ -65,11 +66,11 @@ public:
     void prependUnit(const Unit* unit);
     void prependUnit(std::unique_ptr<const Unit> unit);
 
-    /// Create a QComboBox populated with units and wired to this tracker.
-    QComboBox* createUnitCombo(QWidget* parent = nullptr);
+    /// Create an IconComboBox populated with units and wired to this tracker.
+    IconComboBox* createUnitCombo(QWidget* parent = nullptr);
 
-    /// Populate and wire an existing QComboBox to this tracker.
-    void attachCombo(QComboBox* combo);
+    /// Populate and wire an existing IconComboBox to this tracker.
+    void attachCombo(IconComboBox* combo);
 
     /// Create a popup menu of units and wire it to the given button's click.
     /// The button's text is not modified — the caller should update it via
@@ -81,6 +82,7 @@ Q_SIGNALS:
 
 private:
     void setActive(int index);
+    void populateCombo(IconComboBox* combo);
     void fixupSpinBoxes(const Unit* oldUnit, const Unit* newUnit);
 
     struct UnitEntry {
@@ -95,7 +97,7 @@ private:
     bool _activeUnitInitialized = false;
 
     std::vector<UnitEntry> _units;
-    std::vector<QComboBox*> _combos;
+    std::vector<IconComboBox*> _combos;
     std::vector<QMenu*> _popupMenus;
     std::vector<NumberEdit*> _spinBoxes;
     std::map<NumberEdit*, double> _priorValues;

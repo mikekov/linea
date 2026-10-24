@@ -1,21 +1,38 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// Stroke options widget (Qt version) — join, cap, miter limit, paint order.
+// Stroke options widget — style, pattern, offset, join, cap, miter limit, markers, paint order.
 
 #include "stroke-options.h"
 #include "ui_stroke-options.h"
 
+#include <QGridLayout>
+#include <QHBoxLayout>
 #include <QIcon>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QSignalBlocker>
 
+#include "actions/actions-tools.h"
+#include "dash-selector.h"
+#include "desktop.h"
+#include "document.h"
+#include "icon-widget.h"
+#include "marker-combo-box.h"
 #include "paint-order-widget.h"
+#include "popup-menu.h"
 #include "props/binder.h"
 #include "props/property-def.h"
 #include "radio-toggle.h"
 #include "style.h"
 #include "style-enums.h"
 #include "style-internal.h"
+#include "ui/tools/marker-tool.h"
+#include "util-string/context-string.h"
+#include "util/paint-item-ops.h"
 #include "util/style-utils.h"
+
+using Linea::Util::new_css_attr;
+using Linea::Util::PaintEditDelegate;
 
 namespace Linea::UI {
 
@@ -24,12 +41,34 @@ StrokeOptions::StrokeOptions(QWidget* parent)
     , _ui(std::make_unique<Ui::StrokeOptions>())
 {
     _ui->setupUi(this);
+
+    auto resetPolicy = _ui->resetStyle->sizePolicy();
+    resetPolicy.setRetainSizeWhenHidden(true);
+    _ui->resetStyle->setSizePolicy(resetPolicy);
+
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
     setupJoinCap();
+    setupMarkers();
     setupPaintOrder();
     connectSignals();
 }
 
 StrokeOptions::~StrokeOptions() = default;
+
+void StrokeOptions::setDocument(SPDocument* doc) {
+    _document = doc;
+
+    for (auto combo : {_markerStart, _markerMid, _markerEnd}) {
+        if (combo) {
+            combo->setDocument(doc);
+        }
+    }
+}
+
+void StrokeOptions::setDesktop(SPDesktop* desktop) {
+    _desktop = desktop;
+}
 
 void StrokeOptions::setupJoinCap() {
     // Icons and tooltips are set in the .ui file; only the enum→value mapping
@@ -49,11 +88,47 @@ void StrokeOptions::setupJoinCap() {
     });
 }
 
+void StrokeOptions::setupMarkers() {
+    _markerStart = new MarkerComboBox("marker-start", SP_MARKER_LOC_START, _ui->markersPlaceholder);
+    _markerMid = new MarkerComboBox("marker-mid", SP_MARKER_LOC_MID, _ui->markersPlaceholder);
+    _markerEnd = new MarkerComboBox("marker-end", SP_MARKER_LOC_END, _ui->markersPlaceholder);
+
+    auto markersLayout = new QHBoxLayout(_ui->markersPlaceholder);
+    markersLayout->setContentsMargins(0, 0, 0, 0);
+    markersLayout->setSpacing(2);
+    markersLayout->addWidget(_markerStart);
+    markersLayout->addWidget(_markerMid);
+    markersLayout->addWidget(_markerEnd);
+
+    // Apply segment button classes so the three marker buttons look connected.
+    _markerStart->button()->setProperty("class", "segment-first");
+    _markerMid->button()->setProperty("class", "segment-middle");
+    _markerEnd->button()->setProperty("class", "segment-last");
+
+    for (auto combo : {_markerStart, _markerMid, _markerEnd}) {
+        connect(combo, &MarkerComboBox::editRequested, this, [this, combo]() {
+            if (!_desktop) return;
+            set_active_tool(_desktop, "Marker");
+            if (auto mt = dynamic_cast<Inkscape::UI::Tools::MarkerTool*>(_desktop->getTool())) {
+                mt->editMarkerMode = combo->getLoc();
+                mt->selection_changed(_desktop->getSelection());
+            }
+        });
+    }
+}
+
 void StrokeOptions::setupPaintOrder() {
-    _paintOrder = _ui->paintOrder;
+    _paintOrder = new PaintOrderWidget(this);
     _paintOrder->addOption(tr("Marker"), "paint-order-markers", tr("Arrows, markers and points"), SP_CSS_PAINT_ORDER_MARKER);
     _paintOrder->addOption(tr("Stroke"), "paint-order-stroke",  tr("The border line around the shape"), SP_CSS_PAINT_ORDER_STROKE);
     _paintOrder->addOption(tr("Fill"),   "paint-order-fill",    tr("The content of the shape"), SP_CSS_PAINT_ORDER_FILL);
+
+    _orderPopup = new PopupMenu(this);
+    _orderPopup->setContent(_paintOrder);
+
+    connect(_ui->orderButton, &QPushButton::clicked, this, [this]() {
+        _orderPopup->showBelowWidget(_ui->orderButton);
+    });
 }
 
 void StrokeOptions::connectSignals() {
@@ -94,6 +169,19 @@ void StrokeOptions::connectSignals() {
 
 void StrokeOptions::setMiterEnabled(bool enabled) {
     _ui->miterLimit->setEnabled(enabled);
+}
+
+void StrokeOptions::updatePatternEntry(const std::vector<double>& pattern) {
+    if (!_ui->patternEdit->hasFocus()) {
+        QSignalBlocker b(_ui->patternEdit);
+        _ui->patternEdit->setText(DashSelector::formatDashPattern(pattern));
+    }
+}
+
+void StrokeOptions::applyDash(Props::Editor* editor, const std::vector<double>& pattern, double offset) {
+    if (!editor) return;
+    editor->apply(PaintEditDelegate::DashOp{pattern, offset}, "set-dash-pattern",
+                  RC_("Undo", "Set stroke dash pattern"));
 }
 
 void StrokeOptions::updateWidgets(SPStyle& style) {
@@ -148,6 +236,78 @@ void StrokeOptions::updateWidgets(const Linea::PresentationState& props) {
 }
 
 void StrokeOptions::bind(Props::Binder& binder) {
+    auto editor = binder.editor();
+
+    // Stroke dash — read-only in the property table (StrokeDashProp), so
+    // bindField for read + binder.track() + editor->apply(DashOp) for write.
+    binder.bindField(Props::Field::stroke_dash, [this](const Props::SelectionState& s) {
+        if (_update.pending()) return;
+        auto scope(_update.block());
+        if (s.style.stroke_dash.is_single() || s.style.stroke_dash.is_mixed()) {
+            auto& dash = s.style.stroke_dash.value();
+            _ui->dashSelector->setDashPattern(dash.dashes, dash.offset);
+            if (s.style.stroke_dash.is_mixed()) {
+                _ui->dashSelector->setPlaceholder(tr("Mixed"));
+                _ui->offsetEdit->setMixedMode(true);
+                updatePatternEntry({});
+            } else {
+                _ui->dashSelector->setPlaceholder(QString());
+                _ui->offsetEdit->setMixedMode(false);
+                _ui->offsetEdit->setValue(dash.dashes.empty() ? 0.0 : dash.offset);
+                updatePatternEntry(dash.dashes);
+            }
+        } else {
+            _ui->dashSelector->setPlaceholder(QString());
+            _ui->dashSelector->setDashPattern({}, 0.0);
+            _ui->offsetEdit->setMixedMode(false);
+            _ui->offsetEdit->setValue(0.0);
+            updatePatternEntry({});
+        }
+    });
+
+    binder.track(connect(_ui->dashSelector, &DashSelector::dashChanged, this, [this, editor]() {
+        if (_update.pending()) return;
+        applyDash(editor, _ui->dashSelector->getDashPattern(), _ui->dashSelector->getOffset());
+    }));
+
+    binder.track(connect(_ui->resetStyle, &QPushButton::clicked, this, [this, editor]() {
+        if (_update.pending()) return;
+        applyDash(editor, {}, 0.0);
+    }));
+
+    binder.track(connect(_ui->offsetEdit, &NumberEdit::valueChanged, this, [this, editor](double value) {
+        if (_update.pending()) return;
+        auto scope(_update.block());
+        auto const& pattern = _ui->dashSelector->getDashPattern();
+        _ui->dashSelector->setPlaceholder(QString());
+        _ui->dashSelector->setDashPattern(pattern, value);
+        applyDash(editor, pattern, value);
+    }));
+
+    binder.track(connect(_ui->patternEdit, &QLineEdit::textChanged, this, [this, editor](const QString& text) {
+        if (_update.pending()) return;
+        auto pattern = DashSelector::parseDashPattern(text);
+        if (pattern.empty()) return;
+        double offset = _ui->offsetEdit->value();
+        _ui->dashSelector->setPlaceholder(QString());
+        _ui->dashSelector->setDashPattern(pattern, offset);
+        applyDash(editor, pattern, offset);
+    }));
+
+    // Pattern, Offset, and Reset controls are visible only when a non-solid
+    // stroke style is selected (or in mixed state).
+    auto nonSolidDash = [](const Props::SelectionState& s) {
+        const auto& d = s.style.stroke_dash;
+        if (d.is_unset()) return false;
+        if (d.is_mixed()) return true;
+        return !d.value().dashes.empty();
+    };
+    binder.visibleWhen(_ui->resetStyle, nonSolidDash);
+    binder.visibleWhen(_ui->titlePattern, nonSolidDash);
+    binder.visibleWhen(_ui->patternEdit, nonSolidDash);
+    binder.visibleWhen(_ui->offsetLabel, nonSolidDash);
+    binder.visibleWhen(_ui->offsetEdit, nonSolidDash);
+
     // Join and cap — direct two-way binding through WidgetTraits<RadioToggle>.
     // RadioToggle emits the enum value via valueChanged(int); the property
     // table stores int, so binder.bind() handles both directions.
@@ -161,12 +321,55 @@ void StrokeOptions::bind(Props::Binder& binder) {
     // uniformly hairline. Enabled in mixed mode (editing applies the new
     // value to all items).
     binder.enableWhen(_ui->miterLimit, [](const Props::SelectionState& s) {
-        if (s.style.stroke_linejoin.is_single() && s.style.stroke_linejoin.value() != SP_STROKE_LINEJOIN_MITER)
+        if (s.style.stroke_linejoin.is_single() && s.style.stroke_linejoin.value() != SP_STROKE_LINEJOIN_MITER) {
             return false;
-        if (s.style.hairline.is_single() && s.style.hairline.value())
+        }
+        if (s.style.hairline.is_single() && s.style.hairline.value()) {
             return false;
+        }
         return true;
     });
+
+    // Markers (start / mid / end) — read-only string fields; bindField for
+    // read (URI → SPObject) + binder.track() + editor->apply(CssOp) for write.
+    auto bindMarker = [this, &binder, editor](MarkerComboBox* combo, Props::Field field) {
+        binder.bindField(field, [this, combo, field](const Props::SelectionState& s) {
+            if (combo->inUpdate()) return;
+            const auto prop = [&]() -> const mixed_property<std::string>* {
+                switch (field) {
+                    case Props::Field::marker_start:
+                        return &s.style.marker_start;
+                    case Props::Field::marker_mid:
+                        return &s.style.marker_mid;
+                    case Props::Field::marker_end:
+                        return &s.style.marker_end;
+                    default:
+                        return nullptr;
+                }
+            }();
+            if (!prop) return;
+
+            SPObject* marker = nullptr;
+            if (!prop->is_unset() && !prop->value().empty()) {
+                marker = getMarkerObj(prop->value().c_str(), _document);
+            }
+            combo->setCurrent(marker);
+        });
+
+        binder.track(connect(combo, &MarkerComboBox::markerChanged, this, [this, combo, editor]() {
+            if (!_document) return;
+            auto [uri, id] = combo->getActiveMarkerUri();
+            auto css = new_css_attr();
+            sp_repr_css_set_property(css.get(), combo->getId().c_str(), uri.c_str());
+            editor->apply(PaintEditDelegate::CssOp{css}, "marker-change", RC_("Undo", "Set marker"));
+            if (auto marker = _document->getObjectById(id.c_str())) {
+                combo->setCurrent(marker);
+            }
+        }));
+    };
+    bindMarker(_markerStart, Props::Field::marker_start);
+    bindMarker(_markerMid, Props::Field::marker_mid);
+    bindMarker(_markerEnd, Props::Field::marker_end);
 
     // Paint order — bespoke widget (reorderable drag stack, not an int toggle).
     // Read via bindField; write via editor->set() with the current SPIPaintOrder.
@@ -176,10 +379,25 @@ void StrokeOptions::bind(Props::Binder& binder) {
         if (s.style.paint_order.is_single()) {
             bool has_markers = true; // TODO: this should be external input to the widget
             _paintOrder->setValue(const_cast<SPIPaintOrder&>(s.style.paint_order.value()), has_markers);
+
+            auto layers = s.style.paint_order.value().get_layers();
+            auto letter = [](SPPaintOrderLayer l) -> char {
+                switch (l) {
+                    case SP_CSS_PAINT_ORDER_STROKE:
+                        return 's';
+                    case SP_CSS_PAINT_ORDER_MARKER:
+                        return 'm';
+                    default:
+                        return 'f';
+                }
+            };
+            QString name =
+                QString("paint-order-%1%2%3").arg(letter(layers[0])).arg(letter(layers[1])).arg(letter(layers[2]));
+            _ui->orderIcon->setIcon(QIcon(QString(":/icons/") + name));
         }
     });
     binder.track(connect(_paintOrder, &PaintOrderWidget::orderChanged, this,
-        [this, editor = binder.editor()]() {
+        [this, editor]() {
             if (_update.pending()) return;
             editor->set(Props::paint_order, _paintOrder->getValue());
         }));

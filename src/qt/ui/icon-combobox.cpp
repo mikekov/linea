@@ -128,6 +128,15 @@ void IconComboBox::addPopupWidget(QWidget* widget, int index) {
     }
 }
 
+void IconComboBox::clear() {
+    _item_data.clear();
+    _menu->clear();
+    _current_id = -1;
+    _current_label.clear();
+    _current_icon_name.clear();
+    updateButtonDisplay();
+}
+
 void IconComboBox::setActiveById(int id) {
     if (_current_id == id) return;
 

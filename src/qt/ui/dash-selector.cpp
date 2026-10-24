@@ -10,14 +10,12 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QPushButton>
-#include <QLineEdit>
 #include <QLabel>
 #include <QGridLayout>
 #include <QHBoxLayout>
 
 #include "drawing-area.h"
 #include "popup-menu.h"
-#include "number-edit.h"
 #include "preferences.h"
 #include "style.h"
 #include "svg/css-ostringstream.h"
@@ -33,34 +31,6 @@ namespace {
 const std::vector<double> DEFAULT_CUSTOM_PATTERN = {1, 2, 1, 4};
 constexpr int ITEM_WIDTH = 100;
 constexpr int ITEM_HEIGHT = 20;
-
-// Parse dash pattern from string
-std::vector<double> parseDashPattern(const QString& input) {
-    std::vector<double> output;
-    if (input.isEmpty()) return output;
-
-    std::istringstream stream(input.toStdString());
-    while (stream) {
-        double val;
-        stream >> val;
-        if (stream) {
-            output.push_back(val);
-        }
-    }
-    return output;
-}
-
-// Format dash pattern to string
-QString formatDashPattern(const std::vector<double>& pattern) {
-    if (pattern.empty()) return QString();
-
-    Inkscape::CSSOStringStream ost;
-    for (size_t i = 0; i < pattern.size(); ++i) {
-        if (i > 0) ost << " ";
-        ost << pattern[i];
-    }
-    return QString::fromStdString(ost.str());
-}
 
 // Load predefined dash patterns from preferences
 std::vector<std::vector<double>> loadPredefinedPatterns() {
@@ -240,12 +210,10 @@ void DashSelector::construct(bool compact) {
     _dashButton = new QPushButton(this);
     _dashButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     _dashButton->setMinimumSize(60, 24);
-    _dashButton->setMaximumSize(260, 24);
+    _dashButton->setMaximumHeight(24);
     _dashButton->setToolTip(tr("Select dash pattern"));
     connect(_dashButton, &QPushButton::clicked, this, [this]() {
         if (_popup) {
-            _offsetEdit->setValue(_offset);
-            updatePatternEntry();
             _popup->showBelowWidget(_dashButton);
         }
     });
@@ -290,13 +258,7 @@ void DashSelector::buildPopupMenu() {
     _popupContent = new QWidget();
     _popupUi->setupUi(_popupContent);
 
-    _patternEdit = _popupUi->patternEdit;
-    _offsetEdit = _popupUi->offsetEdit;
-
     createPatternGrid();
-
-    connect(_offsetEdit, &NumberEdit::valueChanged, this, &DashSelector::onOffsetValueChanged);
-    connect(_patternEdit, &QLineEdit::textChanged, this, &DashSelector::onPatternTextChanged);
 
     _popup->setContent(_popupContent);
 }
@@ -380,18 +342,10 @@ void DashSelector::setDashPattern(const std::vector<double>& dash, double offset
     _offset = dash.empty() ? 0.0 : offset;
 
     updateButtonDisplay();
-    _offsetEdit->setValue(_offset);
-    updatePatternEntry();
 }
 
 void DashSelector::updateButtonDisplay() {
     if (_dashArea) _dashArea->update();
-}
-
-void DashSelector::updatePatternEntry() {
-    if (!_patternEdit->hasFocus()) {
-        _patternEdit->setText(formatDashPattern(_dashPattern));
-    }
 }
 
 void DashSelector::setPlaceholder(const QString& placeholder) {
@@ -399,8 +353,32 @@ void DashSelector::setPlaceholder(const QString& placeholder) {
     updateButtonDisplay();
 }
 
-std::vector<double> DashSelector::getCustomDashPattern() const {
-    return parseDashPattern(_patternEdit->text());
+// Parse dash pattern from string
+std::vector<double> DashSelector::parseDashPattern(const QString& input) {
+    std::vector<double> output;
+    if (input.isEmpty()) return output;
+
+    std::istringstream stream(input.toStdString());
+    while (stream) {
+        double val;
+        stream >> val;
+        if (stream) {
+            output.push_back(val);
+        }
+    }
+    return output;
+}
+
+// Format dash pattern to string
+QString DashSelector::formatDashPattern(const std::vector<double>& pattern) {
+    if (pattern.empty()) return QString();
+
+    Inkscape::CSSOStringStream ost;
+    for (size_t i = 0; i < pattern.size(); ++i) {
+        if (i > 0) ost << " ";
+        ost << pattern[i];
+    }
+    return QString::fromStdString(ost.str());
 }
 
 void DashSelector::paintEvent(QPaintEvent*) {
@@ -414,7 +392,6 @@ void DashSelector::onPatternItemClicked(int index) {
     }
 
     if (index == CUSTOM_POS) {
-        _dashPattern = getCustomDashPattern();
         if (_dashPattern.empty()) {
             _dashPattern = DEFAULT_CUSTOM_PATTERN;
         }
@@ -423,35 +400,11 @@ void DashSelector::onPatternItemClicked(int index) {
     }
 
     _offset = 0.0;
-    _offsetEdit->setValue(_offset);
 
     updateButtonDisplay();
-    updatePatternEntry();
 
     _popup->hide();
     Q_EMIT dashChanged();
-}
-
-void DashSelector::onOffsetValueChanged(double value) {
-    if (_update.pending()) return;
-    _offset = value;
-    Q_EMIT offsetChanged();
-}
-
-void DashSelector::onPatternTextChanged() {
-    if (_update.pending()) return;
-
-    auto pattern = getCustomDashPattern();
-    if (!pattern.empty()) {
-        _dashPattern = pattern;
-
-        for (auto item : _patternItems) {
-            item->setSelected(item->index() == CUSTOM_POS);
-        }
-
-        updateButtonDisplay();
-        Q_EMIT patternChanged();
-    }
 }
 
 } // namespace Linea::UI

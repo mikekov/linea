@@ -50,6 +50,14 @@
 - radio and check buttons have different accent color than the rest
 - enter/esc in shape tool should switch to select tool
 - list individual pages under 'Pages' node?
+- xml tree - cannot rearrange nodes, d&d doesn't work
+- obj tree - cannot rearrange layers, they cannot be dragged
+- adjust number edit with mouse drag
+- add collapsible sections in addition or instead of popups
+- add stroke hairline option (not a unit!)
+- expose rgb_hex_colors setting
+- rect panel - corners lpe button doesn't work (should retain/replace current rounded corners)
+- stroke order - update icon accordingly to reflect the current order
 
 ## Tools
 
@@ -130,7 +138,7 @@
 - add virtual node Symbols if document has them
 - add Resources virtual node with a content of old Resources dialog, stats and individual nodes
 - should individual pages have background color, can they?
-- impl scrollbars?
+- impl scrollbars
 - add RecentColors to a document, connected to undo signals
 - consider adding ruler units to 'Display' section
 - add guide and grid default colors to css file; rename node-handles.css or add a new one?

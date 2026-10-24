@@ -42,6 +42,8 @@ public:
     void addRow(const QString& iconName, const QString& fullLabel, const QString& shortLabel, int id);
     // Add a custom widget to the popup, optionally at a specific position.
     void addPopupWidget(QWidget* widget, int index = -1);
+    // Remove all rows and reset the selection.
+    void clear();
 
     // Set the active item by id; -1 clears the selection (mixed state).
     void setActiveById(int id);

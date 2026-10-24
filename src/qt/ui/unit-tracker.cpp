@@ -14,13 +14,13 @@
 
 #include "unit-tracker.h"
 
-#include <QComboBox>
 #include <QMenu>
 #include <QPushButton>
 #include <QSignalBlocker>
 #include <iostream>
 #include <utility>
 
+#include "icon-combobox.h"
 #include "number-edit.h"
 
 namespace Linea::UI {
@@ -28,7 +28,7 @@ namespace Linea::UI {
 UnitTracker::UnitTracker(UnitType unit_type, QObject* parent)
     : QObject(parent) {
     const auto& table = UnitTable::get();
-    for (const auto* u : table.units(unit_type)) {
+    for (auto u : table.units(unit_type)) {
         _units.push_back({u->abbr.raw(), u, nullptr});
     }
     setActive(0);
@@ -97,32 +97,32 @@ void UnitTracker::removeSpinBox(NumberEdit* spin) {
 
 void UnitTracker::addUnit(const Unit* unit) {
     if (!unit) return;
+    const int id = static_cast<int>(_units.size());
     _units.push_back({unit->abbr.raw(), unit, nullptr});
     for (auto combo : _combos) {
-        combo->addItem(QString::fromStdString(unit->abbr.raw()));
+        QSignalBlocker blocker(combo);
+        combo->addRow({}, QString::fromStdString(unit->abbr.raw()), id);
     }
 }
 
 void UnitTracker::addUnit(std::unique_ptr<const Unit> unit) {
     if (!unit) return;
     const Unit* ptr = unit.get();
+    const int id = static_cast<int>(_units.size());
     _units.push_back({ptr->abbr.raw(), ptr, std::move(unit)});
     for (auto combo : _combos) {
-        combo->addItem(QString::fromStdString(ptr->abbr.raw()));
+        QSignalBlocker blocker(combo);
+        combo->addRow({}, QString::fromStdString(ptr->abbr.raw()), id);
     }
 }
 
 void UnitTracker::prependUnit(const Unit* unit) {
     if (!unit) return;
     _units.insert(_units.begin(), {unit->abbr.raw(), unit, nullptr});
-    for (auto combo : _combos) {
-        combo->insertItem(0, QString::fromStdString(unit->abbr.raw()));
-    }
     // keep the active index pointing to the same unit
     ++_active;
     for (auto combo : _combos) {
-        QSignalBlocker blocker(combo);
-        combo->setCurrentIndex(_active);
+        populateCombo(combo);
     }
 }
 
@@ -130,36 +130,40 @@ void UnitTracker::prependUnit(std::unique_ptr<const Unit> unit) {
     if (!unit) return;
     const Unit* ptr = unit.get();
     _units.insert(_units.begin(), {ptr->abbr.raw(), ptr, std::move(unit)});
-    for (auto combo : _combos) {
-        combo->insertItem(0, QString::fromStdString(ptr->abbr.raw()));
-    }
     // keep the active index pointing to the same unit
     ++_active;
     for (auto combo : _combos) {
-        QSignalBlocker blocker(combo);
-        combo->setCurrentIndex(_active);
+        populateCombo(combo);
     }
 }
 
-QComboBox* UnitTracker::createUnitCombo(QWidget* parent) {
-    auto combo = new QComboBox(parent);
+void UnitTracker::populateCombo(IconComboBox* combo) {
+    if (!combo) return;
+    QSignalBlocker blocker(combo);
+    combo->clear();
+    for (int i = 0; i < static_cast<int>(_units.size()); ++i) {
+        combo->addRow({}, QString::fromStdString(_units[i].abbr), i);
+    }
+    combo->setActiveById(_active);
+}
+
+IconComboBox* UnitTracker::createUnitCombo(QWidget* parent) {
+    auto combo = new IconComboBox(parent);
     combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     attachCombo(combo);
     return combo;
 }
 
-void UnitTracker::attachCombo(QComboBox* combo) {
+void UnitTracker::attachCombo(IconComboBox* combo) {
     if (!combo) return;
 
     // Avoid double-registering the same combo.
     if (std::find(_combos.begin(), _combos.end(), combo) != _combos.end()) return;
 
-    for (const auto& entry : _units) {
-        combo->addItem(QString::fromStdString(entry.abbr));
-    }
-    combo->setCurrentIndex(_active);
+    combo->setHeaderType(IconComboBox::LabelOnly);
+    populateCombo(combo);
 
-    connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) { setActive(index); });
+    connect(combo, &IconComboBox::currentChanged, this, [this](int index) { setActive(index); });
 
     // Remove from list if combo is destroyed
     connect(combo, &QObject::destroyed, this, [this, combo]() {
@@ -212,7 +216,7 @@ void UnitTracker::setActive(int index) {
     // Sync combo boxes
     for (auto combo : _combos) {
         QSignalBlocker blocker(combo);
-        combo->setCurrentIndex(index);
+        combo->setActiveById(index);
     }
 
     // Sync popup menus

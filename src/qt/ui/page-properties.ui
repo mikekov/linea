@@ -163,9 +163,9 @@
               </widget>
             </item>
 
-            <!-- Row 6: Page units combo (replaced at runtime by UnitTracker combo) -->
+            <!-- Row 6: Page units combo -->
             <item row="6" column="0" colspan="1">
-              <widget class="QComboBox" name="pageUnitsCombo">
+              <widget class="Linea::UI::IconComboBox" name="pageUnitsCombo">
                 <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
                 </property>
@@ -675,9 +675,9 @@
               </widget>
             </item>
 
-            <!-- Row 2: Display units combo (replaced at runtime by UnitTracker combo) -->
+            <!-- Row 2: Display units combo -->
             <item row="2" column="0" colspan="1">
-              <widget class="QComboBox" name="displayUnitsCombo">
+              <widget class="Linea::UI::IconComboBox" name="displayUnitsCombo">
                 <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed"/>
                 </property>
@@ -937,6 +937,11 @@
       <class>Linea::UI::ColorPicker</class>
       <extends>QWidget</extends>
       <header>qt/ui/color-picker.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::IconComboBox</class>
+      <extends>QPushButton</extends>
+      <header>icon-combobox.h</header>
     </customwidget>
   </customwidgets>
 

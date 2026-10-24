@@ -6,9 +6,12 @@
 
 #include "widget-utils.h"
 
+#include <QAbstractButton>
 #include <QCoreApplication>
+#include <QEasingCurve>
 #include <QEvent>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QLayout>
 #include <QLinearGradient>
 #include <QPainter>
@@ -16,12 +19,14 @@
 #include <QPointer>
 #include <QScreen>
 #include <QTimer>
+#include <QVariantAnimation>
 #include <QWidget>
 #include <QWindow>
 #include <algorithm>
 #include <string>
 
 #include "preferences.h"
+#include "qt/util/motion.h"
 
 namespace Linea::UI {
 
@@ -267,6 +272,98 @@ void settleLayout(QWidget* widget) {
     for (auto a = widget; a; a = a->parentWidget()) {
         QCoreApplication::sendPostedEvents(a, QEvent::LayoutRequest);
     }
+}
+
+namespace {
+
+class CollapsibleSectionController : public QObject {
+public:
+    CollapsibleSectionController(QAbstractButton* toggleBtn, QWidget* container,
+                                 const char* prefsPath, bool defaultExpanded)
+        : QObject(container)
+        , _toggleBtn(toggleBtn)
+        , _container(container)
+        , _prefsPath(prefsPath ? prefsPath : "")
+        , _animation(new QVariantAnimation(this)) {
+        _expanded = !_prefsPath.empty()
+            ? Inkscape::Preferences::get()->getBool(_prefsPath, defaultExpanded)
+            : defaultExpanded;
+
+        _container->setVisible(_expanded);
+        updateIcon();
+
+        _animation->setEasingCurve(QEasingCurve::OutCubic);
+
+        connect(_animation, &QVariantAnimation::valueChanged, this, [this](const QVariant& value) {
+            if (!_container) return;
+            _container->setFixedHeight(value.toInt());
+            settleLayout(_container->parentWidget() ? _container->parentWidget() : _container.data());
+        });
+
+        connect(_animation, &QVariantAnimation::finished, this, [this]() {
+            if (!_container) return;
+            if (!_expanded) {
+                _container->setVisible(false);
+            }
+            _container->setMinimumHeight(0);
+            _container->setMaximumHeight(QWIDGETSIZE_MAX);
+            settleLayout(_container->parentWidget() ? _container->parentWidget() : _container.data());
+        });
+
+        connect(_toggleBtn, &QAbstractButton::clicked, this, [this]() {
+            toggle();
+        });
+    }
+
+    bool isExpanded() const { return _expanded; }
+
+private:
+    void updateIcon() {
+        if (!_toggleBtn) return;
+        _toggleBtn->setIcon(QIcon(_expanded ? ":/icons/section-collapse" : ":/icons/section-expand"));
+    }
+
+    void toggle() {
+        if (!_container) return;
+        _expanded = !_expanded;
+        updateIcon();
+
+        if (!_prefsPath.empty()) {
+            Inkscape::Preferences::get()->setBool(_prefsPath, _expanded);
+        }
+
+        _animation->stop();
+        _animation->setDuration(effectiveAnimationDuration(200));
+        if (_expanded) {
+            int targetHeight = _container->sizeHint().height();
+            _container->setFixedHeight(0);
+            _container->setVisible(true);
+            _animation->setStartValue(0);
+            _animation->setEndValue(targetHeight);
+        } else {
+            _animation->setStartValue(_container->height());
+            _animation->setEndValue(0);
+        }
+        _animation->start();
+    }
+
+    QPointer<QAbstractButton> _toggleBtn;
+    QPointer<QWidget> _container;
+    std::string _prefsPath;
+    QVariantAnimation* _animation = nullptr;
+    bool _expanded = false;
+};
+
+} // namespace
+
+std::function<bool()> setupCollapsibleSection(QAbstractButton* toggleBtn, QWidget* container,
+                                              const char* prefsPath, bool defaultExpanded) {
+    if (!toggleBtn || !container) {
+        return []() { return false; };
+    }
+    auto controller = new CollapsibleSectionController(toggleBtn, container, prefsPath, defaultExpanded);
+    QPointer<CollapsibleSectionController> guard(controller);
+    return [guard]() { return guard ? guard->isExpanded() : false; };
 }
 
 } // namespace Linea::UI

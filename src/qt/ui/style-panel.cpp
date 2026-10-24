@@ -14,14 +14,12 @@
 #include <QSizePolicy>
 #include <QStackedWidget>
 
-#include "actions/actions-tools.h"
 #include "color-preview.h"
 #include "colors/utils.h"
-#include "dash-selector.h"
 #include "document-undo.h"
 #include "document.h"
+#include "icon-combobox.h"
 #include "icon-widget.h"
-#include "marker-combo-box.h"
 #include "number-edit.h"
 #include "object/sp-gradient.h"
 #include "object/sp-item.h"
@@ -36,7 +34,6 @@
 #include "spin-scale.h"
 #include "stroke-options.h"
 #include "style.h"
-#include "ui/tools/marker-tool.h"
 #include "ui/widget/paint-enums.h"
 #include "ui_style-panel.h"
 #include "unit-tracker.h"
@@ -45,6 +42,7 @@
 #include "util/paint-item-ops.h"
 #include "util/style-utils.h"
 #include "util/units.h"
+#include "widget-utils.h"
 
 using Inkscape::Colors::Color;
 using Inkscape::UI::Widget::PaintDerivedMode;
@@ -387,6 +385,8 @@ StylePanel::StylePanel(unsigned int tag, QWidget* parent)
         grid->setColumnMinimumWidth(2, _ui->resetOpacity->sizeHint().width());
     }
 
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
     construct();
 }
 
@@ -396,7 +396,6 @@ void StylePanel::construct() {
     setupPaintStrip(_fill, true);
     setupPaintStrip(_stroke, false);
     setupStrokeWidgets();
-    setupMarkers();
     setupOpacity();
     setupBlendMode();
 }
@@ -450,6 +449,7 @@ void StylePanel::setupStrokeWidgets() {
     // Unit tracker
     _unitTracker = new UnitTracker(Inkscape::Util::UNIT_TYPE_LINEAR, this);
     _unitCombo = _unitTracker->createUnitCombo(_ui->unitPlaceholder);
+    _unitCombo->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     auto unitLayout = new QHBoxLayout(_ui->unitPlaceholder);
     unitLayout->setContentsMargins(0, 0, 0, 0);
     unitLayout->addWidget(_unitCombo);
@@ -461,6 +461,18 @@ void StylePanel::setupStrokeWidgets() {
 
     connect(_ui->strokeOptionsBtn, &QPushButton::clicked, this,
             [this]() { _strokeOptionsPopup->showBelowWidget(_ui->strokeOptionsBtn); });
+
+    // Expand/collapse animation for the inline stroke options section
+    _isStrokeOptionsExpanded = setupCollapsibleSection(
+        _ui->strokeOptionsToggle, _ui->strokeOptionsContainer, "/dialogs/style/stroke_options_expanded");
+
+    // Popup button and inline section are mutually exclusive: hide the button
+    // while the section is expanded. This handler runs after the section
+    // controller's, so the expanded flag is already updated.
+    _ui->strokeOptionsBtn->setVisible(!_isStrokeOptionsExpanded());
+    connect(_ui->strokeOptionsToggle, &QPushButton::clicked, this, [this]() {
+        _ui->strokeOptionsBtn->setVisible(!_isStrokeOptionsExpanded());
+    });
 
     // Unit changed — convert displayed value to the new unit (no document write).
     connect(_unitTracker, &UnitTracker::unitChanged, this, [this](const Inkscape::Util::Unit* newUnit) {
@@ -476,39 +488,7 @@ void StylePanel::setupStrokeWidgets() {
     });
 
     // Track stroke widgets for show/hide
-    _strokeWidgets = {_ui->strokeWidth,  _ui->unitPlaceholder, _ui->strokeOptionsBtn,
-                      _ui->dashSelector, _ui->markersLabel,    _ui->markersPlaceholder};
-}
-
-// --- Markers ---
-
-void StylePanel::setupMarkers() {
-    _markerStart = new MarkerComboBox("marker-start", SP_MARKER_LOC_START, _ui->markersPlaceholder);
-    _markerMid = new MarkerComboBox("marker-mid", SP_MARKER_LOC_MID, _ui->markersPlaceholder);
-    _markerEnd = new MarkerComboBox("marker-end", SP_MARKER_LOC_END, _ui->markersPlaceholder);
-
-    auto markersLayout = new QHBoxLayout(_ui->markersPlaceholder);
-    markersLayout->setContentsMargins(0, 0, 0, 0);
-    markersLayout->setSpacing(2);
-    markersLayout->addWidget(_markerStart);
-    markersLayout->addWidget(_markerMid);
-    markersLayout->addWidget(_markerEnd);
-
-    // Apply segment button classes so the three marker buttons look connected.
-    _markerStart->button()->setProperty("class", "segment-first");
-    _markerMid->button()->setProperty("class", "segment-middle");
-    _markerEnd->button()->setProperty("class", "segment-last");
-
-    for (auto combo : {_markerStart, _markerMid, _markerEnd}) {
-        connect(combo, &MarkerComboBox::editRequested, this, [this, combo]() {
-            if (!_desktop) return;
-            set_active_tool(_desktop, "Marker");
-            if (auto mt = dynamic_cast<Inkscape::UI::Tools::MarkerTool*>(_desktop->getTool())) {
-                mt->editMarkerMode = combo->getLoc();
-                mt->selection_changed(_desktop->getSelection());
-            }
-        });
-    }
+    _strokeWidgets = {_ui->weightLabel, _ui->strokeWidth, _ui->unitPlaceholder, _ui->strokeOptionsToggle};
 }
 
 // --- Opacity ---
@@ -533,10 +513,8 @@ void StylePanel::setDocument(SPDocument* doc) {
 
     if (_fill.selector) _fill.selector->setDocument(doc);
     if (_stroke.selector) _stroke.selector->setDocument(doc);
-
-    for (auto combo : {_markerStart, _markerMid, _markerEnd}) {
-        if (combo) combo->setDocument(doc);
-    }
+    if (_strokeOptions) _strokeOptions->setDocument(doc);
+    if (_ui->strokeOptions) _ui->strokeOptions->setDocument(doc);
 }
 
 void StylePanel::setDesktop(SPDesktop* desktop) {
@@ -544,6 +522,8 @@ void StylePanel::setDesktop(SPDesktop* desktop) {
 
     if (_fill.selector) _fill.selector->setDesktop(desktop);
     if (_stroke.selector) _stroke.selector->setDesktop(desktop);
+    if (_strokeOptions) _strokeOptions->setDesktop(desktop);
+    if (_ui->strokeOptions) _ui->strokeOptions->setDesktop(desktop);
 
     if (desktop && desktop->getNamedView()) {
         auto unit = desktop->getNamedView()->display_units;
@@ -589,57 +569,10 @@ void StylePanel::bind(Props::Binder& binder) {
     _fill.bind(binder);
     _stroke.bind(binder);
 
-    // Stroke options (join, cap, miter, paint order) — StrokeOptions has its
-    // own bind() that wires all four sub-properties.
+    // Stroke options — StrokeOptions has its own bind() that wires all
+    // stroke sub-properties.
     _strokeOptions->bind(binder);
-
-    // Stroke option icons — each driven by its own field via bindField.
-    binder.bindField(Props::Field::stroke_linejoin, [this](const Props::SelectionState& s) {
-        if (s.style.stroke_linejoin.is_single()) {
-            const char* name = "stroke-join-miter";
-            switch (s.style.stroke_linejoin.value()) {
-                case SP_STROKE_LINEJOIN_ROUND:
-                    name = "stroke-join-round";
-                    break;
-                case SP_STROKE_LINEJOIN_BEVEL:
-                    name = "stroke-join-bevel";
-                    break;
-            }
-            _ui->joinIcon->setIcon(QIcon(QString(":/icons/") + name));
-        }
-    });
-    binder.bindField(Props::Field::stroke_linecap, [this](const Props::SelectionState& s) {
-        if (s.style.stroke_linecap.is_single()) {
-            const char* name = "stroke-cap-butt";
-            switch (s.style.stroke_linecap.value()) {
-                case SP_STROKE_LINECAP_ROUND:
-                    name = "stroke-cap-round";
-                    break;
-                case SP_STROKE_LINECAP_SQUARE:
-                    name = "stroke-cap-square";
-                    break;
-            }
-            _ui->capIcon->setIcon(QIcon(QString(":/icons/") + name));
-        }
-    });
-    binder.bindField(Props::Field::paint_order, [this](const Props::SelectionState& s) {
-        if (s.style.paint_order.is_single()) {
-            auto layers = s.style.paint_order.value().get_layers();
-            auto letter = [](SPPaintOrderLayer l) -> char {
-                switch (l) {
-                    case SP_CSS_PAINT_ORDER_STROKE:
-                        return 's';
-                    case SP_CSS_PAINT_ORDER_MARKER:
-                        return 'm';
-                    default:
-                        return 'f';
-                }
-            };
-            QString name =
-                QString("paint-order-%1%2%3").arg(letter(layers[0])).arg(letter(layers[1])).arg(letter(layers[2]));
-            _ui->orderIcon->setIcon(QIcon(QString(":/icons/") + name));
-        }
-    });
+    _ui->strokeOptions->bind(binder);
 
     // Stroke width — read-only in the property table (StrokeWidthProp), so
     // bindField for read + binder.track() + editor->apply(StrokeWidthOp) for
@@ -664,67 +597,6 @@ void StylePanel::bind(Props::Binder& binder) {
         editor->apply(PaintEditDelegate::StrokeWidthOp{displayValue, false, unit()}, "set-stroke-width",
                       RC_("Undo", "Set stroke width"));
     }));
-
-    // Stroke dash — read-only in the property table (StrokeDashProp), so
-    // bindField for read + binder.track() + editor->apply(DashOp) for write.
-    binder.bindField(Props::Field::stroke_dash, [this](const Props::SelectionState& s) {
-        if (s.style.stroke_dash.is_single() || s.style.stroke_dash.is_mixed()) {
-            auto& dash = s.style.stroke_dash.value();
-            _ui->dashSelector->setDashPattern(dash.dashes, dash.offset);
-            if (s.style.stroke_dash.is_mixed()) {
-                _ui->dashSelector->setPlaceholder(tr("Mixed"));
-            }
-        } else {
-            _ui->dashSelector->setDashPattern({}, 0.0);
-        }
-    });
-
-    auto applyDash = [this, editor]() {
-        editor->apply(PaintEditDelegate::DashOp{_ui->dashSelector->getDashPattern(), _ui->dashSelector->getOffset()},
-                      "set-dash-pattern", RC_("Undo", "Set stroke dash pattern"));
-    };
-    binder.track(connect(_ui->dashSelector, &DashSelector::dashChanged, this, applyDash));
-    binder.track(connect(_ui->dashSelector, &DashSelector::offsetChanged, this, applyDash));
-
-    // Markers (start / mid / end) — read-only string fields; bindField for
-    // read (URI → SPObject) + binder.track() + editor->apply(CssOp) for write.
-    auto bindMarker = [this, &binder, editor](MarkerComboBox* combo, Props::Field field) {
-        binder.bindField(field, [this, combo, field](const Props::SelectionState& s) {
-            if (combo->inUpdate()) return;
-            const auto* prop = [&]() -> const mixed_property<std::string>* {
-                switch (field) {
-                    case Props::Field::marker_start:
-                        return &s.style.marker_start;
-                    case Props::Field::marker_mid:
-                        return &s.style.marker_mid;
-                    case Props::Field::marker_end:
-                        return &s.style.marker_end;
-                    default:
-                        return nullptr;
-                }
-            }();
-            if (!prop) return;
-
-            SPObject* marker = nullptr;
-            if (!prop->is_unset() && !prop->value().empty()) {
-                marker = getMarkerObj(prop->value().c_str(), _document);
-            }
-            combo->setCurrent(marker);
-        });
-
-        binder.track(connect(combo, &MarkerComboBox::markerChanged, this, [this, combo, editor]() {
-            auto [uri, id] = combo->getActiveMarkerUri();
-            auto css = new_css_attr();
-            sp_repr_css_set_property(css.get(), combo->getId().c_str(), uri.c_str());
-            editor->apply(PaintEditDelegate::CssOp{css}, "marker-change", RC_("Undo", "Set marker"));
-            if (auto marker = _document->getObjectById(id.c_str())) {
-                combo->setCurrent(marker);
-            }
-        }));
-    };
-    bindMarker(_markerStart, Props::Field::marker_start);
-    bindMarker(_markerMid, Props::Field::marker_mid);
-    bindMarker(_markerEnd, Props::Field::marker_end);
 
     // ---- Visibility / enablement rules driven by property values ----
 
@@ -783,6 +655,14 @@ void StylePanel::bind(Props::Binder& binder) {
         binder.visibleWhen(w, editable && strokeDefined);
     }
 
+    // Stroke options section: additionally gated by the expand toggle.
+    binder.visibleWhen(_ui->strokeOptionsContainer, editable && strokeDefined &&
+        [this](const Props::SelectionState&) { return _isStrokeOptionsExpanded && _isStrokeOptionsExpanded(); });
+
+    // The popup options button is only offered while the section is collapsed.
+    binder.visibleWhen(_ui->strokeOptionsBtn, editable && strokeDefined &&
+        [this](const Props::SelectionState&) { return !_isStrokeOptionsExpanded || !_isStrokeOptionsExpanded(); });
+
     // Stroke width/dash/options/markers enabled when stroke is not uniformly
     // None and not uniformly hairline. Enabled in mixed mode (editing applies
     // the new value to all items).
@@ -793,8 +673,8 @@ void StylePanel::bind(Props::Binder& binder) {
     };
     binder.enableWhen(_ui->strokeWidth, hasSelection && strokeEnabled);
     binder.enableWhen(_ui->strokeOptionsBtn, hasSelection && strokeEnabled);
-    binder.enableWhen(_ui->dashSelector, hasSelection && strokeEnabled);
-    if (_ui->markersPlaceholder) binder.enableWhen(_ui->markersPlaceholder, hasSelection && strokeEnabled);
+    binder.enableWhen(_ui->strokeOptionsToggle, hasSelection && strokeEnabled);
+    binder.enableWhen(_ui->strokeOptions, hasSelection && strokeEnabled);
 }
 
 } // namespace Linea::UI

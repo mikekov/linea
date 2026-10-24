@@ -7,6 +7,7 @@
 #ifndef LINEA_UI_STYLE_PANEL_H
 #define LINEA_UI_STYLE_PANEL_H
 
+#include <functional>
 #include <memory>
 #include <vector>
 #include <QWidget>
@@ -18,7 +19,6 @@ class SPDesktop;
 class SPDocument;
 class SPItem;
 class SPObject;
-class QComboBox;
 class QPushButton;
 class QLabel;
 
@@ -36,7 +36,7 @@ namespace Linea::Props { class Binder; }
 
 namespace Linea::UI {
 
-class MarkerComboBox;
+class IconComboBox;
 class NumberEdit;
 class PaintSelector;
 class PopupMenu;
@@ -95,7 +95,6 @@ private:
     void construct();
     void setupPaintStrip(PaintStrip& strip, bool isFill);
     void setupStrokeWidgets();
-    void setupMarkers();
     void setupOpacity();
     void setupBlendMode();
 
@@ -105,15 +104,11 @@ private:
     PaintStrip _stroke;
 
     // stroke attribute widgets
-    QComboBox* _unitCombo = nullptr;
+    IconComboBox* _unitCombo = nullptr;
     UnitTracker* _unitTracker = nullptr;
     StrokeOptions* _strokeOptions = nullptr;
     PopupMenu* _strokeOptionsPopup = nullptr;
-
-    // markers
-    MarkerComboBox* _markerStart = nullptr;
-    MarkerComboBox* _markerMid = nullptr;
-    MarkerComboBox* _markerEnd = nullptr;
+    std::function<bool()> _isStrokeOptionsExpanded;
 
     // state
     SPDesktop* _desktop = nullptr;

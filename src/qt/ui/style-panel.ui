@@ -33,6 +33,12 @@
       <!-- Row 0: Fill label -->
       <item row="0" column="0" colspan="3">
         <widget class="QLabel" name="fillLabel">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
           <property name="text">
             <string>Fill</string>
           </property>
@@ -44,6 +50,12 @@
       <!-- Row 1: Fill controls -->
       <item row="1" column="0" colspan="2">
         <widget class="QLabel" name="fillLabel2">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
         </widget>
       </item>
       <item row="1" column="0">
@@ -133,10 +145,22 @@
       <!-- Row 2: Stroke label -->
       <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="strokeLabel2">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
         </widget>
       </item>
       <item row="2" column="0" colspan="3">
         <widget class="QLabel" name="strokeLabel">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
           <property name="text">
             <string>Stroke</string>
           </property>
@@ -184,6 +208,7 @@
           </property>
         </widget>
       </item>
+
       <item row="3" column="2">
         <widget class="QWidget" name="strokeButtons" native="true">
           <layout class="QHBoxLayout" name="strokeButtonsLayout">
@@ -230,8 +255,24 @@
         </widget>
       </item>
 
-      <!-- Row 4: Stroke width + unit + options -->
-      <item row="4" column="0">
+      <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="weightLabel">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="text">
+            <string>Weight</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <!-- Row 5: Stroke width + unit + options -->
+      <item row="5" column="0">
         <widget class="Linea::UI::NumberEdit" name="strokeWidth">
           <property name="minimum">
             <double>0.000000</double>
@@ -256,87 +297,104 @@
           </property>
         </widget>
       </item>
-      <item row="4" column="1">
-        <widget class="QWidget" name="unitPlaceholder" native="true">
+      <item row="5" column="1">
+        <layout class="QHBoxLayout" name="unitLayout" stretch="1,0">
+          <item>
+            <widget class="QWidget" name="unitPlaceholder" native="true">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                </sizepolicy>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="strokeOptionsBtn">
+              <property name="toolTip">
+                <string>Stroke options</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/settings-vert</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item row="5" column="2">
+        <widget class="QPushButton" name="strokeOptionsToggle">
+          <property name="toolTip">
+            <string>Toggle stroke options</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/section-expand</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+
+      <!-- Row 6: Stroke options -->
+      <item row="6" column="0" colspan="3">
+        <widget class="QWidget" name="strokeOptionsContainer">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
             </sizepolicy>
           </property>
-        </widget>
-      </item>
-
-      <!-- Row 5: Dash selector -->
-      <item row="5" column="0">
-        <widget class="Linea::UI::DashSelector" name="dashSelector">
-          <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-            </sizepolicy>
+          <property name="visible">
+            <bool>false</bool>
           </property>
-        </widget>
-      </item>
-      <item row="5" column="1">
-        <widget class="QPushButton" name="strokeOptionsBtn">
-          <property name="toolTip">
-            <string>Stroke options</string>
-          </property>
-          <layout class="QHBoxLayout" name="strokeOptionsBtnLayout">
-            <property name="leftMargin"><number>2</number></property>
-            <property name="topMargin"><number>0</number></property>
-            <property name="rightMargin"><number>2</number></property>
-            <property name="bottomMargin"><number>0</number></property>
-            <property name="spacing"><number>2</number></property>
-            <item>
-              <widget class="Linea::UI::IconWidget" name="joinIcon"/>
-            </item>
-            <item>
-              <widget class="Linea::UI::IconWidget" name="capIcon"/>
-            </item>
-            <item>
-              <widget class="Linea::UI::IconWidget" name="orderIcon"/>
-            </item>
-            <item>
-              <widget class="Linea::UI::IconWidget" name="arrow-down">
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/pan-down</normaloff>
-                  </iconset>
-                </property>
-              </widget>
+          <layout class="QVBoxLayout" name="strokeOptionsSection">
+            <property name="leftMargin">
+              <number>0</number>
+            </property>
+            <property name="topMargin">
+              <number>0</number>
+            </property>
+            <property name="rightMargin">
+              <number>0</number>
+            </property>
+            <property name="bottomMargin">
+              <number>0</number>
+            </property>
+            <item alignment="Qt::AlignTop">
+              <widget class="Linea::UI::StrokeOptions" name="strokeOptions" native="true"/>
             </item>
           </layout>
         </widget>
       </item>
 
-      <!-- Row 6: Markers label -->
-      <item row="6" column="0" colspan="3">
-        <widget class="QLabel" name="markersLabel">
-          <property name="text">
-            <string>Markers</string>
+      <!-- Row 7: 4px gap -->
+      <item row="7" column="0" colspan="3">
+        <spacer name="strokeOptionsSpacer">
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
           </property>
-          <property name="class" stdset="0">
-            <string>panel-label</string>
+          <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
           </property>
-        </widget>
-      </item>
-      <!-- Row 7: Markers controls -->
-      <item row="7" column="0" colspan="2">
-        <widget class="QWidget" name="markersPlaceholder" native="true">
-          <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-            </sizepolicy>
+          <property name="sizeHint" stdset="0">
+            <size>
+              <width>0</width>
+              <height>8</height>
+            </size>
           </property>
-        </widget>
+        </spacer>
       </item>
 
       <!-- Row 8: Opacity label -->
       <item row="8" column="0" colspan="3">
         <widget class="QLabel" name="opacityLabel">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
           <property name="text">
             <string>Opacity</string>
           </property>
@@ -390,6 +448,12 @@
       <!-- Row 10: Blend mode label -->
       <item row="10" column="0" colspan="3">
         <widget class="QLabel" name="blendLabel">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
           <property name="text">
             <string>Blend mode</string>
           </property>
@@ -430,14 +494,9 @@
       <header>number-edit.h</header>
     </customwidget>
     <customwidget>
-      <class>Linea::UI::DashSelector</class>
+      <class>Linea::UI::StrokeOptions</class>
       <extends>QWidget</extends>
-      <header>qt/ui/dash-selector.h</header>
-    </customwidget>
-    <customwidget>
-      <class>Linea::UI::IconWidget</class>
-      <extends>QWidget</extends>
-      <header>qt/ui/icon-widget.h</header>
+      <header>qt/ui/stroke-options.h</header>
     </customwidget>
     <customwidget>
       <class>Linea::UI::SpinScale</class>

@@ -75,20 +75,8 @@ PageProperties::PageProperties(QWidget* parent)
         edit->setSingleStep(1.0);
     }
 
-    // Inject tracker-managed combo boxes, replacing the placeholder QComboBox
-    // widgets from the .ui file with the ones the tracker owns and keeps in sync.
-    auto injectCombo = [](QComboBox* placeholder, QComboBox* replacement) {
-        auto lay = qobject_cast<QGridLayout*>(placeholder->parentWidget()->layout());
-        if (!lay) return;
-        int row = -1, col = -1, rowSpan = 1, colSpan = 1;
-        lay->getItemPosition(lay->indexOf(placeholder), &row, &col, &rowSpan, &colSpan);
-        lay->removeWidget(placeholder);
-        placeholder->hide();
-        lay->addWidget(replacement, row, col, rowSpan, colSpan);
-    };
-
-    injectCombo(_ui->pageUnitsCombo, _pageUnitsTracker->createUnitCombo(_ui->leftGrid));
-    injectCombo(_ui->displayUnitsCombo, _displayUnitsTracker->createUnitCombo(_ui->rightGrid));
+    _pageUnitsTracker->attachCombo(_ui->pageUnitsCombo);
+    _displayUnitsTracker->attachCombo(_ui->displayUnitsCombo);
 
     _currentPageUnit = _pageUnitsTracker->getActiveUnit();
 

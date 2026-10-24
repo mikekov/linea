@@ -9,7 +9,9 @@
 
 #include <QPoint>
 #include <QSize>
+#include <functional>
 
+class QAbstractButton;
 class QColor;
 class QPainter;
 class QRect;
@@ -86,6 +88,18 @@ void paintFadedText(QPainter& painter, const QRect& rect, const QString& text,
  * requests.)
  */
 void settleLayout(QWidget* widget);
+
+/**
+ * Wire `toggleBtn` to expand/collapse `container` with a smooth height
+ * animation, updating `toggleBtn`'s icon between `:/icons/section-expand`
+ * (collapsed) and `:/icons/section-collapse` (expanded), and persisting the
+ * expanded state in preferences under `prefsPath` (if non-empty).
+ *
+ * Returns a predicate querying the current expanded state (suitable for
+ * composing into `Binder::visibleWhen` rules alongside other conditions).
+ */
+std::function<bool()> setupCollapsibleSection(QAbstractButton* toggleBtn, QWidget* container,
+                                              const char* prefsPath = nullptr, bool defaultExpanded = false);
 
 } // namespace Linea::UI
 
