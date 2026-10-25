@@ -333,19 +333,22 @@
                 <string>Scale X</string>
               </property>
               <property name="minimum">
-                <double>0.010000000000000</double>
+                <double>0.01</double>
               </property>
               <property name="maximum">
-                <double>1000.000000000000000</double>
+                <double>1000.0</double>
               </property>
               <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>0.01</double>
               </property>
               <property name="decimals">
                 <number>3</number>
               </property>
               <property name="label">
                 <string>X</string>
+              </property>
+              <property name="keptFractionDigits">
+                <number>2</number>
               </property>
             </widget>
           </item>
@@ -355,19 +358,22 @@
                 <string>Scale Y</string>
               </property>
               <property name="minimum">
-                <double>0.010000000000000</double>
+                <double>0.01</double>
               </property>
               <property name="maximum">
-                <double>1000.000000000000000</double>
+                <double>1000.0</double>
               </property>
               <property name="singleStep">
-                <double>0.010000000000000</double>
+                <double>0.01</double>
               </property>
               <property name="decimals">
                 <number>3</number>
               </property>
               <property name="label">
                 <string>Y</string>
+              </property>
+              <property name="keptFractionDigits">
+                <number>2</number>
               </property>
             </widget>
           </item>
@@ -400,19 +406,22 @@
                 <string>Stroke width</string>
               </property>
               <property name="minimum">
-                <double>0.001000000000000</double>
+                <double>0.001</double>
               </property>
               <property name="maximum">
-                <double>1000000.000000000000000</double>
+                <double>1000000.0</double>
               </property>
               <property name="singleStep">
-                <double>0.100000000000000</double>
+                <double>0.1</double>
               </property>
               <property name="decimals">
                 <number>3</number>
               </property>
               <property name="icon">
                 <string>stroke-widths</string>
+              </property>
+              <property name="keptFractionDigits">
+                <number>2</number>
               </property>
             </widget>
           </item>
