@@ -104,7 +104,7 @@ namespace {
 class FlatColorEditor : public QWidget {
 public:
     FlatColorEditor(const std::string& prefs, Type space, std::shared_ptr<ColorHolder> colors,
-                    ColorPickerPanel::PlateType default_plate, QWidget* parent = nullptr)
+                    ColorPlateType default_plate, QWidget* parent = nullptr)
         : QWidget(parent)
         , _prefs(prefs)
         , _picker(ColorPickerPanel::create(space, get_plate_type_preference(_prefs, default_plate), colors)) {
@@ -113,12 +113,12 @@ public:
         layout->addWidget(_picker.get());
     }
 
-    void setColorPickerPlate(ColorPickerPanel::PlateType type) {
+    void setColorPickerPlate(ColorPlateType type) {
         _picker->setPlateType(type);
         set_plate_type_preference(_prefs, type);
     }
 
-    ColorPickerPanel::PlateType getColorPickerPlate() const { return _picker->getPlateType(); }
+    ColorPlateType getColorPickerPlate() const { return _picker->getPlateType(); }
 
     ColorPickerPanel& getPicker() { return *_picker; }
 
@@ -142,6 +142,18 @@ void store_color_type(Type type) {
     }
 }
 
+static const struct {
+    ColorPlateType type;
+    const char* icon;
+    const char* label;
+    const char* tooltip;
+} pickers[] = {
+    {ColorPlateType::Rect, "color-picker-rect", _("Color Plane"), _("Show color plane")},
+    {ColorPlateType::Ring, "color-picker-ring", _("Color Ring"), _("Show color ring")},
+    {ColorPlateType::Circle, "color-picker-circle", _("Color Wheel"), _("Show color wheel")},
+    {ColorPlateType::None, "color-picker-input", _("Only Sliders"), _("Show color sliders only")},
+};
+
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -159,7 +171,7 @@ class PaintSelectorImpl : public PaintSelector {
     Q_OBJECT
 public:
     PaintSelectorImpl(bool support_no_paint, bool support_fill_rule, bool compact_mode, bool compact_inherited,
-                      const std::string& prefs_path, ColorPickerPanel::PlateType default_plate, QWidget* parent);
+                      const std::string& prefs_path, ColorPlateType default_plate, QWidget* parent);
 
     void setDesktop(SPDesktop* desktop) override {
         _desktop = desktop;
@@ -257,8 +269,8 @@ public:
     }
 
     // set current page color plate type
-    void set_plate_type(ColorPickerPanel::PlateType type);
-    std::optional<ColorPickerPanel::PlateType> get_plate_type(QWidget* page) const;
+    void set_plate_type(ColorPlateType type);
+    std::optional<ColorPlateType> get_plate_type(QWidget* page) const;
 
     // map each PaintMode to its editor page widget (built once in the constructor)
     std::map<PaintMode, QWidget*> _pages;
@@ -274,11 +286,9 @@ public:
 
     std::map<PaintMode, QToolButton*> _mode_buttons;
     QButtonGroup* _mode_group = nullptr;
-    std::map<ColorPickerPanel::PlateType, QToolButton*> _plate_buttons;
 
     // compact plate buttons
     std::unique_ptr<QMenu> _menu_popover;
-    bool _use_compact_mode = false;
     PaintMode _mode = PaintMode::None;
     SPDocument* _document = nullptr;
     FlatColorEditor _flat_color;
@@ -294,9 +304,8 @@ public:
 
 PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_rule, bool compact_mode,
                                      bool compact_inherited, const std::string& prefs_path,
-                                     ColorPickerPanel::PlateType default_plate, QWidget* parent)
+                                     ColorPlateType default_plate, QWidget* parent)
     : PaintSelector()
-    , _use_compact_mode(compact_mode)
     , _flat_color(prefs_path + "/color-editor", get_color_type(), _color, default_plate)
     , _gradient(prefs_path + "/gradient-editor", get_color_type(), true, false)
     , _inherited(compact_inherited) {
@@ -342,61 +351,22 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
         _mode_buttons[i.mode] = btn;
     }
 
-    if (_use_compact_mode) {
-        _ui.pickersWidget->hide();
-        _ui.menuButton->show();
-        _menu_popover = std::make_unique<QMenu>(this);
-        _ui.menuButton->setMenu(_menu_popover.get());
-        auto menuButtonPolicy = _ui.menuButton->sizePolicy();
-        menuButtonPolicy.setRetainSizeWhenHidden(true);
-        _ui.menuButton->setSizePolicy(menuButtonPolicy);
-    } else {
-        _ui.menuButton->hide();
-        _ui.pickersWidget->show();
-    }
+    _ui.menuButton->show();
+    _menu_popover = std::make_unique<QMenu>(this);
+    _ui.menuButton->setMenu(_menu_popover.get());
+    auto menuButtonPolicy = _ui.menuButton->sizePolicy();
+    menuButtonPolicy.setRetainSizeWhenHidden(true);
+    _ui.menuButton->setSizePolicy(menuButtonPolicy);
 
-    static const struct {
-        ColorPickerPanel::PlateType type;
-        const char* icon;
-        const char* label;
-        const char* tooltip;
-    } pickers[] = {
-        {ColorPickerPanel::Rect, "color-picker-rect", _("Color Plane"), _("Show color plane")},
-        {ColorPickerPanel::Circle, "color-picker-circle", _("Color Wheel"), _("Show color wheel")},
-        {ColorPickerPanel::None, "color-picker-input", _("Only Sliders"), _("Show color sliders only")},
-    };
-
-    QToolButton* plate_btns[] = {_ui.rectButton, _ui.circleButton, _ui.inputButton};
-
-    auto plate_group = new QButtonGroup(this);
-    plate_group->setExclusive(true);
-    for (int idx = 0; idx < 3; ++idx) {
-        const auto& p = pickers[idx];
-        auto pb = plate_btns[idx];
-        pb->setIcon(QIcon(QString(":/icons/") + p.icon));
-        pb->setToolTip(tr(p.tooltip));
-        pb->setCheckable(true);
-        pb->setAutoRaise(true);
-        pb->setAutoExclusive(false);
-        plate_group->addButton(pb);
-        _plate_buttons[p.type] = pb;
-
-        if (_use_compact_mode) {
-            auto action = _menu_popover->addAction(QIcon(QString(":/icons/") + p.icon), tr(p.label));
-            action->setToolTip(tr(p.tooltip));
-            connect(action, &QAction::triggered, this, [this, type = p.type, icon = p.icon] {
-                if (!_update.pending()) {
-                    set_plate_type(type);
-                    _ui.menuButton->setIcon(QIcon(QString(":/icons/") + icon));
-                }
-            });
-        } else {
-            connect(pb, &QToolButton::toggled, this, [this, pb, type = p.type](bool checked) {
-                if (checked && !_update.pending()) {
-                    set_plate_type(type);
-                }
-            });
-        }
+    for (const auto& p : pickers) {
+        auto action = _menu_popover->addAction(QIcon(QString(":/icons/") + p.icon), tr(p.label));
+        action->setToolTip(tr(p.tooltip));
+        connect(action, &QAction::triggered, this, [this, type = p.type, icon = p.icon] {
+            if (!_update.pending()) {
+                set_plate_type(type);
+                _ui.menuButton->setIcon(QIcon(QString(":/icons/") + icon));
+            }
+        });
     }
 
     _flat_color.getPicker().colorSpaceChanged().connect([](Type type) { store_color_type(type); });
@@ -528,13 +498,13 @@ void PaintSelectorImpl::_set_mode(PaintMode mode) {
         auto type = get_plate_type(it->second);
         if (type.has_value()) {
             has_color_picker = true;
-            if (auto it2 = _plate_buttons.find(*type); it2 != end(_plate_buttons)) {
+            // reflect the plate type in the menu button's icon — look the type
+            // up in pickers, don't index by raw enum value
+            auto pit = std::find_if(std::begin(pickers), std::end(pickers),
+                                    [&type](auto& p) { return p.type == *type; });
+            if (pit != std::end(pickers)) {
                 auto scoped = _update.block();
-                it2->second->setChecked(true);
-                if (_use_compact_mode) {
-                    const char* icons[] = {"color-picker-rect", "color-picker-circle", "color-picker-input"};
-                    _ui.menuButton->setIcon(QIcon(QString(":/icons/") + icons[static_cast<int>(*type)]));
-                }
+                _ui.menuButton->setIcon(QIcon(QString(":/icons/") + pit->icon));
             }
         }
     }
@@ -543,18 +513,15 @@ void PaintSelectorImpl::_set_mode(PaintMode mode) {
         it->second->setChecked(true);
     }
     // color picker available?
-    _ui.pickersWidget->setEnabled(has_color_picker);
-    if (_use_compact_mode) {
-        _ui.menuButton->setEnabled(has_color_picker);
-        _ui.menuButton->setVisible(has_color_picker);
-    }
+    _ui.menuButton->setEnabled(has_color_picker);
+    _ui.menuButton->setVisible(has_color_picker);
 
     // Notify parent layouts that our size may have changed (AdaptiveStack
     // reports the current page's size, not the tallest page).
     _ui.stack->updateGeometry();
 }
 
-void PaintSelectorImpl::set_plate_type(ColorPickerPanel::PlateType type) {
+void PaintSelectorImpl::set_plate_type(ColorPlateType type) {
     if (auto it = _pages.find(_mode); it != end(_pages)) {
         auto page = it->second;
 
@@ -563,21 +530,15 @@ void PaintSelectorImpl::set_plate_type(ColorPickerPanel::PlateType type) {
         } else if (page == &_gradient) {
             _gradient.setColorPickerPlate(type);
         }
-        // else if (page == &_swatch) {
-        //     _swatch.set_color_picker_plate(type);
-        // }
     }
 }
 
-std::optional<ColorPickerPanel::PlateType> PaintSelectorImpl::get_plate_type(QWidget* page) const {
+std::optional<ColorPlateType> PaintSelectorImpl::get_plate_type(QWidget* page) const {
     if (page == &_flat_color) {
         return _flat_color.getColorPickerPlate();
     } else if (page == &_gradient) {
         return _gradient.getColorPickerPlate();
     }
-    // else if (page == &_swatch) {
-    //     return _swatch.get_color_picker_plate();
-    // }
 
     return {};
 }
@@ -678,7 +639,7 @@ void PaintSelectorImpl::setFillRule(FillRule fill_rule) {
 
 std::unique_ptr<PaintSelector> PaintSelector::create(bool support_no_paint, bool support_fill_rule, bool compact_mode,
                                                      bool compact_inherited, const std::string& prefs_path,
-                                                     ColorPickerPanel::PlateType default_plate, QWidget* parent) {
+                                                     ColorPlateType default_plate, QWidget* parent) {
     return std::make_unique<PaintSelectorImpl>(support_no_paint, support_fill_rule, compact_mode, compact_inherited,
                                                prefs_path, default_plate, parent);
 }

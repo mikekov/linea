@@ -12,10 +12,12 @@ class QWidget;
 
 namespace Linea::UI {
 
+enum class ColorPlateType { None, Rect, Circle, Ring };
+
 class ColorWheel;
 
 // Create a color wheel widget for the given space type and shape; null if unsupported.
-ColorWheel* createColorWheel(Inkscape::Colors::Space::Type type, bool disc, QWidget* parent = nullptr);
+ColorWheel* createColorWheel(Inkscape::Colors::Space::Type type, ColorPlateType plateType, QWidget* parent = nullptr);
 
 // Returns true if a color wheel exists for this space type.
 bool canCreateColorWheel(Inkscape::Colors::Space::Type type);

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "color-holder.h"
+#include "color-wheel-factory.h"
 #include "colors/color.h"
 #include "colors/spaces/base.h"
 #include "colors/spaces/enum.h"
@@ -38,7 +39,7 @@ public:
     ~ColorPage() override;
 
     // Create a color wheel/plate widget (returns nullptr if not yet ported)
-    ColorWheel* createColorWheel(Inkscape::Colors::Space::Type type, bool disc);
+    ColorWheel* createColorWheel(Inkscape::Colors::Space::Type type, ColorPlateType plateType);
 
 protected:
     void showEvent(QShowEvent* event) override;

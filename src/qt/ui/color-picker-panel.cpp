@@ -10,9 +10,11 @@
 #include <QLabel>
 #include <QMenu>
 #include <QPushButton>
+#include <QSpacerItem>
 #include <QVBoxLayout>
 #include <glibmm/ustring.h>
 
+#include "color-wheel-factory.h"
 #include "ui_color-picker-panel.h"
 
 #include "color-clipboard-menu.h"
@@ -34,7 +36,7 @@ namespace Linea::UI {
 using namespace Inkscape::Colors;
 
 std::unique_ptr<ColorPickerPanel> ColorPickerPanel::create(
-    Space::Type space, PlateType type,
+    Space::Type space, ColorPlateType type,
     std::shared_ptr<ColorHolder> color, QWidget* parent)
 {
     return std::unique_ptr<ColorPickerPanel>(
@@ -42,7 +44,7 @@ std::unique_ptr<ColorPickerPanel> ColorPickerPanel::create(
 }
 
 ColorPickerPanel::ColorPickerPanel(
-    Space::Type space, PlateType type,
+    Space::Type space, ColorPlateType type,
     std::shared_ptr<ColorHolder> color, QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::ColorPickerPanel>())
@@ -110,29 +112,41 @@ void ColorPickerPanel::buildBottomBar() {
     _ui->spacesButton->setMenu(_spacesMenu.get());
 }
 
-void ColorPickerPanel::createColorPage(Space::Type type, PlateType plateType) {
+void ColorPickerPanel::createColorPage(Space::Type type, ColorPlateType plateType) {
     auto space = Inkscape::Colors::Manager::get().find(type);
 
     _page = new ColorPage(space, _colorSet, this);
 
+    int topMargin = 0;
+    int index = 0;
     // color plate/wheel widget — wheel is owned by ColorPage (parented to it),
     // we just hold the interface pointer and a separate widget pointer for the layout.
-    if (plateType == Circle) {
-        _plate = _page->createColorWheel(type, true);
-    } else if (plateType == Rect) {
-        _plate = _page->createColorWheel(type, false);
+    if (plateType == ColorPlateType::Circle || plateType == ColorPlateType::Ring) {
+        _plate = _page->createColorWheel(type, plateType);
+        topMargin = 2;
+    } else if (plateType == ColorPlateType::Rect) {
+        _plate = _page->createColorWheel(type, plateType);
+        topMargin = 4;
     }
     if (_plate) {
         _plateWidget = _plate->getWidget();
-        _ui->mainLayout->insertWidget(0, _plateWidget); // plate goes above the page
+        // plates need a little breathing room at the top; pages don't
+        _topGap = new QSpacerItem(0, topMargin, QSizePolicy::Minimum, QSizePolicy::Fixed);
+        _ui->mainLayout->insertItem(index++, _topGap);
+        _ui->mainLayout->insertWidget(index++, _plateWidget); // plate goes above the page
     }
 
-    _ui->mainLayout->insertWidget(_plate ? 1 : 0, _page);
+    _ui->mainLayout->insertWidget(index, _page);
 
     updateColor();
 }
 
 void ColorPickerPanel::removeWidgets() {
+    if (_topGap) {
+        _ui->mainLayout->removeItem(_topGap);
+        delete _topGap;
+        _topGap = nullptr;
+    }
     // Remove plate widget from layout first (it's a child of _page, deleted with it)
     if (_plateWidget) {
         _ui->mainLayout->removeWidget(_plateWidget);
@@ -155,12 +169,12 @@ void ColorPickerPanel::updateColor() {
     if (_plate) _plate->setColor(color);
 }
 
-void ColorPickerPanel::switchPage(Space::Type space, PlateType plateType) {
+void ColorPickerPanel::switchPage(Space::Type space, ColorPlateType plateType) {
     removeWidgets();
     createColorPage(space, plateType);
     _spaceType = space;
     _plateType = plateType;
-    _ui->spacer->changeSize(0, 0, QSizePolicy::Minimum, plateType != None ? QSizePolicy::Minimum : QSizePolicy::Expanding);
+    _ui->spacer->changeSize(0, 0, QSizePolicy::Minimum, plateType != ColorPlateType::None ? QSizePolicy::Minimum : QSizePolicy::Expanding);
 }
 
 void ColorPickerPanel::setDesktop(SPDesktop* desktop) {
@@ -183,13 +197,13 @@ void ColorPickerPanel::setPickerType(Space::Type type) {
     }
 }
 
-void ColorPickerPanel::setPlateType(PlateType plate) {
+void ColorPickerPanel::setPlateType(ColorPlateType plate) {
     if (plate == _plateType) return;
 
     switchPage(_spaceType, plate);
 }
 
-ColorPickerPanel::PlateType ColorPickerPanel::getPlateType() const {
+ColorPlateType ColorPickerPanel::getPlateType() const {
     return _plateType;
 }
 
@@ -213,14 +227,14 @@ void ColorPickerPanel::pickColor() {
     }
 }
 
-ColorPickerPanel::PlateType get_plate_type_preference(const std::string& pref_path_base, ColorPickerPanel::PlateType def_type) {
+ColorPlateType get_plate_type_preference(const std::string& pref_path_base, ColorPlateType def_type) {
     Glib::ustring path(pref_path_base);
-    return static_cast<ColorPickerPanel::PlateType>(Inkscape::Preferences::get()->getIntLimited(path + "/color-plate", def_type, 0, 2));
+    return static_cast<ColorPlateType>(Inkscape::Preferences::get()->getIntLimited(path + "/color-plate-type", static_cast<int>(def_type), 0, 3));
 }
 
-void set_plate_type_preference(const std::string& pref_path_base, ColorPickerPanel::PlateType type) {
+void set_plate_type_preference(const std::string& pref_path_base, ColorPlateType type) {
     Glib::ustring path(pref_path_base);
-    Inkscape::Preferences::get()->setInt(path + "/color-plate", type);
+    Inkscape::Preferences::get()->setInt(path + "/color-plate-type", static_cast<int>(type));
 }
 
 } // namespace Linea::UI

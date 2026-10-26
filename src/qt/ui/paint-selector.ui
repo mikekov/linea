@@ -96,9 +96,6 @@
                   <normaloff>:/icons/fill-rule-even-odd</normaloff>
                 </iconset>
               </property>
-              <!-- <property name="autoRaise">
-        <bool>true</bool>
-       </property> -->
             </widget>
           </item>
           <item>
@@ -116,82 +113,6 @@
                 </size>
               </property>
             </spacer>
-          </item>
-          <!-- Plate-picker buttons (normal mode) -->
-          <item>
-            <widget class="QWidget" name="pickersWidget" native="true">
-              <layout class="QHBoxLayout" name="pickersLayout">
-                <property name="spacing">
-                  <number>0</number>
-                </property>
-                <property name="leftMargin">
-                  <number>0</number>
-                </property>
-                <property name="topMargin">
-                  <number>0</number>
-                </property>
-                <property name="rightMargin">
-                  <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                  <number>0</number>
-                </property>
-                <item>
-                  <widget class="QToolButton" name="rectButton">
-                    <property name="toolTip">
-                      <string>Show color map</string>
-                    </property>
-                    <property name="icon">
-                      <iconset>
-                        <normaloff>:/icons/color-picker-rect</normaloff>
-                      </iconset>
-                    </property>
-                    <property name="checkable">
-                      <bool>true</bool>
-                    </property>
-                    <property name="autoRaise">
-                      <bool>true</bool>
-                    </property>
-                  </widget>
-                </item>
-                <item>
-                  <widget class="QToolButton" name="circleButton">
-                    <property name="toolTip">
-                      <string>Show color wheel</string>
-                    </property>
-                    <property name="icon">
-                      <iconset>
-                        <normaloff>:/icons/color-picker-circle</normaloff>
-                      </iconset>
-                    </property>
-                    <property name="checkable">
-                      <bool>true</bool>
-                    </property>
-                    <property name="autoRaise">
-                      <bool>true</bool>
-                    </property>
-                  </widget>
-                </item>
-                <item>
-                  <widget class="QToolButton" name="inputButton">
-                    <property name="toolTip">
-                      <string>Show color sliders only</string>
-                    </property>
-                    <property name="icon">
-                      <iconset>
-                        <normaloff>:/icons/color-picker-input</normaloff>
-                      </iconset>
-                    </property>
-                    <property name="checkable">
-                      <bool>true</bool>
-                    </property>
-                    <property name="autoRaise">
-                      <bool>true</bool>
-                    </property>
-                  </widget>
-                </item>
-              </layout>
-            </widget>
           </item>
 
           <!-- Compact menu button (compact mode only, hidden by default) -->
@@ -213,17 +134,7 @@
           </item>
         </layout>
       </item>
-      <!-- Separator -->
-      <!-- <item>
-    <widget class="QFrame" name="separator">
-     <property name="frameShape">
-      <enum>QFrame::Shape::HLine</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Shadow::Sunken</enum>
-     </property>
-    </widget>
-   </item> -->
+
       <!-- Stacked widget for editor pages -->
       <item>
         <widget class="Linea::UI::AdaptiveStack" name="stack">

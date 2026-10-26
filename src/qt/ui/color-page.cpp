@@ -87,6 +87,7 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
             // for small values increase precision
             edit->setDecimals(2);
             edit->setSingleStep(0.1);
+            edit->setKeptFractionDigits(2);
         }
 
         // Set suffix based on unit
@@ -111,10 +112,10 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
 
 ColorPage::~ColorPage() = default;
 
-ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, bool disc) {
+ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, ColorPlateType plateType) {
     if (!canCreateColorWheel(type)) return nullptr;
 
-    auto wheel = Linea::UI::createColorWheel(type, disc, this);
+    auto wheel = Linea::UI::createColorWheel(type, plateType, this);
     if (!wheel) return nullptr;
     // keep color wheel in sync with the color set
     _color_wheel = wheel;

@@ -10,6 +10,7 @@
 #include <QPointF>
 #include <QPointer>
 #include <QWidget>
+#include <array>
 #include <optional>
 #include <sigc++/signal.h>
 
@@ -40,7 +41,8 @@ public:
 
     // Set disc (circular) vs rectangular mode.
     void setDisc(bool disc);
-    bool isDisc() const { return _disc; }
+    // Set ring (annulus) vs filled disc mode; only meaningful with setDisc(true).
+    void setRing(bool ring);
 
     // ColorWheel interface
     void setColor(const Inkscape::Colors::Color& color) override;
@@ -80,12 +82,20 @@ private:
     void rebuildPlate();
     // show/move/hide the indicator overlay to track _indicator
     void syncIndicatorOverlay();
+    void syncOverlay(QPointer<IndicatorOverlay>& overlay, const std::optional<QPointF>& indicator);
+
+    // ring mode: hue picks on the band, sat/value picks inside the triangle
+    void selectRingPoint(const QPointF& local);
+    void selectTrianglePoint(const QPointF& local);
+    void rebuildTriangle();
+    std::array<QPointF, 3> triangleScreenVerts(const QRectF& area) const;
 
     // inset of the colored area inside the widget; the indicator is drawn by
     // an overlay widget, so it no longer needs padding to draw past the area
     int _padding = 0;
     double _radius = 4.0;
     bool _disc = true;
+    bool _ring = false;
     bool _drag = false;
 
     Inkscape::Colors::Color _baseColor{Inkscape::Colors::Space::Type::RGB, {0, 0, 0}};
@@ -94,10 +104,15 @@ private:
     int _channel2 = 2;
 
     QImage _plate;
+    QImage _triangle;
     std::optional<QPointF> _indicator;
+    std::optional<QPointF> _triIndicator;
     // child of the top-level window, not of the plate: the indicator may
     // extend past the plate's edges, which a regular child cannot draw into
     QPointer<IndicatorOverlay> _indicatorOverlay;
+    QPointer<IndicatorOverlay> _triOverlay;
+    bool _dragRing = false;
+    int _fixedChannel = -1;
 
     sigc::signal<void(const Inkscape::Colors::Color&)> _signal_color_changed;
 };

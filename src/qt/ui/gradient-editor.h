@@ -76,8 +76,8 @@ public:
     void selectStop(SPStop* selected) override;
 
     // Additional public methods
-    void setColorPickerPlate(ColorPickerPanel::PlateType type);
-    ColorPickerPanel::PlateType getColorPickerPlate() const;
+    void setColorPickerPlate(ColorPlateType type);
+    ColorPlateType getColorPickerPlate() const;
     SPGradientType getType() const;
     ColorPickerPanel& getPicker() { return *_colorPicker; }
     QWidget& getColorBox();

@@ -338,7 +338,7 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     // Create PaintSelector popup
     strip.selector = PaintSelector::create(false, isFill, true, false,
         isFill ? "/style-panel/fill-paint-popup" : "/style-panel/stroke-paint-popup",
-        ColorPickerPanel::Rect, this).release();
+        ColorPlateType::Rect, this).release();
     strip.popup = new PopupMenu(this);
     strip.popup->setContent(strip.selector);
 
@@ -347,7 +347,7 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     // Create inline PaintSelector for the collapsible section
     strip.inlineSelector = PaintSelector::create(false, isFill, true, true,
         isFill ? "/style-panel/fill-paint-inline" : "/style-panel/stroke-paint-inline",
-        ColorPickerPanel::None, strip.selectorContainer).release();
+        ColorPlateType::None, strip.selectorContainer).release();
     strip.inlineSelector->setMinimumWidth(0);
     strip.inlineSelector->setMaximumWidth(QWIDGETSIZE_MAX);
     strip.inlineSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -612,7 +612,7 @@ void StylePanel::bind(Props::Binder& binder) {
     binder.visibleWhen(_stroke.emptyLabel, editable && strokeNotDefined);
 
     // Stroke attribute widgets: visible only when stroke is defined.
-    binder.visibleWhen(_ui->strokeOptionsSpacer, editable && strokeDefined);
+    binder.visibleWhen(_ui->strokeOptionsSpacer, editable);
     for (auto w : _strokeWidgets) {
         binder.visibleWhen(w, editable && strokeDefined);
     }

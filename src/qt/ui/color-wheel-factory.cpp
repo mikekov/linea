@@ -24,7 +24,7 @@ constexpr bool TEST_TIMING = false;
 class FastColorPlate : public ColorPlate {
     Q_OBJECT
 public:
-    FastColorPlate(Type source, Type plate, int fixed_channel, int var_channel1, int var_channel2, bool disc, QWidget* parent)
+    FastColorPlate(Type source, Type plate, int fixed_channel, int var_channel1, int var_channel2, ColorPlateType plateType, QWidget* parent)
         : ColorPlate(parent)
         , _source(source)
         , _plate(plate)
@@ -32,7 +32,8 @@ public:
         , _var_channel1(var_channel1)
         , _var_channel2(var_channel2)
     {
-        setDisc(disc);
+        setDisc(plateType == ColorPlateType::Circle || plateType == ColorPlateType::Ring);
+        setRing(plateType == ColorPlateType::Ring);
     }
 
     void setColor(const Color& color) override {
@@ -115,17 +116,20 @@ private:
     double _last_hue = -1.0; // last hue rendered on the plate; -1 before the first setColor
 };
 
-static ColorWheel* createPlate(Type source, Type plate, bool disc, QWidget* parent) {
-    if (disc) {
+static ColorWheel* createPlate(Type source, Type plate, ColorPlateType plateType, QWidget* parent) {
+    if (plateType == ColorPlateType::Circle || plateType == ColorPlateType::Ring) {
         auto value = 2; // if value changes, color wheel needs to be rebuilt
         auto hue = 0;   // vary hue with angle (while painting the disc)
         auto sat = 1;   // vary saturation with distance from the center of the disc (while painting the disc)
-        return new FastColorPlate(source, plate, value, hue, sat, disc, parent);
-    } else {
+        return new FastColorPlate(source, plate, value, hue, sat, plateType, parent);
+    } else if (plateType == ColorPlateType::Rect) {
         auto hue = 0;   // hue is fixed; it's a single hue rectangular plate
         auto sat = 1;
         auto value = 2;
-        return new FastColorPlate(source, plate, hue, sat, value, disc, parent);
+        return new FastColorPlate(source, plate, hue, sat, value, plateType, parent);
+    }
+    else {
+        return nullptr;
     }
 }
 
@@ -139,7 +143,7 @@ static Type plateTypeFor(Type source) {
     }
 }
 
-static std::pair<ColorWheel*, bool> createHelper(Type type, bool create, bool disc, QWidget* parent) {
+static std::pair<ColorWheel*, bool> createHelper(Type type, bool create, ColorPlateType plateType, QWidget* parent) {
     switch (type) {
     case Type::HSL:
     case Type::HSLUV:
@@ -155,7 +159,7 @@ static std::pair<ColorWheel*, bool> createHelper(Type type, bool create, bool di
 
     if (!create) return {nullptr, true};
 
-    ColorWheel* wheel = createPlate(type, plateTypeFor(type), disc, parent);
+    ColorWheel* wheel = createPlate(type, plateTypeFor(type), plateType, parent);
 
     // Speed test — use this to evaluate how quickly we can rebuild a color wheel
     if (TEST_TIMING) {
@@ -180,13 +184,13 @@ static std::pair<ColorWheel*, bool> createHelper(Type type, bool create, bool di
     return {wheel, true};
 }
 
-ColorWheel* createColorWheel(Type type, bool disc, QWidget* parent) {
-    auto [wheel, _] = createHelper(type, true, disc, parent);
+ColorWheel* createColorWheel(Type type, ColorPlateType plateType, QWidget* parent) {
+    auto [wheel, _] = createHelper(type, true, plateType, parent);
     return wheel;
 }
 
 bool canCreateColorWheel(Type type) {
-    auto [_, ok] = createHelper(type, false, true, nullptr);
+    auto [_, ok] = createHelper(type, false, ColorPlateType::Circle, nullptr);
     return ok;
 }
 
