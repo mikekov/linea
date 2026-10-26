@@ -129,6 +129,8 @@ target_sources(linea_base PRIVATE
     ui/paint-selector.cpp
     ui/paint-selector.h
     ui/paint-selector.ui
+    ui/paint-selector-bind.cpp
+    ui/paint-selector-bind.h
     ui/resizing-separator.cpp
     ui/resizing-separator.h
     ui/simple-grid.cpp

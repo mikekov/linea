@@ -25,6 +25,9 @@
 #include "colors/color.h"
 #include "colors/manager.h"
 #include "colors/spaces/base.h"
+#include "inkscape.h"
+#include "ui/tools/dropper-tool.h"
+#include "ui/tools/tool-base.h"
 
 namespace Linea::UI {
 
@@ -172,7 +175,7 @@ void ColorPickerPanel::setPickerType(Space::Type type) {
     switchPage(type, _plateType);
     // sync the spaces button: update its label and the checked menu action
     if (_spacesMenu) {
-        for (auto* action : _spacesMenu->actions()) {
+        for (auto action : _spacesMenu->actions()) {
             auto actionType = static_cast<Space::Type>(action->data().toInt());
             action->setChecked(actionType == type);
             if (actionType == type) _ui->spacesButton->setText(action->text());
@@ -195,28 +198,27 @@ sigc::signal<void(Space::Type)>& ColorPickerPanel::colorSpaceChanged() {
 }
 
 void ColorPickerPanel::pickColor() {
-//     // TODO: port dropper tool integration
-//     // Set the dropper into a "one-click" mode, so it reverts to the previous tool after a click
-//     if (_colorPicking.connected()) {
-//         _colorPicking.disconnect();
-//         return;
-//     }
-//     auto desktop = _desktop ? _desktop : SP_ACTIVE_DESKTOP;
-//     if (!desktop) return;
-//     Tools::sp_toggle_dropper(desktop);
-//     if (auto tool = dynamic_cast<Tools::DropperTool*>(desktop->getTool())) {
-//         _colorPicking = tool->onetimepick_signal.connect([this](auto& color) {
-//             _colorSet->set(color);
-//         });
-//     }
+    // Set the dropper into a "one-click" mode, so it reverts to the previous tool after a click
+    if (_colorPicking.connected()) {
+        _colorPicking.disconnect();
+        return;
+    }
+    auto desktop = _desktop ? _desktop : SP_ACTIVE_DESKTOP;
+    if (!desktop) return;
+    Inkscape::UI::Tools::sp_toggle_dropper(desktop);
+    if (auto tool = dynamic_cast<Inkscape::UI::Tools::DropperTool*>(desktop->getTool())) {
+        _colorPicking = tool->onetimepick_signal.connect([this](auto& color) {
+            _colorSet->set(color);
+        });
+    }
 }
 
-ColorPickerPanel::PlateType get_plate_type_preference(const char* pref_path_base, ColorPickerPanel::PlateType def_type) {
+ColorPickerPanel::PlateType get_plate_type_preference(const std::string& pref_path_base, ColorPickerPanel::PlateType def_type) {
     Glib::ustring path(pref_path_base);
     return static_cast<ColorPickerPanel::PlateType>(Inkscape::Preferences::get()->getIntLimited(path + "/color-plate", def_type, 0, 2));
 }
 
-void set_plate_type_preference(const char* pref_path_base, ColorPickerPanel::PlateType type) {
+void set_plate_type_preference(const std::string& pref_path_base, ColorPickerPanel::PlateType type) {
     Glib::ustring path(pref_path_base);
     Inkscape::Preferences::get()->setInt(path + "/color-plate", type);
 }

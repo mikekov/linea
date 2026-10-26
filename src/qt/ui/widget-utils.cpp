@@ -321,6 +321,9 @@ private:
     void updateIcon() {
         if (!_toggleBtn) return;
         _toggleBtn->setIcon(QIcon(_expanded ? ":/icons/section-collapse" : ":/icons/section-expand"));
+        // checkable toggles show :checked (highlight) while expanded;
+        // no-op for non-checkable buttons
+        _toggleBtn->setChecked(_expanded);
     }
 
     void toggle() {

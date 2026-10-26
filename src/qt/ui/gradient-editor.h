@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <memory>
 #include <optional>
+#include <string>
 #include <sigc++/scoped_connection.h>
 
 #include "ui/operation-blocker.h"
@@ -56,7 +57,7 @@ class GradientEditor : public QWidget, public GradientSelectorInterface {
 
 public:
     GradientEditor(
-        const char* prefs,
+        const std::string& prefs,
         Inkscape::Colors::Space::Type space,
         bool showTypeSelector,
         bool showColorwheelExpander,

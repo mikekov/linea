@@ -25,7 +25,7 @@ constexpr double RING_THICKNESS = 1.5;
 // presses this far outside the plate still pick the nearest edge color —
 // the tolerance the widget padding used to provide, now covering popup
 // margins and layout spacing around the plate
-constexpr double PICK_MARGIN = 10;
+constexpr double PICK_MARGIN = 3;
 
 // The color indicator is drawn by a dedicated widget parented to the
 // top-level window rather than by the plate itself: a widget cannot paint

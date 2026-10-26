@@ -16,6 +16,17 @@ def process_svg_file(input_path, output_path, color, background_color):
     with open(input_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
+    # Strip XML declaration and ensure xmlns="http://www.w3.org/2000/svg" is within
+    # the first 256 bytes so QMimeDatabase / QSvgIconEngine recognizes extensionless
+    # :/icons/* qrc aliases as image/svg+xml instead of falling back to raster QPixmap.
+    content = re.sub(r'^\s*<\?xml[^?]*\?>\s*', '', content)
+    content = re.sub(
+        r'<svg\b([^>]*?)\s+xmlns="http://www\.w3\.org/2000/svg"',
+        r'<svg xmlns="http://www.w3.org/2000/svg"\1',
+        content,
+        count=1,
+    )
+
     # Replace black color values with the specified hex color
     modified_content = re.sub(r'\bblack\b', color, content, flags=re.IGNORECASE)
     modified_content = modified_content.replace('#000000', color)

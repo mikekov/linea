@@ -76,9 +76,13 @@ private:
         NumberEdit* alpha = nullptr;
         QPushButton* addBtn = nullptr;
         QPushButton* clearBtn = nullptr;
+        QPushButton* toggleBtn = nullptr;
+        QWidget* selectorContainer = nullptr;
         QLabel* emptyLabel = nullptr;
         PaintSelector* selector = nullptr;
+        PaintSelector* inlineSelector = nullptr;
         PopupMenu* popup = nullptr;
+        std::function<bool()> isExpanded;
 
         void setPreviewFromPaint(const Linea::mixed_property<Linea::PaintProp>& paint,
                                  const Linea::mixed_property<double>& opacity);

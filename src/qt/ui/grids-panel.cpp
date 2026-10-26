@@ -68,7 +68,7 @@ GridsPanel::GridsPanel(QWidget* parent)
 
     // "New Grid" button — sits below the defined grids, inside the scroll area.
     // It stays at a fixed position: after the grids, before the stretch.
-    _newGridButton = new QPushButton(QIcon::fromTheme("list-add"),
+    _newGridButton = new QPushButton(QIcon(":/icons/list-add"),
                                      QString::fromUtf8(_("New Grid")), listContainer);
     _newGridButton->setToolTip(QString::fromUtf8(_("Add a new grid to the document")));
     _listLayout->addWidget(_newGridButton);

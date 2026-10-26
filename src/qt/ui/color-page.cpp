@@ -48,7 +48,7 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         }
     });
 
-    _selected_colors->signal_cleared.connect([this]() {
+    _selected_cleared_connection = _selected_colors->signal_cleared.connect([this]() {
         auto scoped = SignalBlocker(_specific_changed_connection);
         _specific_colors->clear();
     });

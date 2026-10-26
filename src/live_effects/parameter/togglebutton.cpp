@@ -8,31 +8,28 @@
 
 #include "togglebutton.h"
 
+#include <QIcon>
+#include <QPushButton>
+#include <QString>
 #include <utility>
 #include <glibmm/i18n.h>
 
-#include <QPushButton>
-#include <QIcon>
-#include <QString>
-
 #include "inkscape.h"
-#include "selection.h"
-
 #include "live_effects/effect.h"
+#include "selection.h"
 #include "util/numeric/converters.h"
 
 namespace Inkscape::LivePathEffect {
 
-ToggleButtonParam::ToggleButtonParam(const Glib::ustring &label, const Glib::ustring &tip, const Glib::ustring &key,
-                                     Inkscape::UI::Widget::Registry *wr, Effect *effect, bool default_value,
-                                     Glib::ustring inactive_label, char const *_icon_active, char const *_icon_inactive)
+ToggleButtonParam::ToggleButtonParam(const Glib::ustring& label, const Glib::ustring& tip, const Glib::ustring& key,
+                                     Inkscape::UI::Widget::Registry* wr, Effect* effect, bool default_value,
+                                     Glib::ustring inactive_label, const char* _icon_active, const char* _icon_inactive)
     : Parameter(label, tip, key, wr, effect)
     , value(default_value)
     , defvalue(default_value)
     , inactive_label(std::move(inactive_label))
     , _icon_active(_icon_active)
-    , _icon_inactive(_icon_inactive)
-{
+    , _icon_inactive(_icon_inactive) {
     checkwdg = nullptr;
 }
 
@@ -42,46 +39,32 @@ ToggleButtonParam::~ToggleButtonParam() {
     }
 }
 
-void
-ToggleButtonParam::param_set_default()
-{
+void ToggleButtonParam::param_set_default() {
     param_setValue(defvalue);
 }
 
-bool
-ToggleButtonParam::param_readSVGValue(const gchar * strvalue)
-{
+bool ToggleButtonParam::param_readSVGValue(const gchar* strvalue) {
     param_setValue(Inkscape::Util::read_bool(strvalue, defvalue));
     return true; // not correct: if value is unacceptable, should return false!
 }
 
-Glib::ustring
-ToggleButtonParam::param_getSVGValue() const
-{
+Glib::ustring ToggleButtonParam::param_getSVGValue() const {
     return value ? "true" : "false";
 }
 
-Glib::ustring
-ToggleButtonParam::param_getDefaultSVGValue() const
-{
+Glib::ustring ToggleButtonParam::param_getDefaultSVGValue() const {
     return defvalue ? "true" : "false";
 }
 
-void 
-ToggleButtonParam::param_update_default(bool default_value)
-{
+void ToggleButtonParam::param_update_default(bool default_value) {
     defvalue = default_value;
 }
 
-void 
-ToggleButtonParam::param_update_default(const gchar * default_value)
-{
+void ToggleButtonParam::param_update_default(const gchar* default_value) {
     param_update_default(Inkscape::Util::read_bool(default_value, defvalue));
 }
 
-QWidget*
-ToggleButtonParam::param_newWidget()
-{
+QWidget* ToggleButtonParam::param_newWidget() {
     if (_toggled_connection) {
         QObject::disconnect(_toggled_connection);
     }
@@ -97,17 +80,13 @@ ToggleButtonParam::param_newWidget()
     return btn;
 }
 
-void
-ToggleButtonParam::refresh_button()
-{
+void ToggleButtonParam::refresh_button() {
     if (!checkwdg) return;
     update_button_label();
     checkwdg->setChecked(value);
 }
 
-void
-ToggleButtonParam::update_button_label()
-{
+void ToggleButtonParam::update_button_label() {
     if (!checkwdg) return;
 
     QString text;
@@ -121,14 +100,12 @@ ToggleButtonParam::update_button_label()
         if (!_icon_inactive) {
             _icon_inactive = _icon_active;
         }
-        checkwdg->setIcon(QIcon::fromTheme(QString::fromUtf8(value ? _icon_active : _icon_inactive)));
+        checkwdg->setIcon(QIcon(QString(":/icons/") + _icon_active));
     }
     checkwdg->setText(text);
 }
 
-void
-ToggleButtonParam::param_setValue(bool newvalue)
-{
+void ToggleButtonParam::param_setValue(bool newvalue) {
     if (value != newvalue) {
         param_effect->refresh_widgets = true;
     }
@@ -136,10 +113,9 @@ ToggleButtonParam::param_setValue(bool newvalue)
     refresh_button();
 }
 
-void
-ToggleButtonParam::toggled() {
+void ToggleButtonParam::toggled() {
     if (SP_ACTIVE_DESKTOP) {
-        Inkscape::Selection *selection = SP_ACTIVE_DESKTOP->getSelection();
+        Inkscape::Selection* selection = SP_ACTIVE_DESKTOP->getSelection();
         selection->emitModified();
     }
     _signal_toggled.emit();

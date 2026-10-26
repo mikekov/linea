@@ -54,10 +54,11 @@
 - obj tree - cannot rearrange layers, they cannot be dragged
 - adjust number edit with mouse drag
 - add collapsible sections in addition or instead of popups
-- add stroke hairline option (not a unit!)
+- add stroke hairline option somehow
 - expose rgb_hex_colors setting
 - rect panel - corners lpe button doesn't work (should retain/replace current rounded corners)
-- stroke order - update icon accordingly to reflect the current order
+- add dropper tool mode that keeps selected tool to stop props panel from resizing
+- expanded paint - add alpha number edit somewhere
 
 ## Tools
 

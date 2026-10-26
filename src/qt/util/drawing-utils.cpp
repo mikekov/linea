@@ -187,7 +187,8 @@ bool isDarkPalette(const QWidget& widget) {
 
 void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness, const QWidget& widget) {
     double const radius = size / 2.0;
-    QColor const ring = widget.palette().color(QPalette::Window);
+    // content background: white on light themes, dark on dark themes
+    QColor const ring = widget.palette().color(QPalette::Base);
 
     // translucent contrast stroke: black on light themes, white on dark
     bool const dark = isDarkPalette(widget);

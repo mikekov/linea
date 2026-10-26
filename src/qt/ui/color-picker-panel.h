@@ -8,6 +8,7 @@
 #define LINEA_UI_COLOR_PICKER_PANEL_H
 
 #include <memory>
+#include <string>
 #include <QWidget>
 #include <sigc++/signal.h>
 
@@ -73,7 +74,7 @@ private:
     void removeWidgets();
     void switchPage(Inkscape::Colors::Space::Type space, PlateType plateType);
     void updateColor();
-    void pickColor(); // TODO: port dropper tool integration
+    void pickColor();
 
     // UI from .ui file
     std::unique_ptr<Ui::ColorPickerPanel> _ui;
@@ -91,14 +92,15 @@ private:
     QMenu* _swatchMenu = nullptr;
 
     sigc::scoped_connection _colorChanged;
+    sigc::scoped_connection _colorPicking;
     sigc::signal<void(Inkscape::Colors::Space::Type)> _colorSpaceChanged;
 };
 
 // get a plate type from preferences
-ColorPickerPanel::PlateType get_plate_type_preference(const char* pref_path_base, ColorPickerPanel::PlateType def_type = ColorPickerPanel::Rect);
+ColorPickerPanel::PlateType get_plate_type_preference(const std::string& pref_path_base, ColorPickerPanel::PlateType def_type = ColorPickerPanel::Rect);
 
 // persist a plate type in preferences
-void set_plate_type_preference(const char* pref_path_base, ColorPickerPanel::PlateType type);
+void set_plate_type_preference(const std::string& pref_path_base, ColorPickerPanel::PlateType type);
 
 } // namespace Linea::UI
 

@@ -28,7 +28,8 @@ class PaintInherited : public QWidget {
     Q_OBJECT
 
 public:
-    explicit PaintInherited(QWidget* parent = nullptr);
+    // 'compact' presents the four modes as a combo box instead of radio buttons
+    explicit PaintInherited(bool compact, QWidget* parent = nullptr);
     ~PaintInherited() override;
 
     // update UI to reflect 'mode'
@@ -53,6 +54,7 @@ private:
 
     std::unique_ptr<Ui::PaintInherited> _ui;
     OperationBlocker _update;
+    bool _compact = false;
 };
 
 } // namespace Linea::UI

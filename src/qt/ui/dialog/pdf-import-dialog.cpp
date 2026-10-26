@@ -453,9 +453,9 @@ void PdfImportDialog::setFonts(const FontList& fonts) {
         // Icon column
         auto iconItem = new QStandardItem;
         if (font->isCIDFont()) {
-            iconItem->setIcon(QIcon::fromTheme("text-convert-to-regular"));
+            iconItem->setIcon(QIcon(":/icons/text-convert-to-regular"));
         } else {
-            iconItem->setIcon(QIcon::fromTheme(data.found ? "on" : "off-outline"));
+            iconItem->setIcon(QIcon(data.found ? ":/icons/on" : ":/icons/off-outline"));
         }
         _fontModel->setItem(row, FontCol::COL_ICON, iconItem);
 

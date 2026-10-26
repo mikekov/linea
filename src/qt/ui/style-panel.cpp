@@ -14,6 +14,7 @@
 #include <QSizePolicy>
 #include <QStackedWidget>
 
+#include "color-picker-panel.h"
 #include "color-preview.h"
 #include "colors/utils.h"
 #include "document-undo.h"
@@ -27,6 +28,7 @@
 #include "object/sp-radial-gradient.h"
 #include "object/sp-stop.h"
 #include "paint-selector.h"
+#include "paint-selector-bind.h"
 #include "pattern-manager.h"
 #include "popup-menu.h"
 #include "props/binder.h"
@@ -193,15 +195,6 @@ void StylePanel::PaintButton::setPreview(const Linea::mixed_property<Linea::Pain
 
 // --- PaintStrip helpers ---
 
-static boost::intrusive_ptr<SPCSSAttr> make_paint_css(bool fill, const Inkscape::Colors::Color& color) {
-    auto c = color;
-    c.enableOpacity(false);
-    auto css = new_css_attr();
-    sp_repr_css_set_property_string(css.get(), fill ? "fill" : "stroke", sp_color_to_css(c));
-    sp_repr_css_set_property_double(css.get(), fill ? "fill-opacity" : "stroke-opacity", color.getOpacity());
-    return css;
-}
-
 void StylePanel::PaintStrip::setFlatColor(const Inkscape::Colors::Color& color) {
     if (paintBtn) paintBtn->setFlatColor(color);
 }
@@ -214,17 +207,8 @@ void StylePanel::PaintStrip::setPreviewFromPaint(const Linea::mixed_property<Lin
 void StylePanel::PaintStrip::setPaintFromProps(const Linea::mixed_property<Linea::PaintProp>& paint,
                                                const Linea::mixed_property<double>& /*opacity*/,
                                                const Linea::mixed_property<SPWindRule>& fillRule) {
-    if (!selector) return;
-
-    if (paint.is_mixed()) {
-        selector->showPlaceholder(QObject::tr("Mixed"), true);
-    } else {
-        selector->updateFromPaintProps(paint.value());
-    }
-
-    if (isFill && fillRule.is_single()) {
-        selector->setFillRule(fillRule.value() == SP_WIND_RULE_NONZERO ? FillRule::NonZero : FillRule::EvenOdd);
-    }
+    syncPaintSelector(selector, paint, fillRule, isFill);
+    syncPaintSelector(inlineSelector, paint, fillRule, isFill);
 
     // Alpha is no longer set here — it's bound directly via
     // binder.bind(Props::fill_opacity / stroke_opacity, alpha) which handles
@@ -250,101 +234,28 @@ void StylePanel::PaintStrip::bind(Props::Binder& binder) {
     if (fill) {
         binder.bindField(Props::Field::fill_rule, [this](const Props::SelectionState& s) {
             if (s.style.fill_rule.is_single()) {
-                selector->setFillRule(s.style.fill_rule.value() == SP_WIND_RULE_NONZERO ? FillRule::NonZero
-                                                                                        : FillRule::EvenOdd);
+                auto rule = s.style.fill_rule.value() == SP_WIND_RULE_NONZERO ? FillRule::NonZero : FillRule::EvenOdd;
+                if (selector) selector->setFillRule(rule);
+                if (inlineSelector) inlineSelector->setFillRule(rule);
             }
         });
     }
 
     // ---- Write: PaintSelector signals → editor->apply(Op) ----
-
-    binder.track(
-        connect(selector, &PaintSelector::flatColorChanged, paintBtn, [this, editor, fill](const Color& color) {
-            auto css = make_paint_css(fill, color);
-            editor->apply(PaintEditDelegate::CssOp{css}, fill ? "change-fill" : "change-stroke",
-                          fill ? RC_("Undo", "Set fill color") : RC_("Undo", "Set stroke color"));
-            if (paintBtn) paintBtn->setFlatColor(color);
-        }));
-
-    binder.track(connect(
-        selector, &PaintSelector::gradientChanged, paintBtn, [editor, fill](SPGradient* vector, SPGradientType type) {
-            editor->apply(PaintEditDelegate::GradientOp{vector, type, fill},
-                          fill ? "fill-gradient-change" : "stroke-gradient-change",
-                          fill ? RC_("Undo", "Set gradient on fill") : RC_("Undo", "Set gradient on stroke"));
-        }));
-
-    binder.track(connect(
-        selector, &PaintSelector::patternChanged, paintBtn,
-        [editor, fill](SPPattern* pattern, std::optional<Color> color, const QString& label,
-                       const Geom::Affine& transform, const Geom::Point& offset, bool uniform, const Geom::Scale& gap) {
-            editor->apply(PaintEditDelegate::PatternOp{pattern, fill, color, label.toStdString(), transform, offset,
-                                                       uniform, gap},
-                          fill ? "fill-pattern-change" : "stroke-pattern-change",
-                          fill ? RC_("Undo", "Set pattern on fill") : RC_("Undo", "Set pattern on stroke"));
-        }));
-
-    binder.track(connect(
-        selector, &PaintSelector::hatchChanged, paintBtn,
-        [editor, fill](SPHatch* hatch, std::optional<Color> color, const QString& label, const Geom::Affine& transform,
-                       const Geom::Point& offset, double pitch, double rotation, double thickness) {
-            editor->apply(PaintEditDelegate::HatchOp{hatch, fill, color, label.toStdString(), transform, offset, pitch,
-                                                     rotation, thickness},
-                          fill ? "fill-pattern-change" : "stroke-pattern-change",
-                          fill ? RC_("Undo", "Set pattern on fill") : RC_("Undo", "Set pattern on stroke"));
-        }));
-
-    binder.track(connect(selector, &PaintSelector::meshChanged, paintBtn, [editor, fill](SPGradient* mesh) {
-        editor->apply(PaintEditDelegate::MeshOp{mesh, fill}, fill ? "fill-mesh-change" : "stroke-mesh-change",
-                      fill ? RC_("Undo", "Set mesh on fill") : RC_("Undo", "Set mesh on stroke"));
-    }));
-
-    binder.track(connect(selector, &PaintSelector::swatchChanged, paintBtn,
-                         [editor, fill](SPGradient* swatch, Inkscape::UI::EditOperation op, SPGradient* replacement,
-                                        std::optional<Color> color, QString label) {
-                             editor->apply(
-                                 PaintEditDelegate::SwatchOp{swatch, op, replacement, color, label.toStdString(), fill},
-                                 fill ? "fill-swatch-change" : "stroke-swatch-change",
-                                 fill ? RC_("Undo", "Set swatch on fill") : RC_("Undo", "Set swatch on stroke"));
-                         }));
-
-    // Fill rule (fill strip only)
-    if (fill) {
-        binder.track(connect(selector, &PaintSelector::fillRuleChanged, paintBtn, [editor](FillRule rule) {
-            auto css = new_css_attr();
-            sp_repr_css_set_property(css.get(), "fill-rule", rule == FillRule::EvenOdd ? "evenodd" : "nonzero");
-            editor->apply(PaintEditDelegate::CssOp{css}, "change-fill-rule", RC_("Undo", "Change fill rule"));
-        }));
-    }
-
-    // Inherit/derived mode
-    binder.track(connect(selector, &PaintSelector::inheritModeChanged, paintBtn, [editor, fill](PaintDerivedMode mode) {
-        auto css = new_css_attr();
-        auto attr = fill ? "fill" : "stroke";
-        switch (mode) {
-            case PaintDerivedMode::Unset:
-                sp_repr_css_unset_property(css.get(), attr);
-                break;
-            case PaintDerivedMode::Inherit:
-                sp_repr_css_set_property(css.get(), attr, "inherit");
-                break;
-            case PaintDerivedMode::ContextFill:
-                sp_repr_css_set_property(css.get(), attr, "context-fill");
-                break;
-            case PaintDerivedMode::ContextStroke:
-                sp_repr_css_set_property(css.get(), attr, "context-stroke");
-                break;
-            case PaintDerivedMode::CurrentColor:
-                sp_repr_css_set_property(css.get(), attr, "currentColor");
-                break;
+    for (auto sel : {selector, inlineSelector}) {
+        for (auto& conn : bindPaintSelectorToEditor(sel, editor, fill, paintBtn)) {
+            binder.track(std::move(conn));
         }
-        editor->apply(PaintEditDelegate::CssOp{css}, fill ? "inherit-fill" : "inherit-stroke",
-                      fill ? RC_("Undo", "Inherit fill") : RC_("Undo", "Inherit stroke"));
-    }));
+        if (sel) {
+            binder.track(connect(sel, &PaintSelector::flatColorChanged, paintBtn,
+                                 [this](const Color& color) { setFlatColor(color); }));
+        }
+    }
 
     // ---- Write: Add button (set default flat color) ----
     binder.track(connect(addBtn, &QPushButton::clicked, paintBtn, [this, editor, fill](bool) {
         Color color = Color::rgba(0x909090, 1.0);
-        auto css = make_paint_css(fill, color);
+        auto css = makePaintCss(fill, color);
         editor->apply(PaintEditDelegate::CssOp{css}, fill ? "change-fill" : "change-stroke",
                       fill ? RC_("Undo", "Set fill color") : RC_("Undo", "Set stroke color"));
         if (paintBtn) paintBtn->setFlatColor(color);
@@ -417,17 +328,47 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     strip.addBtn = isFill ? _ui->fillAdd : _ui->strokeAdd;
     strip.clearBtn = isFill ? _ui->fillClear : _ui->strokeClear;
     strip.clearBtn->setVisible(false);
+    strip.toggleBtn = isFill ? _ui->fillToggle : _ui->strokeToggle;
+    strip.selectorContainer = isFill ? _ui->fillSelectorContainer : _ui->strokeSelectorContainer;
     strip.emptyLabel = isFill ? _ui->fillLabel2 : _ui->strokeLabel2;
     strip.emptyLabel->setVisible(false);
     strip.emptyLabel->setCursor(Qt::PointingHandCursor);
     strip.emptyLabel->installEventFilter(this);
 
     // Create PaintSelector popup
-    strip.selector = PaintSelector::create(false, isFill, true, this).release();
+    strip.selector = PaintSelector::create(false, isFill, true, false,
+        isFill ? "/style-panel/fill-paint-popup" : "/style-panel/stroke-paint-popup",
+        ColorPickerPanel::Rect, this).release();
     strip.popup = new PopupMenu(this);
     strip.popup->setContent(strip.selector);
 
     connect(strip.paintBtn, &QPushButton::clicked, this, [&strip]() { strip.popup->showBelowWidget(strip.paintBtn); });
+
+    // Create inline PaintSelector for the collapsible section
+    strip.inlineSelector = PaintSelector::create(false, isFill, true, true,
+        isFill ? "/style-panel/fill-paint-inline" : "/style-panel/stroke-paint-inline",
+        ColorPickerPanel::None, strip.selectorContainer).release();
+    strip.inlineSelector->setMinimumWidth(0);
+    strip.inlineSelector->setMaximumWidth(QWIDGETSIZE_MAX);
+    strip.inlineSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    if (auto containerLayout = qobject_cast<QVBoxLayout*>(strip.selectorContainer->layout())) {
+        containerLayout->addWidget(strip.inlineSelector, 0, Qt::AlignTop);
+    }
+
+    strip.isExpanded = setupCollapsibleSection(
+        strip.toggleBtn, strip.selectorContainer,
+        isFill ? "/style-panel/fill_paint_expanded" : "/style-panel/stroke_paint_expanded");
+
+    auto typeLabel = isFill ? _ui->fillSelectorLabel : _ui->strokePaintTypeLabel;
+    typeLabel->setVisible(strip.isExpanded());
+    strip.paintBtn->setVisible(!strip.isExpanded());
+    strip.alpha->setVisible(!strip.isExpanded());
+    connect(strip.toggleBtn, &QPushButton::clicked, this, [&strip, typeLabel]() {
+        auto expanded = strip.isExpanded();
+        strip.paintBtn->setVisible(!expanded);
+        strip.alpha->setVisible(!expanded);
+        typeLabel->setVisible(expanded);
+    });
 }
 
 bool StylePanel::eventFilter(QObject* watched, QEvent* event) {
@@ -464,7 +405,7 @@ void StylePanel::setupStrokeWidgets() {
 
     // Expand/collapse animation for the inline stroke options section
     _isStrokeOptionsExpanded = setupCollapsibleSection(
-        _ui->strokeOptionsToggle, _ui->strokeOptionsContainer, "/dialogs/style/stroke_options_expanded");
+        _ui->strokeOptionsToggle, _ui->strokeOptionsContainer, "/style-panel/stroke_options_expanded");
 
     // Popup button and inline section are mutually exclusive: hide the button
     // while the section is expanded. This handler runs after the section
@@ -512,7 +453,9 @@ void StylePanel::setDocument(SPDocument* doc) {
     _document = doc;
 
     if (_fill.selector) _fill.selector->setDocument(doc);
+    if (_fill.inlineSelector) _fill.inlineSelector->setDocument(doc);
     if (_stroke.selector) _stroke.selector->setDocument(doc);
+    if (_stroke.inlineSelector) _stroke.inlineSelector->setDocument(doc);
     if (_strokeOptions) _strokeOptions->setDocument(doc);
     if (_ui->strokeOptions) _ui->strokeOptions->setDocument(doc);
 }
@@ -521,7 +464,9 @@ void StylePanel::setDesktop(SPDesktop* desktop) {
     _desktop = desktop;
 
     if (_fill.selector) _fill.selector->setDesktop(desktop);
+    if (_fill.inlineSelector) _fill.inlineSelector->setDesktop(desktop);
     if (_stroke.selector) _stroke.selector->setDesktop(desktop);
+    if (_stroke.inlineSelector) _stroke.inlineSelector->setDesktop(desktop);
     if (_strokeOptions) _strokeOptions->setDesktop(desktop);
     if (_ui->strokeOptions) _ui->strokeOptions->setDesktop(desktop);
 
@@ -556,6 +501,7 @@ void StylePanel::bind(Props::Binder& binder) {
 
     binder.visibleWhen(_ui->blendLabel, hasSelection);
     binder.visibleWhen(_ui->blendCombo, hasSelection);
+    binder.visibleWhen(_ui->bottomSpacer, hasSelection);
 
     // Reset-blend button visible when blend mode is not uniformly Normal.
     binder.visibleWhen(_ui->resetBlendBtn, hasSelection && differsFrom(Props::blend_mode, SP_CSS_BLEND_NORMAL));
@@ -623,9 +569,16 @@ void StylePanel::bind(Props::Binder& binder) {
     };
 
     binder.visibleWhen(_ui->fillLabel, editable);
-    binder.visibleWhen(_fill.paintBtn, editable && fillDefined);
-    binder.visibleWhen(_fill.alpha, editable && fillDefined);
+    binder.visibleWhen(_fill.paintBtn, editable && fillDefined &&
+        [this](const Props::SelectionState&) { return !_fill.isExpanded || !_fill.isExpanded(); });
+    binder.visibleWhen(_fill.alpha, editable && fillDefined &&
+        [this](const Props::SelectionState&) { return !_fill.isExpanded || !_fill.isExpanded(); });
     binder.visibleWhen(_fill.clearBtn, editable && fillDefined);
+    binder.visibleWhen(_fill.toggleBtn, editable && fillDefined);
+    binder.visibleWhen(_fill.selectorContainer, editable && fillDefined &&
+        [this](const Props::SelectionState&) { return _fill.isExpanded && _fill.isExpanded(); });
+    binder.visibleWhen(_ui->fillSelectorLabel, editable && fillDefined &&
+        [this](const Props::SelectionState&) { return _fill.isExpanded && _fill.isExpanded(); });
     binder.visibleWhen(_fill.addBtn, editable && fillNotDefined);
     binder.visibleWhen(_fill.emptyLabel, editable && fillNotDefined);
 
@@ -643,14 +596,23 @@ void StylePanel::bind(Props::Binder& binder) {
         return p.value().mode == PaintMode::None;
     };
 
+    binder.visibleWhen(_ui->strokeSpacer, editable);
     binder.visibleWhen(_ui->strokeLabel, editable);
-    binder.visibleWhen(_stroke.paintBtn, editable && strokeDefined);
-    binder.visibleWhen(_stroke.alpha, editable && strokeDefined);
+    binder.visibleWhen(_stroke.paintBtn, editable && strokeDefined &&
+        [this](const Props::SelectionState&) { return !_stroke.isExpanded || !_stroke.isExpanded(); });
+    binder.visibleWhen(_stroke.alpha, editable && strokeDefined &&
+        [this](const Props::SelectionState&) { return !_stroke.isExpanded || !_stroke.isExpanded(); });
     binder.visibleWhen(_stroke.clearBtn, editable && strokeDefined);
+    binder.visibleWhen(_stroke.toggleBtn, editable && strokeDefined);
+    binder.visibleWhen(_stroke.selectorContainer, editable && strokeDefined &&
+        [this](const Props::SelectionState&) { return _stroke.isExpanded && _stroke.isExpanded(); });
+    binder.visibleWhen(_ui->strokePaintTypeLabel, editable && strokeDefined &&
+        [this](const Props::SelectionState&) { return _stroke.isExpanded && _stroke.isExpanded(); });
     binder.visibleWhen(_stroke.addBtn, editable && strokeNotDefined);
     binder.visibleWhen(_stroke.emptyLabel, editable && strokeNotDefined);
 
     // Stroke attribute widgets: visible only when stroke is defined.
+    binder.visibleWhen(_ui->strokeOptionsSpacer, editable && strokeDefined);
     for (auto w : _strokeWidgets) {
         binder.visibleWhen(w, editable && strokeDefined);
     }

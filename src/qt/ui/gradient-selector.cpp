@@ -138,10 +138,10 @@ GradientSelector::GradientSelector(QWidget* parent)
     _ui->gradientTable->verticalHeader()->setDefaultSectionSize(_pixHeight + 4);
 
     // Set up button icons
-    _ui->addButton->setIcon(QIcon::fromTheme("list-add"));
-    _ui->delButton->setIcon(QIcon::fromTheme("list-remove"));
-    _ui->del2Button->setIcon(QIcon::fromTheme("list-remove"));
-    _ui->editButton->setIcon(QIcon::fromTheme("document-edit"));
+    _ui->addButton->setIcon(QIcon(":/icons/list-add"));
+    _ui->delButton->setIcon(QIcon(":/icons/list-remove"));
+    _ui->del2Button->setIcon(QIcon(":/icons/list-remove"));
+    _ui->editButton->setIcon(QIcon(":/icons/document-edit"));
 
     // Initially disable buttons
     _ui->addButton->setEnabled(false);

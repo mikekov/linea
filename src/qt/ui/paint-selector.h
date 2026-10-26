@@ -13,6 +13,7 @@
 
 #include "colors/color.h"
 #include "object/sp-gradient.h"
+#include "qt/ui/color-picker-panel.h"
 #include "ui/widget/edit-operation.h"
 #include "ui/widget/paint-enums.h"
 #include "util/style-utils.h"
@@ -48,7 +49,11 @@ public:
     PaintSelector();
 
     // create a new PaintSelector widget; if 'support_no_paint' is true, then add the "no paint" toggle button too
-    static std::unique_ptr<PaintSelector> create(bool support_no_paint, bool support_fill_rule, bool compact_mode = false, QWidget* parent = nullptr);
+    // 'prefs_path' is the per-instance base used to persist color plate type
+    // (under "<prefs_path>/color-editor" and "<prefs_path>/gradient-editor");
+    // 'default_plate' is the flat color page's plate type when no pref is stored;
+    // 'compact_inherited' swaps the inherited-paint page's radio buttons for a combo box
+    static std::unique_ptr<PaintSelector> create(bool support_no_paint, bool support_fill_rule, bool compact_mode, bool compact_inherited, const std::string& prefs_path, ColorPickerPanel::PlateType default_plate, QWidget* parent = nullptr);
 
     virtual void setDesktop(SPDesktop* desktop) = 0;
     virtual void setDocument(SPDocument* document) = 0;

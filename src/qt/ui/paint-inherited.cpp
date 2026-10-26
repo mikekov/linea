@@ -13,6 +13,8 @@
 
 #include <QRadioButton>
 
+#include "icon-combobox.h"
+
 namespace Linea::UI {
 
 namespace {
@@ -26,13 +28,27 @@ const std::array<std::pair<const char*, PaintDerivedMode>, 5> derived_paints = {
     {"paint-current-color",  PaintDerivedMode::CurrentColor}
 };
 
+// modes shown in the compact combo box (modeCombo) — there are no icons for them
+const std::array<std::pair<PaintDerivedMode, const char*>, 4> combo_modes = {
+    std::pair{PaintDerivedMode::Unset,         "Ancestor"},
+    {PaintDerivedMode::ContextFill,   "Fill paint"},
+    {PaintDerivedMode::ContextStroke, "Stroke paint"},
+    {PaintDerivedMode::CurrentColor,  "Color property"}
+};
+
 } // namespace
 
-PaintInherited::PaintInherited(QWidget* parent)
+PaintInherited::PaintInherited(bool compact, QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::PaintInherited>())
+    , _compact(compact)
 {
     _ui->setupUi(this);
+    _ui->modeStack->setCurrentWidget(_compact ? _ui->comboPage : _ui->radioPage);
+    _ui->modeCombo->setHeaderType(IconComboBox::LabelOnly);
+    for (auto& [mode, label] : combo_modes) {
+        _ui->modeCombo->addRow(QString(), tr(label), static_cast<int>(mode));
+    }
     setupConnections();
 }
 
@@ -44,6 +60,11 @@ void PaintInherited::setupConnections() {
     connect(_ui->paintContextFill, &QRadioButton::toggled, this, &PaintInherited::onPaintContextFillToggled);
     connect(_ui->paintContextStroke, &QRadioButton::toggled, this, &PaintInherited::onPaintContextStrokeToggled);
     connect(_ui->paintCurrentColor, &QRadioButton::toggled, this, &PaintInherited::onPaintCurrentColorToggled);
+    connect(_ui->modeCombo, &IconComboBox::currentChanged, this, [this](int id) {
+        if (!_update.pending()) {
+            Q_EMIT modeChanged(static_cast<PaintDerivedMode>(id));
+        }
+    });
 }
 
 void PaintInherited::onPaintUnsetToggled(bool checked) {
@@ -78,6 +99,16 @@ void PaintInherited::onPaintCurrentColorToggled(bool checked) {
 
 void PaintInherited::setMode(std::optional<PaintDerivedMode> maybe_mode) {
     auto scoped = _update.block();
+
+    if (_compact) {
+        auto mode = maybe_mode.value_or(PaintDerivedMode::Unset);
+        if (mode == PaintDerivedMode::Inherit) {
+            // "inherit" keyword and unset paint are both represented by "from ancestor" choice
+            mode = PaintDerivedMode::Unset;
+        }
+        _ui->modeCombo->setActiveById(maybe_mode ? static_cast<int>(mode) : -1);
+        return;
+    }
 
     if (!maybe_mode) {
         // mode cannot be determined, is mixed, or does not apply; clear all radio buttons
@@ -114,6 +145,15 @@ void PaintInherited::setMode(std::optional<PaintDerivedMode> maybe_mode) {
 }
 
 PaintDerivedMode PaintInherited::getMode() const {
+    if (_compact) {
+        auto id = _ui->modeCombo->getActiveRowId();
+        if (id >= 0) {
+            return static_cast<PaintDerivedMode>(id);
+        }
+        g_warning("PaintInherited::get_mode - mode has not been set.");
+        return PaintDerivedMode::Unset;
+    }
+
     if (_ui->paintUnset->isChecked()) {
         return PaintDerivedMode::Unset;
     } else if (_ui->paintInherit->isChecked()) {

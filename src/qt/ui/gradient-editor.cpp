@@ -50,7 +50,7 @@ const std::array<std::tuple<SPGradientSpread, const char*, const char*>, 3>& spG
 }
 
 GradientEditor::GradientEditor(
-    const char* prefs,
+    const std::string& prefs,
     Inkscape::Colors::Space::Type space,
     bool showTypeSelector,
     bool showColorwheelExpander,
@@ -98,7 +98,7 @@ void GradientEditor::setupCustomWidgets(Inkscape::Colors::Space::Type space, boo
     // Create color picker and add to placeholder
     _colorPicker = ColorPickerPanel::create(
         space,
-    get_plate_type_preference(_prefs.c_str(), ColorPickerPanel::None),
+    get_plate_type_preference(_prefs, ColorPickerPanel::None),
         _colors,
         this
     ).release();
@@ -313,7 +313,7 @@ void GradientEditor::setStopOffset(size_t index, double offset) {
 
 void GradientEditor::setColorPickerPlate(ColorPickerPanel::PlateType type) {
     _colorPicker->setPlateType(type);
-    set_plate_type_preference(_prefs.c_str(), type);
+    set_plate_type_preference(_prefs, type);
 }
 
 ColorPickerPanel::PlateType GradientEditor::getColorPickerPlate() const {
