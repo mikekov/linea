@@ -368,6 +368,18 @@ void layer_bottom(SPDesktop* desktop) {
     }
 }
 
+/**
+ * Layers and non-layer groups choose their default highlight color differently. Call this function
+ * before converting one to the other to avoid changing the highlight color in the objects and
+ * layers dialog. It sets the highlight to the current color so that defaults don't override it.
+ * @param group The group or layer to preserve the highlight for.
+ */
+void preserve_group_highlight(SPGroup* group) {
+    if (!group->isHighlightSet()) {
+        group->setHighlight(group->highlight_color());
+    }
+}
+
 void layer_to_group(SPDesktop* desktop) {
     if (!desktop) return;
     auto layer = desktop->layerManager().currentLayer();
@@ -377,6 +389,7 @@ void layer_to_group(SPDesktop* desktop) {
         return;
     }
 
+    preserve_group_highlight(layer);
     layer->setLayerMode(SPGroup::GROUP);
     layer->updateRepr(SP_OBJECT_WRITE_NO_CHILDREN | SP_OBJECT_WRITE_EXT);
     desktop->getSelection()->set(layer);
@@ -396,6 +409,7 @@ void layer_from_group(SPDesktop* desktop) {
 
     if (auto group = cast<SPGroup>(obj)) {
         if (!group->isLayer()) {
+            preserve_group_highlight(group);
             group->setLayerMode(SPGroup::LAYER);
             group->updateRepr(SP_OBJECT_WRITE_NO_CHILDREN | SP_OBJECT_WRITE_EXT);
             selection->set(group);
