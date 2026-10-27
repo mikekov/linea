@@ -326,11 +326,9 @@ Document *sp_repr_read_mem (const gchar * buffer, gint length, const gchar *defa
     xmlDocPtr doc;
     Document * rdoc;
 
-    xmlSubstituteEntitiesDefault(1);
-
     g_return_val_if_fail (buffer != nullptr, NULL);
 
-    int parser_options = XML_PARSE_HUGE | XML_PARSE_RECOVER;
+    int parser_options = XML_PARSE_HUGE | XML_PARSE_NOENT | XML_PARSE_RECOVER;
     parser_options |= XML_PARSE_NONET; // TODO: should we allow network access?
                                        // proper solution would be to check the preference "/options/externalresources/xml/allow_net_access"
                                        // as done in XmlSource::readXml which gets called by the analogous sp_repr_read_file()
