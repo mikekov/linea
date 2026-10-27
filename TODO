@@ -30,7 +30,7 @@
 ## Missing features
 
 - recolor panel
-- math expressions for number edit widget
+x math expressions for number edit widget
 
 ## UI Panels & Dialogs, widgets
 
@@ -59,6 +59,7 @@
 - rect panel - corners lpe button doesn't work (should retain/replace current rounded corners)
 - add dropper tool mode that keeps selected tool to stop props panel from resizing
 - expanded paint - add alpha number edit somewhere
+- color plate - add keyboard focus handling
 
 ## Tools
 
@@ -133,6 +134,7 @@
 - blend mode combo -> add separators betwen items to group them
 - fix multiline edit rounded corners
 - page tool - wrong page is being adjusted after switching to "Pages"
+- expression evaluator - processes garbage input on app start up and throws
 
 ## Feature requests
 
