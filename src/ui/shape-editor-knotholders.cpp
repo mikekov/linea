@@ -1748,10 +1748,13 @@ void StarKnotHolderEntityVertex::knot_set_internal(Geom::Point const &p, unsigne
     double arg1 = atan2(d);
     double darg1 = arg1 - star->arg[0];
 
+    const double epsilon = 0.000001;
+    double denominator = star->arg[0] - star->arg[1];
+    denominator = fabs(denominator) < epsilon ? epsilon : denominator;
     if (state & INK_ALT_MASK) {
-        star->randomized = darg1/(star->arg[0] - star->arg[1]);
+        star->randomized = darg1/denominator;
     } else if (state & INK_SHIFT_MASK) {
-        star->rounded = darg1/(star->arg[0] - star->arg[1]);
+        star->rounded = darg1/denominator;
     } else if (state & INK_CONTROL_MASK) {
         update_with_radial_ray_modifier(d);
     } else {
