@@ -222,6 +222,7 @@ Output::save(SPDocument *doc, gchar const *filename, bool detachbase)
         run_processing_actions(doc);
         imp->save(this, doc, filename);
         DocumentUndo::cancel(doc); // reset any changes from run_processing_actions
+        doc->setModifiedSinceSave(false);
     }
 }
 
