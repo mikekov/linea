@@ -23,3 +23,9 @@ set(libnrtype_SRC
 include("${CMAKE_CURRENT_LIST_DIR}/CMakeUnit.txt")
 
 target_sources(linea_base PRIVATE ${libnrtype_unit_SRC} ${libnrtype_SRC})
+
+pkg_check_modules(HARFBUZZ_CAIRO IMPORTED_TARGET GLOBAL harfbuzz-cairo)
+if (HARFBUZZ_CAIRO_FOUND)
+	target_compile_definitions(linea_base PRIVATE WITH_HARFBUZZ_CAIRO)
+	target_link_libraries(linea_base PRIVATE PkgConfig::HARFBUZZ_CAIRO)
+endif()
