@@ -20,6 +20,7 @@ FontTags& FontTags::get() {
         ft.add_tag(FontTag{"monospace",  C_("Font category", "Monospace")});
         ft.add_tag(FontTag{"variable",   C_("Font category", "Variable")});
         ft.add_tag(FontTag{"oblique",    C_("Font category", "Oblique")});
+        ft.add_tag(FontTag{"color",      C_("Font category", "Color")});
     }
     return ft;
 }

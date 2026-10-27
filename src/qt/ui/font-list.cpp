@@ -483,6 +483,7 @@ void FontList::tagFontFaces() {
             if (font.monospaced) tags.tag_font(font.face, "monospace");
             if (font.variable_font) tags.tag_font(font.face, "variable");
             if (font.oblique) tags.tag_font(font.face, "oblique");
+            if (font.color_flags) tags.tag_font(font.face, "color");
         }
     }
 }

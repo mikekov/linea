@@ -23,6 +23,7 @@ struct FontInfo {
     double weight = 0;           // proxy for font weight - how black it is
     double width = 0;            // proxy for font width - how compressed/extended it is
     unsigned short family_kind = 0; // OS/2 family class
+    unsigned short color_flags = 0; // color font flags (has: svg, png, layers, paint)
     bool monospaced = false;    // fixed-width font
     bool oblique = false;       // italic or oblique font
     bool variable_font = false; // this is variable font

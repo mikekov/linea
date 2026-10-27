@@ -164,7 +164,7 @@
           </property>
           <property name="icon">
             <iconset>
-              <normaloff>:/icons/chevron-expand</normaloff>
+              <normaloff>:/icons/sort-alphabetically</normaloff>
             </iconset>
           </property>
         </widget>

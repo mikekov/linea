@@ -615,6 +615,8 @@ unsigned DrawingText::_renderItem(DrawingContext &dc, RenderContext &rc, Geom::I
 #ifdef WITH_HARFBUZZ_CAIRO
         bool debug_cairo_fonts = prefs->getBool("/options/rendering/debug_cairo_fonts", false);
         bool use_cairo_fonts = (cairo_version() > CAIRO_VERSION_ENCODE(1, 18, 4)) || debug_cairo_fonts;
+        // cairo 1.18.6 still hangs!
+        use_cairo_fonts = debug_cairo_fonts;
 #endif
 
         // Accumulate the path that represents the glyphs and/or draw color glyphs.

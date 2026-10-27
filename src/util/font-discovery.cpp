@@ -292,13 +292,14 @@ Pango::FontDescription get_font_description(const Glib::RefPtr<Pango::FontFamily
 // as well as flags (monospaced, variable, oblique, synthetic font). It is kept to speed up font metadata discovery.
 const char font_cache[] = "font-cache.ini";
 const char cache_header[] = "@font-cache@";
-constexpr auto cache_version = 1.0;
+constexpr auto cache_version = 1.2;
 enum FontCacheFlags : int {
     Normal = 0,
     Monospace = 0x01,
     Oblique   = 0x02,
     Variable  = 0x04,
     Synthetic = 0x08,
+    ColorFlags = 0xf0 // svg, png, layers, paint
 };
 
 void save_font_cache_entry(const Glib::RefPtr<Glib::KeyFile>& keyfile, const Glib::ustring& group, const FontInfo& font) {
@@ -314,6 +315,9 @@ void save_font_cache_entry(const Glib::RefPtr<Glib::KeyFile>& keyfile, const Gli
     }
     if (font.synthetic) {
         flags |= FontCacheFlags::Synthetic;
+    }
+    if (font.color_flags) {
+        flags |= font.color_flags << 4;
     }
     keyfile->set_double(group, "weight", font.weight);
     keyfile->set_double(group, "width", font.width);
@@ -396,6 +400,9 @@ std::unordered_map<std::string, FontInfo> load_cached_font_info() {
                 }
                 if (flags & FontCacheFlags::Synthetic) {
                     font.synthetic = true;
+                }
+                if (flags & FontCacheFlags::ColorFlags) {
+                    font.color_flags = (flags & FontCacheFlags::ColorFlags) >> 4;
                 }
                 font.weight = keyfile->get_double(group, weight);
                 font.width = keyfile->get_double(group, width);
@@ -507,6 +514,11 @@ std::shared_ptr<const std::vector<std::vector<FontInfo>>> get_all_fonts(Async::P
                             // caps height normalized to 0..1
                             caps_height = glyph->bbox_exact.height();
                         }
+                        // color font flags
+                        info.color_flags = (font->FontHasSVG() ? 1 : 0) |
+                                           (font->FontHasPNG() ? 2 : 0) |
+                                           (font->FontHasLayers() ? 4 : 0) |
+                                           (font->FontHasPaint() ? 8 : 0);
                     }
                 }
                 catch (...) {
