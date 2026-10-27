@@ -182,7 +182,7 @@ protected:
 
     QValidator::State validate(QString& text, int& pos) const override {
         auto state = QDoubleSpinBox::validate(text, pos);
-        if (state != QValidator::Invalid || !_evaluator || text.trimmed().isEmpty()) {
+        if (state != QValidator::Invalid || !_evaluator || _parentEdit->_mixedMode || text.trimmed().isEmpty()) {
             return state;
         }
         // With an evaluator installed, accept expressions and unit suffixes:
