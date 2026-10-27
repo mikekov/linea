@@ -491,6 +491,8 @@ std::unique_ptr<SPDocument> SPDocument::createDoc(
     // Prevent the updates from running multiples times and mark the changes as complete.
     document->root->updateDocVersion();
 
+    DocumentUndo::clearUndo(document.get()); // don't include above changes in the undo stack
+
     // Update document level action settings
     // -- none available so far --
 
@@ -504,7 +506,6 @@ std::unique_ptr<SPDocument> SPDocument::copy() const
 {
     auto *new_rdoc = rdoc->duplicate(nullptr);
     auto doc = createDoc(new_rdoc, document_filename, document_base, document_name);
-    doc->_original_document = this;
     return doc;
 }
 

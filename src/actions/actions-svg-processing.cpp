@@ -318,14 +318,14 @@ void remove_marker_context_paint(Inkscape::XML::Node* repr, Inkscape::XML::Node*
  * Notes:
  *   Text must have been layed out. Access via old document.
  */
-void insert_text_fallback(Inkscape::XML::Node* repr, const SPDocument* original_doc, Inkscape::XML::Node* defs) {
+void insert_text_fallback(Inkscape::XML::Node* repr, SPDocument const* doc, Inkscape::XML::Node* defs) {
     if (repr) {
         if (strncmp("svg:text", repr->name(), 8) == 0) {
             auto id = repr->attribute("id");
             // std::cout << "insert_text_fallback: found text!  id: " << (id?id:"null") << std::endl;
 
             // We need to get original SPText object to access layout.
-            SPText* text = static_cast<SPText*>(original_doc->getObjectById(id));
+            SPText* text = static_cast<SPText*>(doc->getObjectById(id));
             if (text == nullptr) {
                 std::cerr << "insert_text_fallback: bad cast" << std::endl;
                 return;
@@ -533,7 +533,7 @@ void insert_text_fallback(Inkscape::XML::Node* repr, const SPDocument* original_
         }
 
         for (auto child = repr->firstChild(); child; child = child->next()) {
-            insert_text_fallback(child, original_doc, defs);
+            insert_text_fallback(child, doc, defs);
         }
     }
 }
@@ -697,7 +697,7 @@ void remove_marker_context_paints(SPDocument* doc) {
 }
 
 void insert_svg1_text_fallback(SPDocument* doc) {
-    insert_text_fallback(doc->getReprRoot(), doc->getOriginalDocument());
+    insert_text_fallback(doc->getReprRoot(), doc);
 }
 
 void insert_mesh_polyfill_script(SPDocument* doc) {
