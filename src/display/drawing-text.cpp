@@ -33,6 +33,7 @@ DrawingGlyphs::DrawingGlyphs(Drawing &drawing)
     : DrawingItem(drawing)
     , _glyph(0)
 {
+    _class_name = "DrawingGlyphs";
 }
 
 struct SvgGlyphHash
@@ -78,7 +79,6 @@ std::shared_ptr<Pixbuf> DrawingGlyphs::_get_svg_glyph(std::shared_ptr<FontInstan
 void DrawingGlyphs::setGlyph(std::shared_ptr<FontInstance> font, unsigned int glyph, Geom::Affine const &trans)
 {
     defer([=, this, font = std::move(font)] {
-        _markForRendering();
 
         assert(!_drawing.snapshotted());
         setTransform(trans);
@@ -109,8 +109,6 @@ void DrawingGlyphs::setGlyph(std::shared_ptr<FontInstance> font, unsigned int gl
             //           << "  bbox_draw: " << bbox_draw
             //           << std::endl;
         }
-
-        _markForUpdate(STATE_ALL, false);
     });
 }
 
@@ -199,6 +197,7 @@ DrawingText::DrawingText(Drawing &drawing)
     , style_stroke_extensions_hairline(false)
     , style_clip_rule(SP_WIND_RULE_EVENODD)
 {
+    _class_name = "DrawingText";
 }
 
 bool DrawingText::addComponent(std::shared_ptr<FontInstance> const &font, unsigned int glyph, Geom::Affine const &trans, float width, float ascent, float descent, float phase_length)
@@ -214,7 +213,6 @@ bool DrawingText::addComponent(std::shared_ptr<FontInstance> const &font, unsign
     }
 
     defer([=, this, font = std::move(font)] () mutable {
-        _markForRendering();
         auto ng = new DrawingGlyphs(_drawing);
         assert(!_drawing.snapshotted());
         ng->setGlyph(font, glyph, trans);

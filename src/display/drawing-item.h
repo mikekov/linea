@@ -25,6 +25,7 @@
 #include <boost/operators.hpp>
 #include <2geom/affine.h>
 #include <2geom/rect.h>
+#include <glibmm/ustring.h>
 
 #include "colors/color.h"
 #include "style-enums.h"
@@ -274,6 +275,7 @@ protected:
 
     bool _isolation : 1;
     SPBlendMode _blend_mode;
+    Glib::ustring _class_name{"Unknown"};
 
     template<typename F>
     void defer(F &&f)
