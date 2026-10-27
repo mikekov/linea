@@ -1061,7 +1061,10 @@ gboolean Inkscape::SelTrans::scaleRequest(Geom::Point &pt, guint state)
 
     _absolute_affine = Geom::identity(); //Initialize the scaler
 
+    auto confine = Modifiers::Modifier::get(Modifiers::Type::TRANS_CONFINE)->active(state);
     auto increments = Modifiers::Modifier::get(Modifiers::Type::TRANS_INCREMENT)->active(state);
+    auto no_snap = Modifiers::Modifier::get(Modifiers::Type::TRANS_NO_SNAPPING)->active(state);
+
     if (increments) { // scale by an integer multiplier/divider
         // We're scaling either the visual or the geometric bbox here (see the comment above)
         for ( unsigned int i = 0 ; i < 2 ; i++ ) {
@@ -1078,7 +1081,6 @@ gboolean Inkscape::SelTrans::scaleRequest(Geom::Point &pt, guint state)
         // In all other cases we should try to snap now
         Inkscape::PureScale  *bb, *sn;
 
-        auto confine = Modifiers::Modifier::get(Modifiers::Type::TRANS_CONFINE)->active(state);
         if (confine || Inkscape::Preferences::get()->getBool("/tools/select/lock_aspect_ratio", false)) {
             // Scale is locked to a 1:1 aspect ratio, so that s[X] must be made to equal s[Y].
             //
@@ -1108,7 +1110,7 @@ gboolean Inkscape::SelTrans::scaleRequest(Geom::Point &pt, guint state)
 
         // These lines below are duplicated in stretchRequest
         //TODO: Eliminate this code duplication
-        if (bb->best_snapped_point.getSnapped() || sn->best_snapped_point.getSnapped()) {
+        if (!no_snap && (bb->best_snapped_point.getSnapped() || sn->best_snapped_point.getSnapped())) {
             if (bb->best_snapped_point.getSnapped() && !bb->best_snapped_point.isOtherSnapBetter(sn->best_snapped_point, false)) {
                 // We snapped the bbox (which is either visual or geometric)
                 _desktop->getSnapIndicator()->set_new_snaptarget(bb->best_snapped_point);
@@ -1161,7 +1163,10 @@ gboolean Inkscape::SelTrans::stretchRequest(Geom::Point &pt, guint state, bool i
 
     _absolute_affine = Geom::identity(); //Initialize the scaler
 
+    auto confine = Modifiers::Modifier::get(Modifiers::Type::TRANS_CONFINE)->active(state);
     auto increments = Modifiers::Modifier::get(Modifiers::Type::TRANS_INCREMENT)->active(state);
+    auto no_snap = Modifiers::Modifier::get(Modifiers::Type::TRANS_NO_SNAPPING)->active(state);
+
     if (increments) { // stretch by an integer multiplier/divider
         if (fabs(default_scale[axis]) > 1) {
             default_scale[axis] = round(default_scale[axis]);
@@ -1177,7 +1182,6 @@ gboolean Inkscape::SelTrans::stretchRequest(Geom::Point &pt, guint state, bool i
         SnapManager &m = _desktop->getNamedView()->snap_manager;
         m.setup(_desktop, false, _objects_const);
 
-        auto confine = Modifiers::Modifier::get(Modifiers::Type::TRANS_CONFINE)->active(state);
         Inkscape::PureStretchConstrained bb = Inkscape::PureStretchConstrained(Geom::Coord(default_scale[axis]), _origin_for_bboxpoints, Geom::Dim2(axis), confine);
         Inkscape::PureStretchConstrained sn = Inkscape::PureStretchConstrained(Geom::Coord(geom_scale[axis]), _origin_for_specpoints, Geom::Dim2(axis), confine);
 
@@ -1185,12 +1189,12 @@ gboolean Inkscape::SelTrans::stretchRequest(Geom::Point &pt, guint state, bool i
         m.snapTransformed(_snap_points, _point, sn);
         m.unSetup();
 
-        if (bb.best_snapped_point.getSnapped()) {
+        if (!no_snap && bb.best_snapped_point.getSnapped()) {
             // We snapped the bbox (which is either visual or geometric)
             default_scale[axis] = bb.getMagnitude();
         }
 
-        if (sn.best_snapped_point.getSnapped()) {
+        if (!no_snap && sn.best_snapped_point.getSnapped()) {
             geom_scale[axis] = sn.getMagnitude();
         }
 
@@ -1202,7 +1206,7 @@ gboolean Inkscape::SelTrans::stretchRequest(Geom::Point &pt, guint state, bool i
         }
 
         // These lines below are duplicated in scaleRequest
-        if (bb.best_snapped_point.getSnapped() || sn.best_snapped_point.getSnapped()) {
+        if (!no_snap && (bb.best_snapped_point.getSnapped() || sn.best_snapped_point.getSnapped())) {
             if (bb.best_snapped_point.getSnapped() && !bb.best_snapped_point.isOtherSnapBetter(sn.best_snapped_point, false)) {
                 // We snapped the bbox (which is either visual or geometric)
                 _desktop->getSnapIndicator()->set_new_snaptarget(bb.best_snapped_point);
