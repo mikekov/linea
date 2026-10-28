@@ -834,7 +834,7 @@ void SPGroup::translateChildItems(Geom::Translate const &tr)
     if (hasChildren()) {
         for (auto &o: children) {
             if (auto item = cast<SPItem>(&o)) {
-                item->move_rel(tr);
+                item->move_rel(tr, false);
             }
         }
     }
