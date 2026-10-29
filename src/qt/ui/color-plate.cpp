@@ -121,7 +121,9 @@ QImage buildColorWheel(int resolution, const Color& base, int ch1, int ch2) {
     QImage img(size, size, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
     double limit = radius;
-    double rsqr = std::pow(1.0 + 1.0 / radius, 2);
+    // paint a couple of pixels past the rim, giving the clip's
+    // antialiased edge extra margin
+    double rsqr = std::pow(1.0 + 2.0 / radius, 2);
     Color color = base;
     for (int iy = -radius; iy <= radius; ++iy) {
         auto line = reinterpret_cast<QRgb*>(img.scanLine(iy + radius));
@@ -590,7 +592,9 @@ void ColorPlate::paintEvent(QPaintEvent*) {
         double sz = std::min(area.width(), area.height());
         imgRect = QRectF(area.center().x() - sz / 2, area.center().y() - sz / 2, sz, sz);
     }
-    p.drawImage(imgRect.toRect(), _plate);
+    // round the target rect outwards so the image edge never lands inside the
+    // clip — toRect() can pull it up to a pixel in on one side, leaving an uncovered jagged strip
+    p.drawImage(imgRect.toAlignedRect(), _plate);
 
     // the triangle lives inside the ring's hole — its own clip
     if (_ring) {
@@ -599,7 +603,7 @@ void ColorPlate::paintEvent(QPaintEvent*) {
         triClip.addPolygon({triVerts[0], triVerts[1], triVerts[2]});
         triClip.closeSubpath();
         p.setClipPath(triClip);
-        p.drawImage(imgRect.toRect(), _triangle);
+        p.drawImage(imgRect.toAlignedRect(), _triangle);
     }
 
     p.setClipping(false);
@@ -613,10 +617,24 @@ void ColorPlate::paintEvent(QPaintEvent*) {
         // enlarge by one physical pixel per side (device-ratio aware)
         double inset = std::min(area.width(), area.height()) * (1.0 - RING_INNER_RATIO) / 2.0 - 1.0 / devicePixelRatio();
         drawStandardBorder(p, area.adjusted(inset, inset, -inset, -inset), dark, _radius, devicePixelRatio(), _disc, false);
-        // triangle border
-        p.setPen(QPen(getStandardBorderColor(dark), 1.0));
-        p.setBrush(Qt::NoBrush);
-        p.drawPolygon({triVerts[0], triVerts[1], triVerts[2]});
+        // triangle border — same soft relief the standard border gives other
+        // shapes: 1px concentric strokes marching inward with decaying alpha.
+        // Insetting each edge of an equilateral triangle by d shrinks its
+        // circumradius by 2d; the path is in physical pixels.
+        const QPointF triCenter = (triVerts[0] + triVerts[1] + triVerts[2]) / 3.0;
+        const double dpr = devicePixelRatio();
+        drawBorderShape(p, area, getStandardBorderColor(dark), dpr, [&](QRectF&, int step) {
+            QPainterPath path;
+            QPolygonF poly;
+            for (const auto& v : triVerts) {
+                const QPointF d = (v - triCenter) * dpr;
+                const double r = std::hypot(d.x(), d.y());
+                poly << (r > 2.0 * step ? triCenter * dpr + d * ((r - 2.0 * step) / r) : triCenter * dpr);
+            }
+            path.addPolygon(poly);
+            path.closeSubpath();
+            return path;
+        });
     }
 
     syncIndicatorOverlay();
