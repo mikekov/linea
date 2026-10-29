@@ -4,9 +4,7 @@
  */
 
 #include "number-edit.h"
-#include "util/expression-evaluator.h"
-#include "util/numeric/converters.h"
-#include <cmath>
+
 #include <QDoubleSpinBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -17,6 +15,10 @@
 #include <QPainter>
 #include <QStyle>
 #include <QStyleOption>
+#include <cmath>
+
+#include "util/expression-evaluator.h"
+#include "util/numeric/converters.h"
 
 namespace Linea::UI {
 
@@ -29,8 +31,7 @@ class FadeOverlay : public QWidget {
 public:
     explicit FadeOverlay(QLineEdit* edit)
         : QWidget(edit)
-        , _edit(edit)
-    {
+        , _edit(edit) {
         setAttribute(Qt::WA_TransparentForMouseEvents);
         setGeometry(edit->rect());
         edit->installEventFilter(this);
@@ -68,8 +69,7 @@ protected:
 
         QStyleOptionFrame option;
         option.initFrom(_edit);
-        QRect contents = _edit->style()->subElementRect(
-            QStyle::SE_LineEditContents, &option, _edit);
+        QRect contents = _edit->style()->subElementRect(QStyle::SE_LineEditContents, &option, _edit);
 
         // Locate the text origin from the leftmost visible character:
         // cursorPositionAt reads the line control's real layout, so
@@ -89,13 +89,11 @@ protected:
             int mid = lo + (hi - lo) / 2;
             if (_edit->cursorPositionAt(QPoint(mid, y)) <= anchor) {
                 lo = mid + 1;
-            }
-            else {
+            } else {
                 hi = mid;
             }
         }
-        int text_x = lo - fm.horizontalAdvance(shown[anchor]) / 2
-                        - fm.horizontalAdvance(shown.left(anchor));
+        int text_x = lo - fm.horizontalAdvance(shown[anchor]) / 2 - fm.horizontalAdvance(shown.left(anchor));
         int fade_x = text_x + fm.horizontalAdvance(shown.left(fade_from));
         int fade_end = text_x + fm.horizontalAdvance(shown.left(frac_end));
         if (fade_end <= fade_x) return;
@@ -149,8 +147,7 @@ class NumberEdit::SpinBox : public QDoubleSpinBox {
 public:
     explicit SpinBox(NumberEdit* parentEdit, QWidget* parent = nullptr)
         : QDoubleSpinBox(parent)
-        , _parentEdit(parentEdit)
-    {
+        , _parentEdit(parentEdit) {
         setKeyboardTracking(false);
         setAlignment(Qt::AlignCenter);
     }
@@ -158,14 +155,16 @@ public:
     void setTrimZeros(bool trim) { _trimZeros = trim; }
     bool trimZeros() const { return _trimZeros; }
 
-    void setEvaluator(std::function<double(const QString&)> evaluator) {
-        _evaluator = std::move(evaluator);
-    }
+    void setEvaluator(std::function<double(const QString&)> evaluator) { _evaluator = std::move(evaluator); }
 
     QLineEdit* getLineEdit() const { return lineEdit(); }
 
-    QSize sizeHint() const override { return sizedHint([this] { return QDoubleSpinBox::sizeHint(); }); }
-    QSize minimumSizeHint() const override { return sizedHint([this] { return QDoubleSpinBox::minimumSizeHint(); }); }
+    QSize sizeHint() const override {
+        return sizedHint([this] { return QDoubleSpinBox::sizeHint(); });
+    }
+    QSize minimumSizeHint() const override {
+        return sizedHint([this] { return QDoubleSpinBox::minimumSizeHint(); });
+    }
 
 protected:
     QString textFromValue(double value) const override {
@@ -192,8 +191,7 @@ protected:
         try {
             _evaluator(stripped);
             return QValidator::Acceptable;
-        }
-        catch (...) {
+        } catch (...) {
             return QValidator::Intermediate;
         }
     }
@@ -216,8 +214,7 @@ protected:
             }
             try {
                 return _evaluator(stripped);
-            }
-            catch (...) {
+            } catch (...) {
                 // Fall through to native parsing only for text Qt accepts
                 // itself (e.g. specialValueText)
             }
@@ -294,8 +291,7 @@ private:
 
 NumberEdit::NumberEdit(QWidget* parent)
     : QWidget(parent)
-    , _trimZeros(true)
-{
+    , _trimZeros(true) {
     setObjectName("NumberEdit");
     setProperty("class", "NumberEdit"); // For stylesheet selection
     setProperty("frame", _hasFrame);
@@ -305,21 +301,24 @@ NumberEdit::NumberEdit(QWidget* parent)
     _layout->setContentsMargins(0, 0, 0, 0);
     _layout->setSpacing(0);
 
-    _indicator = new QLabel(this);
-    _indicator->setObjectName("indicator");
-    _indicator->setAlignment(Qt::AlignCenter);
-    _indicator->setVisible(false);
-    // fix label's width to lock the number box position
-    _indicator->setMinimumWidth(18);
-    _indicator->setMaximumWidth(30);
-    _layout->addWidget(_indicator);
-
     _spinBox = new NumberEdit::SpinBox(this, this);
     _spinBox->setObjectName("spinBox");
     _spinBox->setFrame(false);
     _spinBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     _spinBox->setMinimumWidth(18);
     _layout->addWidget(_spinBox, 1);
+
+    // The indicator floats above the spinbox (not in the layout), so hiding
+    // it doesn't shift the field; it is hidden while the arrows are visible.
+    _indicator = new QLabel(_spinBox);
+    _indicator->setObjectName("indicator");
+    _indicator->setAlignment(Qt::AlignCenter);
+    _indicator->setAttribute(Qt::WA_TransparentForMouseEvents);
+    _indicator->setVisible(false);
+    // fix label's width to lock the number box position
+    _indicator->setMinimumWidth(18);
+    _indicator->setMaximumWidth(30);
+    _indicator->raise();
 
     _spinBox->installEventFilter(this);
     if (auto le = static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit()) {
@@ -344,11 +343,23 @@ QString NumberEdit::label() const {
     return _indicator->text();
 }
 
+void NumberEdit::updateIndicatorVisibility() {
+    _indicator->setVisible(_showIndicator && !_spinBox->property("hovered").toBool());
+}
+
+void NumberEdit::updateTextMargins() {
+    // shift the text right only when an indicator actually occupies the space
+    static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit()
+        ->setTextMargins(_showIndicator ? 5 : 0, 0, 0, 0);
+}
+
 void NumberEdit::setLabel(const QString& text) {
     _indicator->clear();
     _indicator->setText(text);
     // _indicator->setPixmap(QPixmap());
-    _indicator->setVisible(!text.isEmpty());
+    _showIndicator = !text.isEmpty();
+    updateIndicatorVisibility();
+    updateTextMargins();
 }
 
 QString NumberEdit::icon() const {
@@ -364,13 +375,17 @@ void NumberEdit::setIcon(const QString& iconName) {
 void NumberEdit::setIcon(const QIcon& icon) {
     _indicator->setPixmap(icon.pixmap(16, 16));
     _indicator->setText(QString());
-    _indicator->setVisible(!icon.isNull());
+    _showIndicator = !icon.isNull();
+    updateIndicatorVisibility();
+    updateTextMargins();
 }
 
 void NumberEdit::clearIndicator() {
     _indicator->setText(QString());
     _indicator->setPixmap(QPixmap());
-    _indicator->setVisible(false);
+    _showIndicator = false;
+    updateIndicatorVisibility();
+    updateTextMargins();
 }
 
 void NumberEdit::setTrimZeros(bool trim) {
@@ -505,12 +520,29 @@ void NumberEdit::keyPressEvent(QKeyEvent* event) {
 
 bool NumberEdit::eventFilter(QObject* watched, QEvent* event) {
     auto le = static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit();
+
+    if (event->type() == QEvent::Enter || event->type() == QEvent::Leave) {
+        // underMouse() stays true while the cursor is over any part of the
+        // spinbox, so moving between the line edit and buttons causes no
+        // property flicker. The stylesheet keys arrow visibility off "hovered".
+        const bool hovered = _spinBox->underMouse();
+        if (_spinBox->property("hovered").toBool() != hovered) {
+            _spinBox->setProperty("hovered", hovered);
+            _spinBox->style()->unpolish(_spinBox);
+            _spinBox->style()->polish(_spinBox);
+            updateIndicatorVisibility();
+        }
+    }
+    else if (watched == _spinBox && event->type() == QEvent::Resize) {
+        // anchor the indicator overlay to the left side of the spinbox
+        _indicator->move(2, (_spinBox->height() - _indicator->sizeHint().height()) / 2);
+    }
+
     if (watched == static_cast<QObject*>(le)) {
         if (event->type() == QEvent::FocusIn) {
             _editing = true;
             _preEditValue = value();
-        }
-        else if (event->type() == QEvent::KeyPress) {
+        } else if (event->type() == QEvent::KeyPress) {
             auto keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
                 _editing = false;

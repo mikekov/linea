@@ -153,6 +153,10 @@ private:
     int _keptFractionDigits = 0;
     bool _editing = false;
     bool _mixedMode = false;
+    bool _showIndicator = false;
+
+    void updateIndicatorVisibility();
+    void updateTextMargins();
     double _preEditValue = 0.0;
     double _factor = 1.0;
 

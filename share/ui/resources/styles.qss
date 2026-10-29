@@ -74,15 +74,19 @@ QWidget[class="NumberEdit"] QDoubleSpinBox::down-button:pressed {
     background-color: rgba(0, 0, 0, 0.12);
 }
 
-/* Arrow Shapes (Inner part) */
-QWidget[class="NumberEdit"] QDoubleSpinBox::up-arrow {
-    image: url(:/icons/pan-right);
+/* Arrow Shapes (Inner part) - hidden until the spinbox is hovered */
+QWidget[class="NumberEdit"] QDoubleSpinBox::up-arrow,
+QWidget[class="NumberEdit"] QDoubleSpinBox::down-arrow {
+    image: none;
     /* color: palette(mid); */
 }
 
-QWidget[class="NumberEdit"] QDoubleSpinBox::down-arrow {
+QWidget[class="NumberEdit"] QDoubleSpinBox[hovered="true"]::up-arrow {
+    image: url(:/icons/pan-right);
+}
+
+QWidget[class="NumberEdit"] QDoubleSpinBox[hovered="true"]::down-arrow {
     image: url(:/icons/pan-left);
-    /* color: palette(mid); */
 }
 
 QLineEdit, QTextEdit, QPlainTextEdit {
