@@ -218,6 +218,9 @@ Pixbuf *Pixbuf::create_from_buffer(std::string const &buffer, double svgdpi, std
     // preserve the original MIME bytes when a transformation is present: some consumers ignore
     // EXIF orientation, so embedding the original bytes could display differently elsewhere.
     reader.setAutoTransform(true);
+    // Ask for the format before read() — format() is detected from content up
+    // front but returns empty after a successful read.
+    auto format = reader.format().toLower();
     auto image = reader.read();
     if (image.isNull()) {
         std::cerr << "Pixbuf::create_from_buffer: failed to load contents: " << fn << std::endl;
@@ -226,7 +229,6 @@ Pixbuf *Pixbuf::create_from_buffer(std::string const &buffer, double svgdpi, std
 
     auto result = std::make_unique<Pixbuf>(image);
     result->_path = fn;
-    auto format = reader.format().toLower();
     auto mime = format == "jpg" || format == "jpeg" ? "jpeg" : format.constData();
     result->_setMimeData(reinterpret_cast<guchar const *>(buffer.data()), buffer.size(), mime);
     return result.release();
