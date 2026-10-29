@@ -136,8 +136,10 @@ unsigned DrawingGlyphs::_updateItem(Geom::IntRect const &/*area*/, UpdateContext
         throw InvalidItemException();
     }
 
-    if (!pathvec) {
+    if (!pathvec && !pixbuf && !has_png && !has_layers && !has_paint) {
         // Can happen for code points other than spaces that don't have paths ('LF', etc.).
+        // Color glyphs without outlines can still be painted (pixbuf or Cairo), so they
+        // need a valid _bbox to contribute to the DrawingText dirty region.
         return STATE_ALL;
     }
 

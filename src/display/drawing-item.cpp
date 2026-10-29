@@ -723,7 +723,9 @@ void DrawingItem::update(Geom::IntRect const &area, UpdateContext const &ctx, un
             _stroke_pattern->update(area, child_ctx, flags, reset);
         }
         if (!totally_invalidated) {
-            if (!is<DrawingGroup>(this) || (_filter && filters) || totally_invalidate) {
+            // DrawingText paints its DrawingGlyphs children itself, and glyphs never
+            // mark dirty rects, so it must be marked for rendering like a leaf item.
+            if (!is<DrawingGroup>(this) || is<DrawingText>(this) || (_filter && filters) || totally_invalidate) {
                 _markForRendering();
             }
         }
