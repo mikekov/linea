@@ -337,6 +337,7 @@ void PatternEditor::drawGalleryCell(QPainter* painter,
                                     bool selected) {
     if (index >= items.size()) return;
     const auto& item = items[index];
+    ensureTileImage(item);
 
     const QRect qr(rect.left(), rect.top(), rect.width(), rect.height());
 
@@ -436,13 +437,10 @@ PatternEditor::updateDocPatternList(SPDocument* document) {
 }
 
 void PatternEditor::setStockPatterns(const std::vector<SPPaintServer*>& patterns) {
-    const double ds = devicePixelRatioF();
-
     _stockItems.clear();
     _stockItems.reserve(patterns.size());
     for (auto ps : patterns) {
         if (auto item = _manager.get_item(ps)) {
-            item->pix = _manager.get_image(ps, _tileSize, _tileSize, ds);
             _stockItems.push_back(std::move(item));
         }
     }
@@ -469,31 +467,24 @@ void PatternEditor::applyFilter() {
 }
 
 void PatternEditor::updateTileImages() {
-    const double ds = devicePixelRatioF();
-
-    auto regenerate = [&](std::vector<PatternItemPtr>& items, SPDocument* doc) {
+    auto reset = [](std::vector<PatternItemPtr>& items) {
         for (auto& item : items) {
-            auto d   = item->collection ? item->collection : doc;
-            auto ps  = d ? cast<SPPaintServer>(d->getObjectById(item->id)) : nullptr;
-            if (!ps) continue;
-            item->pix = _manager.get_image(ps, _tileSize, _tileSize, ds);
+            item->pix = QImage();
         }
     };
 
-    regenerate(_docItems,   _currentDocument);
-    regenerate(_stockItems, nullptr);
-
-    // Propagate regenerated stock images into the filtered subset
-    for (auto& filtered : _stockItemsFiltered) {
-        for (const auto& full : _stockItems) {
-            if (full->id == filtered->id && full->collection == filtered->collection) {
-                filtered->pix = full->pix;
-                break;
-            }
-        }
-    }
+    reset(_docItems);
+    reset(_stockItems);
 
     rebuildGalleryCallbacks();
+}
+
+void PatternEditor::ensureTileImage(const PatternItemPtr& item) {
+    if (!item || !item->pix.isNull()) return;
+    auto doc = item->collection ? item->collection : _currentDocument;
+    auto ps = doc ? cast<SPPaintServer>(doc->getObjectById(item->id)) : nullptr;
+    if (!ps) return;
+    item->pix = _manager.get_image(ps, _tileSize, _tileSize, devicePixelRatioF());
 }
 
 // ─── Document / selection ────────────────────────────────────────────────────
@@ -558,7 +549,7 @@ void PatternEditor::setSelectedInternal(SPPaintServer* linkPaint,
 
 // Select the saved pattern in the galleries, used after set_document.
 void PatternEditor::setInitialSelection() {
-    auto [id, doc] = getSelected();
+    auto [id, doc] = _initialSelectionDone ? getSelected() : std::pair<std::string, SPDocument*>{getSelectedDocPattern(), nullptr};
     if (id.empty()) return;
 
     auto scoped(_update.block());
@@ -720,7 +711,6 @@ std::pair<std::string, SPDocument*> PatternEditor::getSelected() {
 }
 
 std::string PatternEditor::getSelectedDocPattern() {
-    initialSelect();
     auto sel = activeDocItem();
     if (!sel) return {};
     // If the selection hasn't changed, return the link-pattern id so its transform/offset

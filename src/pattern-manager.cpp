@@ -332,8 +332,7 @@ std::shared_ptr<PatternItem> PatternManager::get_item(SPPaintServer* paint) {
     std::shared_ptr<PatternItem> item;
     if (!paint) return item;
 
-    init();
-    auto it = _cache.find(paint);
+    auto it = _initialized ? _cache.find(paint) : _cache.end();
     // if pattern entry was present in the cache, then it is a stock pattern
     bool stock = it != _cache.end();
     if (!stock || !it->second) {

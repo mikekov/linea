@@ -94,6 +94,7 @@ private:
     void applyFilter();
     std::vector<PatternItemPtr> updateDocPatternList(SPDocument* document);
     void updateTileImages();
+    void ensureTileImage(const PatternItemPtr& item);
 
     // Selection helpers
     PatternItemPtr activeDocItem() const;
