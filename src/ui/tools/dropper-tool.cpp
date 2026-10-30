@@ -375,6 +375,9 @@ bool DropperTool::root_handler(CanvasEvent const &event)
     // Set the right cursor for the mode and apply the special Fill color
     _cursor_filename = dropping ? (stroke ? "dropper-drop-stroke.svg" : "dropper-drop-fill.svg")
                                 : (stroke ? "dropper-pick-stroke.svg" : "dropper-pick-fill.svg");
+    if (pickOnly) {
+        _cursor_filename = "dropper-tool.svg";
+    }
 
     // We do this ourselves to get color correct.
     set_svg_cursor(*_desktop->getCanvas(), _cursor_filename, color);
