@@ -76,6 +76,10 @@ Linea::Script::Registry& LineaApplication::scriptRegistry() {
 // ---------------------------------------------------------------------------
 
 void LineaApplication::set_active_desktop(SPDesktop* desktop) {
+    // an overlay tool (e.g. a panel's eye dropper) only lives while its desktop is active
+    if (_active_desktop && _active_desktop != desktop) {
+        _active_desktop->discardOverlayTool();
+    }
     _active_desktop = desktop;
     if (desktop) {
         INKSCAPE.activate_desktop(desktop);

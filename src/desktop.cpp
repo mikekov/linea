@@ -144,6 +144,8 @@ SPDesktop::SPDesktop(SPNamedView* namedview)
 SPDesktop::~SPDesktop() {
     _destroy_signal.emit(this);
 
+    discardOverlayTool();
+
     // Clean up tools first (they may reference drawing items)
     _currentTool.reset();
 
@@ -246,6 +248,7 @@ void SPDesktop::_attachDocument() {
 }
 
 void SPDesktop::_detachDocument() {
+    discardOverlayTool();
     _reconstructionStartConn.disconnect();
     _reconstructionFinishConn.disconnect();
     _document_modified_conn.disconnect();
@@ -335,6 +338,7 @@ void SPDesktop::updatePageInfo() {
 // replaced (e.g. setTool(getTool()->get_name())), which must not dangle
 // after _currentTool.reset().
 void SPDesktop::setTool(std::string tool_name) {
+    discardOverlayTool();
     _canvas->resetIM();
     _canvas->setAttribute(Qt::WA_InputMethodEnabled, false);
 
@@ -360,6 +364,44 @@ bool SPDesktop::isSelectTool() const {
 
 bool SPDesktop::isNodeTool() const {
     return _currentToolName == "Node";
+}
+
+void SPDesktop::setOverlayTool(std::unique_ptr<Inkscape::UI::Tools::ToolBase> tool) {
+    discardOverlayTool();
+    _overlayTool = std::move(tool);
+    // discarding the previous overlay restored the current tool's cursor
+    if (_overlayTool) {
+        _overlayTool->use_tool_cursor();
+    }
+}
+
+void SPDesktop::discardOverlayTool(const Inkscape::UI::Tools::ToolBase* tool) {
+    if (!_overlayTool || (tool && tool != _overlayTool.get())) return;
+
+    auto discarded = std::move(_overlayTool);
+    if (_overlayDispatching) {
+        // still inside the tool's own event handler; destroyed once dispatch returns
+        _retiredOverlayTool = std::move(discarded);
+    } else {
+        discarded.reset();
+    }
+
+    if (!_currentTool) return;
+    // the overlay tool's constructor applied its own cursor and selection preferences
+    Inkscape::UI::Tools::sp_event_context_read(_currentTool.get(), "changelayer");
+    Inkscape::UI::Tools::sp_event_context_read(_currentTool.get(), "changepage");
+    _currentTool->use_tool_cursor();
+}
+
+bool SPDesktop::handleOverlayEvent(const CanvasEvent& event) {
+    if (!_overlayTool) return false;
+
+    _overlayDispatching = true;
+    // tool_root_handler rather than start_root_handler: keeps the overlay out of the shared delayed-snap state
+    bool handled = _overlayTool->tool_root_handler(event);
+    _overlayDispatching = false;
+    _retiredOverlayTool.reset();
+    return handled;
 }
 
 bool SPDesktop::handleCanvasEvent(CanvasEvent* event) {
@@ -727,8 +769,8 @@ void SPDesktop::setWaitingCursor() {
 }
 
 void SPDesktop::clearWaitingCursor() {
-    if (_waiting_cursor && _currentTool) {
-        _currentTool->use_tool_cursor();
+    if (auto tool = getInputTool(); _waiting_cursor && tool) {
+        tool->use_tool_cursor();
     }
 }
 

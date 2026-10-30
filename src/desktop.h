@@ -293,6 +293,22 @@ public:
     bool isSelectTool() const;
     bool isNodeTool() const;
 
+    /// Transient tool that receives canvas input ahead of the current tool without replacing it
+    /// (e.g. an eye dropper started from a color panel). The desktop owns it and discards it when a
+    /// new overlay tool is set, the current tool changes, the document is detached, or the desktop
+    /// is deactivated or destroyed.
+    void setOverlayTool(std::unique_ptr<Inkscape::UI::Tools::ToolBase> tool);
+    /// Discard the overlay tool (only if it is @a tool, when given) and restore the current tool's state.
+    /// Safe to call from the overlay tool's own event handler: destruction is deferred until dispatch ends.
+    void discardOverlayTool(const Inkscape::UI::Tools::ToolBase* tool = nullptr);
+    Inkscape::UI::Tools::ToolBase* getOverlayTool() const { return _overlayTool.get(); }
+    /// Tool receiving canvas input: the overlay tool if any, otherwise the current tool.
+    Inkscape::UI::Tools::ToolBase* getInputTool() const {
+        return _overlayTool ? _overlayTool.get() : _currentTool.get();
+    }
+    /// Route a canvas event to the overlay tool; the canvas calls this instead of regular dispatch while one is set.
+    bool handleOverlayEvent(const CanvasEvent& event);
+
     // Storage for selected dragger used by GrDrag as it's created and deleted by tools
     SPItem* gr_item = nullptr;
     GrPointType gr_point_type = POINT_LG_BEGIN;
@@ -473,6 +489,9 @@ private:
     // Tools
     std::unique_ptr<Inkscape::UI::Tools::ToolBase> _currentTool;
     std::string _currentToolName;
+    std::unique_ptr<Inkscape::UI::Tools::ToolBase> _overlayTool;
+    std::unique_ptr<Inkscape::UI::Tools::ToolBase> _retiredOverlayTool; ///< discarded during its own dispatch
+    bool _overlayDispatching = false;
 
     // Selection
     std::unique_ptr<Selection> _selection;

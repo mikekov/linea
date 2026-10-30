@@ -23,16 +23,29 @@ namespace Inkscape::UI::Tools {
 class DropperTool : public ToolBase
 {
 public:
-    DropperTool(SPDesktop *desktop);
+    /**
+     * @param pickOnly Detached mode: deliver the picked color to the caller via
+     *                 onetimepick_signal without mutating the selection, the
+     *                 document, or the active tool. The caller decides what the
+     *                 color is for (fill, stroke, gradient stop, ...).
+     */
+    DropperTool(SPDesktop* desktop, bool pickOnly = false);
     ~DropperTool() override;
 
     std::optional<Colors::Color> get_color(bool invert = false, bool non_dropping = false) const;
     sigc::signal<void (Colors::Color const &)> onetimepick_signal;
+    sigc::signal<void ()> onetimepick_cancel_signal; ///< pickOnly mode: Escape or non-left click
+
+    /// pickOnly: claim keys so Escape and modifiers reach the dropper instead of window shortcuts
+    bool wantsAllKeys() const override { return pickOnly; }
 
 protected:
     bool root_handler(CanvasEvent const &event) override;
 
 private:
+    /// pickOnly: report the picked color (or cancellation when empty) and remove this tool from the desktop
+    void endPick(std::optional<Colors::Color> const& color);
+
     unsigned _translucency_key;
 
     // Stored color.
@@ -45,6 +58,7 @@ private:
     bool invert = false;   ///< Set color to inverse rgb value
     bool stroke = false;   ///< Set to stroke color. In dropping mode, set from stroke color
     bool dropping = false; ///< When true, get color from selected objects instead of canvas
+    const bool pickOnly;   ///< Deliver picked color via onetimepick_signal only; no document or selection side effects
     // bool dragging = false; ///< When true, get average color for region on canvas, instead of a single point
 
     double radius = 0.0;                       ///< Size of region under dragging mode

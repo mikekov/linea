@@ -27,6 +27,7 @@
 #include "colors/color.h"
 #include "colors/manager.h"
 #include "colors/spaces/base.h"
+#include "desktop.h"
 #include "inkscape.h"
 #include "ui/tools/dropper-tool.h"
 #include "ui/tools/tool-base.h"
@@ -60,7 +61,7 @@ ColorPickerPanel::ColorPickerPanel(
     _colorChanged = _colorSet->signal_changed.connect([this]() { updateColor(); });
 }
 
-ColorPickerPanel::~ColorPickerPanel() = default;
+ColorPickerPanel::~ColorPickerPanel() { cancelPick(); }
 
 void ColorPickerPanel::buildBottomBar() {
     // eye dropper button
@@ -212,19 +213,26 @@ sigc::signal<void(Space::Type)>& ColorPickerPanel::colorSpaceChanged() {
 }
 
 void ColorPickerPanel::pickColor() {
-    // Set the dropper into a "one-click" mode, so it reverts to the previous tool after a click
+    // clicking the dropper button again while picking cancels the pick
     if (_colorPicking.connected()) {
-        _colorPicking.disconnect();
+        cancelPick();
         return;
     }
     auto desktop = _desktop ? _desktop : SP_ACTIVE_DESKTOP;
     if (!desktop) return;
-    Inkscape::UI::Tools::sp_toggle_dropper(desktop);
-    if (auto tool = dynamic_cast<Inkscape::UI::Tools::DropperTool*>(desktop->getTool())) {
-        _colorPicking = tool->onetimepick_signal.connect([this](auto& color) {
-            _colorSet->set(color);
-        });
-    }
+
+    // Start a detached "one-click" dropper: the current tool stays active, the desktop routes canvas
+    // input to the dropper and discards it after a pick, on cancel, or when the document/desktop goes away.
+    auto tool = std::make_unique<Inkscape::UI::Tools::DropperTool>(desktop, true);
+    _pickTool = tool.get();
+    _colorPicking = tool->onetimepick_signal.connect([this](auto& color) { _colorSet->set(color); });
+    desktop->setOverlayTool(std::move(tool));
+}
+
+void ColorPickerPanel::cancelPick() {
+    // the connection only survives while our dropper is still installed on its desktop
+    if (!_colorPicking.connected()) return;
+    _pickTool->getDesktop()->discardOverlayTool(_pickTool);
 }
 
 ColorPlateType get_plate_type_preference(const std::string& pref_path_base, ColorPlateType def_type) {

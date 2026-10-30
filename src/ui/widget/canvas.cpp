@@ -1516,7 +1516,7 @@ bool Canvas::event(QEvent* event) {
             // placed), claim this key so Qt's shortcut map backs off and delivers
             // it as a normal keyPressEvent instead.
             if (_desktop) {
-                if (auto tool = _desktop->getTool(); tool && tool->wantsAllKeys()) {
+                if (auto tool = _desktop->getInputTool(); tool && tool->wantsAllKeys()) {
                     auto ke = dynamic_cast<QKeyEvent*>(event);
                     // Only claim keys that produce text or are navigation — not
                     // modifier-only presses which don't generate characters.
@@ -2082,8 +2082,11 @@ bool CanvasPrivate::emit_event(CanvasEvent &event)
 {
     ensure_geometry_uptodate();
 
+    // While an overlay tool is set it owns all canvas input, regardless of grabs.
+    const bool overlay = q->_desktop && q->_desktop->getOverlayTool();
+
     // Handle grabbed items.
-    if (q->_grabbed_canvas_item && !(event.type() & q->_grabbed_event_mask)) {
+    if (!overlay && q->_grabbed_canvas_item && !(event.type() & q->_grabbed_event_mask)) {
         return false;
     }
 
@@ -2123,6 +2126,10 @@ bool CanvasPrivate::emit_event(CanvasEvent &event)
         [&] (ButtonReleaseEvent &event) { q->_is_dragging = false; },
         [&] (CanvasEvent &event) {}
     );
+
+    if (overlay) {
+        return q->_desktop->handleOverlayEvent(event);
+    }
 
     if (q->_current_canvas_item) {
         // Choose where to send event.
@@ -2494,7 +2501,9 @@ void Canvas::update_cursor()
 
     switch (_hover_direction) {
         case SplitDirection::NONE:
-            _desktop->getTool()->use_tool_cursor();
+            if (auto tool = _desktop->getInputTool()) {
+                tool->use_tool_cursor();
+            }
             break;
 
         case SplitDirection::NORTH:

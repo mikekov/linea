@@ -43,8 +43,9 @@ enum PickMode
     PICK_ACTUAL
 };
 
-DropperTool::DropperTool(SPDesktop *desktop)
+DropperTool::DropperTool(SPDesktop* desktop, bool pickOnly)
     : ToolBase(desktop, "/tools/dropper", "dropper-pick-fill.svg")
+    , pickOnly(pickOnly)
     , mod_dropper_dropping(Modifiers::Modifier::get(Modifiers::Type::DROPPER_DROPPING))
     , mod_dropper_invert(Modifiers::Modifier::get(Modifiers::Type::DROPPER_INVERT))
     , mod_dropper_stroke(Modifiers::Modifier::get(Modifiers::Type::DROPPER_STROKE))
@@ -57,11 +58,11 @@ DropperTool::DropperTool(SPDesktop *desktop)
 
     auto prefs = Preferences::get();
 
-    if (prefs->getBool("/tools/dropper/selcue")) {
+    if (!pickOnly && prefs->getBool("/tools/dropper/selcue")) {
         enableSelectionCue();
     }
 
-    if (prefs->getBool("/tools/dropper/gradientdrag")) {
+    if (!pickOnly && prefs->getBool("/tools/dropper/gradientdrag")) {
         enableGrDrag();
     }
 
@@ -106,6 +107,16 @@ std::optional<Colors::Color> DropperTool::get_color(bool invert, bool non_droppi
         color->enableOpacity(false);
 
     return color;
+}
+
+void DropperTool::endPick(const std::optional<Colors::Color>& color) {
+    if (color) {
+        onetimepick_signal.emit(*color);
+    } else {
+        onetimepick_cancel_signal.emit();
+    }
+    // deferred by the desktop until this event has been dispatched
+    _desktop->discardOverlayTool(this);
 }
 
 bool DropperTool::root_handler(CanvasEvent const &event)
@@ -161,6 +172,11 @@ bool DropperTool::root_handler(CanvasEvent const &event)
                 centre = event.pos;
                 dragging = true;
                 ret = true;
+            } else if (pickOnly) {
+                endPick({});
+                self_destroyed = true;
+                ret = true;
+                return;
             }
 
             grabCanvasEvents(EventType::KEY_PRESS      |
@@ -243,6 +259,15 @@ bool DropperTool::root_handler(CanvasEvent const &event)
 
             ungrabCanvasEvents();
 
+            if (pickOnly) {
+                // Detached pick: hand the color to the caller and stop there —
+                // don't touch the selection, the document, or the active tool.
+                endPick(get_color(invert));
+                self_destroyed = true;
+                ret = true;
+                return;
+            }
+
             auto selection = _desktop->getSelection();
             g_assert(selection);
 
@@ -303,7 +328,13 @@ bool DropperTool::root_handler(CanvasEvent const &event)
                     }
                     break;
                 case INK_KEY_Escape:
-                    _desktop->getSelection()->clear();
+                    if (pickOnly) {
+                        endPick({});
+                        self_destroyed = true;
+                        ret = true;
+                    } else {
+                        _desktop->getSelection()->clear();
+                    }
                     break;
                 default:
                     break;

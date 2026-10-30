@@ -26,6 +26,7 @@ class ColorPickerPanel;
 QT_END_NAMESPACE
 
 class SPDesktop;
+namespace Inkscape::UI::Tools { class DropperTool; }
 
 namespace Linea::UI {
 
@@ -70,6 +71,7 @@ private:
     void switchPage(Inkscape::Colors::Space::Type space, ColorPlateType plateType);
     void updateColor();
     void pickColor();
+    void cancelPick();
 
     // UI from .ui file
     std::unique_ptr<Ui::ColorPickerPanel> _ui;
@@ -89,6 +91,7 @@ private:
 
     sigc::scoped_connection _colorChanged;
     sigc::scoped_connection _colorPicking;
+    Inkscape::UI::Tools::DropperTool* _pickTool = nullptr; // valid only while _colorPicking is connected
     sigc::signal<void(Inkscape::Colors::Space::Type)> _colorSpaceChanged;
 };
 
