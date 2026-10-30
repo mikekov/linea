@@ -86,8 +86,10 @@ void setColorHelper(Color& color, int channel1, int channel2, double x, double y
 }
 
 QPointF getColorCoordinates(double val1, double val2, bool circular) {
-    val1 = std::clamp(val1, 0.0, 1.0);
-    val2 = std::clamp(val2, 0.0, 1.0);
+    // broken conversions (OKLCH etc.) can yield NaN/Inf — std::clamp passes
+    // NaN straight through, so sanitize before clamping
+    val1 = std::isfinite(val1) ? std::clamp(val1, 0.0, 1.0) : 0.0;
+    val2 = std::isfinite(val2) ? std::clamp(val2, 0.0, 1.0) : 0.0;
     if (circular) {
         double angle = val1 * 2 * M_PI - M_PI;
         return {std::sin(angle) * val2, std::cos(angle) * val2};
@@ -468,7 +470,13 @@ void ColorPlate::syncOverlay(QPointer<IndicatorOverlay>& overlay, const std::opt
         delete overlay;
         overlay = new IndicatorOverlay(host);
     }
-    const QPointF center = mapTo(host, localToScreen(getActiveArea(), *indicator));
+    const auto active = getActiveArea();
+    if (active.width() <= 0 || active.height() <= 0) {
+        overlay->hide();
+        return;
+    }
+    
+    const QPointF center = mapTo(host, localToScreen(active, *indicator));
     overlay->placeAt(center);
     overlay->show();
     overlay->raise();
@@ -492,7 +500,10 @@ void ColorPlate::select(const QPointF& local) {
 }
 
 void ColorPlate::pickAt(QPointF pos) {
-    auto local = screenToLocal(getActiveArea(), pos);
+    const auto active = getActiveArea();
+    if (active.width() <= 0 || active.height() <= 0) return;
+
+    auto local = screenToLocal(active, pos);
     if (_ring) {
         if (_dragRing) {
             selectRingPoint(local);
