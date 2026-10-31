@@ -4,7 +4,7 @@
 #include <2geom/int-point.h>
 
 #include "ui/widget/canvas/texture.h"
-#include "preferences.h"
+#include "qt/util/surface-format.h"
 #include <cairomm/cairomm.h>
 #include <cairomm/context.h>
 #include <cairomm/refptr.h>
@@ -49,13 +49,7 @@ auto share_lambda(F &&f)
 // tagged Display P3 its bytes are read as P3 values, so sRGB-encoded document
 // content must be re-encoded here or it renders oversaturated. The transfer
 // curve is identical on both sides, so this is decode -> 3x3 matrix -> encode.
-bool p3_surface() {
-    static const bool enabled = [] {
-        auto cs = Inkscape::Preferences::get()->getString("/options/displayprofile/colorspace").lowercase();
-        return cs == "displayp3" || cs == "p3";
-    }();
-    return enabled;
-}
+constexpr auto& p3_surface = Linea::UI::displaySurfaceIsP3;
 
 const char* p3_vs_src = R"(
 #version 330 core

@@ -18,6 +18,14 @@ namespace Linea::UI {
  */
 void applyPreferredColorSpace(QSurfaceFormat& format);
 
+/**
+ * True when /options/displayprofile/colorspace selects a Display P3 surface —
+ * i.e. raw bytes written to the window surface are interpreted as P3, so
+ * sRGB-encoded content needs converting and wide-gamut content may be emitted
+ * directly.
+ */
+bool displaySurfaceIsP3();
+
 } // namespace Linea::UI
 
 #endif // LINEA_QT_UTIL_SURFACE_FORMAT_H

@@ -23,6 +23,7 @@
 #include <giomm/file.h>
 
 #include "auto-save.h"
+#include "util/surface-format.h"
 #include "helper/gettext.h"
 #include "inkgc/gc-core.h"
 #include "inkscape.h"
@@ -66,16 +67,19 @@ int main(int argc, char* argv[]) {
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
         // QApplication::setAttribute(Qt::AA_DontShowIconsInMenus, true);
 
+        // GLib threading is automatically initialized in modern GLib
+        Inkscape::GC::init();
+        Inkscape::initialize_gettext();
+
         QSurfaceFormat format;
         format.setVersion(3, 3);
         format.setProfile(QSurfaceFormat::CoreProfile);
         format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
         format.setStencilBufferSize(8);
+        // Preferences needs GC initialized; the format is captured at QWindow
+        // construction so this must run before any window exists
+        Linea::UI::applyPreferredColorSpace(format);
         QSurfaceFormat::setDefaultFormat(format);
-
-        // GLib threading is automatically initialized in modern GLib
-        Inkscape::GC::init();
-        Inkscape::initialize_gettext();
 
         QGuiApplication::setDesktopSettingsAware(true);
         QApplication app(argc, argv);

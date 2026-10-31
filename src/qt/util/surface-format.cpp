@@ -29,4 +29,12 @@ void applyPreferredColorSpace(QSurfaceFormat& format) {
     }
 }
 
+bool displaySurfaceIsP3() {
+    static const bool enabled = [] {
+        auto cs = Inkscape::Preferences::get()->getString("/options/displayprofile/colorspace").lowercase();
+        return cs == "displayp3" || cs == "p3";
+    }();
+    return enabled;
+}
+
 } // namespace Linea::UI
