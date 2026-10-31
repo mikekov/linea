@@ -4,15 +4,16 @@
  */
 
 #include "color-wheel-factory.h"
-#include "color-plate.h"
-#include "colors/spaces/base.h"
-#include "colors/spaces/enum.h"
 
-#include <chrono>
-#include <optional>
 #include <QDebug>
 #include <QImage>
 #include <QPainter>
+#include <chrono>
+#include <optional>
+
+#include "color-plate.h"
+#include "colors/spaces/base.h"
+#include "colors/spaces/enum.h"
 
 namespace Linea::UI {
 
@@ -24,14 +25,14 @@ constexpr bool TEST_TIMING = false;
 class FastColorPlate : public ColorPlate {
     Q_OBJECT
 public:
-    FastColorPlate(Type source, Type plate, int fixed_channel, int var_channel1, int var_channel2, ColorPlateType plateType, QWidget* parent)
+    FastColorPlate(Type source, Type plate, int fixed_channel, int var_channel1, int var_channel2,
+                   ColorPlateType plateType, QWidget* parent)
         : ColorPlate(parent)
         , _source(source)
         , _plate(plate)
         , _fixed_channel(fixed_channel)
         , _var_channel1(var_channel1)
-        , _var_channel2(var_channel2)
-    {
+        , _var_channel2(var_channel2) {
         setDisc(plateType == ColorPlateType::Circle || plateType == ColorPlateType::Ring);
         setRing(plateType == ColorPlateType::Ring);
     }
@@ -47,8 +48,8 @@ public:
         // arbitrarily for grays and flips the 0/360 representation at the
         // seam. Otherwise keep the last hue shown for achromatic colors,
         // whose converted hue is meaningless.
-        auto const type = color.getSpace() ? color.getSpace()->getType() : Type::NONE;
-        if (auto const hue_ch = plateHueChannel(type)) {
+        const auto type = color.getSpace() ? color.getSpace()->getType() : Type::NONE;
+        if (const auto hue_ch = plateHueChannel(type)) {
             dest.set(0, color[*hue_ch]);
         } else if (plateAchromatic(dest) && _last_hue >= 0.0) {
             dest.set(0, _last_hue);
@@ -70,7 +71,7 @@ public:
                 // field wobble or flip across the 0/360 seam. Same for
                 // achromatic picks, where the converted hue is meaningless.
                 if (_fixed_channel == 0 || plateAchromatic(c)) {
-                    if (auto const hue_ch = plateHueChannel(_source)) {
+                    if (const auto hue_ch = plateHueChannel(_source)) {
                         color->set(*hue_ch, c[0]);
                     }
                 }
@@ -92,18 +93,19 @@ private:
     // OKHSL/OKLCH <-> OKHSV plate).
     std::optional<int> plateHueChannel(Type type) const {
         switch (type) {
-        case Type::HSL:
-        case Type::HSV:
-            if (_plate == Type::HSV) return 0;
-            break;
-        case Type::OKHSL:
-            if (_plate == Type::OKHSV) return 0;
-            break;
-        case Type::OKLCH:
-            if (_plate == Type::OKHSV) return 2;
-            break;
-        default:
-            break;
+            case Type::HSL:
+            case Type::HSV:
+                if (_plate == Type::HSV) return 0;
+                break;
+            case Type::OKHSL:
+                if (_plate == Type::OKHSV) return 0;
+                break;
+            case Type::OKLCH:
+                if (_plate == Type::OKHSV) return 2;
+                if (_plate == Type::OKLCH) return 2;
+                break;
+            default:
+                break;
         }
         return {};
     }
@@ -123,38 +125,37 @@ static ColorWheel* createPlate(Type source, Type plate, ColorPlateType plateType
         auto sat = 1;   // vary saturation with distance from the center of the disc (while painting the disc)
         return new FastColorPlate(source, plate, value, hue, sat, plateType, parent);
     } else if (plateType == ColorPlateType::Rect) {
-        auto hue = 0;   // hue is fixed; it's a single hue rectangular plate
+        auto hue = 0; // hue is fixed; it's a single hue rectangular plate
         auto sat = 1;
         auto value = 2;
         return new FastColorPlate(source, plate, hue, sat, value, plateType, parent);
-    }
-    else {
+    } else {
         return nullptr;
     }
 }
 
 static Type plateTypeFor(Type source) {
     switch (source) {
-    case Type::OKHSL:
-    case Type::OKLCH:
-        return Type::OKHSV;
-    default:
-        return Type::HSV;
+        case Type::OKHSL:
+        case Type::OKLCH:
+            return Type::OKHSV;
+        default:
+            return Type::HSV;
     }
 }
 
 static std::pair<ColorWheel*, bool> createHelper(Type type, bool create, ColorPlateType plateType, QWidget* parent) {
     switch (type) {
-    case Type::HSL:
-    case Type::HSLUV:
-    case Type::OKHSL:
-    case Type::OKLCH:
-    case Type::HSV:
-    case Type::RGB:
-    case Type::CMYK:
-        break;
-    default:
-        return {nullptr, false};
+        case Type::HSL:
+        case Type::HSLUV:
+        case Type::OKHSL:
+        case Type::OKLCH:
+        case Type::HSV:
+        case Type::RGB:
+        case Type::CMYK:
+            break;
+        default:
+            return {nullptr, false};
     }
 
     if (!create) return {nullptr, true};

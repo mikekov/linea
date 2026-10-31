@@ -150,6 +150,13 @@ private:
     std::string _msg;
 };
 
+// Channel index of the normalized (0..1) hue for polar color spaces, or -1
+// when the space has no hue channel. In all of these spaces channel 1 is the
+// saturation/chroma channel.
+int get_hue_channel(Space::Type type);
+int get_saturation_channel(Space::Type type);
+int get_value_channel(Space::Type type);
+
 } // namespace Inkscape::Colors
 
 #endif // SEEN_COLORS_COLOR_H

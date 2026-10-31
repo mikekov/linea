@@ -30,10 +30,12 @@ static decltype(auto) assert_nonnull(T &&t)
     return std::forward<T>(t);
 }
 
+} // namespace
+
 // Channel index of the normalized (0..1) hue for polar color spaces, or -1
 // when the space has no hue channel. In all of these spaces channel 1 is the
 // saturation/chroma channel.
-static int hue_channel(Space::Type type) {
+int get_hue_channel(Space::Type type) {
     switch (type) {
         case Space::Type::HSL:
         case Space::Type::HSV:
@@ -49,7 +51,37 @@ static int hue_channel(Space::Type type) {
     }
 }
 
-} // namespace
+int get_saturation_channel(Space::Type type) {
+    switch (type) {
+        case Space::Type::HSL:
+        case Space::Type::HSV:
+        case Space::Type::HSLUV:
+        case Space::Type::OKHSL:
+        case Space::Type::OKHSV:
+            return 1;
+        case Space::Type::LCH:
+        case Space::Type::OKLCH:
+            return 1;
+        default:
+            return -1;
+    }
+}
+
+int get_value_channel(Space::Type type) {
+    switch (type) {
+        case Space::Type::HSL:
+        case Space::Type::HSV:
+        case Space::Type::HSLUV:
+        case Space::Type::OKHSL:
+        case Space::Type::OKHSV:
+            return 2;
+        case Space::Type::LCH:
+        case Space::Type::OKLCH:
+            return 0;
+        default:
+            return -1;
+    }
+}
 
 /**
  * Create a color, given the type of the space and the values to store.
@@ -234,7 +266,7 @@ bool Color::convert(std::shared_ptr<Space::AnySpace> to_space)
     }
 
     if (_space != to_space) {
-        const int src_hue_channel = hue_channel(_space->getType());
+        const int src_hue_channel = get_hue_channel(_space->getType());
         const double src_hue = src_hue_channel >= 0 ? _values[src_hue_channel] : 0.0;
 
         _space->convert(_values, to_space);
@@ -243,7 +275,7 @@ bool Color::convert(std::shared_ptr<Space::AnySpace> to_space)
         // either resets it to zero or derives it from float residue, which
         // makes the same gray show different hues in different spaces.
         // Carry the source hue over instead, so it survives space switches.
-        const int dst_hue_channel = hue_channel(to_space->getType());
+        const int dst_hue_channel = get_hue_channel(to_space->getType());
         if (dst_hue_channel >= 0 && src_hue_channel >= 0 && _values[1] <= Space::ACHROMATIC_CHROMA) {
             _values[dst_hue_channel] = src_hue;
         }

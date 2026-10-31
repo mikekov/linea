@@ -110,6 +110,18 @@ QImage buildColorPlate(int resolution, const Color& base, int ch1, int ch2) {
         for (int ix = 0; ix <= resolution; ++ix) {
             color.set(ch1, ix / double(resolution));
             uint32_t argb = color.toARGB();
+#if 0
+            // pixels outside sRGB are transparent: the plate shows the gamut
+            // boundary instead of silently clipping
+            uint32_t argb = 0;
+            if (auto rgb = color.converted(Space::Type::RGB)) {
+                bool in_gamut = true;
+                for (int i = 0; i < 3 && in_gamut; ++i) {
+                    in_gamut = std::isfinite((*rgb)[i]) && (*rgb)[i] >= 0.0 && (*rgb)[i] <= 1.0;
+                }
+                if (in_gamut) argb = rgb->toARGB();
+            }
+#endif
             line[ix] = QRgb(argb);
         }
     }
