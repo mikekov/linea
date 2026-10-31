@@ -246,6 +246,7 @@ static char const preferences_skeleton[] =
     <group id="grabsize" value="8"/>
     <group
        id="displayprofile"
+       colorspace=""
        enable="0"
        from_display="0"
        intent="0"

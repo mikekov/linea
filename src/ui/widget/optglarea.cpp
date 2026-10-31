@@ -4,6 +4,7 @@
 #include <2geom/int-point.h>
 
 #include "ui/widget/canvas/texture.h"
+#include "preferences.h"
 #include <cairomm/cairomm.h>
 #include <cairomm/context.h>
 #include <cairomm/refptr.h>
@@ -42,6 +43,130 @@ auto share_lambda(F &&f)
 
     return Result{std::make_shared<Fd>(std::move(f))};
 }
+
+#ifdef __APPLE__
+// sRGB -> Display P3 conversion at composite time. When the window surface is
+// tagged Display P3 its bytes are read as P3 values, so sRGB-encoded document
+// content must be re-encoded here or it renders oversaturated. The transfer
+// curve is identical on both sides, so this is decode -> 3x3 matrix -> encode.
+bool p3_surface() {
+    static const bool enabled = [] {
+        auto cs = Inkscape::Preferences::get()->getString("/options/displayprofile/colorspace").lowercase();
+        return cs == "displayp3" || cs == "p3";
+    }();
+    return enabled;
+}
+
+const char* p3_vs_src = R"(
+#version 330 core
+out vec2 uv;
+void main() {
+    vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+    uv = p;
+    gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+})";
+
+const char* p3_fs_src = R"(
+#version 330 core
+in vec2 uv;
+out vec4 frag;
+uniform sampler2D u_tex;
+uniform int u_flip;
+
+// sRGB linear -> Display P3 linear, both D65
+const mat3 SRGB_TO_P3 = mat3(
+     0.8224620, 0.0331941, 0.0170826,  // column 0
+     0.1774820, 0.9668059, 0.0724874,  // column 1
+     0.0,       0.0,       0.9107567   // column 2
+);
+
+vec3 decode_trc(vec3 c) {
+    return mix(c / 12.92,
+               pow((c + 0.055) / 1.055, vec3(2.4)),
+               step(0.04045, c));
+}
+vec3 encode_trc(vec3 c) {
+    return mix(c * 12.92,
+               1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055,
+               step(0.0031308, c));
+}
+
+void main() {
+    vec2 t = vec2(uv.x, u_flip != 0 ? 1.0 - uv.y : uv.y);
+    vec4 c = texture(u_tex, t);
+    if (c.a > 0.0) {
+        // premultiplied input: convert straight color, then re-multiply
+        vec3 rgb = encode_trc(clamp(SRGB_TO_P3 * decode_trc(c.rgb / c.a), 0.0, 1.0));
+        frag = vec4(rgb * c.a, c.a);
+    } else {
+        frag = c;
+    }
+})";
+
+struct P3Pipeline {
+    GLuint program = 0;
+    GLuint vao = 0;
+    GLint tex_loc = -1;
+    GLint flip_loc = -1;
+
+    bool init() {
+        auto glf = QOpenGLContext::currentContext() ? QOpenGLContext::currentContext()->functions() : nullptr;
+        if (!glf) return false;
+        auto compile = [glf](GLenum type, const char* src) -> GLuint {
+            GLuint sh = glf->glCreateShader(type);
+            glf->glShaderSource(sh, 1, &src, nullptr);
+            glf->glCompileShader(sh);
+            GLint ok = GL_FALSE;
+            glf->glGetShaderiv(sh, GL_COMPILE_STATUS, &ok);
+            if (!ok) {
+                char log[512];
+                glf->glGetShaderInfoLog(sh, sizeof(log), nullptr, log);
+                fprintf(stderr, "P3 shader compile failed: %s\n", log);
+                glf->glDeleteShader(sh);
+                return 0;
+            }
+            return sh;
+        };
+        GLuint vs = compile(GL_VERTEX_SHADER, p3_vs_src);
+        GLuint fs = compile(GL_FRAGMENT_SHADER, p3_fs_src);
+        if (!vs || !fs) return false;
+        program = glf->glCreateProgram();
+        glf->glAttachShader(program, vs);
+        glf->glAttachShader(program, fs);
+        glf->glLinkProgram(program);
+        glf->glDeleteShader(vs);
+        glf->glDeleteShader(fs);
+        GLint ok = GL_FALSE;
+        glf->glGetProgramiv(program, GL_LINK_STATUS, &ok);
+        if (!ok) {
+            glf->glDeleteProgram(program);
+            program = 0;
+            return false;
+        }
+        tex_loc = glf->glGetUniformLocation(program, "u_tex");
+        flip_loc = glf->glGetUniformLocation(program, "u_flip");
+        glGenVertexArrays(1, &vao);
+        return true;
+    }
+};
+
+void draw_p3_converted(GLuint texture, GLuint target_fbo, const Geom::IntPoint& size, bool flip) {
+    static P3Pipeline pipe;
+    auto glf = QOpenGLContext::currentContext() ? QOpenGLContext::currentContext()->functions() : nullptr;
+    if (!glf || (!pipe.program && !pipe.init())) return;
+    glf->glBindFramebuffer(GL_FRAMEBUFFER, target_fbo);
+    glf->glViewport(0, 0, size.x(), size.y());
+    glf->glUseProgram(pipe.program);
+    glf->glActiveTexture(GL_TEXTURE0);
+    glf->glBindTexture(GL_TEXTURE_2D, texture);
+    glf->glUniform1i(pipe.tex_loc, 0);
+    glf->glUniform1i(pipe.flip_loc, flip ? 1 : 0);
+    glBindVertexArray(pipe.vao);
+    glf->glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+    glf->glUseProgram(0);
+}
+#endif // __APPLE__
 
 } // namespace
 
@@ -258,6 +383,16 @@ void OptGLArea::paintGL()
                      GL_BGRA, GL_UNSIGNED_BYTE, _surface->get_data());
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
+#ifdef __APPLE__
+        if (p3_surface()) {
+            // draw straight into the widget framebuffer with sRGB->P3
+            // conversion and the Y flip folded into the shader's uv
+            draw_p3_converted(tex, defaultFramebufferObject(), size, true);
+            glDeleteTextures(1, &tex);
+            return;
+        }
+#endif
+
         // Cairo's surface data is top-down, while OpenGL's framebuffer origin is bottom-up,
         // so we flip the Y axis during the blit.
         GLuint fbo;
@@ -359,12 +494,19 @@ void OptGLArea::paintGL()
     GLuint const default_fbo = defaultFramebufferObject();
 
     if (painted) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, gl->framebuffer);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, default_fbo);
-        glBlitFramebuffer(0, 0, size.x(), size.y(),
-                          0, 0, size.x(), size.y(),
-                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, default_fbo);
+#ifdef __APPLE__
+        if (p3_surface()) {
+            draw_p3_converted(gl->current_texture.id(), default_fbo, size, false);
+        } else
+#endif
+        {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, gl->framebuffer);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, default_fbo);
+            glBlitFramebuffer(0, 0, size.x(), size.y(),
+                              0, 0, size.x(), size.y(),
+                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_FRAMEBUFFER, default_fbo);
+        }
     } else {
         // Nothing was painted; clear the default FBO so we don't show stale content.
         glBindFramebuffer(GL_FRAMEBUFFER, default_fbo);
