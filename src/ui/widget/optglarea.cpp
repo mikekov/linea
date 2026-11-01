@@ -68,10 +68,12 @@ uniform sampler2D u_tex;
 uniform int u_flip;
 
 // sRGB linear -> Display P3 linear, both D65
+// same matrix as LINEAR_SRGB_TO_P3 in src/colors/spaces/gamut.cpp
+// (P3->XYZ^-1 x sRGB->XYZ), kept in sync by hand — GLSL can't share the constant
 const mat3 SRGB_TO_P3 = mat3(
-     0.8224620, 0.0331941, 0.0170826,  // column 0
-     0.1774820, 0.9668059, 0.0724874,  // column 1
-     0.0,       0.0,       0.9107567   // column 2
+     0.8224619687, 0.0331941989, 0.0170826307,  // column 0
+     0.1775380313, 0.9668058011, 0.0723974407,  // column 1
+     0.0,          0.0,          0.9105199286   // column 2
 );
 
 vec3 decode_trc(vec3 c) {

@@ -109,7 +109,9 @@ target_sources(linea_base PRIVATE
     ui/color-slider.cpp
     ui/color-page.cpp
     ui/color-picker-panel.cpp
-    ui/color-wheel-factory.cpp
+    ui/color-plate-rect.cpp
+    ui/color-plate-wheel.cpp
+    ui/color-plate-ring.cpp
     ui/gradient-selector.cpp
     ui/gradient-selector.ui
     ui/gradient-editor.cpp

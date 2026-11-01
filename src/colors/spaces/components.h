@@ -4,7 +4,7 @@
  *   Jon A. Cruz <jon@joncruz.org>
  *   Martin Owens <doctormo@geek-2.com>
  *
- * Copyright (C) 2013-2023 Authors
+ * Copyright (C) 2013-2026 Authors
  *
  * Released under GNU GPL v2+, read the file 'COPYING' for more information.
  */
@@ -14,6 +14,7 @@
 
 #include <lcms2.h>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,22 @@
 namespace Inkscape::Colors::Space {
 
 enum class Type;
+
+// Channel roles of a rectangular color plate
+struct PlateAxes {
+    int fixed = 0; // channel held constant (driven by its slider)
+    int x = 1;     // channel along the horizontal axis, 0 at the left
+    int y = 2;     // channel along the vertical axis, 0 at the bottom
+};
+
+// How color plates present colors of a space
+struct PlateSpec {
+    Type polar = Type::NONE; // space of wheel/ring plates; must be HSV-like: 0 hue (angle), 1 saturation (radius), 2 value
+    Type rect = Type::NONE;  // space of the rectangular plate
+    PlateAxes axes;          // channel roles in the 'rect' space
+    bool gamut = false;      // 'rect' is unbounded: draw it clipped to the requested gamut
+    bool shared_hue = false; // this space's hue channel is the plate spaces' hue (no conversion residue)
+};
 
 enum class Traits {
     None = 0,
@@ -67,8 +84,8 @@ class Components
 {
 public:
     Components() = default;
-    Components(Type type, Type wheel, Traits traits, std::vector<Component> components):
-        _type(type), _components(std::move(components)), _wheel_type(wheel), _traits(traits) {}
+    Components(Type type, PlateSpec plate, Traits traits, std::vector<Component> components):
+        _type(type), _components(std::move(components)), _plate(plate), _traits(traits) {}
 
     static Components const &get(Type type, bool alpha = false);
 
@@ -82,16 +99,18 @@ public:
     unsigned size() const { return _components.size(); }
 
     void add(std::string id, std::string name, std::string tip, Unit unit = Unit::EightBit);
-    void setType(Type type, Type color_wheel = Type::NONE) { _type = type; _wheel_type = color_wheel; }
-    // Says which space the color wheel should be in when picking this color space
-    Type get_wheel_type() const;
+    void setType(Type type) { _type = type; }
+    // How color plates present colors of this space; Type::NONE when unsupported
+    const PlateSpec& plate() const { return _plate; }
+    // Index of the first component measured in degrees (the hue channel), if any
+    std::optional<unsigned> hue_index() const;
     // Trait(s) of those components
     Traits traits() const { return _traits; }
 
 private:
     Type _type = Type::NONE;
     std::vector<Component> _components;
-    Type _wheel_type = Type::NONE;
+    PlateSpec _plate;
     Traits _traits = Traits::None;
 };
 

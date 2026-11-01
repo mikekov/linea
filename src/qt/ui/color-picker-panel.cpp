@@ -14,14 +14,13 @@
 #include <QVBoxLayout>
 #include <glibmm/ustring.h>
 
-#include "color-wheel-factory.h"
 #include "ui_color-picker-panel.h"
 
 #include "color-clipboard-menu.h"
 #include "color-entry.h"
 #include "color-page.h"
+#include "color-plate.h"
 #include "color-preview.h"
-#include "color-wheel.h"
 #include "preferences.h"
 
 #include "colors/color.h"
@@ -29,6 +28,7 @@
 #include "colors/spaces/base.h"
 #include "desktop.h"
 #include "inkscape.h"
+#include "qt/util/surface-format.h"
 #include "ui/tools/dropper-tool.h"
 #include "ui/tools/tool-base.h"
 
@@ -120,21 +120,17 @@ void ColorPickerPanel::createColorPage(Space::Type type, ColorPlateType plateTyp
 
     int topMargin = 0;
     int index = 0;
-    // color plate/wheel widget — wheel is owned by ColorPage (parented to it),
-    // we just hold the interface pointer and a separate widget pointer for the layout.
-    if (plateType == ColorPlateType::Circle || plateType == ColorPlateType::Ring) {
-        _plate = _page->createColorWheel(type, plateType);
-        topMargin = 2;
-    } else if (plateType == ColorPlateType::Rect) {
-        _plate = _page->createColorWheel(type, plateType);
-        topMargin = 4;
+    // color plate widget — owned by the layout once inserted
+    if (plateType != ColorPlateType::None) {
+        const auto gamut = get_plate_gamut_preference();
+        _plate = _page->createColorPlate(type, plateType, gamut);
+        topMargin = plateType == ColorPlateType::Rect ? 4 : 2;
     }
     if (_plate) {
-        _plateWidget = _plate->getWidget();
         // plates need a little breathing room at the top; pages don't
         _topGap = new QSpacerItem(0, topMargin, QSizePolicy::Minimum, QSizePolicy::Fixed);
         _ui->mainLayout->insertItem(index++, _topGap);
-        _ui->mainLayout->insertWidget(index++, _plateWidget); // plate goes above the page
+        _ui->mainLayout->insertWidget(index++, _plate); // plate goes above the page
     }
 
     _ui->mainLayout->insertWidget(index, _page);
@@ -149,10 +145,9 @@ void ColorPickerPanel::removeWidgets() {
         _topGap = nullptr;
     }
     // Remove plate widget from layout first (it's a child of _page, deleted with it)
-    if (_plateWidget) {
-        _ui->mainLayout->removeWidget(_plateWidget);
-        delete _plateWidget; // reparented to panel by insertWidget, must delete explicitly
-        _plateWidget = nullptr;
+    if (_plate) {
+        _ui->mainLayout->removeWidget(_plate);
+        delete _plate; // reparented to panel by insertWidget, must delete explicitly
         _plate = nullptr;
     }
     if (_page) {
@@ -243,6 +238,27 @@ ColorPlateType get_plate_type_preference(const std::string& pref_path_base, Colo
 void set_plate_type_preference(const std::string& pref_path_base, ColorPlateType type) {
     Glib::ustring path(pref_path_base);
     Inkscape::Preferences::get()->setInt(path + "/color-plate-type", static_cast<int>(type));
+}
+
+PlateGamut get_plate_gamut_preference() {
+    auto prefs = Inkscape::Preferences::get();
+    PlateGamut gamut;
+    const auto name = prefs->getString("/colorselector/plate/gamut");
+    if (name == "p3") {
+        gamut.gamut = Gamut::DisplayP3;
+    } else if (name == "rec2020") {
+        gamut.gamut = Gamut::Rec2020;
+    } // unknown values fall back to sRGB
+    gamut.srgb_line = prefs->getBool("/colorselector/plate/srgb-line", true);
+    gamut.p3_line = prefs->getBool("/colorselector/plate/p3-line", true);
+#ifdef __APPLE__
+    // same gate OptGLArea uses (src/ui/widget/optglarea.cpp): a Display P3
+    // surface reads raw bytes as P3, so plates must convert their sRGB pixels
+    if (displaySurfaceIsP3()) {
+        gamut.surface = Gamut::DisplayP3;
+    }
+#endif
+    return gamut;
 }
 
 } // namespace Linea::UI

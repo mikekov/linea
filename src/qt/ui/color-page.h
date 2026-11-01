@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "color-holder.h"
-#include "color-wheel-factory.h"
+#include "color-plate.h"
 #include "colors/color.h"
 #include "colors/spaces/base.h"
 #include "colors/spaces/enum.h"
@@ -27,7 +27,6 @@ namespace Linea::UI {
 class ColorSlider;
 class NumberEdit;
 class ColorPageChannel;
-class ColorWheel;
 
 class ColorPage : public QWidget {
     Q_OBJECT
@@ -38,8 +37,9 @@ public:
               QWidget* parent = nullptr);
     ~ColorPage() override;
 
-    // Create a color wheel/plate widget (returns nullptr if not yet ported)
-    ColorWheel* createColorWheel(Inkscape::Colors::Space::Type type, ColorPlateType plateType);
+    // Create a color plate widget (returns nullptr if the space has no plate)
+    ColorPlate* createColorPlate(Inkscape::Colors::Space::Type type, ColorPlateType plateType,
+                                 const PlateGamut& gamut);
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -56,9 +56,9 @@ private:
     sigc::scoped_connection _specific_changed_connection;
     sigc::scoped_connection _selected_changed_connection;
     sigc::scoped_connection _selected_cleared_connection;
-    sigc::scoped_connection _color_wheel_changed;
-    sigc::scoped_connection _color_wheel_updated;
-    ColorWheel* _color_wheel = nullptr;
+    sigc::scoped_connection _color_plate_changed;
+    sigc::scoped_connection _color_plate_updated;
+    ColorPlate* _color_plate = nullptr;
 };
 
 class ColorPageChannel {

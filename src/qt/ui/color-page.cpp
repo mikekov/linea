@@ -6,8 +6,7 @@
 #include "color-page.h"
 
 #include "color-slider.h"
-#include "color-wheel.h"
-#include "color-wheel-factory.h"
+#include "color-plate.h"
 #include "number-edit.h"
 #include "util/signal-blocker.h"
 
@@ -112,26 +111,27 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
 
 ColorPage::~ColorPage() = default;
 
-ColorWheel* ColorPage::createColorWheel(Inkscape::Colors::Space::Type type, ColorPlateType plateType) {
-    if (!canCreateColorWheel(type)) return nullptr;
+ColorPlate* ColorPage::createColorPlate(Inkscape::Colors::Space::Type type, ColorPlateType plateType,
+                                        const PlateGamut& gamut) {
+    if (!ColorPlate::supports(type)) return nullptr;
 
-    auto wheel = Linea::UI::createColorWheel(type, plateType, this);
-    if (!wheel) return nullptr;
-    // keep color wheel in sync with the color set
-    _color_wheel = wheel;
-    _color_wheel_changed = _specific_colors->signal_changed.connect([this]() {
+    auto plate = ColorPlate::create(type, plateType, gamut, this);
+    if (!plate) return nullptr;
+    // keep color plate in sync with the color set
+    _color_plate = plate;
+    _color_plate_changed = _specific_colors->signal_changed.connect([this]() {
         if (auto color = _specific_colors->get()) {
-            _color_wheel->setColor(*color);
+            _color_plate->setColor(*color);
         }
     });
-    _color_wheel_updated = wheel->connectColorChanged([this](const Inkscape::Colors::Color& color) {
-        auto scoped = SignalBlocker{_color_wheel_changed};
+    _color_plate_updated = plate->connectColorChanged([this](const Inkscape::Colors::Color& color) {
+        auto scoped = SignalBlocker{_color_plate_changed};
         auto opacity = _specific_colors->get() ? _specific_colors->get()->getOpacity() : 1.0;
         auto updated = color;
         updated.setOpacity(opacity);
         _specific_colors->set(updated);
     });
-    return wheel;
+    return plate;
 }
 
 void ColorPage::showEvent(QShowEvent* event) {

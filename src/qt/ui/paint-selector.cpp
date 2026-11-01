@@ -150,7 +150,7 @@ static const struct {
 } pickers[] = {
     {ColorPlateType::Rect, "color-picker-rect", _("Color Plane"), _("Show color plane")},
     {ColorPlateType::Ring, "color-picker-ring", _("Color Ring"), _("Show color ring")},
-    {ColorPlateType::Circle, "color-picker-circle", _("Color Wheel"), _("Show color wheel")},
+    {ColorPlateType::Wheel, "color-picker-circle", _("Color Wheel"), _("Show color wheel")},
     {ColorPlateType::None, "color-picker-input", _("Only Sliders"), _("Show color sliders only")},
 };
 

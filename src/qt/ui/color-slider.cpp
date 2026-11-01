@@ -26,7 +26,7 @@ using namespace Linea::UI;
 // Layout constants
 // ---------------------------------------------------------------------------
 static constexpr int    THUMB_SPACE      = 16;
-static constexpr int    TRACK_HEIGHT     = 10;
+static constexpr int    TRACK_HEIGHT     = 8;
 static constexpr int    THUMB_SIZE       = TRACK_HEIGHT + 2;
 static constexpr int    RING_THICKNESS   = 2;
 static constexpr int    CHECKERBOARD_TILE = TRACK_HEIGHT / 2;

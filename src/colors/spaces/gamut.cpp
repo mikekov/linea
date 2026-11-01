@@ -2,6 +2,7 @@
 
 #include "gamut.h"
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include "colors/color.h"
 #include "colors/manager.h"
@@ -61,7 +62,43 @@ double deltaEOK(const Color& color, const Color& sample) {
 	return std::sqrt(ΔL * ΔL + Δa * Δa + Δb * Δb);
 }
 
+// Linear sRGB -> linear gamut RGB matrices (D65 white point)
+constexpr std::array<std::array<double, 3>, 3> LINEAR_SRGB_TO_P3 = {{
+    {0.8224619687, 0.1775380313, 0},
+    {0.0331941989, 0.9668058011, 0},
+    {0.0170826307, 0.0723974407, 0.9105199286}
+}};
+constexpr std::array<std::array<double, 3>, 3> LINEAR_SRGB_TO_REC2020 = {{
+    {0.6274038959, 0.3292830384, 0.0433130657},
+    {0.0690972894, 0.9195403951, 0.0113623156},
+    {0.0163914389, 0.0880133079, 0.8955952532}
+}};
+
+double min_channel_margin(const std::array<double, 3>& rgb) {
+    double margin = std::numeric_limits<double>::max();
+    for (double c : rgb) {
+        margin = std::min(margin, std::min(c, 1.0 - c));
+    }
+    return margin;
+}
+
 } // namespace
+
+std::array<double, 3> linear_srgb_to(const std::array<double, 3>& linear_srgb, Gamut gamut) {
+    if (gamut == Gamut::sRGB) {
+        return linear_srgb;
+    }
+    const auto& m = gamut == Gamut::DisplayP3 ? LINEAR_SRGB_TO_P3 : LINEAR_SRGB_TO_REC2020;
+    std::array<double, 3> rgb;
+    for (int r = 0; r < 3; ++r) {
+        rgb[r] = m[r][0] * linear_srgb[0] + m[r][1] * linear_srgb[1] + m[r][2] * linear_srgb[2];
+    }
+    return rgb;
+}
+
+double gamut_margin(const std::array<double, 3>& linear_srgb, Gamut gamut) {
+    return min_channel_margin(linear_srgb_to(linear_srgb, gamut));
+}
 
 Color to_gamut_css(const Color& origin, const std::shared_ptr<Space::AnySpace>& space) {
     if (!space) throw std::runtime_error("to_gamut_css: missing color space");

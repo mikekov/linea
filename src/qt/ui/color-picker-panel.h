@@ -13,7 +13,7 @@
 #include <sigc++/signal.h>
 
 #include "color-holder.h"
-#include "color-wheel-factory.h"
+#include "color-plate.h"
 #include "colors/color.h"
 #include "colors/spaces/enum.h"
 
@@ -31,7 +31,6 @@ namespace Inkscape::UI::Tools { class DropperTool; }
 namespace Linea::UI {
 
 class ColorPage;
-class ColorWheel;
 
 /**
  * A widget hosting a ColorPage with an optional color plate/wheel on top and
@@ -81,8 +80,7 @@ private:
     std::shared_ptr<ColorHolder> _colorSet;
     SPDesktop* _desktop = nullptr;
 
-    ColorWheel* _plate = nullptr;    // interface (non-owning alias into _plateWidget)
-    QWidget* _plateWidget = nullptr; // the actual widget owned by the layout
+    ColorPlate* _plate = nullptr;    // owned by the layout
     QSpacerItem* _topGap = nullptr;  // spacing above the plate, when present
     ColorPage* _page = nullptr;
     // custom widgets created in code (not uic-constructible), owned by colorEntryFrame
@@ -101,6 +99,9 @@ ColorPlateType get_plate_type_preference(const std::string& pref_path_base,
 
 // persist a plate type in preferences
 void set_plate_type_preference(const std::string& pref_path_base, ColorPlateType type);
+
+// gamut drawing preferences for plates in unbounded spaces
+PlateGamut get_plate_gamut_preference();
 
 } // namespace Linea::UI
 
