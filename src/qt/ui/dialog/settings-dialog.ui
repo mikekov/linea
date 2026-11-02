@@ -11,7 +11,7 @@
     <property name="minimumSize">
       <size>
         <width>480</width>
-        <height>320</height>
+        <height>380</height>
       </size>
     </property>
     <property name="maximumSize">
@@ -25,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>480</width>
-        <height>320</height>
+        <height>380</height>
       </rect>
     </property>
     <layout class="QVBoxLayout" name="mainLayout">
@@ -315,6 +315,108 @@
             </layout>
           </item>
 
+          <item row="10" column="0">
+            <widget class="QLabel" name="colorsLabel">
+              <property name="text">
+                <string>Colors in SVG</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>settings-label</string>
+              </property>
+            </widget>
+          </item>
+          <item row="11" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="hexColorsRow">
+              <item>
+                <widget class="QRadioButton" name="hexColorsRadio">
+                  <property name="text">
+                    <string>RGB hex</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>Write colors as #rrggbb in styles</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">colorOutputGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <widget class="QRadioButton" name="verbatimColorsRadio">
+                  <property name="text">
+                    <string>Color picker</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>Keep colors in the space they were picked in (oklch(), hsl(), etc.)</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">colorOutputGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <spacer name="hexColorsSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                  </property>
+                </spacer>
+              </item>
+            </layout>
+          </item>
+
+          <item row="12" column="0">
+            <widget class="QLabel" name="displayLabel">
+              <property name="text">
+                <string>Display</string>
+              </property>
+              <property name="class" stdset="0">
+                <string>settings-label</string>
+              </property>
+            </widget>
+          </item>
+          <item row="13" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="displayRow">
+              <item>
+                <widget class="QRadioButton" name="srgbSurfaceRadio">
+                  <property name="text">
+                    <string>sRGB</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>sRGB window surface (requires restart)</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">displaySurfaceGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <widget class="QRadioButton" name="p3SurfaceRadio">
+                  <property name="text">
+                    <string>Display P3</string>
+                  </property>
+                  <property name="toolTip">
+                    <string>Display P3 window surface for wide-gamut colors (requires restart)</string>
+                  </property>
+                  <attribute name="buttonGroup">
+                    <string notr="true">displaySurfaceGroup</string>
+                  </attribute>
+                </widget>
+              </item>
+              <item>
+                <spacer name="displaySpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Expanding</enum>
+                  </property>
+                </spacer>
+              </item>
+            </layout>
+          </item>
+
         </layout>
       </item>
 
@@ -345,6 +447,8 @@
     <buttongroup name="themeGroup"/>
     <buttongroup name="renderingGroup"/>
     <buttongroup name="panelBorderGroup"/>
+    <buttongroup name="colorOutputGroup"/>
+    <buttongroup name="displaySurfaceGroup"/>
   </buttongroups>
   <connections>
     <connection>

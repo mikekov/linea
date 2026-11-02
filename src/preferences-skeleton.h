@@ -166,7 +166,7 @@ static char const preferences_skeleton[] =
       visible="1" />
     <group id="CMS"
       visible="1" />
-    <group id="plate" gamut="srgb" srgb-line="1" p3-line="1" />
+    <group id="plate" gamut="p3" srgb-line="1" p3-line="1" />
   </group>
 
   <group id="embedded">

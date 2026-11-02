@@ -89,6 +89,33 @@ SettingsDialog::SettingsDialog(QWidget* parent)
     }
     connect(_ui->panelBorderRadio, &QRadioButton::clicked, this, [prefs] { prefs->setBool(Inkscape::UI::PANEL_BORDER_PREF, true); });
     connect(_ui->panelShadowRadio, &QRadioButton::clicked, this, [prefs] { prefs->setBool(Inkscape::UI::PANEL_BORDER_PREF, false); });
+
+    constexpr auto rgb_hex_pref = "/options/svgoutput/rgb_hex_colors";
+    if (prefs->getBool(rgb_hex_pref, true)) {
+        _ui->hexColorsRadio->setChecked(true);
+    } else {
+        _ui->verbatimColorsRadio->setChecked(true);
+    }
+    connect(_ui->hexColorsRadio,      &QRadioButton::clicked, this, [prefs] { prefs->setBool(rgb_hex_pref, true); });
+    connect(_ui->verbatimColorsRadio, &QRadioButton::clicked, this, [prefs] { prefs->setBool(rgb_hex_pref, false); });
+
+#ifdef __APPLE__
+    // window surface color space — picked up by applyPreferredColorSpace()
+    // and displaySurfaceIsP3() at startup (src/qt/util/surface-format.cpp)
+    constexpr auto cs_pref = "/options/displayprofile/colorspace";
+    const auto cs = prefs->getString(cs_pref).lowercase();
+    if (cs == "displayp3" || cs == "p3") {
+        _ui->p3SurfaceRadio->setChecked(true);
+    } else {
+        _ui->srgbSurfaceRadio->setChecked(true);
+    }
+    connect(_ui->p3SurfaceRadio,   &QRadioButton::clicked, this, [prefs] { prefs->setString(cs_pref, "p3"); });
+    connect(_ui->srgbSurfaceRadio, &QRadioButton::clicked, this, [prefs] { prefs->setString(cs_pref, "srgb"); });
+#else
+    _ui->displayLabel->hide();
+    _ui->srgbSurfaceRadio->hide();
+    _ui->p3SurfaceRadio->hide();
+#endif
 }
 
 SettingsDialog::~SettingsDialog() = default;

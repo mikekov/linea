@@ -146,6 +146,13 @@ struct P3Pipeline {
     }
 };
 
+// Note: This is sRGB to P3 range compression.
+// Converted values land in a sub-range of the P3 encoding (sRGB red 1.0
+// becomes ~0.92): that compression is the correct conversion, not a loss —
+// the surface's wider primaries compensate exactly, so displayed colors are
+// identical to the sRGB intent. Passing raw bytes instead would show every
+// sRGB color as its P3 counterpart, i.e. oversaturated. The only real cost is
+// ~234 usable codes on the red channel (8-bit in -> 8-bit out).
 void draw_p3_converted(GLuint texture, GLuint target_fbo, const Geom::IntPoint& size, bool flip) {
     static P3Pipeline pipe;
     auto glf = QOpenGLContext::currentContext() ? QOpenGLContext::currentContext()->functions() : nullptr;

@@ -243,7 +243,7 @@ void set_plate_type_preference(const std::string& pref_path_base, ColorPlateType
 PlateGamut get_plate_gamut_preference() {
     auto prefs = Inkscape::Preferences::get();
     PlateGamut gamut;
-    const auto name = prefs->getString("/colorselector/plate/gamut");
+    const auto name = prefs->getString("/colorselector/plate/gamut", "p3");
     if (name == "p3") {
         gamut.gamut = Gamut::DisplayP3;
     } else if (name == "rec2020") {
