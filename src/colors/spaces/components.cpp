@@ -125,7 +125,9 @@ static const std::vector<Components> color_spaces = {
     {
         Type::OKLCH, {.polar=Type::OKHSV, .rect=Type::OKLCH,
             // the axes can be any permutation of L(0)/C(1)/H(2)
-            .axes={.fixed=2, .x=1, .y=0}, .gamut=true, .shared_hue=true}, Traits::Picker,
+            // sRGB chroma tops out near 0.32 (normalized ~0.8) — show 80% of
+            // the channel range; wider gamuts pin the excess to the top edge
+            .axes={.fixed=2, .x=0, .y=1, .y_scale=0.4}, .gamut=true, .shared_hue=true}, Traits::Picker,
         {
             { "l", _("&L<sub>ok</sub>"), _("Lightness"), Unit::Percent },
             { "c", _("&C<sub>ok</sub>"), _("Chroma"), Unit::Chroma40 }, // 100% is 0.4

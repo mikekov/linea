@@ -26,9 +26,11 @@ enum class Type;
 
 // Channel roles of a rectangular color plate
 struct PlateAxes {
-    int fixed = 0; // channel held constant (driven by its slider)
-    int x = 1;     // channel along the horizontal axis, 0 at the left
-    int y = 2;     // channel along the vertical axis, 0 at the bottom
+    int fixed = 0;      // channel held constant (driven by its slider)
+    int x = 1;          // channel along the horizontal axis, 0 at the left
+    int y = 2;          // channel along the vertical axis, 0 at the bottom
+    double x_scale = 1; // fraction of the x channel's range shown, 1 = all of it
+    double y_scale = 1; // fraction of the y channel's range shown, 1 = all of it
 };
 
 // How color plates present colors of a space

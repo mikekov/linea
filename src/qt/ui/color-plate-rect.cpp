@@ -87,11 +87,14 @@ RectColorPlate::RectColorPlate(Type source, const PlateSpec& spec, const PlateGa
     , _gamut(gamut) {}
 
 void RectColorPlate::colorChanged() {
-    // rebuild when the fixed channel moved — it is held constant across the plate
-    if (channelDelta(plateSpace(), _axes.fixed, _built_fixed, color()[_axes.fixed]) > 0.005) {
+    // rebuild when the fixed channel moved — it is held constant across the
+    // plate; epsilon only skips float noise (1e-4 ≈ 0.04° on a hue channel)
+    if (channelDelta(plateSpace(), _axes.fixed, _built_fixed, color()[_axes.fixed]) > 1e-4) {
         _plate = {};
     }
-    _marker = QPointF(sanitizeChannel(color()[_axes.x]), 1.0 - sanitizeChannel(color()[_axes.y]));
+    // channel values beyond the scaled range pin the marker to the plate edge
+    _marker = QPointF(sanitizeChannel(color()[_axes.x] / _axes.x_scale),
+                      1.0 - sanitizeChannel(color()[_axes.y] / _axes.y_scale));
 }
 
 Color RectColorPlate::colorAt(const QPointF& pos) const {
@@ -101,8 +104,8 @@ Color RectColorPlate::colorAt(const QPointF& pos) const {
     const double nx = (std::clamp(pos.x(), active.left(), active.right()) - active.left()) / active.width();
     const double ny = (std::clamp(pos.y(), active.top(), active.bottom()) - active.top()) / active.height();
     auto c = color();
-    c.set(_axes.x, nx);
-    c.set(_axes.y, 1.0 - ny);
+    c.set(_axes.x, nx * _axes.x_scale);
+    c.set(_axes.y, (1.0 - ny) * _axes.y_scale);
     return c;
 }
 
@@ -127,9 +130,9 @@ void RectColorPlate::rebuildPlate() {
     c.addOpacity();
     for (int iy = 0; iy <= resolution; ++iy) {
         auto line = reinterpret_cast<QRgb*>(_plate.scanLine(iy));
-        c.set(_axes.y, 1.0 - iy / double(resolution));
+        c.set(_axes.y, (1.0 - iy / double(resolution)) * _axes.y_scale);
         for (int ix = 0; ix <= resolution; ++ix) {
-            c.set(_axes.x, ix / double(resolution));
+            c.set(_axes.x, ix / double(resolution) * _axes.x_scale);
             line[ix] = QRgb(c.toARGB());
         }
     }
@@ -170,9 +173,9 @@ void RectColorPlate::rebuildGamutPlate(int resolution) {
     std::array<double, 3> out;
     for (int iy = 0; iy <= resolution; ++iy) {
         auto line = reinterpret_cast<QRgb*>(_plate.scanLine(iy));
-        io[_axes.y] = 1.0 - iy / double(resolution);
+        io[_axes.y] = (1.0 - iy / double(resolution)) * _axes.y_scale;
         for (int ix = 0; ix <= resolution; ++ix) {
-            io[_axes.x] = ix / double(resolution);
+            io[_axes.x] = ix / double(resolution) * _axes.x_scale;
             std::copy(io.begin(), io.end(), vals.begin());
             // yields unclamped encoded sRGB for internal spaces
             space->spaceToProfile(vals);
