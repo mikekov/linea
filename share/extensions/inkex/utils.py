@@ -31,8 +31,6 @@ import math
 from argparse import ArgumentTypeError
 from itertools import tee, cycle
 
-import numpy as np
-
 ABORT_STATUS = -5
 
 (X, Y) = range(2)
@@ -286,11 +284,13 @@ def is_number(string):
         return False
 
 
-def rational_limit(f: np.poly1d, g: np.poly1d, t0):
+def rational_limit(f: "np.poly1d", g: "np.poly1d", t0):
     """Computes the limit of the rational function (f/g)(t)
     as t approaches t0.
 
     .. versionadded:: 1.4"""
+    import numpy as np
+
     assert g != np.poly1d([0])
     if g(t0) != 0:
         return f(t0) / g(t0)

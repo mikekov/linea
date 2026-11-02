@@ -728,6 +728,14 @@
                 <property name="suffix">
                   <string>%</string>
                 </property>
+                <property name="icon">
+                  <iconset>
+                    <normaloff>:/icons/opacity</normaloff>
+                  </iconset>
+                </property>
+                <property name="toolTip">
+                  <string>Page color opacity</string>
+                </property>
               </widget>
             </item>
 

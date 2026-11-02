@@ -34,6 +34,7 @@
 x math expressions for number edit widget
 - P3 color space support
 - rec2020 color space support
+- python is not bundled, extensions won't work
 
 ## UI Panels & Dialogs, widgets
 
@@ -68,6 +69,7 @@ x math expressions for number edit widget
 
 - expose tool params/options (star and polygon, node tool, select tool, eraser, tweak, caligraphy, etc)
 - quick zoom and quick preview keys?
+- add text tool options, like text frame vs in-shape text; etc.
 
 ## Color & Paint
 

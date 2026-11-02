@@ -44,6 +44,11 @@ IconComboBox::IconComboBox(QWidget* parent)
         for (auto action : _menu->actions()) {
             if (auto widgetAction = qobject_cast<QWidgetAction*>(action)) {
                 if (auto widget = widgetAction->defaultWidget()) {
+                    // only menu rows manage the "class" property — popup
+                    // widgets (addPopupWidget) may own it for their own style
+                    if (!widget->property("action").isValid()) {
+                        continue;
+                    }
                     widget->setProperty("class", "");
                     widget->style()->unpolish(widget);
                     widget->style()->polish(widget);
@@ -137,8 +142,8 @@ void IconComboBox::clear() {
     updateButtonDisplay();
 }
 
-void IconComboBox::setActiveById(int id) {
-    if (_current_id == id) return;
+bool IconComboBox::setActiveById(int id) {
+    if (_current_id == id) return true;
 
     if (id < 0) {
         _current_id = -1;
@@ -146,11 +151,11 @@ void IconComboBox::setActiveById(int id) {
         updateButtonDisplay();
         _signal_changed.emit(id);
         Q_EMIT currentChanged(id);
-        return;
+        return false;
     }
 
     // Check if the id exists
-    if (!_item_data.contains(id)) return;
+    if (!_item_data.contains(id)) return false;
 
     _current_id = id;
     _current_label = _item_data[id].label;
@@ -159,6 +164,7 @@ void IconComboBox::setActiveById(int id) {
     updateButtonDisplay();
     _signal_changed.emit(id);
     Q_EMIT currentChanged(id);
+    return true;
 }
 
 void IconComboBox::setHeaderType(HeaderType type) {
@@ -172,6 +178,19 @@ IconComboBox::HeaderType IconComboBox::getHeaderType() const {
 
 int IconComboBox::getActiveRowId() const {
     return _current_id;
+}
+
+void IconComboBox::setPlaceholderText(const QString& text) {
+    if (_placeholder_text == text) return;
+    _placeholder_text = text;
+    if (_current_id == -1) {
+        updateButtonDisplay();
+    }
+    updateGeometry();
+}
+
+QString IconComboBox::placeholderText() const {
+    return _placeholder_text;
 }
 
 void IconComboBox::setRowVisible(int id, bool visible) {
@@ -219,7 +238,7 @@ void IconComboBox::keyPressEvent(QKeyEvent* event) {
 
 std::pair<QString, QIcon> IconComboBox::displayContent() const {
     if (_current_id == -1) {
-        return {tr("Select..."), QIcon()};
+        return {_placeholder_text.isEmpty() ? tr("Select...") : _placeholder_text, QIcon()};
     }
 
     const QIcon icon = _current_icon_name.isEmpty()
@@ -371,6 +390,11 @@ void IconComboBox::clearAllHighlights() {
 }
 
 void IconComboBox::setHighlight(QWidget* widget, bool highlight) {
+    // only menu rows manage the "class" property — popup widgets
+    // (addPopupWidget) may own it for their own style
+    if (!widget->property("action").isValid()) {
+        return;
+    }
     widget->setProperty("class", highlight ? "selected-menu-item" : "");
     widget->style()->unpolish(widget);
     widget->style()->polish(widget);

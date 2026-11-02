@@ -2,6 +2,7 @@
 
 target_sources(linea_base PRIVATE
   dir-util.cpp
+  export-helpers.cpp
   file.cpp
   file-error.cpp
   file-export-cmd.cpp

@@ -46,9 +46,13 @@ public:
     void clear();
 
     // Set the active item by id; -1 clears the selection (mixed state).
-    void setActiveById(int id);
+    bool setActiveById(int id);
     // Get the current active item's id
     int getActiveRowId() const;
+
+    // Text shown on the button when nothing is selected
+    void setPlaceholderText(const QString& text);
+    QString placeholderText() const;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
@@ -97,6 +101,7 @@ private:
     int _current_id = -1;
     QString _current_label;
     QString _current_icon_name;
+    QString _placeholder_text;
     HeaderType _header_type = ImageLabel;
     sigc::signal<void(int)> _signal_changed;
 };
