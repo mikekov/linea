@@ -25,6 +25,7 @@ public:
     constexpr static int OutputChannels = 3;
 
     constexpr static double HUE_SCALE = 360;
+    constexpr static double CHROMA_SCALE = 0.4; // CSS percentage reference: 100% chroma = 0.4
 
     OkLch(): RGBBase(Type::OKLCH, "OkLch", "OkLch", "color-selector-oklch") {
         _svgNames.emplace_back("oklch");

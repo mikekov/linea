@@ -82,11 +82,11 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         //     edit->setDecimals(0);
         // } else if (component.unit == Space::Unit::Degree || component.unit == Space::Unit::Percent) {
         //     edit->setDecimals(0);
-        if (component.scale < 100) {
+        if (component.scale <= 1) {
             // for small values increase precision
-            edit->setDecimals(2);
-            edit->setSingleStep(0.1);
-            edit->setKeptFractionDigits(2);
+            edit->setDecimals(3);
+            edit->setSingleStep(0.005);
+            edit->setKeptFractionDigits(3);
         }
 
         // Set suffix based on unit
@@ -95,7 +95,7 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         } else if (component.unit == Inkscape::Colors::Space::Unit::Percent) {
             edit->setSuffix("%");
         }
-        //  else if (component.unit == Inkscape::Colors::Space::Unit::Chroma40) {
+        //  else if (component.unit == Inkscape::Colors::Space::Unit::Chroma) {
             // (very) limited chroma range; increase precision
             // edit->setDecimals(2);
         // }

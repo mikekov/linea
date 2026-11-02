@@ -63,7 +63,7 @@ enum class Unit {
     Percent,    // 0..100%
     Degree,     // 0..360 degree
     Linear1024, // 0..1024 for linear RGB
-    Chroma40    // an oddball 0..40 for OkLch hue encoding
+    Chroma      // absolute OkLch chroma, shown as a number; slider covers 0..0.4
 };
 
 struct Component
@@ -76,7 +76,8 @@ struct Component
     std::string id;
     std::string name;
     std::string tip;
-    unsigned scale;
+    double scale;
+    double range = 1.0; // internal value at the slider's right end; values above it pin the slider to the end
     Unit unit = Unit::EightBit;
 
     double normalize(double value) const;

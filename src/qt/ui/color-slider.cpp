@@ -120,7 +120,7 @@ QSize ColorSlider::sizeHint() const {
 // ---------------------------------------------------------------------------
 
 void ColorSlider::updateComponent(double x) {
-    if (_colors->isValid(_component) && _colors->setComponent(_component, valueAtX(x))) {
+    if (_colors->isValid(_component) && _colors->setComponent(_component, valueAtX(x) * _component.range)) {
         Q_EMIT valueChanged();
     }
 }
@@ -167,15 +167,14 @@ void ColorSlider::leaveEvent(QEvent* event) {
 }
 
 void ColorSlider::keyPressEvent(QKeyEvent* event) {
+    double const step = _component.range * _component.scale / 100.0; // 1% of the slider range
     if (event->key() == ::Qt::Key_Left) {
         double current = getScaled();
-        double step = _component.scale / 100.0; // 1% of range
         setScaled(std::max(0.0, current - step));
         event->accept();
     } else if (event->key() == ::Qt::Key_Right) {
         double current = getScaled();
-        double step = _component.scale / 100.0; // 1% of range
-        setScaled(std::min(_component.scale * 1.0, current + step));
+        setScaled(std::min(_component.scale, current + step));
         event->accept();
     } else {
         QWidget::keyPressEvent(event);
@@ -308,7 +307,7 @@ void ColorSlider::paintEvent(QPaintEvent* /*event*/) {
     double lim = gradW > 1 ? gradW - 1.0 : 1.0;
     auto spaceRgb = Inkscape::Colors::Manager::get().find(Inkscape::Colors::Space::Type::RGB);
     for (int x = 0; x < gradW; ++x) {
-        paintColor.set(_component.index, x / lim);
+        paintColor.set(_component.index, x / lim * _component.range);
         auto c = Inkscape::Colors::to_gamut_css(paintColor, spaceRgb);
         // to_gamut_css returns ABGR; convert to ARGB for Qt
         uint32_t abgr = c.toABGR();
@@ -337,7 +336,7 @@ void ColorSlider::paintEvent(QPaintEvent* /*event*/) {
     // --- Thumb ---
     if (!_colors->isValid(_component)) return;
 
-    double value = std::clamp(_colors->getComponent(_component), 0.0, 1.0);
+    double value = std::clamp(_colors->getComponent(_component) / _component.range, 0.0, 1.0);
     if (!std::isfinite(value)) return;
 
     double thumbX = area.left() + value * area.width();

@@ -19,6 +19,7 @@
 #include <glibmm/value.h>
 
 #include "enum.h"
+#include "oklch.h"
 
 namespace Inkscape::Colors::Space {
 
@@ -125,12 +126,11 @@ static const std::vector<Components> color_spaces = {
     {
         Type::OKLCH, {.polar=Type::OKHSV, .rect=Type::OKLCH,
             // the axes can be any permutation of L(0)/C(1)/H(2)
-            // sRGB chroma tops out near 0.32 (normalized ~0.8) — show 80% of
-            // the channel range; wider gamuts pin the excess to the top edge
-            .axes={.fixed=2, .x=0, .y=1, .y_scale=0.4}, .gamut=true, .shared_hue=true}, Traits::Picker,
+            // show chroma 0..0.4 (sRGB peaks near 0.32); wider gamuts pin the excess to the top edge
+            .axes={.fixed=2, .x=0, .y=1, .y_scale=OkLch::CHROMA_SCALE}, .gamut=true, .shared_hue=true}, Traits::Picker,
         {
             { "l", _("&L<sub>ok</sub>"), _("Lightness"), Unit::Percent },
-            { "c", _("&C<sub>ok</sub>"), _("Chroma"), Unit::Chroma40 }, // 100% is 0.4
+            { "c", _("&C<sub>ok</sub>"), _("Chroma"), Unit::Chroma },
             { "h", _("&H<sub>ok</sub>"), _("Hue"), Unit::Degree }
         }
     },
@@ -211,8 +211,9 @@ Component::Component(Type type, unsigned int index, std::string id, std::string 
     case Unit::Linear1024:
         scale = 1024;
         break;
-    case Unit::Chroma40:
-        scale = 40;
+    case Unit::Chroma:
+        scale = 1;
+        range = OkLch::CHROMA_SCALE;
         break;
     default:
         throw std::logic_error("Missing case statement in Component ctor.");

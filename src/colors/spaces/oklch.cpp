@@ -19,12 +19,10 @@
 
 namespace Inkscape::Colors::Space {
 
-/* Chroma is technically unbounded in the actual calculations but is
- * defined between 0.0 and 0.4 by the CSS Color Module specification
- * as the reasonable upper and lower limits for display. Our internal model
- * always scales from 0 to 1 of this expected range of values.
+/* Chroma is stored as absolute OKLab chroma; it is technically unbounded
+ * (in practice below 0.5). The 0.4 from the CSS Color Module specification
+ * is only the percentage reference (100% = 0.4) and the range shown by the UI.
  */
-constexpr double CHROMA_SCALE = 0.4;
 
 /** @brief
  * Data needed to compute coefficients in the cubic polynomials which express the lines
@@ -322,11 +320,12 @@ uint8_t const *render_lightness_scale(double h, double s, std::array<uint8_t, 4 
 bool OkLch::Parser::parse(std::istringstream &ss, std::vector<double> &output) const
 {
     bool end = false;
-    if (append_css_value(ss, output, end, ',')                  // Luminance
-        && append_css_value(ss, output, end, ',', CHROMA_SCALE) // Chroma
-        && append_css_value(ss, output, end, '/', HUE_SCALE)    // Hue
-        && (append_css_value(ss, output, end) || true)          // Optional opacity
+    if (append_css_value(ss, output, end, ',')                                 // Luminance
+        && append_css_value(ss, output, end, ',', 1.0, 100.0 / CHROMA_SCALE)   // Chroma
+        && append_css_value(ss, output, end, '/', HUE_SCALE)                   // Hue
+        && (append_css_value(ss, output, end) || true)                         // Optional opacity
         && end) {
+        output[1] = std::max(0.0, output[1]); // Negative chroma is clamped to 0
         return true;
     }
     return false;
@@ -342,9 +341,9 @@ std::string OkLch::toString(std::vector<double> const &values, bool opacity) con
 {
     auto os = CssFuncPrinter(3, "oklch");
 
-    os << values[0]                // Luminance
-       << values[1] * CHROMA_SCALE // Chroma
-       << values[2] * HUE_SCALE;   // Hue
+    os << values[0]              // Luminance
+       << values[1]              // Chroma
+       << values[2] * HUE_SCALE; // Hue
 
     if (opacity && values.size() == 4)
         os << values[3]; // Optional opacity
