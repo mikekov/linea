@@ -26,11 +26,14 @@
 - undo/redo is buggy
 - add color fonts entry in a font browser categories
 - add support for color fonts
+- editing gradient after copying an object - gradient stops don't update
 
 ## Missing features
 
 - recolor panel
 x math expressions for number edit widget
+- P3 color space support
+- rec2020 color space support
 
 ## UI Panels & Dialogs, widgets
 
