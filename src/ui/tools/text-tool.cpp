@@ -426,6 +426,8 @@ bool TextTool::root_handler(CanvasEvent const &event)
                 _text_in_shape_hover.reset();
                 _text_on_path_hover.reset();
 
+                set_cursor("text-frame.svg");
+
                 auto p = _desktop->w2d(event.pos);
 
                 auto &m = _desktop->getNamedView()->snap_manager;
