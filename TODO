@@ -27,6 +27,7 @@
 - add color fonts entry in a font browser categories
 - add support for color fonts
 - editing gradient after copying an object - gradient stops don't update
+- don't open twice the same file from the home page; activate existing tab
 
 ## Missing features
 
@@ -35,6 +36,7 @@ x math expressions for number edit widget
 - P3 color space support
 - rec2020 color space support
 - python is not bundled, extensions won't work
+- allow multipage selection and mixing page and element selections
 
 ## UI Panels & Dialogs, widgets
 
@@ -59,7 +61,7 @@ x math expressions for number edit widget
 - adjust number edit with mouse drag
 - add collapsible sections in addition or instead of popups
 - add stroke hairline option somehow
-- expose rgb_hex_colors setting
+x expose rgb_hex_colors setting
 - rect panel - corners lpe button doesn't work (should retain/replace current rounded corners)
 - add dropper tool mode that keeps selected tool to stop props panel from resizing
 - expanded paint - add alpha number edit somewhere
@@ -103,7 +105,9 @@ x math expressions for number edit widget
 ## Document & File
 
 - version info todo/improve
-- add missing export functionality
+x add missing export functionality
+- persist export settings per object
+- show export progress, allow canceling
 - add doc template configuration; they are hardcoded
 
 ## Shortcuts & Input
@@ -150,5 +154,5 @@ x math expressions for number edit widget
 - add RecentColors to a document, connected to undo signals
 - consider adding ruler units to 'Display' section
 - add guide and grid default colors to css file; rename node-handles.css or add a new one?
-- text tool / text frame: there's no text editor other than on-canvas
+x text tool / text frame: there's no text editor other than on-canvas
 - display units -> option to use doc units (default to doc instead of explicit choice)

@@ -34,21 +34,16 @@ namespace Linea::UI {
 
 namespace {
 
-// Show the exported files in the platform's file browser, in a single window.
-void revealInFileManager(const QStringList& paths) {
-    if (paths.isEmpty()) {
-        return;
-    }
+// Show the exported file in the platform's file browser. All exports share
+// one directory, so revealing a single file shows them all.
+void revealInFileManager(const QString& path) {
 #ifdef __APPLE__
-    // open -R with multiple paths selects them all in one Finder window
-    QStringList args{QStringLiteral("-R")};
-    args << paths;
-    QProcess::startDetached(QStringLiteral("open"), args);
+    // open in Finder and select the file
+    QProcess::startDetached(QStringLiteral("open"), {QStringLiteral("-R"), path});
 #elif defined(_WIN32)
-    // explorer can only select a single file; all outputs share one directory
-    QProcess::startDetached(QStringLiteral("explorer"), {QStringLiteral("/select,") + QDir::toNativeSeparators(paths.front())});
+    QProcess::startDetached(QStringLiteral("explorer"), {QStringLiteral("/select,") + QDir::toNativeSeparators(path)});
 #else
-    QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(paths.front()).absolutePath()));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(path).absolutePath()));
 #endif
 }
 
@@ -193,11 +188,9 @@ ExportWidget::ExportWidget(QWidget* parent)
             }
         }
         auto exported = Linea::IO::exportSelection(_desktop, jobs);
-        QStringList paths;
-        for (auto& path : exported) {
-            paths << QString::fromStdString(path);
+        if (!exported.empty()) {
+            revealInFileManager(QString::fromStdString(exported.front()));
         }
-        revealInFileManager(paths);
     });
 }
 

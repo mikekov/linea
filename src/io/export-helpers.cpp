@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <filesystem>
 #include <set>
 #include <glibmm/convert.h>
 #include <glibmm/fileutils.h>
@@ -456,47 +455,41 @@ std::vector<std::string> exportSelection(SPDesktop* desktop, const std::vector<E
         return exported;
     }
 
-    // export area: union of visual bounds of the selected items
-    // one pass over objects(): items go to the export list, pages restrict
-    // vector output, the <svg> root means "whole document"
-    std::vector<const SPItem*> items;
-    std::vector<const SPPage*> pages;
+    // one pass over objects(): each entry is one exportable thing — item,
+    // page, or the <svg> root (whole document)
+    struct Entry {
+        const SPObject* object = nullptr;
+        const SPItem* item = nullptr;
+        const SPPage* page = nullptr;
+        Geom::OptRect bounds;
+    };
+    std::vector<Entry> entries;
     Geom::OptRect area;
     auto unite = [&area](const Geom::Rect& r) {
         area = area ? Geom::Rect(*area | r) : r;
     };
     for (auto object : selection->objects()) {
         if (auto page = cast<SPPage>(object)) {
-            pages.push_back(page);
+            entries.push_back({object, nullptr, page, page->getDesktopRect()});
             unite(page->getDesktopRect());
         } else if (auto item = cast<SPItem>(object)) {
             if (is<SPRoot>(item)) {
+                entries.push_back({object, nullptr, nullptr, doc->preferredBounds()});
                 if (auto bounds = doc->preferredBounds()) {
                     unite(*bounds);
                 }
             } else {
-                items.push_back(item);
+                entries.push_back({object, item, nullptr, item->documentVisualBounds()});
                 if (auto r = item->documentVisualBounds()) {
                     unite(*r);
                 }
             }
         }
     }
-    if (!area || area->hasZeroArea()) {
+    if (entries.empty() || !area || area->hasZeroArea()) {
         exportError(desktop, _("Nothing selected to export."));
         return exported;
     }
-
-    // base name: the selection widget's name for a single object — label, or
-    // synthetic "Type id" (it already handles pages) — or "Selection"
-    std::string base;
-    if (auto object = selection->single()) {
-        base = object->label() ? object->label()
-                               : get_synthetic_object_name(object).toStdString();
-    } else {
-        base = "Selection";
-    }
-    base = sanitizeFileName(base);
 
     // directory: the document's folder, or temp when it hasn't been saved
     std::string dir;
@@ -505,6 +498,26 @@ std::vector<std::string> exportSelection(SPDesktop* desktop, const std::vector<E
     }
     if (dir.empty()) {
         dir = g_get_tmp_dir();
+    }
+
+    // a single object exports as one file named after it; multiple objects go
+    // into a "Selection" directory (unconflicted), one file per object
+    std::vector<std::pair<Entry, std::string>> targets;
+    auto name_of = [](const SPObject* object) {
+        const char* label = object->label();
+        return sanitizeFileName(label ? label : get_synthetic_object_name(object).toStdString());
+    };
+    if (entries.size() == 1) {
+        targets.push_back({entries.front(), name_of(entries.front().object)});
+    } else {
+        std::string sdir = dir + "/" + "Selection";
+        if (!unConflictFilename(doc, sdir, "")) {
+            return exported;
+        }
+        dir = std::move(sdir);
+        for (auto& entry : entries) {
+            targets.push_back({entry, name_of(entry.object)});
+        }
     }
 
     // page color from the named view; export-bgcolor attribute may override it
@@ -522,31 +535,46 @@ std::vector<std::string> exportSelection(SPDesktop* desktop, const std::vector<E
             continue;
         }
 
-        // resolve a unique path; the extension supplies the suffix
-        std::string path = (std::filesystem::path(dir) / base).string();
-        if (!unConflictFilename(doc, path, extension->get_extension())) {
-            break;
-        }
-        if (!checkOrCreateDirectory(path)) {
-            break;
-        }
-        const auto filename = Glib::filename_to_utf8(path);
+        for (auto& [entry, name] : targets) {
+            // resolve a unique path; the extension supplies the suffix
+            std::string path = dir + "/" + name;
+            if (!unConflictFilename(doc, path, extension->get_extension())) {
+                return exported;
+            }
+            if (!checkOrCreateDirectory(path)) {
+                return exported;
+            }
+            const auto filename = Glib::filename_to_utf8(path);
 
-        bool ok;
-        if (extension->is_raster()) {
-            const auto dpi = static_cast<float>(job.dpi);
-            const auto width = static_cast<unsigned long>(area->width() * dpi / 96.0 + 0.5);
-            const auto height = static_cast<unsigned long>(area->height() * dpi / 96.0 + 0.5);
-            ok = exportRaster(*area, width, height, dpi, bgcolor, filename, true, nullptr, nullptr, extension,
-                              items.empty() ? nullptr : &items);
-        } else {
-            auto copy = doc->copy();
-            ok = exportVector(extension, copy.get(), filename, true, items, pages);
+            bool ok;
+            if (extension->is_raster()) {
+                const auto dpi = static_cast<float>(job.dpi);
+                const auto& bounds = entry.bounds ? *entry.bounds : *area;
+                const auto width = static_cast<unsigned long>(bounds.width() * dpi / 96.0 + 0.5);
+                const auto height = static_cast<unsigned long>(bounds.height() * dpi / 96.0 + 0.5);
+                std::vector<const SPItem*> items;
+                if (entry.item) {
+                    items.push_back(entry.item);
+                }
+                ok = exportRaster(bounds, width, height, dpi, bgcolor, filename, true, nullptr, nullptr,
+                                  extension, entry.item ? &items : nullptr);
+            } else {
+                auto copy = doc->copy();
+                std::vector<const SPItem*> items;
+                std::vector<const SPPage*> pages;
+                if (entry.item) {
+                    items.push_back(entry.item);
+                }
+                if (entry.page) {
+                    pages.push_back(entry.page);
+                }
+                ok = exportVector(extension, copy.get(), filename, true, items, pages);
+            }
+            if (!ok) {
+                return exported; // first error stops all processing
+            }
+            exported.push_back(path);
         }
-        if (!ok) {
-            break; // first error stops all processing
-        }
-        exported.push_back(path);
     }
     return exported;
 }
