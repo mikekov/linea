@@ -28,6 +28,10 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING
 
 project(linea)
 
+if(APPLE)
+    enable_language(OBJCXX) # for src/qt/util/macos-utils.mm
+endif()
+
 include(CMakeScripts/HelperFunctions.cmake)
 include(CMakeScripts/ConfigEnv.cmake)
 

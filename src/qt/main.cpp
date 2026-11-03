@@ -15,6 +15,7 @@
 #include <QDir>
 #include <QString>
 #include <QStringList>
+#include <QTimer>
 #include <iostream>
 
 #include <glib.h>
@@ -24,6 +25,7 @@
 #include <giomm/init.h>
 
 #include "auto-save.h"
+#include "util/macos-utils.h"
 #include "util/surface-format.h"
 #include "helper/gettext.h"
 #include "inkgc/gc-core.h"
@@ -239,6 +241,10 @@ int main(int argc, char* argv[]) {
             Inkscape::Util::Statics::destroy();
             return 1;
         }
+
+        // The initial present() runs before the event loop spins; retry the
+        // activation once it does in case WindowServer ignored the first one.
+        QTimer::singleShot(0, &app, [] { Linea::UI::activateApplication(); });
 
         int result = app.exec();
 

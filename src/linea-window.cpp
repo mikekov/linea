@@ -54,6 +54,7 @@
 #include "linea-application.h"
 #include "main-menu.h"
 #include "qt/ui/dialog/choose-file.h"
+#include "qt/util/macos-utils.h"
 #include "ui/desktop/desktop-widget.h"
 #include "ui/shortcut-manager.h"
 #include "ui/widget/canvas.h"
@@ -220,6 +221,7 @@ void LineaWindow::present() {
     restoreSettings();
     raise();
     activateWindow();
+    Linea::UI::activateApplication();
 }
 
 void LineaWindow::toggleColorPalette() {

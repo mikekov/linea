@@ -258,6 +258,7 @@ target_sources(linea_base PRIVATE
     ui/style-panel.ui
     util/drawing-utils.cpp
     util/drawing-utils.h
+    util/macos-utils.h
     util/surface-format.cpp
     util/surface-format.h
     ui/grid-options.ui
@@ -317,3 +318,9 @@ target_sources(linea_base PRIVATE
     ui/console/console-panel.h
     ui/console/console-panel.ui
 )
+
+if(APPLE)
+    target_sources(linea_base PRIVATE
+        util/macos-utils.mm
+    )
+endif()
