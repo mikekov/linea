@@ -21,6 +21,7 @@
 #include <glibmm/init.h>
 #include <glibmm/miscutils.h>
 #include <giomm/file.h>
+#include <giomm/init.h>
 
 #include "auto-save.h"
 #include "util/surface-format.h"
@@ -93,6 +94,7 @@ int main(int argc, char* argv[]) {
         }
 
         Glib::init();
+        Gio::init();
         // Qt bundles don't have girepository-1.0, so force bundle env setup
         // setenv("INKSCAPE_FORCE_BUNDLE_ENV", "1", 1);
         set_xdg_env();

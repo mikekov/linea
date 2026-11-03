@@ -10,6 +10,7 @@
 #include <iostream>
 #include <numeric>
 #include <giomm/file.h>
+#include <glibmm/miscutils.h>
 
 #include "desktop.h"
 #include "document.h"
@@ -28,6 +29,37 @@
 #include "ui/desktop/document-check.h" // document_check_for_data_loss
 #include "ui/desktop/document-templates-menu.h"
 #include "ui/util.h"
+
+namespace {
+
+/// Absolute canonical path of file, or "" for non-local files.
+std::string canonical_path(const Glib::RefPtr<Gio::File>& file) {
+    const auto path = file->get_path();
+    return path.empty() ? std::string{} : Glib::canonicalize_filename(path);
+}
+
+/// Whether two files are the same: canonical paths first, then the
+/// filesystem's file id (covers symlinks and case-insensitive volumes).
+bool same_file(const Glib::RefPtr<Gio::File>& lhs, const Glib::RefPtr<Gio::File>& rhs) {
+    const auto a = canonical_path(lhs);
+    const auto b = canonical_path(rhs);
+    if (!a.empty() && !b.empty() && a == b) {
+        return true;
+    }
+    try {
+        const auto lhs_info = lhs->query_info(G_FILE_ATTRIBUTE_ID_FILE);
+        const auto rhs_info = rhs->query_info(G_FILE_ATTRIBUTE_ID_FILE);
+        if (!lhs_info || !rhs_info) {
+            return false;
+        }
+        const auto id = lhs_info->get_attribute_string(G_FILE_ATTRIBUTE_ID_FILE);
+        return !id.empty() && id == rhs_info->get_attribute_string(G_FILE_ATTRIBUTE_ID_FILE);
+    } catch (const Glib::Error&) {
+        return false; // missing file or unsupported attribute
+    }
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 
@@ -446,6 +478,14 @@ void LineaApplication::openDocument(const Glib::RefPtr<Gio::File>& file) {
         return;
     }
 
+    // If this file is already open, switch to its tab instead of reloading.
+    if (auto existing = findOpenDocument(file)) {
+        auto docname = existing->getDocumentName();
+        Linea::IO::addInkscapeRecentSvg(file->get_path(), docname ? docname : "");
+        activateDocument(existing);
+        return;
+    }
+
     UI::OverrideCursor wait(Qt::WaitCursor);
 
     auto [document, error] = document_open(file);
@@ -471,6 +511,44 @@ void LineaApplication::openDocument(const Glib::RefPtr<Gio::File>& file) {
 
     _active_document = document;
     _active_window = desktop ? desktop->getLineaWindow() : nullptr;
+}
+
+SPDocument* LineaApplication::findOpenDocument(const Glib::RefPtr<Gio::File>& file) const {
+    if (file->get_path().empty()) {
+        return nullptr; // non-local files are never matched
+    }
+
+    // A recovery/autosave file stands in for its original document.
+    auto effective = file;
+    if (auto original = Linea::IO::openAsInkscapeRecentOriginalFile(file->get_path());
+        original && !original->empty()) {
+        effective = Gio::File::create_for_path(*original);
+    }
+
+    for (auto doc : get_documents()) {
+        auto filename = doc->getDocumentFilename();
+        if (filename && same_file(effective, Gio::File::create_for_path(filename))) {
+            return doc;
+        }
+    }
+    return nullptr;
+}
+
+void LineaApplication::activateDocument(SPDocument* document) {
+    const auto it = _documents.find(document);
+    if (it == _documents.end() || it->second.empty()) {
+        return;
+    }
+
+    auto desktop = it->second.front().get();
+    auto window = desktop->getLineaWindow();
+    if (!window || !window->getDesktopWidget()) {
+        return;
+    }
+
+    window->getDesktopWidget()->switchDesktop(desktop);
+    window->present();
+    _active_window = window;
 }
 
 void LineaApplication::windowClose(LineaWindow* window) {

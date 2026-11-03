@@ -182,6 +182,12 @@ private:
     // class ConstructibleApplication;
     static LineaApplication* _instance;
 
+    /// Return the already-open document for file, or nullptr.
+    SPDocument* findOpenDocument(const Glib::RefPtr<Gio::File>& file) const;
+
+    /// Select the tab showing document and raise its window.
+    void activateDocument(SPDocument* document);
+
     // Documents are owned by this application.
     // Each document maps to the desktops (tabs/windows) currently showing it.
     std::unordered_map<std::unique_ptr<SPDocument>, std::vector<std::unique_ptr<SPDesktop>>,
