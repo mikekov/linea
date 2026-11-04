@@ -138,7 +138,7 @@ FontBrowser::FontBrowser(QWidget* parent)
     auto showName = prefs->getBool(pref("/show-font-names"), true);
     options->setShowFontName(showName);
     ui->fontList->setShowFontName(showName);
-    auto percent = prefs->getIntLimited(pref("/preview-size"), 100, 100, 500);
+    auto percent = prefs->getIntLimited(pref("/preview-size"), 180, 100, 500);
     options->setPreviewPercent(percent);
     ui->fontList->setPreviewSize(std::max(1, percent * basePreviewPoints / 100));
 

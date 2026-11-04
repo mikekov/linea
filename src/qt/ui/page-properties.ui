@@ -695,10 +695,20 @@
               </widget>
             </item>
 
-            <item row="4" column="0" colspan="3">
+            <item row="4" column="0" colspan="1">
               <widget class="QLabel" name="allPagesLabel">
                 <property name="text">
                   <string>All Pages</string>
+                </property>
+                <property name="class" stdset="0">
+                  <string>panel-label</string>
+                </property>
+              </widget>
+            </item>
+            <item row="4" column="1" colspan="1">
+              <widget class="QLabel" name="allPagesOpacity">
+                <property name="text">
+                  <string>Opacity</string>
                 </property>
                 <property name="class" stdset="0">
                   <string>panel-label</string>
@@ -734,7 +744,7 @@
                   </iconset>
                 </property>
                 <property name="toolTip">
-                  <string>Page color opacity</string>
+                  <string>Page color opacity used by export</string>
                 </property>
               </widget>
             </item>

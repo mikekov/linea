@@ -27,7 +27,7 @@
 - add color fonts entry in a font browser categories
 - add support for color fonts
 - editing gradient after copying an object - gradient stops don't update
-- don't open twice the same file from the home page; activate existing tab
+x don't open twice the same file from the home page; activate existing tab
 
 ## Missing features
 
@@ -37,6 +37,8 @@ x math expressions for number edit widget
 - rec2020 color space support
 - python is not bundled, extensions won't work
 - allow multipage selection and mixing page and element selections
+- linux build to AppImage + linux-specific workarounds (clipboard, etc.)
+- windows build and win-specific workarounds
 
 ## UI Panels & Dialogs, widgets
 
