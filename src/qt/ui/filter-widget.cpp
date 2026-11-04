@@ -25,7 +25,7 @@
 #include "filter-chemistry.h"
 #include "filter-enums.h"
 #include "filter-gallery.h"
-#include "filter/filter-editor.h"
+#include "actions/action-registry.h"
 #include "object/sp-item.h"
 #include "popup-menu.h"
 #include "popup-tree-helper.h"
@@ -161,10 +161,11 @@ FilterWidget::FilterWidget(QWidget* parent)
     _ui->headerLabel->setCursor(Qt::PointingHandCursor);
     _ui->headerLabel->installEventFilter(this);
     connect(_ui->galleryButton, &QPushButton::clicked, this, &FilterWidget::onGalleryButtonClicked);
-    connect(_ui->editorButton, &QPushButton::clicked, this, &FilterWidget::onEditorButtonClicked);
     connect(_ui->addButton, &QPushButton::clicked, this, &FilterWidget::onAddButtonClicked);
     connect(_ui->removeButton, &QPushButton::clicked, this, &FilterWidget::removeCurrentFilter);
-    connect(_ui->filterButton, &QPushButton::clicked, this, &FilterWidget::onEditorButtonClicked);
+    auto action = ActionRegistry::get().action("dialog-open-filter-editor");
+    connect(_ui->editorButton, &QPushButton::clicked, action, &QAction::trigger);
+    connect(_ui->filterButton, &QPushButton::clicked, action, &QAction::trigger);
     connect(_ui->blurScale, &SpinScale::valueChanged, this, [this](double value) {
         if (_update.pending() || !_object) return;
         auto scoped = _update.block();
@@ -278,21 +279,6 @@ void FilterWidget::onGalleryButtonClicked() {
     }
 
     _galleryPopup->showLeftOfWidget(_ui->galleryButton);
-}
-
-void FilterWidget::onEditorButtonClicked() {
-    if (!_desktop) return;
-
-    if (!_editorPopup) {
-        _editorPopup = new PopupMenu(this);
-        _filterEditor = new FilterEditor();
-        _filterEditor->setFixedSize(640, 720);
-        _editorPopup->setContent(_filterEditor);
-    }
-
-    _filterEditor->setDesktop(_desktop);
-    auto anchor = qobject_cast<QPushButton*>(sender());
-    _editorPopup->showLeftOfWidget(anchor ? anchor : _ui->editorButton);
 }
 
 void FilterWidget::onAddButtonClicked() {

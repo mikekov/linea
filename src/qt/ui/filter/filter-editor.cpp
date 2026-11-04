@@ -29,7 +29,6 @@
 #include <QResizeEvent>
 #include <QVBoxLayout>
 #include <QWidgetAction>
-#include <algorithm>
 #include <set>
 #include <sstream>
 

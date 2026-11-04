@@ -174,6 +174,10 @@ public:
     Linea::Script::Engine& scriptEngine();
     Linea::Script::Registry& scriptRegistry();
 
+Q_SIGNALS:
+    /// Emitted when the active desktop changes (tab switch, window focus).
+    void activeDesktopChanged(SPDesktop* desktop);
+
 private:
     // Private ctor/dtor — use create() / instance().
     LineaApplication();

@@ -42,7 +42,6 @@ class FilterWidget;
 
 namespace Linea::UI {
 
-class FilterEditor;
 class FilterGallery;
 class PopupMenu;
 class SpinScale;
@@ -80,7 +79,6 @@ public:
 private Q_SLOTS:
     void onAddButtonClicked();
     void onGalleryButtonClicked();
-    void onEditorButtonClicked();
     void onSearchChanged();
 
 private:
@@ -100,9 +98,7 @@ private:
     // Add-filter popup
     PopupMenu* _addPopup = nullptr;
     PopupMenu* _galleryPopup = nullptr;
-    PopupMenu* _editorPopup = nullptr;
     FilterGallery* _filterGallery = nullptr;
-    FilterEditor* _filterEditor = nullptr;
     QLineEdit* _searchEdit = nullptr;
     QTreeWidget* _addList = nullptr;
 

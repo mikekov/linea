@@ -25,7 +25,10 @@
 #include "linea-window.h"
 #include "qt/ui/about-widget.h"
 #include "qt/ui/dialog/scripting-dialog.h"
+#include "qt/ui/dialog-utils.h"
 #include "qt/ui/filter/filter-editor.h"
+#include "qt/ui/stock-symbol-source.h"
+#include "qt/ui/symbols-widget.h"
 #include "ui/desktop/desktop-widget.h"
 
 #if 0 // GTK action definitions — kept for reference, replaced by Qt table below
@@ -184,30 +187,37 @@ namespace {
     
 const Glib::ustring SECTION = NC_("Action Section", "Dialog");
 
-static QPointer<QDialog> filter_editor_dialog;
-
 static void open_filter_gallery(LineaWindow* /*win*/) {}
 
 static void open_filter_editor(LineaWindow* win) {
-    if (!win || !win->get_desktop()) return;
-    if (filter_editor_dialog) {
-        filter_editor_dialog->show();
-        filter_editor_dialog->raise();
-        filter_editor_dialog->activateWindow();
-        return;
-    }
+    Linea::UI::openSharedDialog(win, {
+        .prefsPath = "/dialogs/filtereditor",
+        .title = QObject::tr("Filter Editor"),
+        .defaultSize = {640, 720},
+        .create = [win](QDialog* parent) {
+            auto editor = new Linea::UI::FilterEditor(parent);
+            editor->setDesktop(win->get_desktop());
+            return editor;
+        },
+        .setDesktop = [](QWidget* widget, SPDesktop* dt) {
+            static_cast<Linea::UI::FilterEditor*>(widget)->setDesktop(dt);
+        },
+    });
+}
 
-    auto dialog = new QDialog(win);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setWindowTitle(QObject::tr("Filter Editor"));
-    dialog->resize(640, 720);
-    auto layout = new QVBoxLayout(dialog);
-    layout->setContentsMargins(0, 0, 0, 0);
-    auto editor = new Linea::UI::FilterEditor(dialog);
-    editor->setDesktop(win->get_desktop());
-    layout->addWidget(editor);
-    filter_editor_dialog = dialog;
-    dialog->show();
+static void open_symbols(LineaWindow* win) {
+    Linea::UI::openSharedDialog(win, {
+        .prefsPath = "/dialogs/symbols",
+        .title = QObject::tr("Symbols"),
+        .defaultSize = {480, 600},
+        .create = [](QDialog* parent) {
+            auto widget = new Linea::UI::SymbolsWidget(parent);
+            // The source self-loads all stock symbol sets in its constructor;
+            // parent it to the widget so it dies with the dialog.
+            new Linea::UI::StockSymbolsSource(widget, widget);
+            return widget;
+        },
+    });
 }
 
 static QPointer<Linea::UI::ScriptingDialog> scripting_dialog;
@@ -272,6 +282,8 @@ static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
      N_("Manage, edit, and apply SVG filters"), "dialog-filters", open_filter_editor},
     {"dialog-open-filter-effects", N_("Open Filter Effects"), SECTION,
      N_("Manage, edit, and apply SVG filters"), "dialog-filters", open_filter_editor},
+    {"dialog-open-symbols", N_("Open Symbols"), SECTION,
+     N_("Select symbol from a symbols palette"), "symbols", open_symbols},
     {"dialog-open-extension-gallery", N_("Open Extension Gallery"), SECTION,
      N_("Show and run available extensions"), "dialog-extensions", open_extension_gallery},
     {"dialog-open-scripting", N_("Open Script Editor"), SECTION,

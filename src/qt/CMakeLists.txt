@@ -305,6 +305,8 @@ target_sources(linea_base PRIVATE
     ui/separator.h
     ui/widget-utils.cpp
     ui/widget-utils.h
+    ui/dialog-utils.cpp
+    ui/dialog-utils.h
     ui/panel-switch.cpp
     ui/panel-switch.h
     ui/export-widget.cpp

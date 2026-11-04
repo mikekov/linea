@@ -98,6 +98,7 @@ void SpinScale::setPrefix(const QString& prefix) {
 int SpinScale::decimals() const { return _numberEdit->decimals(); }
 void SpinScale::setDecimals(int digits) {
     _numberEdit->setDecimals(digits);
+    _numberEdit->setKeptFractionDigits(digits);
 }
 
 double SpinScale::singleStep() const { return _numberEdit->singleStep(); }

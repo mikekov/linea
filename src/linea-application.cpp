@@ -108,8 +108,9 @@ Linea::Script::Registry& LineaApplication::scriptRegistry() {
 // ---------------------------------------------------------------------------
 
 void LineaApplication::set_active_desktop(SPDesktop* desktop) {
+    const auto changed = _active_desktop != desktop;
     // an overlay tool (e.g. a panel's eye dropper) only lives while its desktop is active
-    if (_active_desktop && _active_desktop != desktop) {
+    if (_active_desktop && changed) {
         _active_desktop->discardOverlayTool();
     }
     _active_desktop = desktop;
@@ -117,6 +118,9 @@ void LineaApplication::set_active_desktop(SPDesktop* desktop) {
         INKSCAPE.activate_desktop(desktop);
         // Don't coalesce undo events across leaving then returning to a desktop.
         desktop->getDocument()->resetKey();
+    }
+    if (changed) {
+        Q_EMIT activeDesktopChanged(desktop);
     }
 }
 
