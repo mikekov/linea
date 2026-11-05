@@ -21,6 +21,7 @@
 #include "action-meta.h"
 #include "action-registry.h"
 #include "dialog/settings-dialog.h"
+#include "filter-gallery.h"
 #include "linea-application.h"
 #include "linea-window.h"
 #include "qt/ui/about-widget.h"
@@ -187,7 +188,26 @@ namespace {
     
 const Glib::ustring SECTION = NC_("Action Section", "Dialog");
 
-static void open_filter_gallery(LineaWindow* /*win*/) {}
+static void open_filter_gallery(LineaWindow* win) {
+    Linea::UI::openSharedDialog(win, {
+        .prefsPath = "/dialogs/filtergallery",
+        .title = QObject::tr("Filter Gallery"),
+        .defaultSize = {640, 720},
+        .create = [](QDialog* parent) {
+            auto gallery = new Linea::UI::FilterGallery(parent);
+            // connect signals
+            QObject::connect(gallery, &Linea::UI::FilterGallery::itemActivated,
+                           [](const QString& id) {
+                               // TODO: Handle item activation
+                           });
+            QObject::connect(gallery, &Linea::UI::FilterGallery::actionRequested,
+                           [](const QString& id) {
+                               // TODO: Handle action request
+                           });
+            return gallery;
+        },
+    });
+}
 
 static void open_filter_editor(LineaWindow* win) {
     Linea::UI::openSharedDialog(win, {
@@ -288,7 +308,7 @@ static auto dialog_entries = std::to_array<ActionSpec<LineaWindow>>({
      N_("Show and run available extensions"), "dialog-extensions", open_extension_gallery},
     {"dialog-open-scripting", N_("Open Script Editor"), SECTION,
      N_("Edit and run scripts"), "dialog-scripts", open_scripting},
-    {"toggle-panel-docking", N_("Toggle All Dialogs"), SECTION,
+    {"toggle-panel-docking", N_("Toggle Dialogs"), SECTION,
      N_("Dock or collapse all dialogs"), "panel-left", toggle_dialogs, dialogs_floating, nullptr, nullptr, "panel-left-2" },
     {"dialog-toggle-xml", N_("Toggle XML Tree"), SECTION,
      N_("Switch between object tree and XML tree"), "document-metadata",
