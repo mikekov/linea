@@ -94,10 +94,22 @@ if command -v ccache >/dev/null 2>&1; then
     CCACHE_ARGS=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
 fi
 
+COMPILER_ARGS=()
+XCODE_TOOLCHAIN="$(xcode-select -p 2>/dev/null)/Toolchains/XcodeDefault.xctoolchain/usr/bin"
+if [ ! -x "$XCODE_TOOLCHAIN/clang" ]; then
+    XCODE_TOOLCHAIN="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
+fi
+if [ -x "$XCODE_TOOLCHAIN/clang" ] && [ -x "$XCODE_TOOLCHAIN/clang++" ]; then
+    export CC="$XCODE_TOOLCHAIN/clang"
+    export CXX="$XCODE_TOOLCHAIN/clang++"
+    COMPILER_ARGS=(-DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX")
+fi
+
 cmake --fresh -S "$ROOT_DIR" \
     -B "$BUILD_DIR" \
     -G Ninja \
     "${CCACHE_ARGS[@]}" \
+    "${COMPILER_ARGS[@]}" \
     ${CMAKE_OSX_SYSROOT:+-DCMAKE_OSX_SYSROOT="$CMAKE_OSX_SYSROOT"} \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
     -DWITH_ASAN="$WITH_ASAN" \

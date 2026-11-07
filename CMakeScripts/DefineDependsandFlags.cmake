@@ -249,7 +249,7 @@ if(WITH_CAPYPDF)
           URL_HASH SHA256=b269a7361252b737f47b744f5329ba63f29af5bd3c46acbf7d4a4e074661f8a1
           DOWNLOAD_EXTRACT_TIMESTAMP TRUE
           PATCH_COMMAND sed ${SED_INPLACE} -e "/subdir('benchmark')/d" -e "/subdir('test')/d" ../capypdf/meson.build
-          CONFIGURE_COMMAND meson setup . ../capypdf --libdir=${CAPY_LIBDIR} --prefix=${CAPY_PREFIX} --buildtype release --default-library static
+          CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} "CFLAGS=-isysroot ${CMAKE_OSX_SYSROOT}" "CXXFLAGS=-isysroot ${CMAKE_OSX_SYSROOT}" "LDFLAGS=-isysroot ${CMAKE_OSX_SYSROOT}" meson setup . ../capypdf --libdir=${CAPY_LIBDIR} --prefix=${CAPY_PREFIX} --buildtype release --default-library static
           BUILD_COMMAND meson compile
           INSTALL_COMMAND meson install
           INSTALL_BYPRODUCTS "${CAPY_LIBDIR}/libcapypdf.a"
