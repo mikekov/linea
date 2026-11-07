@@ -255,7 +255,9 @@ void XmlSettingsDialog::onAttrCellChanged(int row, int column) {
         Inkscape::Preferences::get()->setString(
             Glib::ustring((_currentPrefPath + "/" + name).toUtf8().constData()),
             Glib::ustring(valueItem->text().toUtf8().constData()));
+        Inkscape::Preferences::get()->save();
     }
+    save();
     setStatus(tr("Updated '%1' = '%2'").arg(name, valueItem->text()));
 }
 
@@ -280,7 +282,9 @@ void XmlSettingsDialog::addAttribute() {
         Inkscape::Preferences::get()->setString(
             Glib::ustring((_currentPrefPath + "/" + name).toUtf8().constData()),
             Glib::ustring(""));
+        Inkscape::Preferences::get()->save();
     }
+    save();
     refreshAttrTable();
 
     for (int row = 0; row < _attrTable->rowCount(); ++row) {
@@ -320,7 +324,9 @@ void XmlSettingsDialog::removeAttribute() {
     if (!_currentPrefPath.isEmpty()) {
         Inkscape::Preferences::get()->remove(
             Glib::ustring((_currentPrefPath + "/" + name).toUtf8().constData()));
+        Inkscape::Preferences::get()->save();
     }
+    save();
     refreshAttrTable();
 }
 
