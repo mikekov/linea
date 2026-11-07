@@ -531,20 +531,30 @@ void TextPanel::populateStyles(int family_data_index) {
     QSignalBlocker b(_ui->fontStyle);
     _ui->fontStyle->clear();
     _style_names.clear();
+    _style_font_indices.clear();
 
     if (family_data_index >= 0 && family_data_index < static_cast<int>(_font_families.size())) {
         auto& family = _font_families[family_data_index];
-        for (auto& font : family) {
+        for (int font_index = 0; font_index < static_cast<int>(family.size()); ++font_index) {
+            auto& font = family[font_index];
             if (font.face) {
-                auto style = Inkscape::get_face_style(font.face->describe());
+                auto style = font.face->get_name();
+                if (style.empty()) {
+                    style = Inkscape::get_face_style(font.face->describe());
+                }
                 _style_names.push_back(style);
+                _style_font_indices.push_back(font_index);
                 _ui->fontStyle->addItem(QString::fromUtf8(style.c_str()));
+                _ui->fontStyle->setItemData(_ui->fontStyle->count() - 1,
+                                            QString::fromUtf8(Inkscape::get_face_style(font.face->describe()).c_str()),
+                                            Qt::UserRole);
             }
         }
     } else {
         static const char* default_styles[] = {"Normal", "Italic", "Bold", "Bold Italic"};
         for (auto s : default_styles) {
             _style_names.emplace_back(s);
+            _style_font_indices.push_back(-1);
             _ui->fontStyle->addItem(QString::fromUtf8(s));
         }
     }
@@ -567,7 +577,33 @@ void TextPanel::syncFontStyle(const Props::SelectionState& s) {
     if (s.typography.font_style.is_mixed()) {
         _ui->fontStyle->setCurrentIndex(-1);
     } else if (s.typography.font_style.is_single()) {
-        int idx = findStyleIndex(s.typography.font_style.value());
+        int idx = -1;
+        auto family_name = s.typography.font_family.is_single() ? s.typography.font_family.value()
+                                                                  : Glib::ustring();
+        auto fonts = Inkscape::FontDiscovery::get().fonts();
+        if (fonts && !family_name.empty()) {
+            if (auto family = Inkscape::find_font_family(*fonts, family_name)) {
+                auto target = Pango::FontDescription((family_name + " " + s.typography.font_style.value()).c_str());
+                if (s.typography.font_variation.is_single()) {
+                    auto const& axes = s.typography.font_variation.value().axes;
+                    if (auto it = axes.find("wght"); it != axes.end()) {
+                        target.set_weight(static_cast<Pango::Weight>(it->second));
+                    }
+                }
+                if (auto font = Inkscape::find_closest_face(*family, target)) {
+                    auto font_index = static_cast<int>(font - family->data());
+                    for (int i = 0; i < static_cast<int>(_style_font_indices.size()); ++i) {
+                        if (_style_font_indices[i] == font_index) {
+                            idx = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (idx < 0) {
+            idx = findStyleIndex(s.typography.font_style.value());
+        }
         if (idx >= 0) _ui->fontStyle->setCurrentIndex(idx);
     }
 }
@@ -640,6 +676,8 @@ int TextPanel::findStyleIndex(const Glib::ustring& name) const {
     auto lower = name.lowercase();
     for (int i = 0; i < static_cast<int>(_style_names.size()); ++i) {
         if (_style_names[i].lowercase() == lower) return i;
+        auto key = _ui->fontStyle->itemData(i, Qt::UserRole).toString().toUtf8();
+        if (Glib::ustring(key.constData()).lowercase() == lower) return i;
     }
     return -1;
 }

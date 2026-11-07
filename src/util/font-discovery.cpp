@@ -202,7 +202,8 @@ const std::vector<FontInfo>* find_font_family(const std::vector<std::vector<Font
 
 const FontInfo* find_font_face(const std::vector<FontInfo>& family, const Glib::ustring& style_name) {
     for (auto& font : family) {
-        if (font.face && get_face_style(font.face->describe()) == style_name) {
+        if (font.face &&
+            (font.face->get_name() == style_name || get_face_style(font.face->describe()) == style_name)) {
             return &font;
         }
     }

@@ -113,6 +113,7 @@ private:
     std::vector<std::vector<Inkscape::FontInfo>> _font_families;
     std::vector<Glib::ustring> _family_names;
     std::vector<Glib::ustring> _style_names;
+    std::vector<int> _style_font_indices;
     int _style_index = -2;
     // Tracks the line-height unit for the unitChanged handler's relative↔absolute
     // conversion. Updated by the handler itself (not by the binder push path).

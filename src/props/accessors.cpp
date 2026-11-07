@@ -895,7 +895,16 @@ void apply_font_style(const EditTarget& target, const Glib::ustring& style_name)
 std::optional<SPIFontVariationSettings> read_font_variation(SPItem* item) {
     auto style = text_style(item);
     if (!style) return std::nullopt;
-    return style->font_variation_settings;
+
+    auto variations = style->font_variation_settings;
+    // The wght axis is represented by font-weight rather than
+    // font-variation-settings. Recover it here so the variable-font editor
+    // does not replace an explicit numeric weight with Pango's resolved one.
+    if (variations.axes.find("wght") == variations.axes.end()) {
+        variations.axes["wght"] = static_cast<float>(style->font_weight.computed);
+        variations.normal = false;
+    }
+    return variations;
 }
 
 void apply_font_variation(const EditTarget& target, const SPIFontVariationSettings& variations) {
