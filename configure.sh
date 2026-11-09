@@ -105,12 +105,18 @@ if [ -x "$XCODE_TOOLCHAIN/clang" ] && [ -x "$XCODE_TOOLCHAIN/clang++" ]; then
     COMPILER_ARGS=(-DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX")
 fi
 
+# Match the deployment target to the host OS version. Homebrew dylibs are
+# built for the full OS version (e.g. 27.2) while CMake defaults to the major
+# version (27.0), which triggers "linking with dylib built for newer version".
+DEPLOYMENT_TARGET=$(sw_vers -productVersion)
+
 cmake --fresh -S "$ROOT_DIR" \
     -B "$BUILD_DIR" \
     -G Ninja \
     "${CCACHE_ARGS[@]}" \
     "${COMPILER_ARGS[@]}" \
     ${CMAKE_OSX_SYSROOT:+-DCMAKE_OSX_SYSROOT="$CMAKE_OSX_SYSROOT"} \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET="$DEPLOYMENT_TARGET" \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
     -DWITH_ASAN="$WITH_ASAN" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
