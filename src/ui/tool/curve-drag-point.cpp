@@ -49,8 +49,10 @@ bool CurveDragPoint::_eventHandler(Inkscape::UI::Tools::ToolBase *event_context,
 
 bool CurveDragPoint::grabbed(MotionEvent const &/*event*/)
 {
+    if (!first) return false;
     _pm._selection.hideTransformHandles();
     NodeList::iterator second = first.next();
+    if (!second) return false;
 
     // move the handles to 1/3 the length of the segment for line segments
     if (first->front()->isDegenerate() && second->back()->isDegenerate()) {

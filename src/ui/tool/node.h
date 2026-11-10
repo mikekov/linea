@@ -510,13 +510,13 @@ NodeIterator<N>::operator bool() const {
 template <typename N>
 NodeIterator<N> &NodeIterator<N>::advance() {
     ++(*this);
-    if (G_UNLIKELY(!*this) && _node->ln_list->closed()) ++(*this);
+    if (G_UNLIKELY(!*this) && _node && _node->ln_list->closed()) ++(*this);
     return *this;
 }
 template <typename N>
 NodeIterator<N> &NodeIterator<N>::retreat() {
     --(*this);
-    if (G_UNLIKELY(!*this) && _node->ln_list->closed()) --(*this);
+    if (G_UNLIKELY(!*this) && _node && _node->ln_list->closed()) --(*this);
     return *this;
 }
 
