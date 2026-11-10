@@ -232,7 +232,7 @@ static char const preferences_skeleton[] =
   <group id="options"
      panel-border="1"
      rotationlock="1">
-    <group id="renderingcache" size="512" />
+    <group id="renderingcache" size="64" />
     <group id="rendering" request_opengl="1"  />
     <group id="threading" numthreads="0"  />
     <group id="useoldpdfexporter" value="0" />

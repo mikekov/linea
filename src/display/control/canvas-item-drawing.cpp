@@ -88,7 +88,7 @@ void CanvasItemDrawing::_loadPrefs()
     auto prefs = Inkscape::Preferences::get();
 
     // Preference is stored in MiB; convert to bytes, taking care not to overflow.
-    _drawing->setCacheBudget((size_t{1} << 20) * prefs->getIntLimited("/options/renderingcache/size", 512, 0, 4096));
+    _drawing->setCacheBudget((size_t{1} << 20) * prefs->getIntLimited("/options/renderingcache/size", 64, 0, 4096));
 
     std::unordered_map<std::string, std::function<void (Preferences::Entry const &)>> actions;
 
