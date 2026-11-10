@@ -44,13 +44,13 @@ QColor fromColor(QColor color, float withAlpha) {
 }
 
 void setLightThemePalette(QPalette& palette) {
-    const QColor light(0xf2f2f2);
+    const QColor light(0xf8f8f8);
     const QColor highlight(0xadd8fa);
     const QColor accent(0x45a7f3);
     const QColor button(0xe0e0e0);
     // mid is a border color for panels and other elements; more contrast than midlight
     const auto mid = QColor(0xd3d3d3); // QColor::fromRgbF(0.0, 0.0, 0.0, 0.10);
-    const auto text = QColor::fromRgbF(0.0, 0.0, 0.0, 0.85);
+    const auto text = QColor::fromRgbF(0.0, 0.0, 0.0, 0.70);
     const auto disabledText = fromColor(text, 0.5f);
     // midlight is a low-contrast border for "active" elements (edit box, list box, number edit, etc.);
     // fully opaque color for consistency; it covers some elements that
