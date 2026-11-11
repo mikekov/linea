@@ -7,9 +7,13 @@
 #include <cairomm/surface.h>
 #include <epoxy/gl.h>
 
-#include <QOpenGLWidget>
-#include <QOpenGLWindow>
+#include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QWidget>
+
+class QHideEvent;
+class QResizeEvent;
+class QShowEvent;
 
 namespace Cairo { class Context; }
 // namespace Gdk { class GLContext; }
@@ -20,8 +24,7 @@ namespace Inkscape::UI::Widget {
  * A widget that can dynamically switch between a Gtk::DrawingArea and a Gtk::GLArea.
  * Based on the source code for both widgets.
  */
-class OptGLArea : public QOpenGLWidget, protected QOpenGLFunctions // Gtk::Widget
-{
+class OptGLArea : public QWidget, protected QOpenGLFunctions {
 public:
     OptGLArea();
     ~OptGLArea() override;
@@ -51,10 +54,16 @@ protected:
     virtual void on_realize();
     virtual void on_unrealize();
 
-    // OpenGL lifecycle
-    void initializeGL() override;
-    void resizeGL(int w, int h) override;
-    void paintGL() override;
+    void resizeEvent(QResizeEvent* event) override;
+    void showEvent(QShowEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
+
+    // OpenGL lifecycle (invoked by the transient child GLSurface)
+    void initializeGL();
+    void resizeGL(int w, int h);
+    void paintGL();
+
+    QOpenGLContext* context() const;
 
     /**
      * Reimplement to create the desired OpenGL context. Return nullptr on error.
@@ -98,18 +107,27 @@ protected:
     int get_height() const { return height(); }
     int get_scale_factor() const { return devicePixelRatio(); }
     // Qt equivalent of GTK's queue_draw()
-    void queue_draw() { update(); }
-    void queue_draw_area(int x, int y, int w, int h) { update(x, y, w, h); }
+    void queue_draw();
+    void queue_draw_area(int x, int y, int w, int h);
     /* QT-specific end */
 private:
+    class GLSurface;
+
     bool opengl_enabled = true;
     bool _ready = false;
+    bool _creating_gl_widget = false;
 
     struct GLState;
+    GLSurface* _glWidget = nullptr;
+#ifdef __APPLE__
+    GLuint _p3_vao = 0;
+#endif
     Cairo::RefPtr<Cairo::ImageSurface> _surface;
     std::shared_ptr<GLState> gl;
     QMetaObject::Connection _context_destroyed;
 
+    void ensure_gl_widget();
+    void destroy_gl_widget();
     void init_opengl();
     void uninit_opengl();
 };

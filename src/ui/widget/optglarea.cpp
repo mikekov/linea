@@ -3,6 +3,12 @@
 #include "optglarea.h"
 #include <2geom/int-point.h>
 
+#include <QHideEvent>
+#include <QOpenGLWidget>
+#include <QPlatformSurfaceEvent>
+#include <QResizeEvent>
+#include <QShowEvent>
+
 #include "ui/widget/canvas/texture.h"
 #include "qt/util/surface-format.h"
 #include <cairomm/cairomm.h>
@@ -101,7 +107,6 @@ void main() {
 
 struct P3Pipeline {
     GLuint program = 0;
-    GLuint vao = 0;
     GLint tex_loc = -1;
     GLint flip_loc = -1;
 
@@ -141,7 +146,6 @@ struct P3Pipeline {
         }
         tex_loc = glf->glGetUniformLocation(program, "u_tex");
         flip_loc = glf->glGetUniformLocation(program, "u_flip");
-        glGenVertexArrays(1, &vao);
         return true;
     }
 };
@@ -153,10 +157,12 @@ struct P3Pipeline {
 // identical to the sRGB intent. Passing raw bytes instead would show every
 // sRGB color as its P3 counterpart, i.e. oversaturated. The only real cost is
 // ~234 usable codes on the red channel (8-bit in -> 8-bit out).
-void draw_p3_converted(GLuint texture, GLuint target_fbo, const Geom::IntPoint& size, bool flip) {
+// The shader program is shared across contexts via Qt::AA_ShareOpenGLContexts;
+// VAOs are per-context container objects in Core Profile 3.3, so the caller passes its own.
+void draw_p3_converted(GLuint texture, GLuint target_fbo, GLuint vao, const Geom::IntPoint& size, bool flip) {
     static P3Pipeline pipe;
     auto glf = QOpenGLContext::currentContext() ? QOpenGLContext::currentContext()->functions() : nullptr;
-    if (!glf || (!pipe.program && !pipe.init())) return;
+    if (!glf || !vao || (!pipe.program && !pipe.init())) return;
     glf->glBindFramebuffer(GL_FRAMEBUFFER, target_fbo);
     glf->glViewport(0, 0, size.x(), size.y());
     glf->glUseProgram(pipe.program);
@@ -164,7 +170,7 @@ void draw_p3_converted(GLuint texture, GLuint target_fbo, const Geom::IntPoint& 
     glf->glBindTexture(GL_TEXTURE_2D, texture);
     glf->glUniform1i(pipe.tex_loc, 0);
     glf->glUniform1i(pipe.flip_loc, flip ? 1 : 0);
-    glBindVertexArray(pipe.vao);
+    glBindVertexArray(vao);
     glf->glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
     glf->glUseProgram(0);
@@ -202,11 +208,123 @@ struct OptGLArea::GLState
     }
 };
 
+class OptGLArea::GLSurface final : public QOpenGLWidget {
+public:
+    explicit GLSurface(OptGLArea* owner)
+        : QOpenGLWidget(owner)
+        , _owner(owner)
+    {
+        setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        setFocusPolicy(Qt::NoFocus);
+        // NoPartialUpdate (the modern Qt >= 5.5 default) is correct here: paintGL() always fully
+        // clears and redraws the entire widget from scratch every call (see GLGraphics::paint_widget,
+        // which does a full glClear + full-view composite), so we never rely on content being
+        // preserved between frames. PartialUpdate forces Qt to avoid invalidating the framebuffer
+        // between frames, which can force a slower internal compositing path on some backends
+        // (observed as ~30Hz-capped stalls on the main thread between generations) for no benefit.
+        setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+    }
+
+protected:
+    void initializeGL() override { _owner->initializeGL(); }
+    void resizeGL(int w, int h) override { _owner->resizeGL(w, h); }
+    void paintGL() override { _owner->paintGL(); }
+
+    bool event(QEvent* event) override {
+        switch (event->type()) {
+            case QEvent::Paint:
+            case QEvent::UpdateRequest:
+            case QEvent::Resize:
+            case QEvent::Show:
+            case QEvent::WindowChangeInternal:
+            case QEvent::ScreenChangeInternal:
+            case QEvent::DevicePixelRatioChange:
+                // QOpenGLWidget does its own GL work in our context while handling these (FBO (re)creation, clearing).
+                _owner->restore_default_gl_state();
+                return QOpenGLWidget::event(event);
+            case QEvent::PlatformSurface: {
+                auto surfaceEvent = static_cast<QPlatformSurfaceEvent*>(event);
+                if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+                    // on_unrealize equivalent
+                    _owner->unrealize_gl();
+                }
+                return QOpenGLWidget::event(event);
+            }
+            default:
+                return QOpenGLWidget::event(event);
+        }
+    }
+
+private:
+    OptGLArea* _owner = nullptr;
+};
+
 OptGLArea::OptGLArea() = default;
 
 OptGLArea::~OptGLArea() {
-    // The context is destroyed later, by ~QOpenGLWidget; stop it from calling back into a destroyed object.
+    destroy_gl_widget();
+}
+
+void OptGLArea::ensure_gl_widget() {
+    if (_glWidget || _creating_gl_widget) return;
+
+    // Constructing the first QOpenGLWidget in an already-visible top-level window causes
+    // Qt to recreate the window surface synchronously inside QOpenGLWidget's constructor,
+    // firing nested hideEvent/showEvent on ancestors before `new` returns.
+    _creating_gl_widget = true;
+    _glWidget = new GLSurface(this);
+    _creating_gl_widget = false;
+
+    _glWidget->setGeometry(rect());
+    _glWidget->lower();
+    _glWidget->show();
+}
+
+void OptGLArea::destroy_gl_widget() {
+    if (!_glWidget || _creating_gl_widget) return;
+
+    // Tear down GLState while the child QOpenGLWidget and its context are still alive,
+    // and disconnect before ~QOpenGLWidget() emits aboutToBeDestroyed.
     disconnect(_context_destroyed);
+    unrealize_gl();
+    _surface.reset();
+    delete _glWidget;
+    _glWidget = nullptr;
+}
+
+void OptGLArea::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    if (_glWidget) {
+        _glWidget->setGeometry(rect());
+    }
+}
+
+void OptGLArea::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    ensure_gl_widget();
+}
+
+void OptGLArea::hideEvent(QHideEvent* event) {
+    QWidget::hideEvent(event);
+    // A spontaneous hide is the window being minimised, not a tab switch.
+    if (event->spontaneous()) return;
+    destroy_gl_widget();
+}
+
+QOpenGLContext* OptGLArea::context() const {
+    return _glWidget ? _glWidget->context() : nullptr;
+}
+
+void OptGLArea::queue_draw() {
+    if (_glWidget) {
+        _glWidget->update();
+    }
+}
+
+void OptGLArea::queue_draw_area(int x, int y, int w, int h) {
+    if (_glWidget) {
+        _glWidget->update(x, y, w, h);
+    }
 }
 
 void OptGLArea::on_realize()
@@ -231,29 +349,26 @@ void OptGLArea::set_opengl_enabled(bool enabled)
 
 void OptGLArea::init_opengl()
 {
+    if (!_glWidget) return;
+
     auto context = create_context();
     if (!context) {
         opengl_enabled = false;
         return;
     }
 
-    // context->makeCurrent();
-    makeCurrent();
-    // NoPartialUpdate (the modern Qt >= 5.5 default) is correct here: paintGL() always fully
-    // clears and redraws the entire widget from scratch every call (see GLGraphics::paint_widget,
-    // which does a full glClear + full-view composite), so we never rely on content being
-    // preserved between frames. PartialUpdate forces Qt to avoid invalidating the framebuffer
-    // between frames, which can force a slower internal compositing path on some backends
-    // (observed as ~30Hz-capped stalls on the main thread between generations) for no benefit.
-    setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+    _glWidget->makeCurrent();
     gl = std::make_shared<GLState>(this, context);
     // Gdk::GLContext::clear_current();
 }
 
 void OptGLArea::uninit_opengl()
 {
-    // gl->context->make_current();
-    makeCurrent();
+    if (!_glWidget) {
+        gl.reset();
+        return;
+    }
+    _glWidget->makeCurrent();
     gl.reset();
     // Gdk::GLContext::clear_current();
 }
@@ -261,7 +376,8 @@ void OptGLArea::uninit_opengl()
 void OptGLArea::make_current()
 {
     assert(gl);
-    makeCurrent();
+    assert(_glWidget);
+    _glWidget->makeCurrent();
     on_made_current();
     // gl->context->make_current();
 }
@@ -277,18 +393,24 @@ void OptGLArea::bind_framebuffer()
 }
 
 void OptGLArea::unrealize_gl() {
-    if (!_ready) return;
+    if (!_ready || !_glWidget) return;
 
-    makeCurrent();
+    _glWidget->makeCurrent();
+#ifdef __APPLE__
+    if (_p3_vao) {
+        glDeleteVertexArrays(1, &_p3_vao);
+        _p3_vao = 0;
+    }
+#endif
     on_unrealize();
     _ready = false;
-    doneCurrent();
+    _glWidget->doneCurrent();
 }
 
 void OptGLArea::restore_default_gl_state() {
-    if (!get_realized()) return;
+    if (!get_realized() || !_glWidget) return;
 
-    makeCurrent();
+    _glWidget->makeCurrent();
 
     // Most importantly, a bound unpack buffer turns Qt's glTexImage2D(..., nullptr) into a read from that buffer.
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -306,7 +428,7 @@ void OptGLArea::restore_default_gl_state() {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+    glBindFramebuffer(GL_FRAMEBUFFER, _glWidget->defaultFramebufferObject());
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
 
@@ -315,11 +437,23 @@ void OptGLArea::restore_default_gl_state() {
 }
 
 void OptGLArea::initializeGL() {
+    if (!_glWidget) return;
+
+    if (_ready) {
+        unrealize_gl();
+    }
+
     initializeOpenGLFunctions();
 
     // Each (re)initialisation comes with a new context; tear down on its destruction, before Qt creates the next one.
     disconnect(_context_destroyed);
-    _context_destroyed = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [this] { unrealize_gl(); }, Qt::DirectConnection);
+    _context_destroyed = connect(_glWidget->context(), &QOpenGLContext::aboutToBeDestroyed, this, [this] { unrealize_gl(); }, Qt::DirectConnection);
+
+#ifdef __APPLE__
+    if (!_p3_vao) {
+        glGenVertexArrays(1, &_p3_vao);
+    }
+#endif
 
     // Enable blending for transparency
     glEnable(GL_BLEND);
@@ -352,11 +486,13 @@ void OptGLArea::resizeGL(int w, int h) {
 
 void OptGLArea::paintGL()
 {
-    if (!_ready) return;
+    if (!_ready || !_glWidget) return;
 
 // std::cout << "DEBUG: paintGL() called" << std::endl;
-    auto const size = Geom::IntPoint(width(), height()) * get_scale_factor();
+    auto const size = Geom::IntPoint(_glWidget->width(), _glWidget->height()) * get_scale_factor();
     if (size.x() == 0 || size.y() == 0) return;
+
+    GLuint const default_fbo = _glWidget->defaultFramebufferObject();
 
     glDisable(GL_SCISSOR_TEST);
 
@@ -366,7 +502,7 @@ void OptGLArea::paintGL()
             _surface->set_device_scale(get_scale_factor(), get_scale_factor());
         }
         auto ctx = Cairo::Context::create(_surface);
-        auto painted = paint_widget(*context(), ctx);
+        auto painted = paint_widget(*_glWidget->context(), ctx);
 
         if (!painted) {
             glClearColor(0, 0, 0, 1);
@@ -390,7 +526,7 @@ void OptGLArea::paintGL()
         if (p3_surface()) {
             // draw straight into the widget framebuffer with sRGB->P3
             // conversion and the Y flip folded into the shader's uv
-            draw_p3_converted(tex, defaultFramebufferObject(), size, true);
+            draw_p3_converted(tex, default_fbo, _p3_vao, size, true);
             glDeleteTextures(1, &tex);
             return;
         }
@@ -404,12 +540,12 @@ void OptGLArea::paintGL()
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, defaultFramebufferObject());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, default_fbo);
         glBlitFramebuffer(0, 0, size.x(), size.y(),
                           0, size.y(), size.x(), 0,
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, defaultFramebufferObject());
+        glBindFramebuffer(GL_FRAMEBUFFER, default_fbo);
         glDeleteFramebuffers(1, &fbo);
 
         glDeleteTextures(1, &tex);
@@ -448,7 +584,7 @@ void OptGLArea::paintGL()
     // This typically calls bind_framebuffer(), which attaches current_texture and
     // stencilbuffer to gl->framebuffer.
     Cairo::RefPtr<Cairo::Context> dummy;
-    bool const painted = paint_widget(*context(), dummy);
+    bool const painted = paint_widget(*_glWidget->context(), dummy);
 
     // --- DEBUG: save the framebuffer to PNG (set INKSCAPE_SAVE_FRAMES=1 to enable) ---
     static bool const save_frames = std::getenv("INKSCAPE_SAVE_FRAMES") != nullptr;
@@ -494,12 +630,10 @@ void OptGLArea::paintGL()
     // Composite our offscreen FBO into the QOpenGLWidget's default framebuffer.
     // (Equivalent to GTK's snapshot->append_texture() step.) Both source and destination
     // use the same bottom-left origin, so no Y flip is needed here.
-    GLuint const default_fbo = defaultFramebufferObject();
-
     if (painted) {
 #ifdef __APPLE__
         if (p3_surface()) {
-            draw_p3_converted(gl->current_texture.id(), default_fbo, size, false);
+            draw_p3_converted(gl->current_texture.id(), default_fbo, _p3_vao, size, false);
         } else
 #endif
         {

@@ -420,9 +420,6 @@ Canvas::Canvas()
     d->prefs.outline_overlay_opacity.action = [this] { queue_draw(); };
     d->prefs.softproof.action = [this] { set_cms_transform(); redraw_all(); };
     d->prefs.displayprofile.action = [this] { set_cms_transform(); redraw_all(); };
-    /* QT-specific start */
-    // Qt: get_realized() stub always returns true
-    /* QT-specific end */
     d->prefs.request_opengl.action = [this] {
         if (get_realized()) {
             d->deactivate();
@@ -442,8 +439,12 @@ Canvas::Canvas()
         }
     };
     d->prefs.numthreads.action = [this] {
-        if (!d->active) return;
         int const new_numthreads = d->get_numthreads();
+        if (!d->pool) {
+            d->numthreads = new_numthreads;
+            return;
+        }
+        if (!d->active) return;
         if (d->numthreads == new_numthreads) return;
         d->numthreads = new_numthreads;
         d->deactivate();
@@ -485,9 +486,11 @@ Canvas::Canvas()
     set_opengl_enabled(d->prefs.request_opengl);
     /* QT-specific end */
 
-    // Async redraw process.
+    /* QT-specific start */
+    // Async redraw process. The pool itself is created on realize and released on
+    // unrealize so hidden canvases don't keep worker threads alive.
     d->numthreads = d->get_numthreads();
-    d->pool.emplace(d->numthreads);
+    /* QT-specific end */
 
     d->sync.connectExit([this] { d->after_redraw(); });
 
@@ -617,6 +620,11 @@ CanvasItemGroup *Canvas::get_canvas_item_root() const
 void Canvas::on_realize()
 {
     parent_type::on_realize();
+    /* QT-specific start */
+    if (!d->pool) {
+        d->pool.emplace(d->numthreads);
+    }
+    /* QT-specific end */
     d->activate_graphics();
     if (_drawing) d->activate();
 }
@@ -625,6 +633,9 @@ void Canvas::on_unrealize()
 {
     if (_drawing) d->deactivate();
     d->deactivate_graphics();
+    /* QT-specific start */
+    d->pool.reset();
+    /* QT-specific end */
     parent_type::on_unrealize();
 }
 
@@ -676,10 +687,11 @@ void CanvasPrivate::schedule_redraw(bool instant)
     redraw_active = true;
 
     auto callback = [this] {
+        if (!schedule_redraw_queued) return;
+
         if (q->get_opengl_enabled()) {
             q->make_current();
         }
-        if (!schedule_redraw_queued) return;
 
         if (prefs.debug_logging) std::cout << "Redraw start" << std::endl;
         launch_redraw();
@@ -1321,7 +1333,7 @@ void Canvas::wheelEvent(QWheelEvent *event)
         event->accept();
     } else {
         // Event not handled, pass to parent
-        QOpenGLWidget::wheelEvent(event);
+        parent_type::wheelEvent(event);
     }
 }
 
@@ -1499,7 +1511,7 @@ QVariant Canvas::inputMethodQuery(Qt::InputMethodQuery query) const {
     if (query == Qt::ImCursorRectangle) {
         return _im_cursor_rect;
     }
-    return QOpenGLWidget::inputMethodQuery(query);
+    return parent_type::inputMethodQuery(query);
 }
 
 void Canvas::inputMethodEvent(QInputMethodEvent* event) {
@@ -1526,7 +1538,7 @@ bool Canvas::event(QEvent* event) {
                     }
                 }
             }
-            return QOpenGLWidget::event(event);
+            return parent_type::event(event);
         }
         case QEvent::NativeGesture: {
             auto gestureEvent = static_cast<QNativeGestureEvent*>(event);
@@ -1540,39 +1552,20 @@ bool Canvas::event(QEvent* event) {
                 event->accept();
                 return true;
             }
-            return QOpenGLWidget::event(event);
+            return parent_type::event(event);
         }
-        case QEvent::Paint:
-        case QEvent::UpdateRequest:
-        case QEvent::Resize:
-        case QEvent::Show:
-        case QEvent::WindowChangeInternal:
-        case QEvent::ScreenChangeInternal:
-        case QEvent::DevicePixelRatioChange:
-            // QOpenGLWidget does its own GL work in our context while handling these (FBO (re)creation, clearing).
-            restore_default_gl_state();
-            return QOpenGLWidget::event(event);
         case QEvent::Enter: {
+            if (!d->active) return true;
             auto enterEvent = static_cast<QEnterEvent*>(event);
             on_enter(enterEvent->position().x(), enterEvent->position().y(), _state);
             return true;
         }
         case QEvent::Leave:
+            if (!d->active) return true;
             on_leave(_state);
             return true;
-        case QEvent::PlatformSurface: {
-            auto surfaceEvent = static_cast<QPlatformSurfaceEvent*>(event);
-            if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
-                // on_realize equivalent
-                // on_realize();
-            } else if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
-                // on_unrealize equivalent
-                unrealize_gl();
-            }
-            return QOpenGLWidget::event(event);
-        }
         default:
-            return QOpenGLWidget::event(event);
+            return parent_type::event(event);
     }
 }
 
@@ -1647,7 +1640,7 @@ void Canvas::keyPressEvent(QKeyEvent* event) {
     canvasEvent->orig_pos = d->last_mouse;
     if (!d->process_event(*canvasEvent)) {
         // Event not handled, pass to parent
-        QOpenGLWidget::keyPressEvent(event);
+        parent_type::keyPressEvent(event);
     }
 }
 
@@ -1658,7 +1651,7 @@ void Canvas::keyReleaseEvent(QKeyEvent* event) {
     canvasEvent->orig_pos = d->last_mouse;
     if (!d->process_event(*canvasEvent)) {
         // Event not handled, pass to parent
-        QOpenGLWidget::keyReleaseEvent(event);
+        parent_type::keyReleaseEvent(event);
     }
 }
 /* QT-specific end */
@@ -2610,7 +2603,7 @@ void Canvas::size_allocate(int const width, int const height)
 
 /* QT-specific start */
 void Canvas::resizeEvent(QResizeEvent* event) {
-    QOpenGLWidget::resizeEvent(event);
+    parent_type::resizeEvent(event);
     size_allocate(event->size().width(), event->size().height());
 }
 

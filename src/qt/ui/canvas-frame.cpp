@@ -10,7 +10,9 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPalette>
-#include <QStackedWidget>
+#include <QPointer>
+#include <QVBoxLayout>
+#include <QWidget>
 
 #include "desktop-events.h"
 #include "desktop.h"
@@ -26,6 +28,54 @@
 #include "ui/widget/canvas.h"
 
 namespace Linea::UI {
+
+/**
+ * Container hosting current borrowed canvas widget.
+ * Borrowed, because we don't own them, desktops do.
+ *
+ * Swapping or clearing the widget hides and unparents (`setParent(nullptr)`)
+ * the outgoing widget rather than keeping hidden pages in the window's widget
+ * tree, and `~WidgetSlot()` detaches any mounted widget so QObject parent
+ * destruction never deletes externally-owned widgets. When empty, the slot
+ * itself serves as an expanding placeholder.
+ */
+class WidgetSlot : public QWidget {
+public:
+    explicit WidgetSlot(QWidget* parent = nullptr)
+        : QWidget(parent)
+        , _layout(new QVBoxLayout(this)) {
+        _layout->setContentsMargins(0, 0, 0, 0);
+        _layout->setSpacing(0);
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    }
+
+    ~WidgetSlot() override {
+        setWidget(nullptr);
+    }
+
+    void setWidget(QWidget* widget) {
+        if (_current == widget) return;
+
+        if (_current) {
+            _layout->removeWidget(_current);
+            _current->hide();
+            _current->setParent(nullptr);
+        }
+
+        _current = widget;
+
+        if (_current) {
+            _layout->addWidget(_current);
+            _current->show();
+        }
+    }
+
+    QWidget* widget() const { return _current; }
+
+private:
+    QVBoxLayout* _layout = nullptr;
+    QPointer<QWidget> _current;
+};
 
 CanvasFrame::CanvasFrame(QWidget* parent)
     : QWidget(parent) {
@@ -53,13 +103,10 @@ CanvasFrame::CanvasFrame(QWidget* parent)
     _vruler->setRulerSize(rs);
     layout->addWidget(_vruler, 1, 0);
 
-    // Canvas stack — one page per open document's canvas. The first page is a
-    // plain placeholder shown when no document is selected ("home" state).
-    _stack = new QStackedWidget(this);
-    _emptyPage = new QWidget(_stack);
-    _stack->addWidget(_emptyPage);
-    // _stack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    layout->addWidget(_stack, 1, 1);
+    // Canvas slot — hosts the active document's canvas, or stands in as a
+    // plain placeholder when no document is selected ("home" state).
+    _slot = new WidgetSlot(this);
+    layout->addWidget(_slot, 1, 1);
 
     // Wire ruler drag signals for guide creation.
     connect(_hruler, &RulerWidget::rulerDragStarted, this, &CanvasFrame::onRulerDragStarted);
@@ -70,28 +117,33 @@ CanvasFrame::CanvasFrame(QWidget* parent)
 
 CanvasFrame::~CanvasFrame() = default;
 
-void CanvasFrame::addCanvas(Inkscape::UI::Widget::Canvas* canvas) {
+void CanvasFrame::connectToCanvas(Inkscape::UI::Widget::Canvas* canvas) {
     if (!canvas) return;
 
-    _stack->addWidget(canvas);
+    canvas->setParent(nullptr);
     canvas->on_mouse_moved = [this](auto pos) { onCanvasMouseMoved(pos); };
     canvas->on_mouse_left = [this]() { onCanvasMouseLeft(); };
     canvas->installEventFilter(this);
 }
 
-void CanvasFrame::removeCanvas(Inkscape::UI::Widget::Canvas* canvas) {
+void CanvasFrame::disconnectFromCanvas(Inkscape::UI::Widget::Canvas* canvas) {
     if (!canvas) return;
 
-    _stack->removeWidget(canvas);
+    if (_slot->widget() == canvas) {
+        _slot->setWidget(nullptr);
+    }
+    canvas->on_mouse_moved = nullptr;
+    canvas->on_mouse_left = nullptr;
+    canvas->removeEventFilter(this);
 }
 
 void CanvasFrame::setCurrentCanvas(SPDesktop* desktop, Inkscape::UI::Widget::Canvas* canvas) {
-    _stack->setCurrentWidget(canvas ? canvas : _emptyPage);
+    _slot->setWidget(canvas);
     setDesktop(desktop);
 }
 
 Inkscape::UI::Widget::Canvas* CanvasFrame::currentCanvas() const {
-    return dynamic_cast<Inkscape::UI::Widget::Canvas*>(_stack->currentWidget());
+    return dynamic_cast<Inkscape::UI::Widget::Canvas*>(_slot->widget());
 }
 
 void CanvasFrame::onCanvasMouseMoved(QPointF pos) {

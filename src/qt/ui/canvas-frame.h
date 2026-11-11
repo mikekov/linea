@@ -7,9 +7,11 @@
  *   [ empty corner | HRuler ]
  *   [ VRuler       | canvas ]
  *
- * The canvas area is a QStackedWidget so multiple canvases (one per document)
- * can share the same rulers. Only the visible canvas receives mouse events
- * and drives the ruler cursor position.
+ * The canvas area is a single-widget slot (WidgetSlot) so multiple canvases
+ * (one per document) can share the same rulers while only the active canvas is
+ * mounted in the window's widget tree. Only the visible canvas receives mouse
+ * events and drives the ruler cursor position.
+ * NOTE: Canvas is owned by a SPDesktop (unique pointer).
  */
 
 #ifndef LINEA_UI_CANVAS_FRAME_H
@@ -20,7 +22,6 @@
 
 #include "ruler-widget.h"
 
-class QStackedWidget;
 class SPDocument;
 
 namespace Inkscape {
@@ -34,6 +35,8 @@ class SPDesktop;
 
 namespace Linea::UI {
 
+class WidgetSlot;
+
 class CanvasFrame : public QWidget {
     Q_OBJECT
 
@@ -41,10 +44,10 @@ public:
     explicit CanvasFrame(QWidget* parent = nullptr);
     ~CanvasFrame() override;
 
-    /// Add a canvas to the stack. It will drive the rulers when visible.
-    void addCanvas(Inkscape::UI::Widget::Canvas* canvas);
-    /// Remove a canvas from the stack.
-    void removeCanvas(Inkscape::UI::Widget::Canvas* canvas);
+    /// Connect to canvas mouse callbacks. The canvas will drive the rulers when visible.
+    void connectToCanvas(Inkscape::UI::Widget::Canvas* canvas);
+    /// Disconnect from canvas mouse callbacks and remove it from the slot.
+    void disconnectFromCanvas(Inkscape::UI::Widget::Canvas* canvas);
     /// Show the given canvas (switch current page), or the "no document"
     /// empty page when @p canvas is null.
     void setCurrentCanvas(SPDesktop* desktop, Inkscape::UI::Widget::Canvas* canvas);
@@ -78,8 +81,7 @@ private:
     void onRulerDragStarted(RulerWidget* ruler, double position);
     void setRulersUnit(const QString& abbr);
 
-    QStackedWidget* _stack = nullptr;
-    QWidget* _emptyPage = nullptr; // "no document" placeholder page, first in the stack
+    WidgetSlot* _slot = nullptr;
     RulerWidget* _hruler = nullptr;
     RulerWidget* _vruler = nullptr;
     QWidget* _corner = nullptr;

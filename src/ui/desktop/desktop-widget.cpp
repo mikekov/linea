@@ -437,7 +437,7 @@ void SPDesktopWidget::addDesktop(SPDesktop* desktop, int pos) {
         _canvas->setDesktop(desktop);
     }
 
-    _canvasFrame->addCanvas(canvasWidget);
+    _canvasFrame->connectToCanvas(canvasWidget);
     _canvasForDesktop[desktop] = canvasWidget;
 
     // Subscribe to the document's save-state and filename signals so both the
@@ -487,7 +487,7 @@ void SPDesktopWidget::removeDesktop(SPDesktop* desktop) {
         _tabStrip->removeTab(*tab);
     }
     if (auto it = _canvasForDesktop.find(desktop); it != _canvasForDesktop.end()) {
-        _canvasFrame->removeCanvas(it->second);
+        _canvasFrame->disconnectFromCanvas(it->second);
         _canvasForDesktop.erase(it);
     }
     _tabHandles.erase(desktop);
