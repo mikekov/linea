@@ -240,17 +240,23 @@ void RingColorPlate::colorChanged() {
     _triMarker = vs[0] * (s * v) + vs[2] * (v * (1 - s)) + vs[1] * (1 - v);
 }
 
-std::vector<QPointF> RingColorPlate::markers() const {
+std::vector<PlateMarker> RingColorPlate::markers() const {
     const auto active = activeArea();
-    std::vector<QPointF> pts;
+    std::vector<PlateMarker> pts;
     if (_ringMarker) {
         QPointF p = *_ringMarker;
         const double half = std::min(active.width(), active.height()) / 2;
         const double r = std::hypot(p.x(), p.y());
         if (r > 0 && half > 0) p *= (r + RING_MARKER_OFFSET / half) / r;
-        pts.push_back(polarToScreen(active, p));
+        // the hue marker fills with the pure hue the band shows at its angle
+        auto hue = color();
+        hue.set(PLATE_SAT, 1);
+        hue.set(PLATE_VAL, 1);
+        pts.push_back({polarToScreen(active, p), QColor::fromRgb(QRgb(hue.toARGB()))});
     }
-    if (_triMarker) pts.push_back(polarToScreen(active, *_triMarker));
+    if (_triMarker) {
+        pts.push_back({polarToScreen(active, *_triMarker), QColor::fromRgb(QRgb(color().toARGB()))});
+    }
     return pts;
 }
 

@@ -58,15 +58,23 @@ public:
         }
     }
 
+    void setFill(const QColor& fill) {
+        if (_fill != fill) {
+            _fill = fill;
+            update();
+        }
+    }
+
 protected:
     void paintEvent(QPaintEvent*) override {
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
-        drawThumbRing(p, _center, RING_SIZE, RING_THICKNESS, *this);
+        drawThumbRing(p, _center, RING_SIZE, RING_THICKNESS, *this, _fill);
     }
 
 private:
     QPointF _center;
+    QColor _fill;
 };
 
 // ---------------------------------------------------------------------------
@@ -165,6 +173,11 @@ std::optional<unsigned> ColorPlate::hueChannel() const {
 }
 
 bool ColorPlate::achromatic(const Color& plate) const {
+    // whiteness+blackness saturate to grey in hwb — near-zero w,b is a
+    // fully saturated color, the opposite of the channel-floor test below
+    if (_space == Type::HWB) {
+        return plate[1] + plate[2] >= 1.0 - ACHROMATIC_CHROMA;
+    }
     const auto& comps = Components::get(_space);
     const auto hue = hueChannel();
     for (unsigned i = 0; i < comps.size(); ++i) {
@@ -297,8 +310,9 @@ void ColorPlate::syncOverlays() {
             delete overlay;
             overlay = new IndicatorOverlay(host);
         }
-        const QPointF center = mapTo(host, pts[i]);
+        const QPointF center = mapTo(host, pts[i].pos);
         overlay->placeAt(center);
+        overlay->setFill(pts[i].fill);
         overlay->show();
         overlay->raise();
     }

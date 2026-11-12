@@ -73,8 +73,10 @@ bool isDarkPalette(const QWidget& widget);
  * Draw a thumb ring centered at the location, colored from the widget's
  * palette: theme background ring with a translucent black/white stroke.
  * Used by color sliders and plates, each with its own ring size.
+ * 'fill' optionally paints the ring's opening an opaque color.
  */
-void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness, const QWidget& widget);
+void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness,
+                   const QWidget& widget, const QColor& fill = {});
 
 /**
  * Create a size-independent QLinearGradient from an SPGradient.

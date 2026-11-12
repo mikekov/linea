@@ -121,9 +121,9 @@ Color WheelColorPlate::colorAt(const QPointF& pos) const {
     return c;
 }
 
-std::vector<QPointF> WheelColorPlate::markers() const {
+std::vector<PlateMarker> WheelColorPlate::markers() const {
     if (!_marker) return {};
-    return {polarToScreen(activeArea(), *_marker)};
+    return {{polarToScreen(activeArea(), *_marker), QColor::fromRgb(QRgb(color().toARGB()))}};
 }
 
 void WheelColorPlate::rebuildPlate() {

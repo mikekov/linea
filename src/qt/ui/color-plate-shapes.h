@@ -55,7 +55,7 @@ public:
 protected:
     void colorChanged() override;
     void paintPlate(QPainter& p) override;
-    std::vector<QPointF> markers() const override;
+    std::vector<PlateMarker> markers() const override;
     Inkscape::Colors::Color colorAt(const QPointF& pos) const override;
 
 private:
@@ -84,7 +84,7 @@ public:
 protected:
     void colorChanged() override;
     void paintPlate(QPainter& p) override;
-    std::vector<QPointF> markers() const override;
+    std::vector<PlateMarker> markers() const override;
     Inkscape::Colors::Color colorAt(const QPointF& pos) const override;
 
 private:
@@ -105,7 +105,7 @@ public:
 protected:
     void colorChanged() override;
     void paintPlate(QPainter& p) override;
-    std::vector<QPointF> markers() const override;
+    std::vector<PlateMarker> markers() const override;
     void beginPick(const QPointF& pos) override;
     Inkscape::Colors::Color colorAt(const QPointF& pos) const override;
     void hideEvent(QHideEvent* event) override;

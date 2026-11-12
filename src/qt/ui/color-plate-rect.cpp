@@ -109,11 +109,12 @@ Color RectColorPlate::colorAt(const QPointF& pos) const {
     return c;
 }
 
-std::vector<QPointF> RectColorPlate::markers() const {
+std::vector<PlateMarker> RectColorPlate::markers() const {
     if (!_marker) return {};
     const auto active = activeArea();
-    return {{active.left() + _marker->x() * active.width(),
-             active.top() + _marker->y() * active.height()}};
+    return {{{active.left() + _marker->x() * active.width(),
+              active.top() + _marker->y() * active.height()},
+             QColor::fromRgb(QRgb(color().toARGB()))}};
 }
 
 // Build a rectangular plate image

@@ -47,6 +47,10 @@ static double lightness(const QColor& c) {
     return (y > e ? 116.0 * std::cbrt(y) - 16.0 : (24389.0 / 27.0) * y) / 100.0;
 }
 
+// ink-on-color cutoff, above this a dark icon is used — biased toward
+// white icons: a saturated color at L*=50 still reads as a dark patch
+constexpr double LIGHT_INK_CUTOFF = 0.60;
+
 // ---------------------------------------------------------------------------
 
 ColorPreview::ColorPreview(QWidget* parent, std::uint32_t rgba)
@@ -230,7 +234,7 @@ void ColorPreview::drawIndicators(QPainter& p, const QRectF& rect) const {
     if (_isFill || _isStroke) {
         QColor fill = fromRgba32(_rgba);
         // pick a contrasting ink from the fill's perceptual lightness
-        QColor ink = (lightness(fill) > 0.5) ? Qt::black : Qt::white;
+        QColor ink = (lightness(fill) > LIGHT_INK_CUTOFF) ? Qt::black : Qt::white;
 
         double minwh = std::min(rect.width(), rect.height());
         double cx = rect.left() + (rect.width() - minwh) / 2.0 + minwh / 2.0;
@@ -373,7 +377,7 @@ double ColorPreview::badgeLightness() const {
 
 void ColorPreview::drawBadge(QPainter& p, const QRectF& rect, const QIcon& darkIcon, const QIcon& lightIcon) const {
     constexpr int size = 16;
-    const auto& icon = (badgeLightness() > 0.50) ? darkIcon : lightIcon;
+    const auto& icon = (badgeLightness() > LIGHT_INK_CUTOFF) ? darkIcon : lightIcon;
     auto pm = icon.pixmap(QSize(size, size), devicePixelRatioF());
     p.drawPixmap(rect.center() - QPointF(size / 2.0, size / 2.0), pm);
 }

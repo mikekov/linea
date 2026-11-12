@@ -6,6 +6,7 @@
 #ifndef LINEA_UI_COLOR_PLATE_H
 #define LINEA_UI_COLOR_PLATE_H
 
+#include <QColor>
 #include <QPointF>
 #include <QPointer>
 #include <QWidget>
@@ -23,6 +24,13 @@ class IndicatorOverlay;
 
 // Shapes of color plate widget; persisted in preferences, keep values stable
 enum class ColorPlateType { None, Rect, Wheel, Ring };
+
+// A plate marker: center in widget coords plus the opaque color painted
+// inside its ring — an invalid fill leaves the opening transparent
+struct PlateMarker {
+    QPointF pos;
+    QColor fill;
+};
 
 // Gamut inputs for plates drawn in unbounded spaces (OkLch rect plate)
 struct PlateGamut {
@@ -63,7 +71,7 @@ protected:
     // subclass hooks, all in plate-space colors
     virtual void colorChanged() = 0;                         // _color changed: invalidate images, recompute cached local marker positions
     virtual void paintPlate(QPainter& p) = 0;              // images, clip, borders
-    virtual std::vector<QPointF> markers() const = 0;      // marker centers in widget coords, from cached local positions
+    virtual std::vector<PlateMarker> markers() const = 0;  // marker positions + fills, from cached local positions
     virtual void beginPick(const QPointF& pos) {}          // drag start (ring: band vs triangle)
     virtual Inkscape::Colors::Color colorAt(const QPointF& pos) const = 0; // plate color at a widget position, clamped onto the pickable area
 

@@ -185,7 +185,8 @@ bool isDarkPalette(const QWidget& widget) {
     return getLuminance(bg) < 0.5;
 }
 
-void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness, const QWidget& widget) {
+void drawThumbRing(QPainter& p, const QPointF& center, double size, double thickness,
+                   const QWidget& widget, const QColor& fill) {
     double const radius = size / 2.0;
     // content background: white on light themes, dark on dark themes
     QColor const ring = widget.palette().color(QPalette::Base);
@@ -197,6 +198,14 @@ void drawThumbRing(QPainter& p, const QPointF& center, double size, double thick
     QColor const stroke(static_cast<int>(x * 255), static_cast<int>(x * 255),
                         static_cast<int>(x * 255), static_cast<int>(alpha * 255));
 
+    // fill the opening; sized to reach under the ring stroke so no
+    // background sliver shows at the edge
+    if (fill.isValid()) {
+        double const inner = radius - thickness / 2.0;
+        p.setPen(Qt::NoPen);
+        p.setBrush(fill);
+        p.drawEllipse(center, inner, inner);
+    }
     p.setPen(QPen(stroke, thickness + 2.0));
     p.setBrush(Qt::NoBrush);
     p.drawEllipse(center, radius, radius);
