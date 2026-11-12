@@ -235,8 +235,11 @@ protected:
         if (const QPixmap pm = pixmap(); !pm.isNull()) {
             style()->drawItemPixmap(&p, cr, alignment(), pm);
         } else {
-            style()->drawItemText(&p, cr, alignment(), palette(),
-                                  isEnabled(), text());
+            // the line edit anchors its text line at lineRect.top —
+            // baseline = top + fm.ascent(); centering the text's bounding
+            // box in the line renders caps-only text ~1px too low
+            style()->drawItemText(&p, cr, (alignment() & ~Qt::AlignVertical_Mask) | Qt::AlignTop,
+                                  palette(), isEnabled(), text());
         }
     }
 
@@ -502,17 +505,22 @@ private:
         QSize hint = base();
         _sizing = false;
         if (ideal) {
-            // the hover arrows overlay both edges and the label sits at the
-            // left — the ideal width keeps the text clear of whichever
-            // element occupies each side (the base hint only sizes the text)
-            auto margins = this->getLineEdit()->textMargins();
-            auto horz = margins.left() + margins.right();
-            if (hint.width() > horz) {
-                hint.rwidth() -= horz;
+            // the base hint covers the text only — reserve fixed chrome on
+            // each side: the label zone (or the left arrow) left, the arrow
+            // right. Never read the live text margins here — they are set
+            // from the laid-out width, so a hint that consumed them would
+            // feed back into the layout and freeze a different width per
+            // field depending on which margin was current when queried
+            int leftZone = ARROW_W;
+            if (_parentEdit->_showIndicator) {
+                const int labelRight = 2 // indicator x
+                    + qBound(_parentEdit->_indicator->minimumWidth(),
+                             _parentEdit->_indicator->sizeHint().width(),
+                             _parentEdit->_indicator->maximumWidth())
+                    + 2; // gap after the label, same as updateTextMargins
+                leftZone = qMax(ARROW_W, labelRight);
             }
-            const int leftPad = 0;//lineEdit() ? lineEdit()->textMargins().left() : 0;
-    // printf("%s - w: %d  leftPad: %d,  margins: %d %d %d %d\n", _parentEdit->_indicator->text().toStdString().c_str(), hint.width(), leftPad, margins.left(), margins.top(), margins.right(), margins.bottom());
-            hint.rwidth() += ARROW_W + qMax(ARROW_W, leftPad);
+            hint.rwidth() += ARROW_W + leftZone;
         }
         return hint;
     }
@@ -565,6 +573,7 @@ NumberEdit::NumberEdit(QWidget* parent)
     _arrowUp->raise();
 
     _spinBox->installEventFilter(this);
+    _indicator->installEventFilter(this); // late auto-size on show recenters it
     installEventFilter(this); // own Resize also repositions the arrows
     _arrowDown->installEventFilter(this); // landing on an arrow affirms hover
     _arrowUp->installEventFilter(this);
@@ -829,10 +838,17 @@ bool NumberEdit::eventFilter(QObject* watched, QEvent* event) {
             }
         });
     }
+    else if (watched == _indicator && event->type() == QEvent::Resize) {
+        // the label is never laid out — it auto-sizes to sizeHint on first
+        // show, which can land after the spinbox's own Resize; re-center
+        // and re-evaluate the text margin once it settles at its real size
+        _indicator->move(2, (_spinBox->height() - _indicator->height()) / 2);
+        updateTextMargins();
+    }
     else if ((watched == _spinBox || watched == this) && event->type() == QEvent::Resize
              || watched == _spinBox && event->type() == QEvent::Move) {
         // anchor the indicator overlay to the left side of the spinbox
-        _indicator->move(2, (_spinBox->height() - _indicator->sizeHint().height()) / 2);
+        _indicator->move(2, (_spinBox->height() - _indicator->height()) / 2);
         // inset so the opaque arrow backdrop can't erase the parent's
         // 1px frame and rounded corners; children aren't clipped to the
         // spinbox, so they can reach past its bounds to the frame's edge
@@ -890,6 +906,10 @@ void NumberEdit::clearPlaceholder() {
 }
 
 void NumberEdit::onSpinBoxValueChanged(double v) {
+    // updateEdit() writes the new text with signals blocked — textChanged
+    // never fires for programmatic setValue, so the margin must be
+    // re-evaluated here or the label would cover freshly-arrived digits
+    updateTextMargins();
     Q_EMIT valueChanged(v / _factor);
 }
 
