@@ -5,6 +5,7 @@
 
 #include "number-edit.h"
 
+#include <QApplication>
 #include <QDoubleSpinBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
@@ -12,9 +13,13 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QStyle>
 #include <QStyleOption>
+#include <QTimer>
+#include <QVariantAnimation>
 #include <cmath>
 
 #include "util/expression-evaluator.h"
@@ -142,6 +147,168 @@ private:
     int _keptDigits = 0;
 };
 
+// width of the hover-only step arrow zones at the spinbox edges
+constexpr int ARROW_W = 16;
+
+// crossfade tempo bound to the hover transition, not to a widget's fade
+// direction: everything moves fast on hover-enter, slow on hover-leave —
+// the label overlaps the left arrow, so a slow label fade-out would read
+// as a slow arrow fade-in
+constexpr int HOVER_FADE_IN_MS = 70;
+constexpr int HOVER_FADE_OUT_MS = 160;
+// the label reappears after the arrows have left — slower still, so the
+// field settles back to idle instead of everything snapping home at once
+constexpr int LABEL_RETURN_MS = 300;
+
+namespace {
+
+// Gradual show/hide: animate a paint-time opacity, hiding the widget for
+// real only once a fade-out completes. A QGraphicsOpacityEffect would cache
+// the widget's render and can keep a stale blank frame long after the
+// widget becomes visible — painting with painter opacity renders live every
+// frame. Calls with the same target are no-ops.
+class PaintFade {
+public:
+    explicit PaintFade(QWidget* w, qreal initial = 0.0)
+        : _w(w)
+        , _fade(initial) {
+        QObject::connect(&_anim, &QVariantAnimation::valueChanged, w, [this](const QVariant& v) {
+            _fade = v.toDouble();
+            _w->update();
+        });
+        QObject::connect(&_anim, &QVariantAnimation::finished, w, [this] {
+            if (!_showing) _w->setVisible(false);
+        });
+    }
+
+    void fade(bool show, int durationMs) {
+        if (!_w->window()->isVisible()) { // nothing on screen to animate from
+            _anim.stop();
+            _showing = show;
+            _fade = show ? 1.0 : 0.0;
+            _w->setVisible(show);
+            return;
+        }
+        if (_showing == show) return;
+        _showing = show;
+        _anim.stop();
+        _anim.setDuration(durationMs);
+        _anim.setStartValue(_fade);
+        _anim.setEndValue(show ? 1.0 : 0.0);
+        if (show) _w->setVisible(true);
+        _anim.start();
+    }
+
+    qreal opacity() const { return _fade; }
+
+private:
+    QWidget* _w;
+    bool _showing = false;
+    qreal _fade;
+    QVariantAnimation _anim;
+};
+
+// The indicator label with a paint-time fade — same backing, alignment and
+// content drawing as QLabel's own paintEvent, just at _fader.opacity().
+class IndicatorLabel : public QLabel {
+public:
+    using QLabel::QLabel;
+
+    void fade(bool show, int durationMs) { _fader.fade(show, durationMs); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setOpacity(_fader.opacity());
+        p.setFont(font());
+        QStyleOption opt;
+        opt.initFrom(this);
+        style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+        // lay out the text line exactly like QLineEdit::paintEvent —
+        // (h - fmHeight + 1)/2 rounds the offset up where drawItemText's
+        // own centering truncates
+        const QFontMetrics fm(font());
+        const int fmHeight = qMax(fm.boundingRect(text()).height(), fm.height());
+        QRect cr = contentsRect();
+        cr.setY(cr.y() + (cr.height() - fmHeight + 1) / 2);
+        cr.setHeight(fmHeight);
+        if (const QPixmap pm = pixmap(); !pm.isNull()) {
+            style()->drawItemPixmap(&p, cr, alignment(), pm);
+        } else {
+            style()->drawItemText(&p, cr, alignment(), palette(),
+                                  isEnabled(), text());
+        }
+    }
+
+private:
+    PaintFade _fader{this, 1.0};
+};
+
+} // namespace
+
+// Step arrow shown on hover: a floating child painted over the spinbox edge.
+// Real up/down buttons are style subcontrols that always reserve space in the
+// edit field, even when their arrows are invisible — an overlay costs nothing
+// when hidden.
+class ArrowOverlay : public QWidget {
+public:
+    ArrowOverlay(QDoubleSpinBox* spin, int steps, QWidget* parent)
+        : QWidget(parent)
+        , _spin(spin)
+        , _steps(steps) {
+        // first timeout is the auto-repeat delay; subsequent ones repeat
+        connect(&_repeat, &QTimer::timeout, this, [this] {
+            _spin->stepBy(_steps);
+            _repeat.setInterval(REPEAT_MS);
+        });
+    }
+
+    void fade(bool show, int durationMs) { _fader.fade(show, durationMs); }
+
+    // a Leave on the overlay can be missed when it hides under the cursor —
+    // the field clears this whenever its own hover ends
+    void resetHover() { _hovered = false; update(); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        static const QIcon left(":/icons/pan-left"), right(":/icons/pan-right");
+        QPainter p(this);
+        p.setOpacity(_fader.opacity());
+        p.setRenderHint(QPainter::Antialiasing);
+        // opaque backing so field text never collides with the glyph —
+        // rounded on the outer corners to hug the parent's frame
+        constexpr int R = 3; // frame radius minus its 1px border
+        QPainterPath path;
+        const QRectF r = rect();
+        path.addRoundedRect(_steps < 0 ? r.adjusted(0, 0, R, 0)
+                                       : r.adjusted(-R, 0, 0, 0), R, R);
+        p.fillPath(path, palette().color(_hovered ? QPalette::Midlight : QPalette::Base));
+        (_steps < 0 ? left : right).paint(&p, rect(), Qt::AlignCenter);
+    }
+
+    void enterEvent(QEnterEvent*) override { _hovered = true; update(); }
+
+    void mousePressEvent(QMouseEvent* event) override {
+        if (event->button() == Qt::LeftButton) {
+            _spin->stepBy(_steps);
+            _repeat.start(REPEAT_DELAY_MS);
+        }
+    }
+
+    void mouseReleaseEvent(QMouseEvent*) override { _repeat.stop(); }
+    void leaveEvent(QEvent*) override { _repeat.stop(); _hovered = false; update(); }
+
+private:
+    static constexpr int REPEAT_DELAY_MS = 400;
+    static constexpr int REPEAT_MS = 80;
+
+    QDoubleSpinBox* _spin;
+    int _steps;
+    bool _hovered = false;
+    QTimer _repeat;
+    PaintFade _fader{this};
+};
+
 // Internal spinbox class to access protected lineEdit() and handle formatting
 class NumberEdit::SpinBox : public QDoubleSpinBox {
 public:
@@ -160,10 +327,10 @@ public:
     QLineEdit* getLineEdit() const { return lineEdit(); }
 
     QSize sizeHint() const override {
-        return sizedHint([this] { return QDoubleSpinBox::sizeHint(); });
+        return sizedHint([this] { return QDoubleSpinBox::sizeHint(); }, true);
     }
     QSize minimumSizeHint() const override {
-        return sizedHint([this] { return QDoubleSpinBox::minimumSizeHint(); });
+        return sizedHint([this] { return QDoubleSpinBox::minimumSizeHint(); }, false);
     }
 
 protected:
@@ -176,7 +343,26 @@ protected:
         if (!_trimZeros || _sizing) {
             return QDoubleSpinBox::textFromValue(value);
         }
-        return Inkscape::Util::formatTrimmed(value, decimals());
+        QString text = Inkscape::Util::formatTrimmed(value, decimals());
+        // An unfocused field that can't show the full precision drops
+        // fraction digits until the text fits — a faded tail still occupies
+        // layout width and pushes visible digits off the field's edge.
+        auto le = lineEdit();
+        if (!le || le->hasFocus()) {
+            return text;
+        }
+        const auto margins = le->textMargins();
+        const int avail = contentsRect().width() - margins.left() - margins.right() - 4;
+        if (avail <= 0) return text; // no real layout yet — don't trim blindly
+        const QFontMetrics fm(le->fontMetrics());
+        while (fm.horizontalAdvance(text) > avail) {
+            const int dot = text.indexOf(locale().decimalPoint());
+            if (dot < 0) break;           // even the integer part overflows
+            if (text.endsWith(locale().decimalPoint())) { text.chop(1); break; }
+            if (!text.back().isDigit()) break; // a suffix — can't trim safely
+            text.chop(1);                 // drop one fraction digit
+        }
+        return text;
     }
 
     QValidator::State validate(QString& text, int& pos) const override {
@@ -227,6 +413,36 @@ protected:
             return QDoubleSpinBox::valueFromText(text);
         }
         return value();
+    }
+
+    void resizeEvent(QResizeEvent* event) override {
+        QDoubleSpinBox::resizeEvent(event);
+        fixEditField();
+    }
+
+    void changeEvent(QEvent* event) override {
+        QDoubleSpinBox::changeEvent(event);
+        if (event->type() == QEvent::StyleChange) fixEditField();
+    }
+
+    // with NoButtons the style computes a 1px-wide edit field rect —
+    // lay the line edit out over the whole contents area ourselves
+    void fixEditField() {
+        if (buttonSymbols() == QAbstractSpinBox::NoButtons && lineEdit()) {
+            lineEdit()->setGeometry(contentsRect());
+        }
+        // The fitted text depends on the field's width — refresh it on resize.
+        // updateDisplay() is private, so compose the string the way it does.
+        if (!lineEdit() || lineEdit()->hasFocus()) return;
+        QString text;
+        if (!specialValueText().isEmpty() && value() == minimum()) {
+            text = specialValueText();
+        } else {
+            text = prefix() + textFromValue(value()) + suffix();
+        }
+        if (lineEdit()->text() != text) {
+            lineEdit()->setText(text);
+        }
     }
 
     void stepBy(int steps) override {
@@ -281,10 +497,23 @@ private:
     mutable bool _sizing = false;
 
     template <typename F>
-    QSize sizedHint(F&& base) const {
+    QSize sizedHint(F&& base, bool ideal) const {
         _sizing = true;
         QSize hint = base();
         _sizing = false;
+        if (ideal) {
+            // the hover arrows overlay both edges and the label sits at the
+            // left — the ideal width keeps the text clear of whichever
+            // element occupies each side (the base hint only sizes the text)
+            auto margins = this->getLineEdit()->textMargins();
+            auto horz = margins.left() + margins.right();
+            if (hint.width() > horz) {
+                hint.rwidth() -= horz;
+            }
+            const int leftPad = 0;//lineEdit() ? lineEdit()->textMargins().left() : 0;
+    // printf("%s - w: %d  leftPad: %d,  margins: %d %d %d %d\n", _parentEdit->_indicator->text().toStdString().c_str(), hint.width(), leftPad, margins.left(), margins.top(), margins.right(), margins.bottom());
+            hint.rwidth() += ARROW_W + qMax(ARROW_W, leftPad);
+        }
         return hint;
     }
 };
@@ -304,26 +533,45 @@ NumberEdit::NumberEdit(QWidget* parent)
     _spinBox = new NumberEdit::SpinBox(this, this);
     _spinBox->setObjectName("spinBox");
     _spinBox->setFrame(false);
+    // real buttons would permanently reserve ~28px of field width
+    _spinBox->setButtonSymbols(QAbstractSpinBox::NoButtons);
     _spinBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     _spinBox->setMinimumWidth(18);
     _layout->addWidget(_spinBox, 1);
 
+    // hover-only step arrows, positioned in the Resize filter below; as
+    // descendants they keep the field's enter/leave chain intact while
+    // hovered — Qt doesn't clip children to the parent's rect
+    _arrowDown = new ArrowOverlay(_spinBox, -1, _spinBox);
+    _arrowUp = new ArrowOverlay(_spinBox, 1, _spinBox);
+    _arrowDown->setVisible(false);
+    _arrowUp->setVisible(false);
+
     // The indicator floats above the spinbox (not in the layout), so hiding
     // it doesn't shift the field; it is hidden while the arrows are visible.
-    _indicator = new QLabel(_spinBox);
+    _indicator = new IndicatorLabel(_spinBox);
     _indicator->setObjectName("indicator");
+    _indicator->setAttribute(Qt::WA_StyledBackground, true); // fill its stylesheet background
     _indicator->setAlignment(Qt::AlignCenter);
     _indicator->setAttribute(Qt::WA_TransparentForMouseEvents);
     _indicator->setVisible(false);
     // fix label's width to lock the number box position
-    _indicator->setMinimumWidth(18);
+    _indicator->setMinimumWidth(14);
     _indicator->setMaximumWidth(30);
     _indicator->raise();
+    // the arrows must sit above the label — while it fades out over the
+    // left arrow, an opaque cell on top would hide the arrow's own fade-in
+    _arrowDown->raise();
+    _arrowUp->raise();
 
     _spinBox->installEventFilter(this);
+    installEventFilter(this); // own Resize also repositions the arrows
+    _arrowDown->installEventFilter(this); // landing on an arrow affirms hover
+    _arrowUp->installEventFilter(this);
     if (auto le = static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit()) {
         le->installEventFilter(this);
         _fadeOverlay = new FadeOverlay(le);
+        connect(le, &QLineEdit::textChanged, this, [this] { updateTextMargins(); });
     }
 
     // Use old-style macros to avoid assertObjectType runtime check across library boundaries
@@ -343,14 +591,53 @@ QString NumberEdit::label() const {
     return _indicator->text();
 }
 
+void NumberEdit::setHovered(bool hovered) {
+    if (_spinBox->property("hovered").toBool() == hovered) return;
+    _spinBox->setProperty("hovered", hovered);
+    _spinBox->style()->unpolish(_spinBox);
+    _spinBox->style()->polish(_spinBox);
+    updateIndicatorVisibility();
+    const int ms = hovered ? HOVER_FADE_IN_MS : HOVER_FADE_OUT_MS;
+    _arrowDown->fade(hovered, ms);
+    _arrowUp->fade(hovered, ms);
+    if (!hovered) { // a Leave on an overlay can be missed entirely
+        _arrowDown->resetHover();
+        _arrowUp->resetHover();
+    }
+}
+
 void NumberEdit::updateIndicatorVisibility() {
-    _indicator->setVisible(_showIndicator && !_spinBox->property("hovered").toBool());
+    // the label overlaps the left arrow — when hover toggles, it must move
+    // at the hover tempo, not its own fade direction
+    const bool hovered = _spinBox->property("hovered").toBool();
+    static_cast<IndicatorLabel*>(_indicator)
+        ->fade(_showIndicator && !hovered,
+               hovered ? HOVER_FADE_IN_MS : LABEL_RETURN_MS);
 }
 
 void NumberEdit::updateTextMargins() {
-    // shift the text right only when an indicator actually occupies the space
-    static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit()
-        ->setTextMargins(_showIndicator ? 5 : 0, 0, 0, 0);
+    auto le = static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit();
+    int left = 0;
+    if (_showIndicator && le) {
+        // the label's right edge in the line edit's coordinate space
+        const int labelRight = _indicator->x() - le->x()
+            + qBound(_indicator->minimumWidth(), _indicator->sizeHint().width(),
+                     _indicator->maximumWidth()) + 2;
+        const int textW = le->fontMetrics().horizontalAdvance(le->displayText());
+        if ((le->width() - textW) / 2 >= labelRight) {
+            // comfortable: centered text clears the label zone
+            left = qMax(labelRight - ARROW_W, 0);
+        } else {
+            // tight: the margin keeps the text fully right of the label —
+            // it trims to fit and can never underlap, so the label stays
+            left = labelRight;
+        }
+    }
+    if (le) {
+        le->setTextMargins(left, 0, 0, 0);
+    }
+    updateIndicatorVisibility();
+    _spinBox->updateGeometry(); // the label's footprint feeds the size hint
 }
 
 void NumberEdit::setLabel(const QString& text) {
@@ -521,25 +808,48 @@ void NumberEdit::keyPressEvent(QKeyEvent* event) {
 bool NumberEdit::eventFilter(QObject* watched, QEvent* event) {
     auto le = static_cast<NumberEdit::SpinBox*>(_spinBox)->getLineEdit();
 
-    if (event->type() == QEvent::Enter || event->type() == QEvent::Leave) {
-        // underMouse() stays true while the cursor is over any part of the
-        // spinbox, so moving between the line edit and buttons causes no
-        // property flicker. The stylesheet keys arrow visibility off "hovered".
-        const bool hovered = _spinBox->underMouse();
-        if (_spinBox->property("hovered").toBool() != hovered) {
-            _spinBox->setProperty("hovered", hovered);
-            _spinBox->style()->unpolish(_spinBox);
-            _spinBox->style()->polish(_spinBox);
-            updateIndicatorVisibility();
-        }
+    if (event->type() == QEvent::Enter
+        && (watched == this || watched == _spinBox || watched == le
+            || watched == _arrowDown || watched == _arrowUp)) {
+        // Qt only delivers Enter to a widget the cursor really entered, and
+        // the enter chain walks ancestors — so any Enter anywhere in the
+        // subtree, including landing directly on an arrow, proves hover
+        setHovered(true);
+    } else if (event->type() == QEvent::Leave && (watched == _spinBox || watched == le)) {
+        // moving onto an overlay child (arrow, indicator) fires Leave on the
+        // widget beneath while the cursor stays inside the field
+        setHovered(true);
+    } else if (watched == this && event->type() == QEvent::Leave) {
+        // leaving the NumberEdit leaves the whole subtree — but a Leave can
+        // arrive without the enter/leave chain actually moving the cursor
+        // (widget show/hide reshuffles), so verify underMouse before hiding
+        QTimer::singleShot(150, this, [this] {
+            if (!underMouse()) {
+                setHovered(false);
+            }
+        });
     }
-    else if (watched == _spinBox && event->type() == QEvent::Resize) {
+    else if ((watched == _spinBox || watched == this) && event->type() == QEvent::Resize
+             || watched == _spinBox && event->type() == QEvent::Move) {
         // anchor the indicator overlay to the left side of the spinbox
         _indicator->move(2, (_spinBox->height() - _indicator->sizeHint().height()) / 2);
+        // inset so the opaque arrow backdrop can't erase the parent's
+        // 1px frame and rounded corners; children aren't clipped to the
+        // spinbox, so they can reach past its bounds to the frame's edge
+        const int arrowTop = 1 - _spinBox->y();
+        _arrowDown->setGeometry(1, arrowTop, ARROW_W, height() - 2);
+        _arrowUp->setGeometry(_spinBox->width() - ARROW_W - 1, arrowTop,
+                              ARROW_W, height() - 2);
+        updateTextMargins();
+        updateIndicatorVisibility();
     }
 
     if (watched == static_cast<QObject*>(le)) {
-        if (event->type() == QEvent::FocusIn) {
+        if (event->type() == QEvent::Resize) {
+            // the spinbox Resize above fires before fixEditField() gives the
+            // edit its real width — only now is the collision eval valid
+            updateTextMargins();
+        } else if (event->type() == QEvent::FocusIn) {
             _editing = true;
             _preEditValue = value();
         } else if (event->type() == QEvent::KeyPress) {

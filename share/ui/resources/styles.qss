@@ -23,7 +23,9 @@ QWidget[class="NumberEdit"]:disabled QDoubleSpinBox {
 
 /* Indicator label styling */
 QWidget[class="NumberEdit"] QLabel#indicator {
-    background-color: transparent;
+    /* opaque so overflowing text clips under the label instead of
+       overprinting it — matches the arrow overlays' approach */
+    background-color: palette(base);
     padding-left: 1px;
     padding-right: 0px;
     color: palette(dark);
@@ -37,57 +39,8 @@ QWidget[class="NumberEdit"] QDoubleSpinBox {
     padding: 2px;
 }
 
-/* Arrow buttons - shared base styles */
-QWidget[class="NumberEdit"] QDoubleSpinBox::up-button,
-QWidget[class="NumberEdit"] QDoubleSpinBox::down-button {
-    subcontrol-origin: border;
-    min-width: 10px;
-    max-width: 10px;
-    min-height: 22px;
-    max-height: 22px;
-    width: 14px;
-    height: 16px;
-    background-color: transparent; /* #e0e0e0; */
-    border: none;
-    /* border-width: 1px; */
-}
-
-/* Unique positioning */
-QWidget[class="NumberEdit"] QDoubleSpinBox::up-button {
-    subcontrol-position: center right;
-    right: 1px;
-}
-
-QWidget[class="NumberEdit"] QDoubleSpinBox::down-button {
-    subcontrol-position: center left;
-    left: 1px;
-}
-
-/* Shared hover/pressed states */
-QWidget[class="NumberEdit"] QDoubleSpinBox::up-button:hover,
-QWidget[class="NumberEdit"] QDoubleSpinBox::down-button:hover {
-    background-color: rgba(0, 0, 0, 0.07);
-}
-
-QWidget[class="NumberEdit"] QDoubleSpinBox::up-button:pressed,
-QWidget[class="NumberEdit"] QDoubleSpinBox::down-button:pressed {
-    background-color: rgba(0, 0, 0, 0.12);
-}
-
-/* Arrow Shapes (Inner part) - hidden until the spinbox is hovered */
-QWidget[class="NumberEdit"] QDoubleSpinBox::up-arrow,
-QWidget[class="NumberEdit"] QDoubleSpinBox::down-arrow {
-    image: none;
-    /* color: palette(mid); */
-}
-
-QWidget[class="NumberEdit"] QDoubleSpinBox[hovered="true"]::up-arrow {
-    image: url(:/icons/pan-right);
-}
-
-QWidget[class="NumberEdit"] QDoubleSpinBox[hovered="true"]::down-arrow {
-    image: url(:/icons/pan-left);
-}
+/* Spin buttons are not style subcontrols (they always reserve field width,
+   even when hidden); hover-only arrow overlays in NumberEdit replace them. */
 
 QLineEdit, QTextEdit, QPlainTextEdit {
     min-height: 22px;

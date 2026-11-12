@@ -27,6 +27,7 @@ class QIcon;
 namespace Linea::UI {
 
 class FadeOverlay;
+class ArrowOverlay;
 
 /**
  * Enhanced numeric input widget with optional label/icon and extended features.
@@ -146,6 +147,8 @@ private:
     QLabel* _indicator = nullptr;
     QDoubleSpinBox* _spinBox = nullptr;
     FadeOverlay* _fadeOverlay = nullptr;
+    ArrowOverlay* _arrowUp = nullptr;
+    ArrowOverlay* _arrowDown = nullptr;
 
     bool _trimZeros = true;
     bool _hasFrame = true;
@@ -155,6 +158,7 @@ private:
     bool _mixedMode = false;
     bool _showIndicator = false;
 
+    void setHovered(bool hovered);
     void updateIndicatorVisibility();
     void updateTextMargins();
     double _preEditValue = 0.0;
