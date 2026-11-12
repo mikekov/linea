@@ -29,9 +29,9 @@ static const std::vector<Components> color_spaces = {
     {
         Type::RGB, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}}, Traits::Picker,
         {
-            { "r", _("&R"), _("Red"), Unit::EightBit },
-            { "g", _("&G"), _("Green"), Unit::EightBit },
-            { "b", _("&B"), _("Blue"), Unit::EightBit }
+            { "r", _("R"), _("Red"), Unit::EightBit },
+            { "g", _("G"), _("Green"), Unit::EightBit },
+            { "b", _("B"), _("Blue"), Unit::EightBit }
         }
     },
     {
@@ -45,17 +45,17 @@ static const std::vector<Components> color_spaces = {
     {
         Type::HSL, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
-            { "h", _("&H"), _("Hue"), Unit::Degree },
-            { "s", _("&S"), _("Saturation"), Unit::Percent },
-            { "l", _("&L"), _("Lightness"), Unit::Percent }
+            { "h", _("H"), _("Hue"), Unit::Degree },
+            { "s", _("S"), _("Saturation"), Unit::Percent },
+            { "l", _("L"), _("Lightness"), Unit::Percent }
         }
     },
     {
         Type::HSV, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
-            { "h", _("&H"), _("Hue"), Unit::Degree },
-            { "s", _("&S"), _("Saturation"), Unit::Percent },
-            { "v", _("&V"), _("Value"), Unit::Percent }
+            { "h", _("H"), _("Hue"), Unit::Degree },
+            { "s", _("S"), _("Saturation"), Unit::Percent },
+            { "v", _("V"), _("Value"), Unit::Percent }
         }
     },
     {
@@ -78,9 +78,9 @@ static const std::vector<Components> color_spaces = {
     {
         Type::HSLUV, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}}, Traits::Internal,
         {
-            { "h", _("&H*"), _("Hue"), Unit::Degree },
-            { "s", _("&S*"), _("Saturation"), Unit::Percent },
-            { "l", _("&L*"), _("Lightness"), Unit::Percent }
+            { "h", _("H*"), _("Hue"), Unit::Degree },
+            { "s", _("S*"), _("Saturation"), Unit::Percent },
+            { "l", _("L*"), _("Lightness"), Unit::Percent }
         }
     },
     {
@@ -129,9 +129,9 @@ static const std::vector<Components> color_spaces = {
             // show chroma 0..0.4 (sRGB peaks near 0.32); wider gamuts pin the excess to the top edge
             .axes={.fixed=2, .x=0, .y=1, .y_scale=OkLch::CHROMA_SCALE}, .gamut=true, .shared_hue=true}, Traits::Picker,
         {
-            { "l", _("&L<sub>ok</sub>"), _("Lightness"), Unit::Percent },
-            { "c", _("&C<sub>ok</sub>"), _("Chroma"), Unit::Chroma },
-            { "h", _("&H<sub>ok</sub>"), _("Hue"), Unit::Degree }
+            { "l", _("L"), _("Lightness"), Unit::Percent },
+            { "c", _("C"), _("Chroma"), Unit::Chroma },
+            { "h", _("H"), _("Hue"), Unit::Degree }
         }
     },
     {
@@ -257,7 +257,7 @@ std::map<Type, Components> _build(bool alpha)
     if (alpha) {
         for (auto &[key, val] : sets) {
             // alpha component with unique ID, so it doesn't clash with "a" in Lab
-            val.add("alpha", C_("Transparency (alpha)", "&A"), _("Alpha"), Unit::Percent);
+            val.add("alpha", C_("Transparency (alpha)", "A"), _("Alpha"), Unit::Percent);
         }
     }
     return sets;

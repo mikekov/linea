@@ -152,7 +152,7 @@ void ColorNotebook::wireColorHolder() {
     delete _swatchMenu;
     _swatchMenu = createColorClipboardMenu(_colors, [this] {
         return _current_space ? _current_space->getType() : Inkscape::Colors::Space::Type::NONE;
-    }, this);
+    }, this, _ui->rgbaEntry);
 }
 
 void ColorNotebook::updateSwatch() {
@@ -171,6 +171,7 @@ void ColorNotebook::switchToSpace(std::shared_ptr<Inkscape::Colors::Space::AnySp
 
     // Create new page for the selected space
     _current_space = space;
+    _ui->rgbaEntry->setDisplaySpace(space->getType());
     _current_page = new ColorPage(space, _colors);
     _ui->mainLayout->addWidget(_current_page, 1, 0); // Add at row 1
     _current_page->show();

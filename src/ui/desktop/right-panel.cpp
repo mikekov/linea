@@ -98,7 +98,6 @@ void RightPanel::buildHeader() {
     // connect(extensionGallery, &ExtensionGallery::actionRequested, extensionPopup,
     //         [extensionPopup](const QString&) { extensionPopup->hide(); });
 
-    tb->addStretch();
 // temp --------------------------------
     // auto test = tb->addPushButton("x");
     // test->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -196,6 +195,8 @@ void RightPanel::buildHeader() {
     connect(_rotationEdit, &NumberEdit::valueChanged, this, [this](auto rotation) {
         Q_EMIT rotationChanged(rotation);
     });
+
+    tb->addStretch();
 
     static auto snap_ids = std::to_array({"simple-snap-bbox", "simple-snap-nodes", "simple-snap-alignment"});
     tb->addSplitMenuButton(snap_ids, "snap-global-toggle");

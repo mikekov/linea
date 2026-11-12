@@ -5,6 +5,7 @@
 
 #include "color-picker-panel.h"
 
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
@@ -29,6 +30,7 @@
 #include "desktop.h"
 #include "inkscape.h"
 #include "qt/util/surface-format.h"
+#include "ui/cursor-utils.h"
 #include "ui/tools/dropper-tool.h"
 #include "ui/tools/tool-base.h"
 
@@ -65,29 +67,33 @@ ColorPickerPanel::~ColorPickerPanel() { cancelPick(); }
 
 void ColorPickerPanel::buildBottomBar() {
     // eye dropper button
-    connect(_ui->dropperBtn, &QPushButton::clicked, [this]() { pickColor(); });
+    // connect(_ui->dropperBtn, &QPushButton::clicked, [this]() { pickColor(); });
 
     // color swatch and hex entry live in the .ui file; only the color holder
     // wiring needs code
-    _ui->swatch->setStyle(ColorPreview::Simple);
-    _ui->swatch->setFrame(true);
+    _ui->swatch->setStyle(ColorPreview::Outlined);
+    // _ui->swatch->setFrame(true);
     _ui->swatch->setCheckerboardTileSize(4);
     _ui->swatch->setCursor(Qt::PointingHandCursor);
-    _ui->swatch->setToolTip(tr("Click for copy/paste options"));
-
-    _swatchMenu = createColorClipboardMenu(_colorSet, [this] { return _spaceType; }, this);
+    // _ui->swatch->setToolTip(tr("Click for copy/paste options"));
+    _ui->swatch->setShowPipette(true);
     connect(_ui->swatch, &ColorPreview::clicked, this, [this] {
+        pickColor();
+    });
+
+    _swatchMenu = createColorClipboardMenu(_colorSet, [this] { return _spaceType; }, this, _ui->hexEdit);
+    connect(_ui->optionsBtn, &QPushButton::clicked, this, [this] {
         _swatchMenu->popup(QCursor::pos());
     });
 
-    _ui->hexEdit->setColorHolder(_colorSet);
-
-    // out-of-gamut warning icon
-    _ui->warningLabel->setPixmap(QIcon(":/icons/warning").pixmap(12, 12));
+    // out-of-gamut warning badge on the swatch; connect before setColorHolder
+    // so an already-out-of-gamut color in the holder isn't missed
     _ui->hexEdit->outOfGamutSignal().connect([this](const std::string& msg) {
-        _ui->warningLabel->setToolTip(msg.empty() ? tr("Color is out of gamut") : QString::fromStdString(msg));
-        _ui->warningLabel->setVisible(!msg.empty());
+        _ui->swatch->setWarning(!msg.empty());
+        _ui->swatch->setToolTip(msg.empty() ? tr("") : QString::fromStdString(msg));
     });
+
+    _ui->hexEdit->setColorHolder(_colorSet);
 
     // color space selector — a push button with a popup menu
     _spacesMenu = std::make_unique<QMenu>(this);
@@ -95,7 +101,8 @@ void ColorPickerPanel::buildBottomBar() {
     for (auto&& meta : Inkscape::Colors::Manager::get().spaces(Space::Traits::Picker)) {
         auto type = meta->getType();
         auto text = QString::fromStdString(meta->getShortName());
-        auto action = _spacesMenu->addAction(text);
+        auto icon = QIcon(QString(":/icons/%1").arg(QString::fromStdString(meta->getIcon())));
+        auto action = _spacesMenu->addAction(icon, text);
         action->setCheckable(true);
         action->setData(static_cast<int>(type));
         if (type == _spaceType) current = action;
@@ -108,7 +115,8 @@ void ColorPickerPanel::buildBottomBar() {
     }
     if (current) {
         current->setChecked(true);
-        _ui->spacesButton->setText(current->text());
+        _ui->spacesButton->setIcon(current->icon());
+        _ui->spacesButton->setToolTip(current->text());
     }
     _ui->spacesButton->setMenu(_spacesMenu.get());
 }
@@ -116,7 +124,11 @@ void ColorPickerPanel::buildBottomBar() {
 void ColorPickerPanel::createColorPage(Space::Type type, ColorPlateType plateType) {
     auto space = Inkscape::Colors::Manager::get().find(type);
 
-    _page = new ColorPage(space, _colorSet, this);
+    const auto layout = plateType == ColorPlateType::None
+        ? ColorPage::ChannelLayout::Sliders
+        : ColorPage::ChannelLayout::Segments;
+    _page = new ColorPage(space, _colorSet, this, layout);
+    _ui->hexEdit->setDisplaySpace(type);
 
     int topMargin = 0;
     int index = 0;
@@ -188,7 +200,10 @@ void ColorPickerPanel::setPickerType(Space::Type type) {
         for (auto action : _spacesMenu->actions()) {
             auto actionType = static_cast<Space::Type>(action->data().toInt());
             action->setChecked(actionType == type);
-            if (actionType == type) _ui->spacesButton->setText(action->text());
+            if (actionType == type) {
+                _ui->spacesButton->setIcon(action->icon());
+                _ui->spacesButton->setToolTip(action->text());
+            }
         }
     }
 }
@@ -220,14 +235,32 @@ void ColorPickerPanel::pickColor() {
     // input to the dropper and discards it after a pick, on cancel, or when the document/desktop goes away.
     auto tool = std::make_unique<Inkscape::UI::Tools::DropperTool>(desktop, true);
     _pickTool = tool.get();
-    _colorPicking = tool->onetimepick_signal.connect([this](auto& color) { _colorSet->set(color); });
+    _colorPicking = tool->onetimepick_signal.connect([this](auto& color) {
+        _colorSet->set(color);
+        endPick();
+    });
+    _colorPickingCancel = tool->onetimepick_cancel_signal.connect([this] { endPick(); });
     desktop->setOverlayTool(std::move(tool));
+
+    // pick cursor app-wide while the pick is active; the tool's own canvas
+    // cursor is the same fixed dropper icon in pickOnly mode, so nothing is lost
+    QApplication::setOverrideCursor(
+        Inkscape::load_svg_cursor_qt("dropper-tool.svg", devicePixelRatioF()));
+}
+
+void ColorPickerPanel::endPick() {
+    // the desktop defers discardOverlayTool until the event is dispatched
+    _pickTool = nullptr;
+    _colorPicking.disconnect();
+    _colorPickingCancel.disconnect();
+    QApplication::restoreOverrideCursor();
 }
 
 void ColorPickerPanel::cancelPick() {
     // the connection only survives while our dropper is still installed on its desktop
     if (!_colorPicking.connected()) return;
     _pickTool->getDesktop()->discardOverlayTool(_pickTool);
+    endPick();
 }
 
 ColorPlateType get_plate_type_preference(const std::string& pref_path_base, ColorPlateType def_type) {

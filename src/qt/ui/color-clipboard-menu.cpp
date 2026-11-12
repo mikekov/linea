@@ -5,14 +5,18 @@
 
 #include "color-clipboard-menu.h"
 
+#include <QAction>
+#include <QActionGroup>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QMenu>
 
+#include "color-entry.h"
 #include "color-holder.h"
 #include "colors/color.h"
 #include "colors/spaces/base.h"
+#include "preferences.h"
 
 namespace Linea::UI {
 
@@ -27,7 +31,7 @@ std::optional<Color> clipboardColor() {
 } // namespace
 
 QMenu* createColorClipboardMenu(std::shared_ptr<ColorHolder> colors, std::function<Space::Type()> display_space,
-                                QWidget* parent) {
+                                QWidget* parent, ColorEntry* entry) {
     auto menu = new QMenu(parent);
 
     auto copy = menu->addAction(QIcon(":/icons/edit-copy"), QObject::tr("Copy"));
@@ -63,7 +67,40 @@ QMenu* createColorClipboardMenu(std::shared_ptr<ColorHolder> colors, std::functi
         }
     });
 
-    QObject::connect(menu, &QMenu::aboutToShow, menu, [colors, copy, copy_hex, paste] {
+    QAction* rgb = nullptr;
+    QAction* css = nullptr;
+    if (entry) {
+        // apply the persisted format — the widget itself stays prefs-free
+        auto* prefs = Inkscape::Preferences::get();
+        entry->setFormat(static_cast<ColorEntry::Format>(
+            prefs->getIntLimited("/colorselector/entry-format", 0, 0, 1)));
+
+        menu->addSeparator();
+        auto* group = new QActionGroup(menu);
+        rgb = menu->addAction(QObject::tr("Show RGB Hex"));
+        css = menu->addAction(QObject::tr("Show CSS Color"));
+        for (auto* a : {rgb, css}) {
+            a->setCheckable(true);
+            group->addAction(a);
+        }
+        rgb->setChecked(entry->format() == ColorEntry::Format::RgbHex);
+        css->setChecked(entry->format() == ColorEntry::Format::Css);
+        // entry as context: connections die with it
+        QObject::connect(rgb, &QAction::triggered, entry, [entry] {
+            entry->setFormat(ColorEntry::Format::RgbHex);
+            Inkscape::Preferences::get()->setInt("/colorselector/entry-format", 0);
+        });
+        QObject::connect(css, &QAction::triggered, entry, [entry] {
+            entry->setFormat(ColorEntry::Format::Css);
+            Inkscape::Preferences::get()->setInt("/colorselector/entry-format", 1);
+        });
+    }
+
+    QObject::connect(menu, &QMenu::aboutToShow, menu, [colors, copy, copy_hex, paste, entry, rgb, css] {
+        if (entry) {
+            rgb->setChecked(entry->format() == ColorEntry::Format::RgbHex);
+            css->setChecked(entry->format() == ColorEntry::Format::Css);
+        }
         const bool can_copy = colors && !colors->isEmpty();
         copy->setEnabled(can_copy);
         copy_hex->setEnabled(can_copy);

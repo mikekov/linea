@@ -20,7 +20,13 @@ using namespace Inkscape::Colors;
 using namespace Inkscape::Colors::Space;
 
 // inner radius of a ring plate, as a fraction of its outer radius
-constexpr double RING_INNER_RATIO = 0.80;
+constexpr double RING_INNER_RATIO = 0.90;
+
+// shift the ring marker along its radius, in pixels (+ outward, - inward)
+constexpr double RING_MARKER_OFFSET = 1.0;
+
+// shrink the inscribed triangle's circumradius by this many pixels
+constexpr double TRIANGLE_INSET = 1.0;
 
 namespace {
 
@@ -68,6 +74,13 @@ std::array<QPointF, 3> triangleVerts(double inner, double hue) {
     return vs;
 }
 
+// triangle circumradius in local units: inner radius minus the pixel inset
+// (local radius 1.0 == half the area's shortest side)
+double triInnerRadius(const QRectF& area) {
+    const double half = std::min(area.width(), area.height()) / 2;
+    return half > 0 ? RING_INNER_RATIO - TRIANGLE_INSET / half : RING_INNER_RATIO;
+}
+
 // barycentric weights of p within triangle (a, b, c); any negative = outside
 std::array<double, 3> barycentric(const QPointF& p, const QPointF& a, const QPointF& b, const QPointF& c) {
     double den = (b.y() - c.y()) * (a.x() - c.x()) + (c.x() - b.x()) * (a.y() - c.y());
@@ -79,13 +92,13 @@ std::array<double, 3> barycentric(const QPointF& p, const QPointF& a, const QPoi
 // Build the ring's inner triangle image. Corners are lerped in sRGB between
 // the hue, black and white vertices — matching the GTK wheel's approach of
 // interpolating corner colors instead of per-pixel channel conversion.
-QImage buildColorTriangle(int resolution, const Color& base) {
+QImage buildColorTriangle(int resolution, const Color& base, double inner) {
     int radius = resolution / 2;
     int size = radius * 2 + 1;
     QImage img(size, size, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
 
-    const auto [apex, black, white] = triangleVerts(RING_INNER_RATIO, base[PLATE_HUE]);
+    const auto [apex, black, white] = triangleVerts(inner, base[PLATE_HUE]);
     Color corner = base;
     corner.set(PLATE_SAT, 1.0);
     corner.set(PLATE_VAL, 1.0);
@@ -149,7 +162,7 @@ Color RingColorPlate::colorAt(const QPointF& pos) const {
     }
     // pick sat/value inside the triangle: v = apex + white barycentric weights,
     // s = apex / v (apex contributes s·v to the point, white v·(1−s))
-    const auto vs = triangleVerts(RING_INNER_RATIO, c[PLATE_HUE]);
+    const auto vs = triangleVerts(triInnerRadius(activeArea()), c[PLATE_HUE]);
     const auto [wa, wb, ww] = barycentric(local, vs[0], vs[1], vs[2]);
     const double v = std::clamp(wa + ww, 0.0, 1.0);
     const double s = v > 0.0 ? std::clamp(wa / v, 0.0, 1.0) : 0.0;
@@ -174,7 +187,7 @@ void RingColorPlate::colorChanged() {
     // absurd channel values (OKLCH etc.) can come out NaN/Inf — sanitize
     // before clamping or the marker teleports to a corner
     const double hue = std::isfinite(color()[PLATE_HUE]) ? color()[PLATE_HUE] : 0.0;
-    const auto vs = triangleVerts(RING_INNER_RATIO, hue);
+    const auto vs = triangleVerts(triInnerRadius(activeArea()), hue);
     const double raw_v = color()[PLATE_VAL];
     const double raw_s = color()[PLATE_SAT];
     double v = std::isfinite(raw_v) ? std::clamp(raw_v, 0.0, 1.0) : 1.0;
@@ -230,14 +243,20 @@ void RingColorPlate::colorChanged() {
 std::vector<QPointF> RingColorPlate::markers() const {
     const auto active = activeArea();
     std::vector<QPointF> pts;
-    if (_ringMarker) pts.push_back(polarToScreen(active, *_ringMarker));
+    if (_ringMarker) {
+        QPointF p = *_ringMarker;
+        const double half = std::min(active.width(), active.height()) / 2;
+        const double r = std::hypot(p.x(), p.y());
+        if (r > 0 && half > 0) p *= (r + RING_MARKER_OFFSET / half) / r;
+        pts.push_back(polarToScreen(active, p));
+    }
     if (_triMarker) pts.push_back(polarToScreen(active, *_triMarker));
     return pts;
 }
 
 // triangle vertices in widget coordinates — same transform as the plate image
 std::array<QPointF, 3> RingColorPlate::triangleScreenVerts(const QRectF& area) const {
-    const auto local = triangleVerts(RING_INNER_RATIO, color()[PLATE_HUE]);
+    const auto local = triangleVerts(triInnerRadius(area), color()[PLATE_HUE]);
     return {polarToScreen(area, local[0]), polarToScreen(area, local[1]), polarToScreen(area, local[2])};
 }
 
@@ -256,9 +275,13 @@ void RingColorPlate::paintPlate(QPainter& p) {
         _ring.setColorSpace(QColorSpace(QColorSpace::SRgb));
         toSurface(_ring);
     }
-    if (_triangle.isNull()) {
+    // the pixel inset converts to a size-dependent local radius, so the
+    // cached image must also rebuild when the plate's size changes
+    const double tri_inner = triInnerRadius(a);
+    if (_triangle.isNull() || std::abs(tri_inner - _built_inner) > 1e-4) {
         _built_hue = color()[PLATE_HUE];
-        _triangle = buildColorTriangle(resolution, color());
+        _built_inner = tri_inner;
+        _triangle = buildColorTriangle(resolution, color(), tri_inner);
         _triangle.setColorSpace(QColorSpace(QColorSpace::SRgb));
         toSurface(_triangle);
     }

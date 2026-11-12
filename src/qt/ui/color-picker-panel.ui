@@ -48,9 +48,9 @@
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred"/>
           </property>
-          <property name="class" stdset="0">
+          <!-- <property name="class" stdset="0">
             <string>button-bar</string>
-          </property>
+          </property> -->
           <layout class="QHBoxLayout" name="barLayout">
             <property name="spacing">
               <number>4</number>
@@ -67,8 +67,25 @@
             <property name="bottomMargin">
               <number>0</number>
             </property>
-            <!-- eye dropper button -->
+            <!-- Color preview -->
             <item>
+            <widget class="Linea::UI::ColorPreview" name="swatch">
+                <property name="minimumSize">
+                <size>
+                    <width>22</width>
+                    <height>22</height>
+                </size>
+                </property>
+                <property name="maximumSize">
+                <size>
+                    <width>22</width>
+                    <height>22</height>
+                </size>
+                </property>
+            </widget>
+            </item>
+            <!-- eye dropper button -->
+            <!-- <item>
               <widget class="QPushButton" name="dropperBtn">
                 <property name="toolTip">
                   <string>Pick color from screen</string>
@@ -79,7 +96,7 @@
                   </iconset>
                 </property>
               </widget>
-            </item>
+            </item> -->
             <!-- framed container; color swatch and hex entry are inserted in code -->
             <item>
               <widget class="QWidget" name="colorEntryFrame" native="true">
@@ -91,7 +108,7 @@
                 </property>
                 <layout class="QHBoxLayout" name="frameLayout">
                   <property name="spacing">
-                    <number>2</number>
+                    <number>0</number>
                   </property>
                   <property name="leftMargin">
                     <number>0</number>
@@ -106,45 +123,21 @@
                     <number>0</number>
                   </property>
                   <item>
-                    <widget class="Linea::UI::ColorPreview" name="swatch">
-                      <property name="minimumSize">
-                        <size>
-                          <width>16</width>
-                          <height>16</height>
-                        </size>
+                    <widget class="QPushButton" name="optionsBtn">
+                      <property name="class" stdset="0">
+                        <string>narrow-button</string>
                       </property>
-                      <property name="maximumSize">
-                        <size>
-                          <width>16</width>
-                          <height>16</height>
-                        </size>
-                      </property>
-                    </widget>
-                  </item>
-                  <!-- <item>
-                    <widget class="QPushButton" name="copyBtn">
                       <property name="toolTip">
-                        <string>Copy color to clipboard</string>
+                        <string>Click for copy/paste options</string>
                       </property>
                       <property name="icon">
                         <iconset>
-                          <normaloff>:/icons/edit-copy</normaloff>
+                          <normaloff>:/icons/extra-settings</normaloff>
                         </iconset>
                       </property>
                     </widget>
                   </item>
-                  <item>
-                    <widget class="QPushButton" name="pasteBtn">
-                      <property name="toolTip">
-                        <string>Paste color from clipboard</string>
-                      </property>
-                      <property name="icon">
-                        <iconset>
-                          <normaloff>:/icons/edit-paste</normaloff>
-                        </iconset>
-                      </property>
-                    </widget>
-                  </item> -->
+
                   <!-- hex color entry; ColorSet is assigned in code -->
                   <item>
                     <widget class="Linea::UI::ColorEntry" name="hexEdit">
@@ -156,17 +149,6 @@
                       </property>
                       <property name="class" stdset="0">
                         <string>button-bar</string>
-                      </property>
-                    </widget>
-                  </item>
-                  <!-- out-of-gamut warning icon; pixmap set in code -->
-                  <item>
-                    <widget class="QLabel" name="warningLabel">
-                      <property name="visible">
-                        <bool>false</bool>
-                      </property>
-                      <property name="toolTip">
-                        <string>Color is out of gamut</string>
                       </property>
                     </widget>
                   </item>

@@ -18,6 +18,10 @@ ColorEntry::ColorEntry(QWidget* parent)
     : QLineEdit(parent) {
     setObjectName("ColorEntry");
     setAlignment(Qt::AlignCenter);
+    // CSS strings are long — a condensed cut of the font buys ~10% more room
+    auto condensed = font();
+    condensed.setStretch(QFont::Condensed);
+    setFont(condensed);
     setToolTip(tr("Hexadecimal RGB value of the color"));
 
     connect(this, &QLineEdit::textEdited, [this](const QString& text) {
@@ -48,11 +52,26 @@ void ColorEntry::setColorHolder(std::shared_ptr<ColorHolder> colors) {
 
 ColorEntry::~ColorEntry() = default;
 
+void ColorEntry::setFormat(Format format) {
+    if (_format == format) return;
+
+    _format = format;
+    updateGeometry();
+    onColorChanged();
+}
+
+void ColorEntry::setDisplaySpace(Inkscape::Colors::Space::Type space) {
+    if (_display_space == space) return;
+
+    _display_space = space;
+    onColorChanged();
+}
+
 QSize ColorEntry::sizeHint() const {
     // QLineEdit sizes to maxLength (9 chars) which is unnecessarily wide.
     // Return a compact hint; Expanding policy lets it grow when space is available.
     auto hint = QLineEdit::sizeHint();
-    hint.setWidth(fontMetrics().horizontalAdvance('#') * 7 + 8);
+    hint.setWidth(fontMetrics().horizontalAdvance('#') * (_format == Format::Css ? 14 : 7) + 8);
     return hint;
 }
 
@@ -60,6 +79,10 @@ void ColorEntry::onColorChanged() {
     if (_update.pending() || !_colors) return;
 
     if (_colors->isEmpty()) {
+        if (_warning) {
+            _warning = false;
+            _signal_out_of_gamut.emit({});
+        }
         auto scoped = _update.block();
         setText(tr("N/A"));
         return;
@@ -82,10 +105,23 @@ void ColorEntry::onColorChanged() {
         _signal_out_of_gamut.emit({});
     }
 
-    auto text = QString::fromStdString(color.toString(false));
-    if (this->text() != text) {
+    std::string text;
+    if (_format == Format::Css) {
+        // CSS function in the display space when set (hsl(), lab(), ...),
+        // otherwise in the color's own space
+        auto shown = *_colors->get();
+        if (_display_space && *_display_space != Space::Type::NONE) {
+            if (auto c = shown.converted(*_display_space)) shown = *c;
+        }
+        text = shown.toString(shown.getOpacity() < 1.0);
+    } else {
+        // hex after the sRGB gamut check/mapping above
+        text = color.toString(false);
+    }
+    auto qtext = QString::fromStdString(text);
+    if (this->text() != qtext) {
         auto scoped = _update.block();
-        setText(text);
+        setText(qtext);
     }
 }
 

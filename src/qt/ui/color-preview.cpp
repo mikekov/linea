@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <QIcon>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -35,6 +36,17 @@ static QColor fromRgba32(std::uint32_t rgba) {
         (rgba      ) & 0xff);
 }
 
+// perceptual lightness of a color, 0..1 — WCAG relative luminance (linearized
+// sRGB, Rec.709 weights) passed through the CIE L* curve, so 0.5 ≈ mid-gray
+static double lightness(const QColor& c) {
+    auto lin = [](float v) {
+        return v <= 0.04045f ? v / 12.92f : std::pow((v + 0.055f) / 1.055f, 2.4f);
+    };
+    const double y = 0.2126 * lin(c.redF()) + 0.7152 * lin(c.greenF()) + 0.0722 * lin(c.blueF());
+    constexpr double e = 216.0 / 24389.0; // (6/29)^3
+    return (y > e ? 116.0 * std::cbrt(y) - 16.0 : (24389.0 / 27.0) * y) / 100.0;
+}
+
 // ---------------------------------------------------------------------------
 
 ColorPreview::ColorPreview(QWidget* parent, std::uint32_t rgba)
@@ -44,11 +56,36 @@ ColorPreview::ColorPreview(QWidget* parent, std::uint32_t rgba)
     setObjectName("ColorPreview");
 }
 
+void ColorPreview::mousePressEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton && rect().contains(event->pos())) {
+        _pressed = true;
+        if (_pipette) update();
+    }
+    QWidget::mousePressEvent(event);
+}
+
 void ColorPreview::mouseReleaseEvent(QMouseEvent* event) {
+    if (_pressed) {
+        _pressed = false;
+        if (_pipette) update();
+    }
     if (event->button() == Qt::LeftButton && rect().contains(event->pos())) {
         Q_EMIT clicked();
     }
     QWidget::mouseReleaseEvent(event);
+}
+
+void ColorPreview::enterEvent(QEnterEvent* event) {
+    if (_pipette) update();
+    QWidget::enterEvent(event);
+}
+
+void ColorPreview::leaveEvent(QEvent* event) {
+    if (_pressed || _pipette) {
+        _pressed = false;
+        update();
+    }
+    QWidget::leaveEvent(event);
 }
 
 void ColorPreview::setRgba32(std::uint32_t rgba) {
@@ -79,6 +116,18 @@ void ColorPreview::setBorderRadius(int radius) {
 
 void ColorPreview::setCheckerboardTileSize(unsigned size) {
     _checkerTile = size;
+    update();
+}
+
+void ColorPreview::setWarning(bool on) {
+    if (_warning == on) return;
+    _warning = on;
+    update();
+}
+
+void ColorPreview::setShowPipette(bool show) {
+    if (_pipette == show) return;
+    _pipette = show;
     update();
 }
 
@@ -180,9 +229,8 @@ void ColorPreview::drawSolidColor(QPainter& p, const QRectF& rect, double radius
 void ColorPreview::drawIndicators(QPainter& p, const QRectF& rect) const {
     if (_isFill || _isStroke) {
         QColor fill = fromRgba32(_rgba);
-        // perceptual lightness — use simple luminance estimate
-        double lum = 0.299 * fill.redF() + 0.587 * fill.greenF() + 0.114 * fill.blueF();
-        QColor ink = (lum > 0.5) ? Qt::black : Qt::white;
+        // pick a contrasting ink from the fill's perceptual lightness
+        QColor ink = (lightness(fill) > 0.5) ? Qt::black : Qt::white;
 
         double minwh = std::min(rect.width(), rect.height());
         double cx = rect.left() + (rect.width() - minwh) / 2.0 + minwh / 2.0;
@@ -293,65 +341,96 @@ void ColorPreview::drawFrame(QPainter& p, const QRectF& rect) const {
     p.restore();
 }
 
+void ColorPreview::drawOutline(QPainter& p, const QRectF& rect, double radius) const {
+    bool dark = palette().color(QPalette::Window).lightness() < 128;
+    QColor borderColor = !dark ? QColor(0, 0, 0, 25) : QColor(0xff, 0xff, 0xff, 25);
+
+    QPainterPath border;
+    addRoundedRect(border, rect.adjusted(0.5, 0.5, -0.5, -0.5), std::max(0.0, radius - 0.5));
+
+    p.save();
+    p.setPen(QPen(borderColor, 1.0));
+    p.setBrush(Qt::NoBrush);
+    p.drawPath(border);
+    p.restore();
+}
+
+// lightness of the content under a centered badge: mean gradient stop or the
+// solid color, opacity ignored; images/mixed fall back to the window color
+double ColorPreview::badgeLightness() const {
+    if (!_gradient.empty()) {
+        double sum = 0.0;
+        for (const auto& s : _gradient) {
+            sum += lightness(QColor::fromRgbF(s.r, s.g, s.b));
+        }
+        return sum / _gradient.size();
+    }
+    if (_image.isNull() && !(_indicator & MixedContent)) {
+        return lightness(fromRgba32(_rgba));
+    }
+    return palette().color(QPalette::Window).lightnessF();
+}
+
+void ColorPreview::drawBadge(QPainter& p, const QRectF& rect, const QIcon& darkIcon, const QIcon& lightIcon) const {
+    constexpr int size = 16;
+    const auto& icon = (badgeLightness() > 0.50) ? darkIcon : lightIcon;
+    auto pm = icon.pixmap(QSize(size, size), devicePixelRatioF());
+    p.drawPixmap(rect.center() - QPointF(size / 2.0, size / 2.0), pm);
+}
+
 void ColorPreview::paintEvent(QPaintEvent*) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
     QRectF rect(0, 0, width(), height());
-    double radius = (_radius >= 0) ? _radius : (_style == Simple ? 0.0 : 2.0);
-    bool dark = palette().color(QPalette::Window).lightness() < 128;
+    double radius = (_radius >= 0) ? _radius : (_style == Simple ? 0.0 : 3.0);
 
-    if (_style == Outlined) {
-        // outer outline
-        QPainterPath outer;
-        addRoundedRect(outer, rect, radius);
-        QColor outlineColor = dark ? QColor(0xff, 0xff, 0xff, 0x5f) : QColor(0, 0, 0, 0x5f);
-        p.fillPath(outer, outlineColor);
-        rect = rect.adjusted(1, 1, -1, -1);
-        radius = std::max(0.0, radius - 1.0);
-
-        // inner border
-        QPainterPath inner;
-        addRoundedRect(inner, rect, radius);
-        QColor borderColor = dark ? QColor(0, 0, 0, 255) : QColor(0xff, 0xff, 0xff, 255);
-        p.fillPath(inner, borderColor);
-        rect = rect.adjusted(1, 1, -1, -1);
-        radius = std::max(0.0, radius - 1.0);
+    // click feedback: the color surface recedes inside its frame
+    QRectF content = rect;
+    double contentRadius = radius;
+    if (_pipette && _pressed) {
+        content = content.adjusted(1, 1, -1, -1);
+        contentRadius = std::max(0.0, contentRadius - 1.0);
     }
 
     // clip to final rect
     QPainterPath clip;
-    addRoundedRect(clip, rect, radius);
+    addRoundedRect(clip, content, contentRadius);
     p.setClipPath(clip);
 
     if (_indicator & MixedContent) {
         // Mixed selection
         p.setPen(palette().color(QPalette::WindowText));
-        p.drawText(rect, Qt::AlignCenter, tr("Mixed"));
-        p.setClipping(false);
-        if (_style == Simple && _frame) drawFrame(p, rect);
-        return;
-    }
-
-    if (!_image.isNull()) {
+        p.drawText(content, Qt::AlignCenter, tr("Mixed"));
+    } else if (!_image.isNull()) {
         double ratio = _image.devicePixelRatio();
         QRectF src(0, 0,
-                   std::min((double)_image.width(),  rect.width()  * ratio),
-                   std::min((double)_image.height(), rect.height() * ratio));
-        QRectF dst(rect.left(), rect.top(), src.width() / ratio, src.height() / ratio);
+                   std::min((double)_image.width(),  content.width()  * ratio),
+                   std::min((double)_image.height(), content.height() * ratio));
+        QRectF dst(content.left(), content.top(), src.width() / ratio, src.height() / ratio);
         p.drawImage(dst, _image, src);
     } else if (!_gradient.empty()) {
-        drawGradient(p, rect, radius);
+        drawGradient(p, content, contentRadius);
     } else {
-        drawSolidColor(p, rect, radius);
+        drawSolidColor(p, content, contentRadius);
     }
 
     p.setClipping(false);
 
-    drawIndicators(p, rect);
+    drawIndicators(p, content);
 
-    if (_style == Simple && _frame) {
-        drawFrame(p, rect);
+    if (_style == Outlined) {
+        drawOutline(p, content, contentRadius);
+    } else if (_frame) {
+        drawFrame(p, content);
+    }
+
+    if (_pipette && underMouse()) {
+        static const QIcon dark(":/icons/pipette-black"), light(":/icons/pipette-white");
+        drawBadge(p, rect, dark, light);
+    } else if (_warning) {
+        static const QIcon dark(":/icons/warning-black"), light(":/icons/warning-white");
+        drawBadge(p, rect, dark, light);
     }
 }
 

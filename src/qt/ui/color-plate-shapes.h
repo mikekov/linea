@@ -117,6 +117,7 @@ private:
     QImage _ring;
     QImage _triangle;
     double _built_hue = -1.0; // hue the cached triangle was built with
+    double _built_inner = -1.0; // local inner radius it was built with
     bool _dragRing = false;
     std::optional<QPointF> _ringMarker; // in polar coords
     std::optional<QPointF> _triMarker;  // in polar coords

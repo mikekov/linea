@@ -650,6 +650,12 @@ QToolButton.no-menu-arrow::menu-indicator {
     /* subcontrol-origin: content; */
 }
 
+/* Narrow icon-only button */
+QPushButton.narrow-button {
+    min-width: 16px;
+    max-width: 16px;
+}
+
 /* Reusable: a container bar that should match the push-button background */
 QWidget[class="button-bar"] {
     background-color: palette(button);
@@ -729,6 +735,23 @@ QPushButton.segment-middle {
 QPushButton.segment-last {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
+}
+
+/* Segmented number edits — a row of adjacent fields drawn as one control
+   (e.g. ColorPage channel edits). Non-leading segments drop their left
+   border so they share the previous segment's right border as the divider. */
+QWidget[class="NumberEdit"][segment="first"] {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+QWidget[class="NumberEdit"][segment="middle"] {
+    border-radius: 0;
+    border-left: none;
+}
+QWidget[class="NumberEdit"][segment="last"] {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
 }
 
 /* Removable tag pills, e.g. selected font categories in FontBrowser */

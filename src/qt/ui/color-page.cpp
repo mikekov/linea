@@ -5,6 +5,8 @@
 
 #include "color-page.h"
 
+#include <QHBoxLayout>
+
 #include "color-slider.h"
 #include "color-plate.h"
 #include "number-edit.h"
@@ -15,73 +17,54 @@ using namespace Inkscape::Colors;
 namespace Linea::UI {
 
 ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
-                     std::shared_ptr<ColorHolder> colors, QWidget* parent)
+                     std::shared_ptr<ColorHolder> selected_color, QWidget* parent,
+                     ChannelLayout channels)
     : QWidget(parent)
     , _space(std::move(space))
-    , _selected_colors(colors)
-    , _specific_colors(std::make_shared<ColorHolder>(_space, colors->hasAlpha())) {
+    , _selected_color(selected_color)
+    , _space_color(std::make_shared<ColorHolder>(_space, selected_color->hasAlpha())) {
     _grid = new QGridLayout();
     _grid->setHorizontalSpacing(2);
     _grid->setVerticalSpacing(1);
     _grid->setContentsMargins(0, 0, 0, 0);
-    _grid->setColumnStretch(1, 1); // Make column 1 (slider) resizable
+    _grid->setColumnStretch(0, 1); // Make column 0 (slider) resizable
     setLayout(_grid);
 
-    // Keep the selected color in-sync with the space specific color.
+    // Keep the selected color in-sync with the space-specific color.
     // set() stores the incoming space as written — the picker's space is the
     // color's identity in the model; serialization decides if it survives.
-    _specific_changed_connection = _specific_colors->signal_changed.connect([this]() {
-        auto scoped = SignalBlocker{_specific_changed_connection};
-        if (auto color = _specific_colors->get()) {
-            _selected_colors->set(*color);
+    _space_changed_connection = _space_color->signal_changed.connect([this]() {
+        auto scoped = SignalBlocker{_space_changed_connection};
+        if (auto color = _space_color->get()) {
+            _selected_color->set(*color);
         }
     });
 
     // Keep the child in-sync with the selected color.
-    _selected_changed_connection = _selected_colors->signal_changed.connect([this]() {
+    _selected_changed_connection = _selected_color->signal_changed.connect([this]() {
         auto scoped = SignalBlocker{_selected_changed_connection};
-        if (auto color = _selected_colors->get()) {
-            _specific_colors->set(*color);
+        if (auto color = _selected_color->get()) {
+            _space_color->set(*color);
         } else {
-            _specific_colors->clear();
+            _space_color->clear();
         }
     });
 
-    _selected_cleared_connection = _selected_colors->signal_cleared.connect([this]() {
-        auto scoped = SignalBlocker(_specific_changed_connection);
-        _specific_colors->clear();
+    _selected_cleared_connection = _selected_color->signal_cleared.connect([this]() {
+        auto scoped = SignalBlocker(_space_changed_connection);
+        _space_color->clear();
     });
 
     // Control signals when widget isn't visible
     // (handled in showEvent/hideEvent instead)
 
-    int row = 0;
-    for (auto& component : _specific_colors->getComponents()) {
-        auto label = new QLabel(this);
-        auto slider = new ColorSlider(_specific_colors, component, this);
-        auto edit = new NumberEdit(this);
-
-        // Set label properties
-        label->setText(QString::fromStdString(component.name));
-        label->setToolTip(QString::fromStdString(component.tip));
-        label->setAlignment(Qt::AlignCenter);
-        label->setBuddy(edit);
-        label->setProperty("class", "panel-label");
-
-        // Set slider properties
-        slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
-        // Set edit properties
+    auto const configure_edit = [](NumberEdit* edit, const Space::Component& component) {
         edit->setMinimum(0.0);
         edit->setMaximum(component.scale);
         edit->setSingleStep(1.0);
 
         // Set precision based on component
         edit->setDecimals(0);
-        // if (component.id == "alpha") {
-        //     edit->setDecimals(0);
-        // } else if (component.unit == Space::Unit::Degree || component.unit == Space::Unit::Percent) {
-        //     edit->setDecimals(0);
         if (component.scale <= 1) {
             // for small values increase precision
             edit->setDecimals(3);
@@ -91,20 +74,79 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
 
         // Set suffix based on unit
         if (component.unit == Inkscape::Colors::Space::Unit::Degree) {
-            edit->setSuffix("°");
+            // edit->setSuffix("°");
         } else if (component.unit == Inkscape::Colors::Space::Unit::Percent) {
-            edit->setSuffix("%");
+            // edit->setSuffix("%");
         }
-        //  else if (component.unit == Inkscape::Colors::Space::Unit::Chroma) {
-            // (very) limited chroma range; increase precision
-            // edit->setDecimals(2);
-        // }
 
-        _grid->addWidget(label, row, 0);
-        _grid->addWidget(slider, row, 1);
-        _grid->addWidget(edit, row, 2);
+        edit->setToolTip(QString::fromStdString(component.tip));
+    };
 
-        _channels.emplace_back(std::make_unique<ColorPageChannel>(_specific_colors, *label, *slider, *edit));
+    if (channels == ChannelLayout::Segments) {
+        const auto& components = _space_color->getComponents();
+        int row = 0;
+
+        // Optional sliders above the channel edits: a hue slider when the
+        // space has a degree (hue) channel, an alpha slider when the color
+        // carries opacity. They bind to the same holder, so segments and
+        // sliders stay in sync automatically.
+        auto add_slider = [this, &row](const Space::Component& component) {
+            auto slider = new ColorSlider(_space_color, component, this);
+            slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            _grid->addWidget(slider, row++, 0, 1, 3);
+            return slider;
+        };
+        if (auto hue = components.hue_index()) {
+            _hue_slider = add_slider(components[*hue]);
+        }
+        for (auto& component : components) {
+            if (component.id == "alpha") {
+                add_slider(component);
+                break;
+            }
+        }
+
+        // All channel edits in one row, drawn as a single segmented control;
+        // each edit carries its channel name in the built-in indicator label.
+        auto segments = new QHBoxLayout();
+        segments->setContentsMargins(0, 8, 0, 0);
+        segments->setSpacing(0);
+
+        const int count = static_cast<int>(components.size());
+        int col = 0;
+        for (auto& component : components) {
+            auto edit = new NumberEdit(this);
+            edit->setLabel(QString::fromStdString(component.name));
+            edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            configure_edit(edit, component);
+            if (count > 1) {
+                auto seg = col == 0 ? "first" : (col == count - 1 ? "last" : "middle");
+                edit->setProperty("segment", seg);
+            }
+            segments->addWidget(edit);
+
+            _channels.emplace_back(std::make_unique<ColorPageChannel>(_space_color, component, *edit));
+            col++;
+        }
+
+        _grid->addLayout(segments, row, 0, 1, 3);
+        return;
+    }
+
+    int row = 0;
+    for (auto& component : _space_color->getComponents()) {
+        auto slider = new ColorSlider(_space_color, component, this);
+        auto edit = new NumberEdit(this);
+
+        slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        // the channel name lives inside the edit, like in segments mode
+        edit->setLabel(QString::fromStdString(component.name));
+        configure_edit(edit, component);
+
+        _grid->addWidget(slider, row, 0);
+        _grid->addWidget(edit, row, 1);
+
+        _channels.emplace_back(std::make_unique<ColorPageChannel>(_space_color, *slider, *edit));
         row++;
     }
 }
@@ -117,19 +159,26 @@ ColorPlate* ColorPage::createColorPlate(Inkscape::Colors::Space::Type type, Colo
 
     auto plate = ColorPlate::create(type, plateType, gamut, this);
     if (!plate) return nullptr;
+    // wheel and ring plates already edit hue — drop the redundant slider
+    if (_hue_slider &&
+        (plateType == ColorPlateType::Wheel || plateType == ColorPlateType::Ring)) {
+        _grid->removeWidget(_hue_slider);
+        delete _hue_slider;
+        _hue_slider = nullptr;
+    }
     // keep color plate in sync with the color set
     _color_plate = plate;
-    _color_plate_changed = _specific_colors->signal_changed.connect([this]() {
-        if (auto color = _specific_colors->get()) {
+    _color_plate_changed = _space_color->signal_changed.connect([this]() {
+        if (auto color = _space_color->get()) {
             _color_plate->setColor(*color);
         }
     });
     _color_plate_updated = plate->connectColorChanged([this](const Inkscape::Colors::Color& color) {
         auto scoped = SignalBlocker{_color_plate_changed};
-        auto opacity = _specific_colors->get() ? _specific_colors->get()->getOpacity() : 1.0;
+        auto opacity = _space_color->get() ? _space_color->get()->getOpacity() : 1.0;
         auto updated = color;
         updated.setOpacity(opacity);
-        _specific_colors->set(updated);
+        _space_color->set(updated);
     });
     return plate;
 }
@@ -137,54 +186,64 @@ ColorPlate* ColorPage::createColorPlate(Inkscape::Colors::Space::Type type, Colo
 void ColorPage::showEvent(QShowEvent* event) {
     {
         // Refreshing the space-specific holder is a display sync, not a user
-        // edit — it must not propagate back into _selected_colors. A page
+        // edit — it must not propagate back into _selected_color. A page
         // shown for the first time still has live connections (only hideEvent
         // blocks them), so block explicitly for the sync.
-        auto scoped = SignalBlocker{_specific_changed_connection};
-        _specific_colors->clear();
-        if (auto color = _selected_colors->get()) {
-            _specific_colors->set(*color);
+        auto scoped = SignalBlocker{_space_changed_connection};
+        _space_color->clear();
+        if (auto color = _selected_color->get()) {
+            _space_color->set(*color);
         }
     }
-    _specific_changed_connection.unblock();
+    _space_changed_connection.unblock();
     _selected_changed_connection.unblock();
     QWidget::showEvent(event);
 }
 
 void ColorPage::hideEvent(QHideEvent* event) {
-    _specific_colors->clear();
-    _specific_changed_connection.block();
+    _space_color->clear();
+    _space_changed_connection.block();
     _selected_changed_connection.block();
     QWidget::hideEvent(event);
 }
 
-ColorPageChannel::ColorPageChannel(std::shared_ptr<ColorHolder> color, QLabel& label,
+ColorPageChannel::ColorPageChannel(std::shared_ptr<ColorHolder> color,
                                    ColorSlider& slider, NumberEdit& edit)
-    : _label(label)
-    , _slider(slider)
-    , _edit(edit)
-    , _color(std::move(color)) {
-    auto& component = _slider.getComponent();
+    : ColorPageChannel(std::move(color), slider.getComponent(), &slider, edit) {}
 
-    _color_changed = _color->signal_changed.connect([this, &component]() {
-        if (_color->isValid(component)) {
+ColorPageChannel::ColorPageChannel(std::shared_ptr<ColorHolder> color,
+                                   const Inkscape::Colors::Space::Component& component,
+                                   NumberEdit& edit)
+    : ColorPageChannel(std::move(color), component, nullptr, edit) {}
+
+ColorPageChannel::ColorPageChannel(std::shared_ptr<ColorHolder> color,
+                                   const Inkscape::Colors::Space::Component& component,
+                                   ColorSlider* slider, NumberEdit& edit)
+    : _slider(slider)
+    , _edit(edit)
+    , _component(component)
+    , _color(std::move(color)) {
+    _color_changed = _color->signal_changed.connect([this]() {
+        if (_color->isValid(_component)) {
             auto scoped = _update.block();
-            _edit.setValue(_slider.getScaled());
+            _edit.setValue(_color->getComponent(_component) * _component.scale);
         }
     });
 
     _edit_changed = QObject::connect(&_edit, &NumberEdit::valueChanged, [this](double value) {
         if (!_update.pending()) {
-            _slider.setScaled(value);
+            _color->setComponent(_component, value / _component.scale);
         }
     });
 
-    _slider_changed = QObject::connect(&_slider, &ColorSlider::valueChanged, [this]() {
-        if (!_update.pending()) {
-            auto scoped = _update.block();
-            _edit.setValue(_slider.getScaled());
-        }
-    });
+    if (_slider) {
+        _slider_changed = QObject::connect(_slider, &ColorSlider::valueChanged, [this]() {
+            if (!_update.pending()) {
+                auto scoped = _update.block();
+                _edit.setValue(_slider->getScaled());
+            }
+        });
+    }
 }
 
 } // namespace Linea::UI

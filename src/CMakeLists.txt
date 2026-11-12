@@ -313,13 +313,16 @@ set_target_properties(linea_base PROPERTIES
 find_package(Python3 REQUIRED)
 
 # Get all SVG icon files for dependency tracking
-file(GLOB ICON_SVG_FILES "${CMAKE_SOURCE_DIR}/share/icons/Dash/symbolic/actions/*.svg")
+file(GLOB ICON_SVG_FILES
+    "${CMAKE_SOURCE_DIR}/share/icons/Dash/symbolic/actions/*.svg"
+    "${CMAKE_SOURCE_DIR}/share/icons/Dash/scalable/actions/*.svg")
 
 # Run Python script to generate themed icon sets
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/icons-light.qrc ${CMAKE_BINARY_DIR}/icons-dark.qrc
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/buildtools/process-icons.py
         --source ${CMAKE_SOURCE_DIR}/share/icons/Dash/symbolic/actions
+                 ${CMAKE_SOURCE_DIR}/share/icons/Dash/scalable/actions
         --build-dir ${CMAKE_BINARY_DIR}
     DEPENDS ${CMAKE_SOURCE_DIR}/buildtools/process-icons.py ${ICON_SVG_FILES}
     COMMENT "Processing icons for light/dark themes"

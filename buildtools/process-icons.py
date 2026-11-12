@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Process SVG icons from Dash theme to create themed versions.
-Replaces currentColor with specified hex colors and generates .qrc files.
+Files ending in -symbolic.svg get black/white replaced with theme colors;
+other files are passed through with their colors intact (header still
+normalized). Generates .qrc files aliasing each icon without -symbolic.
 """
 
 import os
@@ -11,8 +13,9 @@ import argparse
 from pathlib import Path
 
 
-def process_svg_file(input_path, output_path, color, background_color):
-    """Process a single SVG file, replacing currentColor with the specified color."""
+def process_svg_file(input_path, output_path, color, background_color, recolor=True):
+    """Process a single SVG file: normalize the header for Qt resource loading and,
+    when recolor is True, replace black/white with the specified theme colors."""
     with open(input_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
@@ -27,40 +30,35 @@ def process_svg_file(input_path, output_path, color, background_color):
         count=1,
     )
 
-    # Replace black color values with the specified hex color
-    modified_content = re.sub(r'\bblack\b', color, content, flags=re.IGNORECASE)
-    modified_content = modified_content.replace('#000000', color)
+    modified_content = content
+    if recolor:
+        # Replace black color values with the specified hex color
+        modified_content = re.sub(r'\bblack\b', color, modified_content, flags=re.IGNORECASE)
+        modified_content = modified_content.replace('#000000', color)
 
-    # Replace white color values with the specified background color
-    if background_color:
-        modified_content = re.sub(r'\bwhite\b', background_color, modified_content, flags=re.IGNORECASE)
-        modified_content = modified_content.replace('#ffffff', background_color)
-        modified_content = modified_content.replace('#FFFFFF', background_color)
-
-    # Also replace explicit black (#000000, black) if needed
-    # Uncomment if you want to replace explicit black references too
-    # modified_content = re.sub(r'#000000', color, modified_content, flags=re.IGNORECASE)
-    # modified_content = re.sub(r'black', color, modified_content, flags=re.IGNORECASE)
+        # Replace white color values with the specified background color
+        if background_color:
+            modified_content = re.sub(r'\bwhite\b', background_color, modified_content, flags=re.IGNORECASE)
+            modified_content = modified_content.replace('#ffffff', background_color)
+            modified_content = modified_content.replace('#FFFFFF', background_color)
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(modified_content)
 
 
-def process_icons(source_dir, output_dir, color, background_color, qrc_output, prefix="/icons"):
-    """Process all SVG icons and generate qrc file."""
+def process_icons(source_dirs, output_dir, color, background_color):
+    """Process all SVG files from every source dir into one output dir."""
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    # Process all SVG files
-    svg_files = list(Path(source_dir).glob('*.svg'))
-
-    for svg_file in svg_files:
-        output_file = output_path / svg_file.name
-        process_svg_file(svg_file, output_file, color, background_color)
-        print(f"Processed: {svg_file.name} -> {color} on {background_color}")
-
-    # Generate qrc file with specified prefix
-    generate_qrc(output_path, qrc_output, prefix)
+    for source_dir in source_dirs:
+        for svg_file in Path(source_dir).glob('*.svg'):
+            output_file = output_path / svg_file.name
+            # files without the -symbolic suffix keep their own colors
+            recolor = svg_file.stem.endswith('-symbolic')
+            process_svg_file(svg_file, output_file, color, background_color, recolor)
+            print(f"Processed: {svg_file.name} -> {color} on {background_color}" if recolor
+                  else f"Copied: {svg_file.name} (colors intact)")
 
 
 def generate_qrc(icons_dir, qrc_output, prefix="/icons"):
@@ -91,7 +89,7 @@ def generate_qrc(icons_dir, qrc_output, prefix="/icons"):
 
 def main():
     parser = argparse.ArgumentParser(description='Process SVG icons for theming')
-    parser.add_argument('--source', required=True, help='Source directory containing SVG files')
+    parser.add_argument('--source', required=True, nargs='+', help='Source directories containing SVG files')
     parser.add_argument('--build-dir', required=True, help='Build directory for output')
     parser.add_argument('--light-color', default='#262626', help='Hex color for light theme (default: #262626)')
     parser.add_argument('--dark-color', default='#ececec', help='Hex color for dark theme (default: #ececec)')
@@ -100,12 +98,13 @@ def main():
 
     args = parser.parse_args()
 
-    source_dir = Path(args.source)
+    source_dirs = [Path(s) for s in args.source]
     build_dir = Path(args.build_dir)
 
-    if not source_dir.exists():
-        print(f"Error: Source directory {source_dir} does not exist")
-        sys.exit(1)
+    for source_dir in source_dirs:
+        if not source_dir.exists():
+            print(f"Error: Source directory {source_dir} does not exist")
+            sys.exit(1)
 
     # Create themed icon sets
     light_output = build_dir / 'icons' / 'light'
@@ -114,7 +113,7 @@ def main():
     light_qrc = build_dir / 'icons-light.qrc'
     dark_qrc = build_dir / 'icons-dark.qrc'
 
-    print(f"Processing icons from: {source_dir}")
+    print(f"Processing icons from: {[str(s) for s in source_dirs]}")
     print(f"Light theme color: {args.light_color} on {args.light_bg_color}")
     print(f"Dark theme color: {args.dark_color} on {args.dark_bg_color}")
     print()
@@ -122,13 +121,15 @@ def main():
     # Process light theme icons
     # Use empty prefix so .rcc can be registered under /icons at runtime
     print("Processing light theme icons...")
-    process_icons(source_dir, light_output, args.light_color, args.light_bg_color, light_qrc, "/")
+    process_icons(source_dirs, light_output, args.light_color, args.light_bg_color)
+    generate_qrc(light_output, light_qrc, "/")
 
     print()
 
     # Process dark theme icons
     print("Processing dark theme icons...")
-    process_icons(source_dir, dark_output, args.dark_color, args.dark_bg_color, dark_qrc, "/")
+    process_icons(source_dirs, dark_output, args.dark_color, args.dark_bg_color)
+    generate_qrc(dark_output, dark_qrc, "/")
 
     print()
     print("Done!")

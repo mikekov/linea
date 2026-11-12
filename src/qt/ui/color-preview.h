@@ -43,6 +43,13 @@ public:
     // checkerboard tile size in pixels
     void setCheckerboardTileSize(unsigned size);
 
+    // persistent warning badge overlaid on the swatch (e.g. out-of-gamut);
+    // the widget's own tooltip carries the message
+    void setWarning(bool on);
+
+    // pipette icon shown on mouse hover (replaces the warning badge while hovered)
+    void setShowPipette(bool show);
+
     // fill / stroke role indicators
     void setFill(bool on);
     void setStroke(bool on);
@@ -60,7 +67,10 @@ Q_SIGNAL void clicked();
 
 protected:
     void paintEvent(QPaintEvent*) override;
+    void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private:
     void drawCheckers(QPainter& p, const QRectF& rect) const;
@@ -68,6 +78,9 @@ private:
     void drawSolidColor(QPainter& p, const QRectF& rect, double radius) const;
     void drawIndicators(QPainter& p, const QRectF& rect) const;
     void drawFrame(QPainter& p, const QRectF& rect) const;
+    void drawOutline(QPainter& p, const QRectF& rect, double radius) const;
+    double badgeLightness() const;
+    void drawBadge(QPainter& p, const QRectF& rect, const class QIcon& darkIcon, const class QIcon& lightIcon) const;
 
     std::uint32_t _rgba = 0;
     Style    _style    = Simple;
@@ -76,6 +89,9 @@ private:
     bool     _frame    = false;
     bool     _isFill   = false;
     bool     _isStroke = false;
+    bool     _warning  = false;
+    bool     _pipette  = false;
+    bool     _pressed  = false;
     unsigned _checkerTile = 6;
     std::vector<GradientStop> _gradient;
     QImage _image;
