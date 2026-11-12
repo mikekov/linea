@@ -18,7 +18,7 @@
 #include "spaces/gray.h"
 #include "spaces/hsl.h"
 #include "spaces/hsluv.h"
-#include "spaces/hsv.h"
+#include "spaces/hwb.h"
 #include "spaces/lab.h"
 #include "spaces/lch.h"
 #include "spaces/linear-rgb.h"
@@ -42,8 +42,8 @@ Parsers::Parsers()
     addParser(new Space::RGB::Parser(true));
     addParser(new Space::HSL::Parser(false));
     addParser(new Space::HSL::Parser(true));
-    addParser(new Space::HSV::fromHwbParser(false));
-    addParser(new Space::HSV::fromHwbParser(true));
+    addParser(new Space::HWB::Parser(false));
+    addParser(new Space::HWB::Parser(true));
     addParser(new Space::Lab::Parser());
     addParser(new Space::Lch::Parser());
     addParser(new Space::OkLab::Parser());

@@ -13,6 +13,7 @@
 #include "hsl.h"
 #include "hsluv.h"
 #include "hsv.h"
+#include "hwb.h"
 #include "lch.h"
 #include "luv.h"
 #include "okhsl.h"
@@ -39,6 +40,7 @@ auto spaceToProfile(std::shared_ptr<Space::ProfileSpace<false>> const &space)
         CASE(HSL,          HSL::spaceToProfile);
         CASE(HSLUV,      HSLuv::spaceToProfile);
         CASE(HSV,          HSV::spaceToProfile);
+        CASE(HWB,          HWB::spaceToProfile);
         CASE(LCH,          Lch::spaceToProfile);
         CASE(LUV,          Luv::spaceToProfile);
         CASE(OKHSL,      OkHsl::spaceToProfile);
@@ -59,6 +61,7 @@ auto profileToSpace(std::shared_ptr<Space::ProfileSpace<false>> const &space)
         CASE(HSL,          HSL::profileToSpace);
         CASE(HSLUV,      HSLuv::profileToSpace);
         CASE(HSV,          HSV::profileToSpace);
+        CASE(HWB,          HWB::profileToSpace);
         CASE(LCH,          Lch::profileToSpace);
         CASE(LUV,          Luv::profileToSpace);
         CASE(OKHSL,      OkHsl::profileToSpace);

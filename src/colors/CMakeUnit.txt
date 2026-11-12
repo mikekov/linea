@@ -17,6 +17,7 @@ set(colors_unit_SRC
 	spaces/hsl.cpp
 	spaces/hsluv.cpp
 	spaces/hsv.cpp
+	spaces/hwb.cpp
 	spaces/lab.cpp
 	spaces/lch.cpp
 	spaces/linear-rgb.cpp
@@ -52,6 +53,7 @@ set(colors_unit_SRC
 	spaces/hsl.h
 	spaces/hsluv.h
 	spaces/hsv.h
+	spaces/hwb.h
 	spaces/lab.h
 	spaces/lch.h
 	spaces/linear-rgb.h

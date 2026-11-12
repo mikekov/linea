@@ -51,7 +51,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::HSV, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::HSV, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Internal,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "s", _("S"), _("Saturation"), Unit::Percent },
@@ -59,20 +59,28 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
+        Type::HWB, {.polar=Type::HSV, .rect=Type::HWB, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        {
+            { "h", _("H"), _("Hue"), Unit::Degree },
+            { "w", _("W"), _("Whiteness"), Unit::Percent },
+            { "b", _("B"), _("Blackness"), Unit::Percent }
+        }
+    },
+    {
         Type::CMYK, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}}, Traits::Internal,
         {
-            { "c", _("&C"), C_("CMYK", "Cyan"), Unit::Percent },
-            { "m", _("&M"), C_("CMYK", "Magenta"), Unit::Percent },
-            { "y", _("&Y"), C_("CMYK", "Yellow"), Unit::Percent },
-            { "k", _("&K"), C_("CMYK", "Black"), Unit::Percent }
+            { "c", _("C"), C_("CMYK", "Cyan"), Unit::Percent },
+            { "m", _("M"), C_("CMYK", "Magenta"), Unit::Percent },
+            { "y", _("Y"), C_("CMYK", "Yellow"), Unit::Percent },
+            { "k", _("K"), C_("CMYK", "Black"), Unit::Percent }
         }
     },
     {
         Type::CMY, {}, Traits::Internal,
         {
-            { "c", _("&C"), C_("CMYK", "Cyan"), Unit::Percent },
-            { "m", _("&M"), C_("CMYK", "Magenta"), Unit::Percent },
-            { "y", _("&Y"), C_("CMYK", "Yellow"), Unit::Percent },
+            { "c", _("C"), C_("CMYK", "Cyan"), Unit::Percent },
+            { "m", _("M"), C_("CMYK", "Magenta"), Unit::Percent },
+            { "y", _("Y"), C_("CMYK", "Yellow"), Unit::Percent },
         }
     },
     {
@@ -86,41 +94,41 @@ static const std::vector<Components> color_spaces = {
     {
         Type::OKHSL, {.polar=Type::OKHSV, .rect=Type::OKHSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
-            { "h", _("&H<sub>ok</sub>"), _("Hue"), Unit::Degree },
-            { "s", _("&S<sub>ok</sub>"), _("Saturation"), Unit::Percent },
-            { "l", _("&L<sub>ok</sub>"), _("Lightness"), Unit::Percent }
+            { "h", _("H"), _("Hue"), Unit::Degree },
+            { "s", _("S"), _("Saturation"), Unit::Percent },
+            { "l", _("L"), _("Lightness"), Unit::Percent }
         }
     },
     {
         Type::OKHSV, {}, Traits::Internal,
         {
-            { "h", _("&H<sub>ok</sub>"), _("Hue"), Unit::Degree },
-            { "s", _("&S<sub>ok</sub>"), _("Saturation"), Unit::Percent },
-            { "v", _("&V<sub>ok</sub>"), _("Value"), Unit::Percent }
+            { "h", _("H"), _("Hue"), Unit::Degree },
+            { "s", _("S"), _("Saturation"), Unit::Percent },
+            { "v", _("V"), _("Value"), Unit::Percent }
         }
     },
     {
         Type::LCH, {}, Traits::Internal,
         {
-            { "l", _("&L"), _("Luminance"), Unit::EightBit },
-            { "c", _("&C"), _("Chroma"), Unit::EightBit },
-            { "h", _("&H"), _("Hue"), Unit::Degree },
+            { "l", _("L"), _("Luminance"), Unit::EightBit },
+            { "c", _("C"), _("Chroma"), Unit::EightBit },
+            { "h", _("H"), _("Hue"), Unit::Degree },
         }
     },
     {
         Type::LUV, {}, Traits::Internal,
         {
-            { "l", _("&L"), _("Luminance"), Unit::Percent },
-            { "u", _("&U"), _("Chroma U"), Unit::Percent },
-            { "v", _("&V"), _("Chroma V"), Unit::Percent },
+            { "l", _("L"), _("Luminance"), Unit::Percent },
+            { "u", _("U"), _("Chroma U"), Unit::Percent },
+            { "v", _("V"), _("Chroma V"), Unit::Percent },
         }
     },
     {
         Type::OKLAB, {}, Traits::Internal,
         {
-            { "l", _("&L<sub>ok</sub>"), _("Lightness"), Unit::Percent },
-            { "a", _("&A<sub>ok</sub>"), _("Component A"), Unit::Percent },
-            { "b", _("&B<sub>ok</sub>"), _("Component B"), Unit::Percent }
+            { "l", _("L"), _("Lightness"), Unit::Percent },
+            { "a", _("A"), _("Component A"), Unit::Percent },
+            { "b", _("B"), _("Component B"), Unit::Percent }
         }
     },
     {
@@ -137,40 +145,40 @@ static const std::vector<Components> color_spaces = {
     {
         Type::LAB, {}, Traits::Internal,
         {
-            { "l", _("&L"), _("Lightness"), Unit::Percent },
-            { "a", _("&A"), _("Component A"), Unit::EightBit },
-            { "b", _("&B"), _("Component B"), Unit::EightBit }
+            { "l", _("L"), _("Lightness"), Unit::Percent },
+            { "a", _("A"), _("Component A"), Unit::EightBit },
+            { "b", _("B"), _("Component B"), Unit::EightBit }
         }
     },
     {
         Type::YCbCr, {}, Traits::CMS,
         {
-            { "y", _("&Y"), _("Y"), Unit::EightBit },
-            { "cb", _("C&r"), _("Cb"), Unit::EightBit },
-            { "cr", _("C&b"), _("Cr"), Unit::EightBit }
+            { "y", _("Y"), _("Y"), Unit::EightBit },
+            { "cb", _("Cb"), _("Cb"), Unit::EightBit },
+            { "cr", _("Cr"), _("Cr"), Unit::EightBit }
         }
     },
     {
         Type::XYZ, {}, Traits::Internal,
         {
-            { "x", "&X", "X", Unit::EightBit },
-            { "y", "&Y", "Y", Unit::EightBit },
-            { "z", "&Z", "Z", Unit::EightBit }
+            { "x", "X", "X", Unit::EightBit },
+            { "y", "Y", "Y", Unit::EightBit },
+            { "z", "Z", "Z", Unit::EightBit }
         }
     },
     {
         Type::XYZ50, {}, Traits::Internal,
         {
-            { "x", "&X", "X", Unit::EightBit },
-            { "y", "&Y", "Y", Unit::EightBit },
-            { "z", "&Z", "Z", Unit::EightBit }
+            { "x", "X", "X", Unit::EightBit },
+            { "y", "Y", "Y", Unit::EightBit },
+            { "z", "Z", "Z", Unit::EightBit }
         }
     },
     {
         Type::YXY, {}, Traits::Internal,
         {
-            { "y1", "&Y", "Y", Unit::EightBit },
-            { "x", "&x", "x", Unit::EightBit },
+            { "y1", "Y", "Y", Unit::EightBit },
+            { "x", "x", "x", Unit::EightBit },
             { "y2", "y", "y", Unit::EightBit }
         }
     },

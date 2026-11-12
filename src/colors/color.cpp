@@ -39,6 +39,7 @@ int get_hue_channel(Space::Type type) {
     switch (type) {
         case Space::Type::HSL:
         case Space::Type::HSV:
+        case Space::Type::HWB:
         case Space::Type::HSLUV:
         case Space::Type::OKHSL:
         case Space::Type::OKHSV:

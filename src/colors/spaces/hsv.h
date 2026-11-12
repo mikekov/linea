@@ -118,15 +118,6 @@ public:
     }
 
     std::string toString(std::vector<double> const &values, bool opacity) const override;
-
-    class fromHwbParser : public HueParser
-    {
-    public:
-        fromHwbParser(bool alpha)
-	     : HueParser("hwb", Space::Type::HSV, alpha, 100.0)
-        {}
-        bool parse(std::istringstream &input, std::vector<double> &output) const override;
-    };
 };
 
 } // namespace Inkscape::Colors::Space

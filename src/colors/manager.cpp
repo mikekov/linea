@@ -22,6 +22,7 @@
 #include "spaces/hsl.h"
 #include "spaces/hsluv.h"
 #include "spaces/hsv.h"
+#include "spaces/hwb.h"
 #include "spaces/lab.h"
 #include "spaces/lch.h"
 #include "spaces/linear-rgb.h"
@@ -49,6 +50,7 @@ Manager::Manager()
     addSpace(new Space::HSL());
     addSpace(new Space::HSLuv());
     addSpace(new Space::HSV());
+    addSpace(new Space::HWB());
     addSpace(new Space::Lab());
     addSpace(new Space::LinearRGB());
     addSpace(new Space::Lch());
