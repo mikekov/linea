@@ -606,7 +606,6 @@ QToolButton.no-menu-arrow::menu-indicator {
 /* Narrow icon-only button */
 QPushButton.narrow-button {
     min-width: 16px;
-    max-width: 16px;
 }
 
 /* Reusable: a container bar that should match the push-button background */
