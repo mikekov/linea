@@ -20,12 +20,26 @@ namespace Linea::UI {
 // helpers
 // ---------------------------------------------------------------------------
 
-static void addRoundedRect(QPainterPath& path, const QRectF& r, double radius) {
-    if (radius <= 0.0) {
+static void addRoundedRect(QPainterPath& path, const QRectF& r,
+                           double tl, double tr, double br, double bl) {
+    if (tl <= 0.0 && tr <= 0.0 && br <= 0.0 && bl <= 0.0) {
         path.addRect(r);
-    } else {
-        path.addRoundedRect(r, radius, radius);
+        return;
     }
+    path.moveTo(r.left() + tl, r.top());
+    path.lineTo(r.right() - tr, r.top());
+    if (tr > 0.0) path.arcTo(QRectF(r.right() - 2*tr, r.top(), 2*tr, 2*tr), 90, -90);
+    path.lineTo(r.right(), r.bottom() - br);
+    if (br > 0.0) path.arcTo(QRectF(r.right() - 2*br, r.bottom() - 2*br, 2*br, 2*br), 0, -90);
+    path.lineTo(r.left() + bl, r.bottom());
+    if (bl > 0.0) path.arcTo(QRectF(r.left(), r.bottom() - 2*bl, 2*bl, 2*bl), 270, -90);
+    path.lineTo(r.left(), r.top() + tl);
+    if (tl > 0.0) path.arcTo(QRectF(r.left(), r.top(), 2*tl, 2*tl), 180, -90);
+    path.closeSubpath();
+}
+
+static void addRoundedRect(QPainterPath& path, const QRectF& r, double radius) {
+    addRoundedRect(path, r, radius, radius, radius, radius);
 }
 
 static QColor fromRgba32(std::uint32_t rgba) {
@@ -113,6 +127,11 @@ void ColorPreview::setFrame(bool frame) {
     update();
 }
 
+void ColorPreview::setFlatEdges(Qt::Edges edges) {
+    _flat_edges = edges;
+    update();
+}
+
 void ColorPreview::setBorderRadius(int radius) {
     _radius = radius;
     update();
@@ -169,9 +188,9 @@ void ColorPreview::drawCheckers(QPainter& p, const QRectF& rect) const {
     p.fillRect(rect, brush);
 }
 
-void ColorPreview::drawGradient(QPainter& p, const QRectF& rect, double radius) const {
+void ColorPreview::drawGradient(QPainter& p, const QRectF& rect, double radiusL, double radiusR) const {
     QPainterPath clip;
-    addRoundedRect(clip, rect, radius);
+    addRoundedRect(clip, rect, radiusL, radiusR, radiusR, radiusL);
     p.setClipPath(clip);
 
     // checkerboard behind gradient
@@ -186,7 +205,7 @@ void ColorPreview::drawGradient(QPainter& p, const QRectF& rect, double radius) 
     p.setClipping(false);
 }
 
-void ColorPreview::drawSolidColor(QPainter& p, const QRectF& rect, double radius) const {
+void ColorPreview::drawSolidColor(QPainter& p, const QRectF& rect, double radiusL, double radiusR) const {
     QColor full = fromRgba32(_rgba);
     QColor solid(full.red(), full.green(), full.blue(), 255);
     double alpha = full.alphaF();
@@ -195,13 +214,13 @@ void ColorPreview::drawSolidColor(QPainter& p, const QRectF& rect, double radius
 
     // left half — solid color (no alpha)
     QPainterPath leftPath;
-    if (radius > 0.0) {
+    if (radiusL > 0.0) {
         QRectF bigRect(rect.left(), rect.top(), rect.width(), rect.height());
         // left-rounded rectangle: manually build
         leftPath.moveTo(rect.left() + halfW, rect.top());
         leftPath.lineTo(rect.left() + halfW, rect.bottom());
-        leftPath.arcTo(QRectF(rect.left(), rect.bottom() - 2*radius, 2*radius, 2*radius), 270, -90);
-        leftPath.arcTo(QRectF(rect.left(), rect.top(), 2*radius, 2*radius), 180, -90);
+        leftPath.arcTo(QRectF(rect.left(), rect.bottom() - 2*radiusL, 2*radiusL, 2*radiusL), 270, -90);
+        leftPath.arcTo(QRectF(rect.left(), rect.top(), 2*radiusL, 2*radiusL), 180, -90);
         leftPath.closeSubpath();
     } else {
         leftPath.addRect(QRectF(rect.left(), rect.top(), halfW, rect.height()));
@@ -210,10 +229,10 @@ void ColorPreview::drawSolidColor(QPainter& p, const QRectF& rect, double radius
 
     // right half — alpha-blended over checkerboard
     QPainterPath rightPath;
-    if (radius > 0.0) {
+    if (radiusR > 0.0) {
         rightPath.moveTo(rect.left() + halfW, rect.top());
-        rightPath.arcTo(QRectF(rect.right() - 2*radius, rect.top(), 2*radius, 2*radius), 90, -90);
-        rightPath.arcTo(QRectF(rect.right() - 2*radius, rect.bottom() - 2*radius, 2*radius, 2*radius), 0, -90);
+        rightPath.arcTo(QRectF(rect.right() - 2*radiusR, rect.top(), 2*radiusR, 2*radiusR), 90, -90);
+        rightPath.arcTo(QRectF(rect.right() - 2*radiusR, rect.bottom() - 2*radiusR, 2*radiusR, 2*radiusR), 0, -90);
         rightPath.lineTo(rect.left() + halfW, rect.bottom());
         rightPath.closeSubpath();
     } else {
@@ -345,12 +364,14 @@ void ColorPreview::drawFrame(QPainter& p, const QRectF& rect) const {
     p.restore();
 }
 
-void ColorPreview::drawOutline(QPainter& p, const QRectF& rect, double radius) const {
+void ColorPreview::drawOutline(QPainter& p, const QRectF& rect, double radiusL, double radiusR) const {
     bool dark = palette().color(QPalette::Window).lightness() < 128;
     QColor borderColor = !dark ? QColor(0, 0, 0, 25) : QColor(0xff, 0xff, 0xff, 25);
 
     QPainterPath border;
-    addRoundedRect(border, rect.adjusted(0.5, 0.5, -0.5, -0.5), std::max(0.0, radius - 0.5));
+    addRoundedRect(border, rect.adjusted(0.5, 0.5, -0.5, -0.5),
+                   std::max(0.0, radiusL - 0.5), std::max(0.0, radiusR - 0.5),
+                   std::max(0.0, radiusR - 0.5), std::max(0.0, radiusL - 0.5));
 
     p.save();
     p.setPen(QPen(borderColor, 1.0));
@@ -397,9 +418,13 @@ void ColorPreview::paintEvent(QPaintEvent*) {
         contentRadius = std::max(0.0, contentRadius - 1.0);
     }
 
+    // flat edges drop both corners on that side (butt-joined neighbour)
+    const double radiusL = (_flat_edges & Qt::LeftEdge)  ? 0.0 : contentRadius;
+    const double radiusR = (_flat_edges & Qt::RightEdge) ? 0.0 : contentRadius;
+
     // clip to final rect
     QPainterPath clip;
-    addRoundedRect(clip, content, contentRadius);
+    addRoundedRect(clip, content, radiusL, radiusR, radiusR, radiusL);
     p.setClipPath(clip);
 
     if (_indicator & MixedContent) {
@@ -414,9 +439,9 @@ void ColorPreview::paintEvent(QPaintEvent*) {
         QRectF dst(content.left(), content.top(), src.width() / ratio, src.height() / ratio);
         p.drawImage(dst, _image, src);
     } else if (!_gradient.empty()) {
-        drawGradient(p, content, contentRadius);
+        drawGradient(p, content, radiusL, radiusR);
     } else {
-        drawSolidColor(p, content, contentRadius);
+        drawSolidColor(p, content, radiusL, radiusR);
     }
 
     p.setClipping(false);
@@ -424,7 +449,7 @@ void ColorPreview::paintEvent(QPaintEvent*) {
     drawIndicators(p, content);
 
     if (_style == Outlined) {
-        drawOutline(p, content, contentRadius);
+        drawOutline(p, content, radiusL, radiusR);
     } else if (_frame) {
         drawFrame(p, content);
     }

@@ -22,6 +22,9 @@
 #include "colors/spaces/enum.h"
 #include "ui/operation-blocker.h"
 
+class QMenu;
+class QPushButton;
+
 namespace Linea::UI {
 
 class ColorSlider;
@@ -40,12 +43,16 @@ public:
     ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
               std::shared_ptr<ColorHolder> selected_color,
               QWidget* parent = nullptr,
-              ChannelLayout channels = ChannelLayout::Sliders);
+              ChannelLayout channels = ChannelLayout::Sliders,
+              bool all_sliders = false);
     ~ColorPage() override;
 
     // Create a color plate widget (returns nullptr if the space has no plate)
     ColorPlate* createColorPlate(Inkscape::Colors::Space::Type type, ColorPlateType plateType,
                                  const PlateGamut& gamut);
+
+    // Attach a popup menu of picker spaces to the segment row's name button
+    void setSpaceMenu(QMenu* menu);
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -66,6 +73,8 @@ private:
     sigc::scoped_connection _color_plate_updated;
     ColorPlate* _color_plate = nullptr;
     ColorSlider* _hue_slider = nullptr;
+    QPushButton* _space_button = nullptr;
+    QGridLayout* _segments = nullptr;
 };
 
 class ColorPageChannel {

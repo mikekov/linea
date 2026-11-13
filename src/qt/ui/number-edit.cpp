@@ -149,6 +149,16 @@ private:
 
 // width of the hover-only step arrow zones at the spinbox edges
 constexpr int ARROW_W = 16;
+// side of the square the pan icon is rendered into, centered in the zone
+constexpr int ARROW_ICON = 16;
+
+// hover arrow width adapts to the field's width: full at 60px and wider,
+// shrinking one pixel at a time to half width at 40px and narrower
+static int arrowWidth(int fieldW) {
+    return qBound(ARROW_W / 2,
+                  ARROW_W / 2 + (fieldW - 40) * (ARROW_W / 2) / 20,
+                  ARROW_W);
+}
 
 // crossfade tempo bound to the hover transition, not to a widget's fade
 // direction: everything moves fast on hover-enter, slow on hover-leave —
@@ -286,7 +296,9 @@ protected:
         path.addRoundedRect(_steps < 0 ? r.adjusted(0, 0, R, 0)
                                        : r.adjusted(-R, 0, 0, 0), R, R);
         p.fillPath(path, palette().color(_hovered ? QPalette::Midlight : QPalette::Base));
-        (_steps < 0 ? left : right).paint(&p, rect(), Qt::AlignCenter);
+        const int s = ARROW_ICON;
+        const QRect iconRect((width() - s) / 2, (height() - s) / 2, s, s);
+        (_steps < 0 ? left : right).paint(&p, iconRect, Qt::AlignCenter);
     }
 
     void enterEvent(QEnterEvent*) override { _hovered = true; update(); }
@@ -635,7 +647,7 @@ void NumberEdit::updateTextMargins() {
         const int textW = le->fontMetrics().horizontalAdvance(le->displayText());
         if ((le->width() - textW) / 2 >= labelRight) {
             // comfortable: centered text clears the label zone
-            left = qMax(labelRight - ARROW_W, 0);
+            left = qMax(labelRight - arrowWidth(width()), 0);
         } else {
             // tight: the margin keeps the text fully right of the label —
             // it trims to fit and can never underlap, so the label stays
@@ -853,9 +865,10 @@ bool NumberEdit::eventFilter(QObject* watched, QEvent* event) {
         // 1px frame and rounded corners; children aren't clipped to the
         // spinbox, so they can reach past its bounds to the frame's edge
         const int arrowTop = 1 - _spinBox->y();
-        _arrowDown->setGeometry(1, arrowTop, ARROW_W, height() - 2);
-        _arrowUp->setGeometry(_spinBox->width() - ARROW_W - 1, arrowTop,
-                              ARROW_W, height() - 2);
+        const int aw = arrowWidth(width());
+        _arrowDown->setGeometry(1, arrowTop, aw, height() - 2);
+        _arrowUp->setGeometry(_spinBox->width() - aw - 1, arrowTop,
+                              aw, height() - 2);
         updateTextMargins();
         updateIndicatorVisibility();
     }

@@ -178,6 +178,11 @@ bool ColorPlate::achromatic(const Color& plate) const {
     if (_space == Type::HWB) {
         return plate[1] + plate[2] >= 1.0 - ACHROMATIC_CHROMA;
     }
+    if (_space == Type::HSL && plate[2] >= 1.0 - ACHROMATIC_CHROMA) {
+        // pure white makes hue meaningless, same as black — the channel-floor
+        // test below only catches the l≈0 side
+        return true;
+    }
     const auto& comps = Components::get(_space);
     const auto hue = hueChannel();
     for (unsigned i = 0; i < comps.size(); ++i) {

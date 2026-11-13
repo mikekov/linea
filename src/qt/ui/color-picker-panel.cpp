@@ -72,6 +72,8 @@ void ColorPickerPanel::buildBottomBar() {
     // color swatch and hex entry live in the .ui file; only the color holder
     // wiring needs code
     _ui->swatch->setStyle(ColorPreview::Outlined);
+    // sharp right corners: the swatch is butt-joined to the entry frame
+    _ui->swatch->setFlatEdges(Qt::RightEdge);
     // _ui->swatch->setFrame(true);
     _ui->swatch->setCheckerboardTileSize(4);
     _ui->swatch->setCursor(Qt::PointingHandCursor);
@@ -83,7 +85,9 @@ void ColorPickerPanel::buildBottomBar() {
 
     _swatchMenu = createColorClipboardMenu(_colorSet, [this] { return _spaceType; }, this, _ui->hexEdit);
     connect(_ui->optionsBtn, &QPushButton::clicked, this, [this] {
-        _swatchMenu->popup(QCursor::pos());
+        // popup anchored under the button, aligned to its right edge
+        const QPoint br = _ui->optionsBtn->mapToGlobal(_ui->optionsBtn->rect().bottomRight());
+        _swatchMenu->popup(br - QPoint(_swatchMenu->sizeHint().width(), 0));
     });
 
     // out-of-gamut warning badge on the swatch; connect before setColorHolder
@@ -115,19 +119,15 @@ void ColorPickerPanel::buildBottomBar() {
     }
     if (current) {
         current->setChecked(true);
-        _ui->spacesButton->setIcon(current->icon());
-        _ui->spacesButton->setToolTip(current->text());
     }
-    _ui->spacesButton->setMenu(_spacesMenu.get());
 }
 
 void ColorPickerPanel::createColorPage(Space::Type type, ColorPlateType plateType) {
     auto space = Inkscape::Colors::Manager::get().find(type);
 
-    const auto layout = plateType == ColorPlateType::None
-        ? ColorPage::ChannelLayout::Sliders
-        : ColorPage::ChannelLayout::Segments;
-    _page = new ColorPage(space, _colorSet, this, layout);
+    auto allChannels = plateType == ColorPlateType::None;
+    _page = new ColorPage(space, _colorSet, this, ColorPage::ChannelLayout::Segments, allChannels);
+    _page->setSpaceMenu(_spacesMenu.get());
     _ui->hexEdit->setDisplaySpace(type);
 
     int topMargin = 0;
@@ -143,6 +143,10 @@ void ColorPickerPanel::createColorPage(Space::Type type, ColorPlateType plateTyp
         _topGap = new QSpacerItem(0, topMargin, QSizePolicy::Minimum, QSizePolicy::Fixed);
         _ui->mainLayout->insertItem(index++, _topGap);
         _ui->mainLayout->insertWidget(index++, _plate); // plate goes above the page
+    } else {
+        // without a plate the page still wants a few pixels of top margin
+        _topGap = new QSpacerItem(0, 4, QSizePolicy::Minimum, QSizePolicy::Fixed);
+        _ui->mainLayout->insertItem(index++, _topGap);
     }
 
     _ui->mainLayout->insertWidget(index, _page);
@@ -195,15 +199,11 @@ void ColorPickerPanel::setColor(const Inkscape::Colors::Color& color) {
 
 void ColorPickerPanel::setPickerType(Space::Type type) {
     switchPage(type, _plateType);
-    // sync the spaces button: update its label and the checked menu action
+    // keep the menu's checkmark on the current space
     if (_spacesMenu) {
         for (auto action : _spacesMenu->actions()) {
             auto actionType = static_cast<Space::Type>(action->data().toInt());
             action->setChecked(actionType == type);
-            if (actionType == type) {
-                _ui->spacesButton->setIcon(action->icon());
-                _ui->spacesButton->setToolTip(action->text());
-            }
         }
     }
 }

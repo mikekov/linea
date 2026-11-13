@@ -5,8 +5,10 @@
 
 #include "color-page.h"
 
-#include <QHBoxLayout>
+#include <QPushButton>
+#include <QVBoxLayout>
 
+#include "color-palette-panel.h"
 #include "color-slider.h"
 #include "color-plate.h"
 #include "number-edit.h"
@@ -18,7 +20,7 @@ namespace Linea::UI {
 
 ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
                      std::shared_ptr<ColorHolder> selected_color, QWidget* parent,
-                     ChannelLayout channels)
+                     ChannelLayout channels, bool all_sliders)
     : QWidget(parent)
     , _space(std::move(space))
     , _selected_color(selected_color)
@@ -86,44 +88,68 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         const auto& components = _space_color->getComponents();
         int row = 0;
 
-        // Optional sliders above the channel edits: a hue slider when the
-        // space has a degree (hue) channel, an alpha slider when the color
-        // carries opacity. They bind to the same holder, so segments and
-        // sliders stay in sync automatically.
-        auto add_slider = [this, &row](const Space::Component& component) {
+        // Optional sliders above the channel edits. By default just the hue
+        // and alpha channels; with all_sliders every channel gets one.
+        // They bind to the same holder, so segments and sliders stay in sync.
+        auto sliders = new QVBoxLayout();
+        sliders->setContentsMargins(0, 0, 0, 0);
+        sliders->setSpacing(6);
+        auto add_slider = [this, sliders](const Space::Component& component) {
             auto slider = new ColorSlider(_space_color, component, this);
             slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            _grid->addWidget(slider, row++, 0, 1, 3);
+            sliders->addWidget(slider);
             return slider;
         };
-        if (auto hue = components.hue_index()) {
-            _hue_slider = add_slider(components[*hue]);
-        }
-        for (auto& component : components) {
-            if (component.id == "alpha") {
-                add_slider(component);
-                break;
+        if (all_sliders) {
+            const auto hue = components.hue_index();
+            for (unsigned i = 0; i < components.size(); ++i) {
+                auto* slider = add_slider(components[i]);
+                if (hue && i == *hue) _hue_slider = slider;
             }
+        } else {
+            if (auto hue = components.hue_index()) {
+                _hue_slider = add_slider(components[*hue]);
+            }
+            for (auto& component : components) {
+                if (component.id == "alpha") {
+                    add_slider(component);
+                    break;
+                }
+            }
+        }
+        if (sliders->count()) {
+            _grid->addLayout(sliders, row++, 0, 1, 3);
+        } else {
+            delete sliders;
         }
 
         // All channel edits in one row, drawn as a single segmented control;
         // each edit carries its channel name in the built-in indicator label.
-        auto segments = new QHBoxLayout();
+        auto segments = new QGridLayout();
         segments->setContentsMargins(0, 8, 0, 0);
         segments->setSpacing(0);
+        _segments = segments;
+
+        // Name of the color space, styled as the leading segment of the row.
+        // A fixed first column keeps the label intact under squeeze — the
+        // channel fields in the remaining columns absorb the shrinkage.
+        _space_button = new QPushButton(QString::fromStdString(_space->getShortName()), this);
+        _space_button->setProperty("class", "NumberEdit");
+        _space_button->setProperty("segment", "first");
+        _space_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        _space_button->ensurePolished();
+        segments->addWidget(_space_button, 0, 0);
+        segments->setColumnMinimumWidth(0, _space_button->sizeHint().width());
 
         const int count = static_cast<int>(components.size());
         int col = 0;
         for (auto& component : components) {
             auto edit = new NumberEdit(this);
-            edit->setLabel(QString::fromStdString(component.name));
+            // edit->setLabel(QString::fromStdString(component.name));
             edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             configure_edit(edit, component);
-            if (count > 1) {
-                auto seg = col == 0 ? "first" : (col == count - 1 ? "last" : "middle");
-                edit->setProperty("segment", seg);
-            }
-            segments->addWidget(edit);
+            edit->setProperty("segment", col == count - 1 ? "last" : "middle");
+            segments->addWidget(edit, 0, col + 1);
 
             _channels.emplace_back(std::make_unique<ColorPageChannel>(_space_color, component, *edit));
             col++;
@@ -152,6 +178,17 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
 }
 
 ColorPage::~ColorPage() = default;
+
+void ColorPage::setSpaceMenu(QMenu* menu) {
+    if (!_space_button) return;
+
+    _space_button->setMenu(menu);
+    // the dropdown indicator widens the button's hint — re-measure the
+    // leading column so the label still fits
+    if (_segments) {
+        _segments->setColumnMinimumWidth(0, _space_button->sizeHint().width());
+    }
+}
 
 ColorPlate* ColorPage::createColorPlate(Inkscape::Colors::Space::Type type, ColorPlateType plateType,
                                         const PlateGamut& gamut) {

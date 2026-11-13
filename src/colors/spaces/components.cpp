@@ -43,7 +43,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::HSL, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::HSL, {.polar=Type::HSV, .rect=Type::HSL, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "s", _("S"), _("Saturation"), Unit::Percent },
@@ -59,7 +59,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::HWB, {.polar=Type::HSV, .rect=Type::HWB, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::HWB, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "w", _("W"), _("Whiteness"), Unit::Percent },

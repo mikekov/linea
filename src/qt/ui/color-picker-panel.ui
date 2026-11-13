@@ -53,7 +53,7 @@
           </property> -->
           <layout class="QHBoxLayout" name="barLayout">
             <property name="spacing">
-              <number>4</number>
+              <number>0</number>
             </property>
             <property name="leftMargin">
               <number>0</number>
@@ -84,20 +84,6 @@
                 </property>
             </widget>
             </item>
-            <!-- eye dropper button -->
-            <!-- <item>
-              <widget class="QPushButton" name="dropperBtn">
-                <property name="toolTip">
-                  <string>Pick color from screen</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/color-picker</normaloff>
-                  </iconset>
-                </property>
-              </widget>
-            </item> -->
-            <!-- framed container; color swatch and hex entry are inserted in code -->
             <item>
               <widget class="QWidget" name="colorEntryFrame" native="true">
                 <property name="sizePolicy">
@@ -122,6 +108,20 @@
                   <property name="bottomMargin">
                     <number>0</number>
                   </property>
+                  <!-- hex color entry; ColorSet is assigned in code -->
+                  <item>
+                    <widget class="Linea::UI::ColorEntry" name="hexEdit">
+                      <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Minimum"/>
+                      </property>
+                      <property name="frame">
+                        <bool>false</bool>
+                      </property>
+                      <property name="class" stdset="0">
+                        <string>button-bar</string>
+                      </property>
+                    </widget>
+                  </item>
                   <item>
                     <widget class="QPushButton" name="optionsBtn">
                       <property name="class" stdset="0">
@@ -137,30 +137,7 @@
                       </property>
                     </widget>
                   </item>
-
-                  <!-- hex color entry; ColorSet is assigned in code -->
-                  <item>
-                    <widget class="Linea::UI::ColorEntry" name="hexEdit">
-                      <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Minimum"/>
-                      </property>
-                      <property name="frame">
-                        <bool>false</bool>
-                      </property>
-                      <property name="class" stdset="0">
-                        <string>button-bar</string>
-                      </property>
-                    </widget>
-                  </item>
                 </layout>
-              </widget>
-            </item>
-            <!-- color space selector -->
-            <item>
-              <widget class="QPushButton" name="spacesButton">
-                <property name="toolTip">
-                  <string>Select color picker type</string>
-                </property>
               </widget>
             </item>
           </layout>

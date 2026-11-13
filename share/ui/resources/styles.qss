@@ -615,6 +615,12 @@ QWidget[class="button-bar"] {
     border-radius: 4px;
 }
 
+/* hex entry frame is butt-joined to the color swatch — square the shared edge */
+QWidget#colorEntryFrame {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
 /* Flat combobox: no border, no background, centred text — used e.g. in pattern category selector */
 QComboBox.flat-combobox {
     border: none;
@@ -705,6 +711,26 @@ QWidget[class="NumberEdit"][segment="last"] {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-left: none;
+}
+
+/* Space-name button leading a segmented edit row (ColorPage): it carries
+   class="NumberEdit" so it inherits the field look above; these rules only
+   adjust what is button-specific — label-toned text and press feedback. */
+QPushButton[class="NumberEdit"] {
+    color: palette(dark);
+    padding: 0px 2px;
+}
+QPushButton[class="NumberEdit"]:pressed {
+    background-color: palette(midlight);
+}
+QPushButton[class="NumberEdit"]:focus {
+    outline: none;
+}
+/* no dropdown arrow on the space-name button — the whole button opens the menu */
+QPushButton[class="NumberEdit"]::menu-indicator {
+    image: none;
+    width: 0px;
+    height: 0px;
 }
 
 /* Removable tag pills, e.g. selected font categories in FontBrowser */

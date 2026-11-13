@@ -40,6 +40,10 @@ public:
     // corner radius; -1 = auto (0 for Simple, 2 for Outlined)
     void setBorderRadius(int radius);
 
+    // edges kept square instead of rounded — for a swatch butt-joined to a
+    // neighbouring control, e.g. an entry frame sharing one side
+    void setFlatEdges(Qt::Edges edges);
+
     // checkerboard tile size in pixels
     void setCheckerboardTileSize(unsigned size);
 
@@ -74,11 +78,11 @@ protected:
 
 private:
     void drawCheckers(QPainter& p, const QRectF& rect) const;
-    void drawGradient(QPainter& p, const QRectF& rect, double radius) const;
-    void drawSolidColor(QPainter& p, const QRectF& rect, double radius) const;
+    void drawGradient(QPainter& p, const QRectF& rect, double radiusL, double radiusR) const;
+    void drawSolidColor(QPainter& p, const QRectF& rect, double radiusL, double radiusR) const;
     void drawIndicators(QPainter& p, const QRectF& rect) const;
     void drawFrame(QPainter& p, const QRectF& rect) const;
-    void drawOutline(QPainter& p, const QRectF& rect, double radius) const;
+    void drawOutline(QPainter& p, const QRectF& rect, double radiusL, double radiusR) const;
     double badgeLightness() const;
     void drawBadge(QPainter& p, const QRectF& rect, const class QIcon& darkIcon, const class QIcon& lightIcon) const;
 
@@ -86,6 +90,7 @@ private:
     Style    _style    = Simple;
     Indicator _indicator = None;
     int      _radius   = -1;
+    Qt::Edges _flat_edges{};
     bool     _frame    = false;
     bool     _isFill   = false;
     bool     _isStroke = false;
