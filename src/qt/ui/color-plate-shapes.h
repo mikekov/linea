@@ -8,10 +8,13 @@
 #define LINEA_UI_COLOR_PLATE_SHAPES_H
 
 #include <QColorSpace>
+#include <QElapsedTimer>
 #include <QImage>
 #include <QPainterPath>
 #include <array>
 #include <optional>
+
+class QTimer;
 
 #include "color-plate.h"
 #include "colors/spaces/components.h"
@@ -109,16 +112,36 @@ protected:
     void beginPick(const QPointF& pos) override;
     Inkscape::Colors::Color colorAt(const QPointF& pos) const override;
     void hideEvent(QHideEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private:
     // triangle vertices in widget coordinates — same transform as the plate image
     std::array<QPointF, 3> triangleScreenVerts(const QRectF& area) const;
+    // would a press at pos grab the ring (vs the triangle)?
+    bool ringGrab(const QPointF& pos) const;
+    // swell feedback: animate the band or the triangle toward the hover
+    // target; clear on leave
+    void setSwellTarget(bool ring);
+    void clearSwellTarget();
+    void setTargets(bool ring, bool tri);
+    void onSwellTick();
+    // triangle circumradius incl. the hover swell, in local units
+    double grownTriRadius(const QRectF& area) const;
 
     QImage _ring;
     QImage _triangle;
     double _built_hue = -1.0; // hue the cached triangle was built with
     double _built_inner = -1.0; // local inner radius it was built with
     bool _dragRing = false;
+    bool _ringTarget = false; // hover intent — swell the band
+    bool _triTarget = false;  // hover intent — swell the triangle
+    double _swell = 0.0;      // animated band swell, 0..1 px
+    double _triSwell = 0.0;   // animated triangle swell, 0..1 px
+    QTimer* _anim_timer = nullptr;
+    QElapsedTimer _elapsed;
+    qint64 _last_tick_ms = 0;
     std::optional<QPointF> _ringMarker; // in polar coords
     std::optional<QPointF> _triMarker;  // in polar coords
 };

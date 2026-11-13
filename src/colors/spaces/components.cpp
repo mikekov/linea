@@ -92,7 +92,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::OKHSL, {.polar=Type::OKHSV, .rect=Type::NONE, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::OKHSL, {.polar=Type::OKHSL, .rect=Type::NONE, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "s", _("S"), _("Saturation"), Unit::Percent },

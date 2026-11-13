@@ -11,6 +11,7 @@
 #include "color-palette-panel.h"
 #include "color-slider.h"
 #include "color-plate.h"
+#include "colors/manager.h"
 #include "number-edit.h"
 #include "util/signal-blocker.h"
 
@@ -74,7 +75,7 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
             edit->setKeptFractionDigits(3);
         }
 
-        // Set suffix based on unit
+        // Set suffix based on unit (removed, there's no space)
         if (component.unit == Inkscape::Colors::Space::Unit::Degree) {
             // edit->setSuffix("°");
         } else if (component.unit == Inkscape::Colors::Space::Unit::Percent) {
@@ -91,7 +92,7 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         // Optional sliders above the channel edits. By default just the hue
         // and alpha channels; with all_sliders every channel gets one.
         // They bind to the same holder, so segments and sliders stay in sync.
-        auto sliders = new QVBoxLayout();
+        auto sliders = _sliders = new QVBoxLayout();
         sliders->setContentsMargins(0, 0, 0, 0);
         sliders->setSpacing(6);
         auto add_slider = [this, sliders](const Space::Component& component) {
@@ -117,11 +118,9 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
                 }
             }
         }
-        if (sliders->count()) {
-            _grid->addLayout(sliders, row++, 0, 1, 3);
-        } else {
-            delete sliders;
-        }
+        // always keep the group at row 0, even when empty — createColorPlate
+        // may add a proxy hue slider to it once the plate space is known
+        _grid->addLayout(sliders, row++, 0, 1, 3);
 
         // All channel edits in one row, drawn as a single segmented control;
         // each edit carries its channel name in the built-in indicator label.
@@ -203,6 +202,16 @@ ColorPlate* ColorPage::createColorPlate(Inkscape::Colors::Space::Type type, Colo
         delete _hue_slider;
         _hue_slider = nullptr;
     }
+    // they instead hold one channel constant — the lightness in OKHSL. When
+    // the page's space is the plate's, give the page a slider for that
+    // channel so it drives which lightness the plate displays
+    if ((plateType == ColorPlateType::Wheel || plateType == ColorPlateType::Ring) &&
+        _sliders && plate->plateSpace() == type) {
+        auto slider = new ColorSlider(
+            _space_color, _space_color->getComponents()[plate->fixedChannel()], this);
+        slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        _sliders->insertWidget(0, slider);
+    }
     // keep color plate in sync with the color set
     _color_plate = plate;
     _color_plate_changed = _space_color->signal_changed.connect([this]() {
@@ -217,6 +226,42 @@ ColorPlate* ColorPage::createColorPlate(Inkscape::Colors::Space::Type type, Colo
         updated.setOpacity(opacity);
         _space_color->set(updated);
     });
+
+    // A rect plate holds its fixed channel constant. When that channel is
+    // the plate space's hue and the page has no hue channel of its own,
+    // give the page a hue slider bound to a proxy holder in plate space —
+    // it edits the color and drives which slice the plate displays.
+    if (!_hue_slider && plateType == ColorPlateType::Rect && _sliders) {
+        const auto plate_space = plate->plateSpace();
+        const auto& plate_components = Space::Components::get(plate_space);
+        const auto plate_anyspace = Manager::get().find(plate_space);
+        if (const auto hue = plate_components.hue_index(); hue && plate_anyspace) {
+            _plate_color = std::make_shared<ColorHolder>(plate_anyspace, false);
+
+            // page -> proxy: reuse the plate's color — its achromatic-hue
+            // preservation has already been applied. Connected after
+            // _color_plate_changed, so the plate runs first on this signal.
+            _plate_color_sync = _space_color->signal_changed.connect([this]() {
+                auto scoped = SignalBlocker{_plate_color_back};
+                if (_space_color->get()) {
+                    _plate_color->set(_color_plate->plateColor());
+                }
+            });
+            // proxy -> plate: feed the plate-space color straight in so the
+            // fixed channel moves even when the color is achromatic and the
+            // source-space round-trip would be a no-op
+            _plate_color_back = _plate_color->signal_changed.connect([this]() {
+                auto scoped = SignalBlocker{_plate_color_sync};
+                if (auto color = _plate_color->get()) {
+                    _color_plate->setPlateColor(*color);
+                }
+            });
+
+            _hue_slider = new ColorSlider(_plate_color, plate_components[*hue], this);
+            _hue_slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            _sliders->insertWidget(0, _hue_slider);
+        }
+    }
     return plate;
 }
 

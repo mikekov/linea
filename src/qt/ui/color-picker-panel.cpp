@@ -136,7 +136,7 @@ void ColorPickerPanel::createColorPage(Space::Type type, ColorPlateType plateTyp
     if (plateType != ColorPlateType::None) {
         const auto gamut = get_plate_gamut_preference();
         _plate = _page->createColorPlate(type, plateType, gamut);
-        topMargin = plateType == ColorPlateType::Rect ? 4 : 2;
+        topMargin = 3;
     }
     if (_plate) {
         // plates need a little breathing room at the top; pages don't

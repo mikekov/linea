@@ -4,7 +4,10 @@
  * tracking the hue angle.
  */
 
+#include <QElapsedTimer>
+#include <QMouseEvent>
 #include <QPainter>
+#include <QTimer>
 #include <QPainterPath>
 #include <algorithm>
 #include <array>
@@ -26,7 +29,10 @@ constexpr double RING_INNER_RATIO = 0.90;
 constexpr double RING_MARKER_OFFSET = 1.0;
 
 // shrink the inscribed triangle's circumradius by this many pixels
-constexpr double TRIANGLE_INSET = 1.0;
+constexpr double TRIANGLE_INSET = 2.0;
+
+// band-swell animation tick, ~60 fps like the slider thumb's
+constexpr int SWELL_TICK_MS = 16;
 
 namespace {
 
@@ -89,6 +95,21 @@ std::array<double, 3> barycentric(const QPointF& p, const QPointF& a, const QPoi
     return {wa, wb, 1.0 - wa - wb};
 }
 
+// distance from p to the triangle's outline in local units; 0 when inside
+double distanceToTriangle(const QPointF& p, const std::array<QPointF, 3>& vs) {
+    const auto [wa, wb, ww] = barycentric(p, vs[0], vs[1], vs[2]);
+    if (wa >= 0 && wb >= 0 && ww >= 0) return 0.0;
+
+    double best = std::numeric_limits<double>::max();
+    for (int i = 0; i < 3; ++i) {
+        const QPointF a = vs[i], ab = vs[(i + 1) % 3] - a;
+        const double t = std::clamp(QPointF::dotProduct(p - a, ab) / QPointF::dotProduct(ab, ab), 0.0, 1.0);
+        const QPointF d = p - (a + ab * t);
+        best = std::min(best, std::hypot(d.x(), d.y()));
+    }
+    return best;
+}
+
 // Build the ring's inner triangle image. Corners are lerped in sRGB between
 // the hue, black and white vertices — matching the GTK wheel's approach of
 // interpolating corner colors instead of per-pixel channel conversion.
@@ -105,9 +126,9 @@ QImage buildColorTriangle(int resolution, const Color& base, double inner) {
     const QRgb cApex = QRgb(corner.toARGB());
     const double rA = qRed(cApex), gA = qGreen(cApex), bA = qBlue(cApex);
 
-    // cover the triangle bounds, plus a couple of pixels of margin so the
-    // antialiased clip edge has room to work
-    const double eps = 2.0 / radius;
+    // cover the triangle bounds, plus a few pixels of margin so the
+    // antialiased clip edge — and the 2px hover swell — has room to work
+    const double eps = 4.0 / radius;
     const int x0 = std::clamp(static_cast<int>(std::floor((std::min({apex.x(), black.x(), white.x()}) - eps) * radius)) + radius, 0, size - 1);
     const int x1 = std::clamp(static_cast<int>(std::ceil((std::max({apex.x(), black.x(), white.x()}) + eps) * radius)) + radius, 0, size - 1);
     const int y0 = std::clamp(static_cast<int>(std::floor((std::min({apex.y(), black.y(), white.y()}) - eps) * radius)) + radius, 0, size - 1);
@@ -144,12 +165,84 @@ QImage buildColorTriangle(int resolution, const Color& base, double inner) {
 // ---------------------------------------------------------------------------
 
 RingColorPlate::RingColorPlate(Type source, Type space, const PlateGamut& gamut, QWidget* parent)
-    : ColorPlate(source, space, PLATE_VAL, gamut.surface, parent) {}
+    : ColorPlate(source, space, PLATE_VAL, gamut.surface, parent) {
+    // the base plate disables tracking; the ring wants hover feedback
+    setMouseTracking(true);
+    _anim_timer = new QTimer(this);
+    _anim_timer->setInterval(SWELL_TICK_MS);
+    connect(_anim_timer, &QTimer::timeout, this, &RingColorPlate::onSwellTick);
+}
 
-// ring mode: hue picks on the band, sat/value picks inside the triangle
+// would a press at pos grab the ring? inside the hole, whichever element
+// is closer — the band's inner edge or the triangle outline
+bool RingColorPlate::ringGrab(const QPointF& pos) const {
+    const auto area = activeArea();
+    const auto local = polarFromScreen(area, pos);
+    const double r = std::hypot(local.x(), local.y());
+    return r >= RING_INNER_RATIO ||
+           RING_INNER_RATIO - r <
+               distanceToTriangle(local, triangleVerts(grownTriRadius(area), color()[PLATE_HUE]));
+}
+
+// triangle circumradius incl. the hover swell, in local units — clip,
+// border, hit test and picking all read this so they never disagree
+double RingColorPlate::grownTriRadius(const QRectF& area) const {
+    const double half = std::min(area.width(), area.height()) / 2;
+    return half > 0 ? triInnerRadius(area) + 2 * _triSwell / half : RING_INNER_RATIO;
+}
+
+// ring mode: hue picks on the band, sat/value picks inside the triangle.
+// In the hole a click goes to whichever element is closer — the band's
+// inner edge or the triangle outline — so taps in the corners of the disk
+// or just off the triangle's rim grab the ring instead of snapping to the
+// triangle's nearest edge.
 void RingColorPlate::beginPick(const QPointF& pos) {
-    const auto local = polarFromScreen(activeArea(), pos);
-    _dragRing = std::hypot(local.x(), local.y()) >= RING_INNER_RATIO;
+    _dragRing = ringGrab(pos);
+    setSwellTarget(_dragRing);
+}
+
+// hovering over a spot animates whichever element a click would hit —
+// the band or the triangle — a pixel thicker; feedback for which element
+// a click will hit, mirroring the slider thumb's grow-on-hover
+void RingColorPlate::setSwellTarget(bool ring) {
+    setTargets(ring, !ring);
+}
+
+void RingColorPlate::clearSwellTarget() {
+    setTargets(false, false);
+}
+
+void RingColorPlate::setTargets(bool ring, bool tri) {
+    if (ring == _ringTarget && tri == _triTarget) return;
+    _ringTarget = ring;
+    _triTarget = tri;
+    if (!_anim_timer->isActive()) {
+        _last_tick_ms = 0;
+        _elapsed.start();
+        _anim_timer->start();
+    }
+}
+
+void RingColorPlate::onSwellTick() {
+    const qint64 now = _elapsed.elapsed();
+    const double dt = _last_tick_ms == 0 ? SWELL_TICK_MS / 1000.0
+                                         : (now - _last_tick_ms) / 1000.0;
+    _last_tick_ms = now;
+    // grow fast toward the target, ease off when leaving — same asymmetric
+    // feel as ColorSlider::onAnimationTick
+    auto approach = [dt](double v, bool target) {
+        return std::clamp(v + (target ? dt * 8.0 : -dt * 4.0), 0.0, 1.0);
+    };
+    const double ring = approach(_swell, _ringTarget);
+    const double tri = approach(_triSwell, _triTarget);
+    if (ring == _swell && tri == _triSwell) {
+        _anim_timer->stop();
+        _last_tick_ms = 0;
+        return;
+    }
+    _swell = ring;
+    _triSwell = tri;
+    update();
 }
 
 Color RingColorPlate::colorAt(const QPointF& pos) const {
@@ -162,7 +255,7 @@ Color RingColorPlate::colorAt(const QPointF& pos) const {
     }
     // pick sat/value inside the triangle: v = apex + white barycentric weights,
     // s = apex / v (apex contributes s·v to the point, white v·(1−s))
-    const auto vs = triangleVerts(triInnerRadius(activeArea()), c[PLATE_HUE]);
+    const auto vs = triangleVerts(grownTriRadius(activeArea()), c[PLATE_HUE]);
     const auto [wa, wb, ww] = barycentric(local, vs[0], vs[1], vs[2]);
     const double v = std::clamp(wa + ww, 0.0, 1.0);
     const double s = v > 0.0 ? std::clamp(wa / v, 0.0, 1.0) : 0.0;
@@ -262,13 +355,33 @@ std::vector<PlateMarker> RingColorPlate::markers() const {
 
 // triangle vertices in widget coordinates — same transform as the plate image
 std::array<QPointF, 3> RingColorPlate::triangleScreenVerts(const QRectF& area) const {
-    const auto local = triangleVerts(triInnerRadius(area), color()[PLATE_HUE]);
+    const auto local = triangleVerts(grownTriRadius(area), color()[PLATE_HUE]);
     return {polarToScreen(area, local[0]), polarToScreen(area, local[1]), polarToScreen(area, local[2])};
 }
 
 void RingColorPlate::hideEvent(QHideEvent* event) {
     _dragRing = false;
+    _ringTarget = _triTarget = false;
+    _swell = _triSwell = 0.0;
     ColorPlate::hideEvent(event);
+}
+
+void RingColorPlate::mouseMoveEvent(QMouseEvent* event) {
+    ColorPlate::mouseMoveEvent(event);
+    if (!(event->buttons() & Qt::LeftButton)) {
+        setSwellTarget(ringGrab(event->position()));
+    }
+}
+
+void RingColorPlate::mouseReleaseEvent(QMouseEvent* event) {
+    ColorPlate::mouseReleaseEvent(event);
+    _dragRing = false;
+    setSwellTarget(ringGrab(event->position()));
+}
+
+void RingColorPlate::leaveEvent(QEvent* event) {
+    clearSwellTarget();
+    ColorPlate::leaveEvent(event);
 }
 
 void RingColorPlate::paintPlate(QPainter& p) {
@@ -295,11 +408,15 @@ void RingColorPlate::paintPlate(QPainter& p) {
     const auto square = polarSquare(a);
     const double sz = square.width();
 
-    // clip
+    // clip — the band normally sits a pixel inside both edges, reserving
+    // room so it can swell a pixel on each side while the cursor is over a
+    // spot that would grab it; the image carries a few pixels of margin
+    // past both edges precisely so the clip has room to grow
+    const double swell = _swell;
     QPainterPath clip;
-    const double inner = sz * RING_INNER_RATIO;
+    const double inner = sz * RING_INNER_RATIO + (1.0 - swell) * 2;
     clip.setFillRule(Qt::OddEvenFill); // carve out the hole
-    clip.addEllipse(square);
+    clip.addEllipse(square.adjusted(1.0 - swell, 1.0 - swell, swell - 1.0, swell - 1.0));
     clip.addEllipse(QRectF(square.center().x() - inner / 2, square.center().y() - inner / 2, inner, inner));
     p.setClipPath(clip);
 
@@ -317,14 +434,16 @@ void RingColorPlate::paintPlate(QPainter& p) {
 
     p.setClipping(false);
 
-    // border
+    // border — tracks the band's outer edge so the outline always hugs it
     bool dark = palette().color(QPalette::Window).lightness() < 128;
-    drawStandardBorder(p, a, dark, PLATE_CORNER_RADIUS, devicePixelRatio(), true);
+    drawStandardBorder(p, a.adjusted(1.0 - swell, 1.0 - swell, swell - 1.0, swell - 1.0),
+                       dark, PLATE_CORNER_RADIUS, devicePixelRatio(), true);
 
     // inner border of the ring — shrink the rect concentrically and draw
     // outwards so the relief lands on the band, not inside the hole;
     // enlarge by one physical pixel per side (device-ratio aware)
     double inset = std::min(a.width(), a.height()) * (1.0 - RING_INNER_RATIO) / 2.0 - 1.0 / devicePixelRatio();
+    inset -= 1.0 - swell;
     drawStandardBorder(p, a.adjusted(inset, inset, -inset, -inset), dark, PLATE_CORNER_RADIUS, devicePixelRatio(), true, false);
     // triangle border — same soft relief the standard border gives other
     // shapes: 1px concentric strokes marching inward with decaying alpha.

@@ -188,7 +188,7 @@ bool ColorPlate::achromatic(const Color& plate) const {
     if (_space == Type::HWB) {
         return plate[1] + plate[2] >= 1.0 - ACHROMATIC_CHROMA;
     }
-    if (_space == Type::HSL && plate[2] >= 1.0 - ACHROMATIC_CHROMA) {
+    if ((_space == Type::HSL || _space == Type::OKHSL) && plate[2] >= 1.0 - ACHROMATIC_CHROMA) {
         // pure white makes hue meaningless, same as black — the channel-floor
         // test below only catches the l≈0 side
         return true;
@@ -236,6 +236,21 @@ void ColorPlate::setColor(const Color& color) {
     colorChanged();
     update();
     syncOverlays();
+}
+
+// adopt a color already in plate space — the page's proxy hue slider uses
+// this so dragging hue repaints the plate even when the source-space color
+// is achromatic and a setColor() round-trip would change nothing
+void ColorPlate::setPlateColor(const Color& color) {
+    _color = color;
+    _color.setOpacity(1);
+    if (const auto hue_ch = hueChannel()) {
+        _last_hue = _color[*hue_ch];
+    }
+    colorChanged();
+    update();
+    syncOverlays();
+    emitColor();
 }
 
 sigc::connection ColorPlate::connectColorChanged(sigc::slot<void(const Color&)> cb) {

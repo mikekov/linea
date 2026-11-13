@@ -61,6 +61,15 @@ public:
 
     // set current color, in any space; ignored while the user is dragging
     void setColor(const Inkscape::Colors::Color& color);
+    // adopt a color already in plate space — drives the fixed channel
+    // directly, used by the page's proxy hue slider
+    void setPlateColor(const Inkscape::Colors::Color& color);
+    // the space the plate is drawn/picked in
+    Inkscape::Colors::Space::Type plateSpace() const { return _space; }
+    // channel the plate holds constant — driven by an external slider
+    int fixedChannel() const { return _fixed_channel; }
+    // current color in plate space, with hue preservation already applied
+    const Inkscape::Colors::Color& plateColor() const { return _color; }
     // connect a callback invoked when the user picks a color; emits colors in the source space
     sigc::connection connectColorChanged(sigc::slot<void(const Inkscape::Colors::Color&)> cb);
 
@@ -78,7 +87,6 @@ protected:
     virtual Inkscape::Colors::Color colorAt(const QPointF& pos) const = 0; // plate color at a widget position, clamped onto the pickable area
 
     const Inkscape::Colors::Color& color() const { return _color; }
-    Inkscape::Colors::Space::Type plateSpace() const { return _space; }
     Inkscape::Colors::Gamut surface() const { return _surface; }
     // convert a built image's bytes into the surface color space when they
     // differ — call after building/tagging an image, never per paint

@@ -24,6 +24,7 @@
 
 class QMenu;
 class QPushButton;
+class QVBoxLayout;
 
 namespace Linea::UI {
 
@@ -71,8 +72,14 @@ private:
     sigc::scoped_connection _selected_cleared_connection;
     sigc::scoped_connection _color_plate_changed;
     sigc::scoped_connection _color_plate_updated;
+    // proxy holder in the plate's space plus its two-way sync — lets a
+    // hue-less page drive the plate's fixed hue channel with a slider
+    sigc::scoped_connection _plate_color_sync;
+    sigc::scoped_connection _plate_color_back;
+    std::shared_ptr<ColorHolder> _plate_color;
     ColorPlate* _color_plate = nullptr;
     ColorSlider* _hue_slider = nullptr;
+    QVBoxLayout* _sliders = nullptr;
     QPushButton* _space_button = nullptr;
     QGridLayout* _segments = nullptr;
 };
