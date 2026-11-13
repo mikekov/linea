@@ -9,6 +9,7 @@
 #include <QPropertyAnimation>
 
 #include "qt/util/motion.h"
+#include "theme.h"
 
 namespace Linea::UI {
 
@@ -50,7 +51,8 @@ void SwitchWidget::paintEvent(QPaintEvent*) {
     // Track color: interpolate between button (off) and accent (on)
     QColor trackOff = pal.color(QPalette::Button);
     QColor trackOn = pal.color(QPalette::Accent);
-    QColor borderColor = pal.color(QPalette::Mid);
+    QColor borderColor = getForegroundColor();
+    borderColor.setAlpha(40);
 
     int red   = trackOff.red()   + _position * (trackOn.red()   - trackOff.red());
     int green = trackOff.green() + _position * (trackOn.green() - trackOff.green());
