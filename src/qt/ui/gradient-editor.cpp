@@ -122,6 +122,7 @@ void GradientEditor::connectSignals() {
 
     // Reverse and turn
     connect(_ui->reverseButton, &QPushButton::clicked, this, &GradientEditor::onReverseClicked);
+    connect(_ui->deleteStopButton, &QPushButton::clicked, this, &GradientEditor::onDeleteStopClicked);
     connect(_ui->turnButton, &QPushButton::clicked, this, &GradientEditor::onTurnClicked);
 
     // Spin boxes
@@ -131,6 +132,7 @@ void GradientEditor::connectSignals() {
     // Gradient image widget signals
     connect(_gradientImage.get(), &GradientWithStops::stopSelected, this, &GradientEditor::onStopSelected);
     connect(_gradientImage.get(), &GradientWithStops::stopOffsetChanged, this, &GradientEditor::onStopOffsetChanged);
+    connect(_gradientImage.get(), &GradientWithStops::stopsSwapped, this, &GradientEditor::onStopsSwapped);
     connect(_gradientImage.get(), &GradientWithStops::addStopAt, this, &GradientEditor::onAddStopAt);
     connect(_gradientImage.get(), &GradientWithStops::deleteStop, this, &GradientEditor::onDeleteStop);
 
@@ -166,6 +168,12 @@ void GradientEditor::onReverseClicked() {
     reverseGradient();
 }
 
+void GradientEditor::onDeleteStopClicked() {
+    if (auto index = currentStopIndex()) {
+        deleteStopInternal(index.value());
+    }
+}
+
 void GradientEditor::onTurnClicked() {
     turnGradient(90, true);
 }
@@ -193,6 +201,21 @@ void GradientEditor::onStopOffsetChanged(size_t index, double offset) {
     setStopOffset(index, offset);
 }
 
+void GradientEditor::onStopsSwapped(size_t first, size_t second) {
+    if (SPGradient* vector = getGradientVector()) {
+        SPStop* a = sp_get_nth_stop(vector, first);
+        SPStop* b = sp_get_nth_stop(vector, second);
+        if (a && b) {
+            auto scoped = _update.block();
+
+            // move the first stop after the second to swap their positions
+            vector->getRepr()->changeOrder(a->getRepr(), b->getRepr());
+
+            DocumentUndo::done(_document, RC_("Undo", "Reorder gradient stops"), INKSCAPE_ICON("color-gradient"));
+        }
+    }
+}
+
 void GradientEditor::onAddStopAt(double offset) {
     insertStopAt(offset);
 }
@@ -213,6 +236,12 @@ void GradientEditor::setGradient(SPGradient* gradient) {
 void GradientEditor::setGradientInternal(SPGradient* gradient) {
     SPGradient* vector = gradient ? gradient->getVector() : nullptr;
 
+    // re-sync selection-dependent controls when the vector is changed outside
+    // this editor (e.g. undo/redo)
+    _vectorModified = vector
+        ? vector->connectModified([this](SPObject*, guint) { onVectorModified(); })
+        : sigc::connection();
+
     if (vector) {
         vector->ensureVector();
     }
@@ -230,19 +259,9 @@ void GradientEditor::setGradientInternal(SPGradient* gradient) {
 
     auto canRotate = false;
     // only linear gradient can be rotated currently
-    if (auto linear = dynamic_cast<SPLinearGradient*>(gradient)) {
+    if (dynamic_cast<SPLinearGradient*>(gradient)) {
         canRotate = true;
-        auto line = Geom::Line(
-            Geom::Point(linear->x1.computed, linear->y1.computed),
-            Geom::Point(linear->x2.computed, linear->y2.computed)
-        );
-        auto angle = std::atan2(line.finalPoint().y() - line.initialPoint().y(),
-                                line.finalPoint().x() - line.initialPoint().x()) * 180 / M_PI;
-        {
-            const bool wasBlocked = _ui->angleSpin->blockSignals(true);
-            _ui->angleSpin->setValue(angle);
-            _ui->angleSpin->blockSignals(wasBlocked);
-        }
+        updateAngleSpin();
         _ui->linearButton->setChecked(true);
         _ui->radialButton->setChecked(false);
     } else {
@@ -308,7 +327,17 @@ void GradientEditor::setStopOffset(size_t index, double offset) {
                 repr->setAttributeCssDouble("offset", stop->offset);
             }
 
-            DocumentUndo::done(_document, RC_("Undo", "Change gradient stop offset"), INKSCAPE_ICON("color-gradient"));
+            // keep the spinbox in sync while the selected stop is dragged
+            if (static_cast<int>(index) == _currentStopIndex) {
+                const bool wasBlocked = _ui->offsetSpin->blockSignals(true);
+                _ui->offsetSpin->setValue(offset * 100);
+                _ui->offsetSpin->blockSignals(wasBlocked);
+            }
+
+            // coalesce repeated changes (e.g. a stop drag) into one undo step;
+            // the key is per-stop so moving different stops stays separate
+            auto key = "gradient-editor:offset:" + std::to_string(index);
+            DocumentUndo::maybeDone(_document, key.c_str(), RC_("Undo", "Change gradient stop offset"), INKSCAPE_ICON("color-gradient"));
         }
     }
 }
@@ -387,6 +416,12 @@ SPStop* GradientEditor::getNthStop(size_t index) {
     return nullptr;
 }
 
+void GradientEditor::onVectorModified() {
+    if (_update.pending()) return;
+    // outside change (e.g. undo/redo): re-sync the selected stop's controls
+    stopSelectedInternal();
+}
+
 void GradientEditor::stopSelectedInternal() {
     auto scoped = _update.block();
     _colors->clear();
@@ -397,6 +432,9 @@ void GradientEditor::stopSelectedInternal() {
         auto [before, after] = sp_get_before_after_stops(stop);
         _ui->offsetSpin->setRange(before ? before->offset * 100 : 0, after ? after->offset * 100 : 100);
         _ui->offsetSpin->setEnabled(true);
+        // a gradient needs at least 1 stop; keep the button in sync
+        SPGradient* vector = _gradient ? _gradient->getVector() : nullptr;
+        _ui->deleteStopButton->setEnabled(vector && vector->getStopCount() > 1);
         {
             const bool wasBlocked = _ui->offsetSpin->blockSignals(true);
             _ui->offsetSpin->setValue(stop->offset * 100);
@@ -409,6 +447,7 @@ void GradientEditor::stopSelectedInternal() {
         _ui->offsetSpin->setRange(0, 0);
         _ui->offsetSpin->setValue(0);
         _ui->offsetSpin->setEnabled(false);
+        _ui->deleteStopButton->setEnabled(false);
     }
 }
 
@@ -444,6 +483,8 @@ void GradientEditor::deleteStopInternal(int index) {
         if (SPStop* stop = sp_get_nth_stop(vector, index)) {
             // try deleting a stop if it can be
             sp_gradient_delete_stop(vector, stop);
+            // re-select a stop in range so controls reflect the new stop count
+            selectStop(std::min<int>(index, vector->getStopCount() - 1));
         }
     }
 }
@@ -451,6 +492,19 @@ void GradientEditor::deleteStopInternal(int index) {
 double lineAngle(const Geom::Line& line) {
     auto d = line.finalPoint() - line.initialPoint();
     return std::atan2(d.y(), d.x());
+}
+
+// refresh the angle spinbox from the gradient's current line endpoints
+void GradientEditor::updateAngleSpin() {
+    if (auto linear = dynamic_cast<SPLinearGradient*>(_gradient)) {
+        auto line = Geom::Line(
+            Geom::Point(linear->x1.computed, linear->y1.computed),
+            Geom::Point(linear->x2.computed, linear->y2.computed)
+        );
+        const bool wasBlocked = _ui->angleSpin->blockSignals(true);
+        _ui->angleSpin->setValue(lineAngle(line) * 180 / M_PI);
+        _ui->angleSpin->blockSignals(wasBlocked);
+    }
 }
 
 void GradientEditor::turnGradient(double angle, bool relative) {
@@ -475,6 +529,9 @@ void GradientEditor::turnGradient(double angle, bool relative) {
         linear->y1 = rotated.initialPoint().y();
         linear->x2 = rotated.finalPoint().x();
         linear->y2 = rotated.finalPoint().y();
+
+        // keep the spinbox in sync with the rotated angle
+        updateAngleSpin();
 
         _gradient->updateRepr();
 

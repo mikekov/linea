@@ -92,11 +92,13 @@ private Q_SLOTS:
     void onOffsetChanged(double value);
     void onAngleChanged(double value);
     void onReverseClicked();
+    void onDeleteStopClicked();
     void onTurnClicked();
     void onLinearToggled(bool checked);
     void onRadialToggled(bool checked);
     void onStopSelected(size_t index);
     void onStopOffsetChanged(size_t index, double offset);
+    void onStopsSwapped(size_t first, size_t second);
     void onAddStopAt(double offset);
     void onDeleteStop(size_t index);
     void onRepeatModeTriggered();
@@ -105,6 +107,7 @@ private:
     void setupCustomWidgets(Inkscape::Colors::Space::Type space, bool showTypeSelector, bool showColorwheelExpander);
     void connectSignals();
     void setGradientInternal(SPGradient* gradient);
+    void onVectorModified();
     void stopSelectedInternal();
     void insertStopAt(double offset);
     void addStop(int index);
@@ -113,6 +116,7 @@ private:
     void setRepeatIcon(SPGradientSpread mode);
     void reverseGradient();
     void turnGradient(double angle, bool relative);
+    void updateAngleSpin();
     void setStopColor(const Inkscape::Colors::Color& color);
     SPStop* currentStop();
     std::optional<int> currentStopIndex();
@@ -145,6 +149,7 @@ private:
 
     // Connections
     sigc::scoped_connection _colorChanged;
+    sigc::scoped_connection _vectorModified;
 };
 
 // SPGradientSpread modes, names and icons

@@ -30,7 +30,7 @@
         <number>0</number>
       </property>
       <item>
-        <layout class="QGridLayout" name="gridLayout">
+        <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0,0,0,1,1">
           <property name="spacing">
             <number>4</number>
           </property>
@@ -41,7 +41,7 @@
             <number>4</number>
           </property>
           <!-- Row 0: title label -->
-          <item row="0" column="0" colspan="6">
+          <item row="0" column="0" colspan="7">
             <widget class="QLabel" name="titleLabel">
               <property name="text">
                 <string>Gradient fill</string>
@@ -52,7 +52,7 @@
             </widget>
           </item>
           <!-- Row 1: Library button, type buttons, repeat mode -->
-          <item row="1" column="0">
+          <item row="1" column="0" colspan="2" alignment="Qt::AlignLeft">
             <widget class="QPushButton" name="libraryButton">
               <property name="toolTip">
                 <string>Gradient library</string>
@@ -66,22 +66,6 @@
                 <string>padded</string>
               </property>
             </widget>
-          </item>
-          <item row="1" column="1">
-            <spacer name="horizontalSpacer1">
-              <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-                <enum>QSizePolicy::MinimumExpanding</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-                <size>
-                  <width>20</width>
-                  <height>0</height>
-                </size>
-              </property>
-            </spacer>
           </item>
           <item row="1" column="2">
             <widget class="QPushButton" name="linearButton">
@@ -116,23 +100,7 @@
               </property>
             </widget>
           </item>
-          <item row="1" column="4">
-            <spacer name="horizontalSpacer2">
-              <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-                <enum>QSizePolicy::MinimumExpanding</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-                <size>
-                  <width>20</width>
-                  <height>0</height>
-                </size>
-              </property>
-            </spacer>
-          </item>
-          <item row="1" column="5">
+          <item row="1" column="5" colspan="2" alignment="Qt::AlignRight">
             <widget class="QPushButton" name="repeatModeButton">
               <property name="toolTip">
                 <string>Repeat mode</string>
@@ -147,7 +115,7 @@
               </property>
             </widget>
           </item>
-          <!-- Row 2: Offset + reverse button, turn + angle -->
+          <!-- Row 2: Offset + reverse, delete stop, turn + angle -->
           <item row="2" column="0" colspan="2">
             <widget class="Linea::UI::NumberEdit" name="offsetSpin" native="true">
               <property name="suffix">
@@ -171,6 +139,9 @@
               <property name="toolTip">
                 <string>Offset of selected stop</string>
               </property>
+              <property name="keptFractionDigits">
+                <number>1</number>
+              </property>
             </widget>
           </item>
           <item row="2" column="2">
@@ -186,6 +157,18 @@
             </widget>
           </item>
           <item row="2" column="3">
+            <widget class="QPushButton" name="deleteStopButton">
+              <property name="toolTip">
+                <string>Delete selected stop</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/edit-delete</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item row="2" column="4">
             <widget class="QPushButton" name="turnButton">
               <property name="toolTip">
                 <string>Rotate gradient 90 degrees</string>
@@ -197,7 +180,7 @@
               </property>
             </widget>
           </item>
-          <item row="2" column="4" colspan="2">
+          <item row="2" column="5" colspan="2">
             <widget class="Linea::UI::NumberEdit" name="angleSpin" native="true">
               <property name="suffix">
                 <string>°</string>
@@ -220,10 +203,13 @@
               <property name="toolTip">
                 <string>Adjust the angle of the gradient</string>
               </property>
+              <property name="keptFractionDigits">
+                <number>1</number>
+              </property>
             </widget>
           </item>
           <!-- Row 3: Gradient widget placeholder -->
-          <item row="3" column="0" colspan="6">
+          <item row="3" column="0" colspan="7">
             <widget class="QWidget" name="gradientWidgetPlaceholder" native="true">
               <property name="minimumSize">
                 <size>

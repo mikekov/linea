@@ -770,7 +770,7 @@ void sp_gradient_delete_stop(SPGradient* gradient, SPStop* stop) {
         return;
     }
 
-    if (gradient->getStopCount() > 2) { // 2 is the minimum
+    if (gradient->getStopCount() > 1) { // 1 is the minimum
         gradient->getRepr()->removeChild(stop->getRepr());
         DocumentUndo::done(gradient->document, RC_("Undo", "Delete gradient stop"), INKSCAPE_ICON("color-gradient"));
     }

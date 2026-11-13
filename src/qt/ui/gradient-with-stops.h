@@ -57,6 +57,9 @@ Q_SIGNALS:
     // request to delete stop at given index
     void deleteStop(size_t index);
 
+    // request to swap two adjacent stops in the document order (first < second)
+    void stopsSwapped(size_t first, size_t second);
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
@@ -142,6 +145,8 @@ private:
     double _stopMoveIncrement = 0.01;
 
     // constants
+    // distance (px) the pointer must overshoot a blocking stop to swap with it
+    static constexpr int STOP_SWAP_DISTANCE = 12;
     static constexpr int CHECKERBOARD_TILE = 7;
     static constexpr int GRADIENT_IMAGE_HEIGHT = 3 * CHECKERBOARD_TILE;
 };

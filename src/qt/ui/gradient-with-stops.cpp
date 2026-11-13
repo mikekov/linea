@@ -51,7 +51,7 @@ GradientWithStops::GradientWithStops(QWidget* parent)
     setMouseTracking(true);
 
     // Set theme-based colors
-    auto* style = qApp->style();
+    auto style = qApp->style();
     _backgroundColor = style->standardPalette().color(QPalette::Base);
     _foregroundColor = style->standardPalette().color(QPalette::Text);
 }
@@ -362,9 +362,31 @@ void GradientWithStops::mouseMoveEvent(QMouseEvent* event) {
         auto layout = getLayout();
         if (layout.width > 0) {
             auto delta = dx / layout.width;
+            // where the pointer is trying to take the stop, ignoring neighbors
+            auto desired = std::clamp(_stopOffset + delta, 0.0, 1.0);
+            auto index = static_cast<size_t>(_focusedStop);
             auto limits = getStopLimits(_focusedStop);
-            if (limits.minOffset < limits.maxOffset) {
-                auto newOffset = std::clamp(_stopOffset + delta, limits.minOffset, limits.maxOffset);
+            // overshoot past the blocking stop required to swap places with it
+            const auto past = STOP_SWAP_DISTANCE / layout.width;
+
+            int swapTo = -1;
+            if (index + 1 < _stops.size() && desired > limits.maxOffset + past) {
+                swapTo = index + 1;
+            } else if (index > 0 && desired < limits.minOffset - past) {
+                swapTo = index - 1;
+            }
+
+            if (swapTo >= 0) {
+                // pushed hard against a neighbor: swap stops and keep dragging under the new index
+                Q_EMIT stopsSwapped(std::min(index, static_cast<size_t>(swapTo)),
+                                    std::max(index, static_cast<size_t>(swapTo)));
+                // resync stop list with reordered document
+                modified();
+                setFocusedStop(swapTo);
+                auto l = getStopLimits(swapTo);
+                Q_EMIT stopOffsetChanged(swapTo, std::clamp(desired, l.minOffset, l.maxOffset));
+            } else if (limits.minOffset < limits.maxOffset) {
+                auto newOffset = std::clamp(desired, limits.minOffset, limits.maxOffset);
                 Q_EMIT stopOffsetChanged(_focusedStop, newOffset);
             }
         }
