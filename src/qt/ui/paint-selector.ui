@@ -29,7 +29,7 @@
       <property name="bottomMargin">
         <number>0</number>
       </property>
-      <!-- Header row: paint-type buttons | fill-rule button | plate-picker buttons | compact menu button -->
+      <!-- Header row: paint-type buttons | fill-rule button | plate-picker buttons | plate toggle button -->
       <item>
         <layout class="QHBoxLayout" name="headerLayout">
           <property name="spacing">
@@ -115,17 +115,17 @@
             </spacer>
           </item>
 
-          <!-- Compact menu button (compact mode only, hidden by default) -->
+          <!-- Color plate toggle (compact mode only, hidden by default) -->
           <item>
-            <widget class="QToolButton" name="menuButton">
+            <widget class="QToolButton" name="plateButton">
               <property name="visible">
                 <bool>false</bool>
               </property>
               <property name="toolTip">
-                <string>Color Pickers</string>
+                <string>Show color plate</string>
               </property>
-              <property name="popupMode">
-                <enum>QToolButton::InstantPopup</enum>
+              <property name="checkable">
+                <bool>true</bool>
               </property>
               <property name="autoRaise">
                 <bool>true</bool>

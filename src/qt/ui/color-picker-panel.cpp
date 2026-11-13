@@ -182,6 +182,11 @@ void ColorPickerPanel::updateColor() {
 }
 
 void ColorPickerPanel::switchPage(Space::Type space, ColorPlateType plateType) {
+    // each space configures a single plate shape — normalize the request so a
+    // stale preference can't ask for a shape the space doesn't have
+    if (plateType != ColorPlateType::None) {
+        plateType = ColorPlate::plateTypeFor(space);
+    }
     removeWidgets();
     createColorPage(space, plateType);
     _spaceType = space;
@@ -263,14 +268,14 @@ void ColorPickerPanel::cancelPick() {
     endPick();
 }
 
-ColorPlateType get_plate_type_preference(const std::string& pref_path_base, ColorPlateType def_type) {
+bool get_show_plate_preference(const std::string& pref_path_base, bool def) {
     Glib::ustring path(pref_path_base);
-    return static_cast<ColorPlateType>(Inkscape::Preferences::get()->getIntLimited(path + "/color-plate-type", static_cast<int>(def_type), 0, 3));
+    return Inkscape::Preferences::get()->getBool(path + "/show-color-plate", def);
 }
 
-void set_plate_type_preference(const std::string& pref_path_base, ColorPlateType type) {
+void set_show_plate_preference(const std::string& pref_path_base, bool show) {
     Glib::ustring path(pref_path_base);
-    Inkscape::Preferences::get()->setInt(path + "/color-plate-type", static_cast<int>(type));
+    Inkscape::Preferences::get()->setBool(path + "/show-color-plate", show);
 }
 
 PlateGamut get_plate_gamut_preference() {

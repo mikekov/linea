@@ -56,6 +56,8 @@ public:
                               const PlateGamut& gamut, QWidget* parent = nullptr);
     // true if 'source' has a plate space
     static bool supports(Inkscape::Colors::Space::Type source);
+    // the single plate shape configured for 'source' (None if it has none)
+    static ColorPlateType plateTypeFor(Inkscape::Colors::Space::Type source);
 
     // set current color, in any space; ignored while the user is dragging
     void setColor(const Inkscape::Colors::Color& color);

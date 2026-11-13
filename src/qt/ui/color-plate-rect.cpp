@@ -211,6 +211,10 @@ void RectColorPlate::paintPlate(QPainter& p) {
     clip.addRoundedRect(a, PLATE_CORNER_RADIUS, PLATE_CORNER_RADIUS);
     p.setClipPath(clip);
 
+    // dim whatever the plate image leaves unpainted — in unbounded spaces
+    // out-of-gamut pixels are transparent; opaque pixels cover this fill
+    p.fillPath(clip, QColor(0, 0, 0, 25));
+
     // round the target rect outwards so the image edge never lands inside the
     // clip — toRect() can pull it up to a pixel in on one side, leaving an uncovered jagged strip
     p.drawImage(a.toAlignedRect(), _plate);

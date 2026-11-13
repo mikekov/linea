@@ -129,7 +129,7 @@ ColorPlate* ColorPlate::create(Type source, ColorPlateType shape, const PlateGam
             if (spec.polar != Type::NONE) plate = new WheelColorPlate(source, spec.polar, gamut, parent);
             break;
         case ColorPlateType::Ring:
-            if (spec.polar != Type::NONE) plate = new RingColorPlate(source, spec.polar, gamut, parent);
+            if (spec.ring != Type::NONE) plate = new RingColorPlate(source, spec.ring, gamut, parent);
             break;
         case ColorPlateType::Rect:
             if (spec.rect != Type::NONE) plate = new RectColorPlate(source, spec, gamut, parent);
@@ -161,7 +161,17 @@ ColorPlate* ColorPlate::create(Type source, ColorPlateType shape, const PlateGam
 }
 
 bool ColorPlate::supports(Type source) {
-    return Components::get(source).plate().polar != Type::NONE;
+    return plateTypeFor(source) != ColorPlateType::None;
+}
+
+// Each picker space configures a single plate shape — polar (wheel), ring or
+// rect — in its Components spec; the others are Type::NONE.
+ColorPlateType ColorPlate::plateTypeFor(Type source) {
+    const auto& spec = Components::get(source).plate();
+    if (spec.rect  != Type::NONE) return ColorPlateType::Rect;
+    if (spec.ring  != Type::NONE) return ColorPlateType::Ring;
+    if (spec.polar != Type::NONE) return ColorPlateType::Wheel;
+    return ColorPlateType::None;
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +204,7 @@ bool ColorPlate::achromatic(const Color& plate) const {
 
 bool ColorPlate::sharesHue(Type type) const {
     const auto& spec = Components::get(type).plate();
-    return spec.shared_hue && (_space == spec.polar || _space == spec.rect);
+    return spec.shared_hue && (_space == spec.polar || _space == spec.ring || _space == spec.rect);
 }
 
 void ColorPlate::setColor(const Color& color) {

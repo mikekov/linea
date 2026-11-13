@@ -27,7 +27,7 @@ static const std::vector<Components> get_color_spaces() {
 
 static const std::vector<Components> color_spaces = {
     {
-        Type::RGB, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}}, Traits::Picker,
+        Type::RGB, {.polar=Type::NONE, .rect=Type::HSV, .axes={0, 1, 2}}, Traits::Picker,
         {
             { "r", _("R"), _("Red"), Unit::EightBit },
             { "g", _("G"), _("Green"), Unit::EightBit },
@@ -43,7 +43,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::HSL, {.polar=Type::HSV, .rect=Type::HSL, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::HSL, {.polar=Type::NONE, .rect=Type::HSL, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "s", _("S"), _("Saturation"), Unit::Percent },
@@ -59,7 +59,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::HWB, {.polar=Type::HSV, .rect=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::HWB, {.ring=Type::HSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "w", _("W"), _("Whiteness"), Unit::Percent },
@@ -92,7 +92,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::OKHSL, {.polar=Type::OKHSV, .rect=Type::OKHSV, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
+        Type::OKHSL, {.polar=Type::OKHSV, .rect=Type::NONE, .axes={0, 1, 2}, .shared_hue=true}, Traits::Picker,
         {
             { "h", _("H"), _("Hue"), Unit::Degree },
             { "s", _("S"), _("Saturation"), Unit::Percent },
@@ -132,7 +132,7 @@ static const std::vector<Components> color_spaces = {
         }
     },
     {
-        Type::OKLCH, {.polar=Type::OKHSV, .rect=Type::OKLCH,
+        Type::OKLCH, {.polar=Type::NONE, .rect=Type::OKLCH,
             // the axes can be any permutation of L(0)/C(1)/H(2)
             // show chroma 0..0.4 (sRGB peaks near 0.32); wider gamuts pin the excess to the top edge
             .axes={.fixed=2, .x=0, .y=1, .y_scale=OkLch::CHROMA_SCALE}, .gamut=true, .shared_hue=true}, Traits::Picker,

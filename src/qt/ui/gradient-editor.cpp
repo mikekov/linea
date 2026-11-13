@@ -98,7 +98,9 @@ void GradientEditor::setupCustomWidgets(Inkscape::Colors::Space::Type space, boo
     // Create color picker and add to placeholder
     _colorPicker = ColorPickerPanel::create(
         space,
-    get_plate_type_preference(_prefs, ColorPlateType::None),
+        get_show_plate_preference(_prefs, false)
+            ? ColorPlate::plateTypeFor(space)
+            : ColorPlateType::None,
         _colors,
         this
     ).release();
@@ -313,7 +315,7 @@ void GradientEditor::setStopOffset(size_t index, double offset) {
 
 void GradientEditor::setColorPickerPlate(ColorPlateType type) {
     _colorPicker->setPlateType(type);
-    set_plate_type_preference(_prefs, type);
+    set_show_plate_preference(_prefs, type != ColorPlateType::None);
 }
 
 ColorPlateType GradientEditor::getColorPickerPlate() const {

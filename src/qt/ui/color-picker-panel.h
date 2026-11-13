@@ -54,6 +54,7 @@ public:
     // request type of color wheel/plate
     void setPlateType(ColorPlateType plate);
     ColorPlateType getPlateType() const;
+    Inkscape::Colors::Space::Type spaceType() const { return _spaceType; }
 
     sigc::signal<void(Inkscape::Colors::Space::Type)>& colorSpaceChanged();
 
@@ -95,12 +96,12 @@ private:
     sigc::signal<void(Inkscape::Colors::Space::Type)> _colorSpaceChanged;
 };
 
-// get a plate type from preferences
-ColorPlateType get_plate_type_preference(const std::string& pref_path_base,
-                                         ColorPlateType def_type = ColorPlateType::Rect);
+// persisted "show color plate" toggle for a picker under 'pref_path_base';
+// the plate's shape comes from the space's spec, not from preferences
+bool get_show_plate_preference(const std::string& pref_path_base, bool def);
 
-// persist a plate type in preferences
-void set_plate_type_preference(const std::string& pref_path_base, ColorPlateType type);
+// persist the toggle
+void set_show_plate_preference(const std::string& pref_path_base, bool show);
 
 // gamut drawing preferences for plates in unbounded spaces
 PlateGamut get_plate_gamut_preference();

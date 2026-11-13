@@ -9,7 +9,6 @@
 #include <QButtonGroup>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QMenu>
 #include <QStackedWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -107,7 +106,12 @@ public:
                     ColorPlateType default_plate, QWidget* parent = nullptr)
         : QWidget(parent)
         , _prefs(prefs)
-        , _picker(ColorPickerPanel::create(space, get_plate_type_preference(_prefs, default_plate), colors)) {
+        , _picker(ColorPickerPanel::create(
+              space,
+              get_show_plate_preference(_prefs, default_plate != ColorPlateType::None)
+                  ? ColorPlate::plateTypeFor(space)
+                  : ColorPlateType::None,
+              colors)) {
         auto layout = new QVBoxLayout(this);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->addWidget(_picker.get());
@@ -115,7 +119,7 @@ public:
 
     void setColorPickerPlate(ColorPlateType type) {
         _picker->setPlateType(type);
-        set_plate_type_preference(_prefs, type);
+        set_show_plate_preference(_prefs, type != ColorPlateType::None);
     }
 
     ColorPlateType getColorPickerPlate() const { return _picker->getPlateType(); }
@@ -145,13 +149,11 @@ void store_color_type(Type type) {
 static const struct {
     ColorPlateType type;
     const char* icon;
-    const char* label;
     const char* tooltip;
 } pickers[] = {
-    {ColorPlateType::Rect, "color-picker-rect", _("Color Plane"), _("Show color plane")},
-    {ColorPlateType::Ring, "color-picker-ring", _("Color Ring"), _("Show color ring")},
-    {ColorPlateType::Wheel, "color-picker-circle", _("Color Wheel"), _("Show color wheel")},
-    {ColorPlateType::None, "color-picker-input", _("Only Sliders"), _("Show color sliders only")},
+    {ColorPlateType::Rect, "color-plate", _("Show color plane")},
+    {ColorPlateType::Ring, "color-ring", _("Show color ring")},
+    {ColorPlateType::Wheel, "color-wheel", _("Show color wheel")},
 };
 
 } // namespace
@@ -271,6 +273,9 @@ public:
     // set current page color plate type
     void set_plate_type(ColorPlateType type);
     std::optional<ColorPlateType> get_plate_type(QWidget* page) const;
+    std::optional<Inkscape::Colors::Space::Type> space_type(QWidget* page);
+    // reflect the current page's plate state on the toggle button
+    void sync_plate_button();
 
     // map each PaintMode to its editor page widget (built once in the constructor)
     std::map<PaintMode, QWidget*> _pages;
@@ -287,8 +292,6 @@ public:
     std::map<PaintMode, QToolButton*> _mode_buttons;
     QButtonGroup* _mode_group = nullptr;
 
-    // compact plate buttons
-    std::unique_ptr<QMenu> _menu_popover;
     PaintMode _mode = PaintMode::None;
     SPDocument* _document = nullptr;
     FlatColorEditor _flat_color;
@@ -351,25 +354,29 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
         _mode_buttons[i.mode] = btn;
     }
 
-    _ui.menuButton->show();
-    _menu_popover = std::make_unique<QMenu>(this);
-    _ui.menuButton->setMenu(_menu_popover.get());
-    auto menuButtonPolicy = _ui.menuButton->sizePolicy();
-    menuButtonPolicy.setRetainSizeWhenHidden(true);
-    _ui.menuButton->setSizePolicy(menuButtonPolicy);
-
-    for (const auto& p : pickers) {
-        auto action = _menu_popover->addAction(QIcon(QString(":/icons/") + p.icon), tr(p.label));
-        action->setToolTip(tr(p.tooltip));
-        connect(action, &QAction::triggered, this, [this, type = p.type, icon = p.icon] {
-            if (!_update.pending()) {
-                set_plate_type(type);
-                _ui.menuButton->setIcon(QIcon(QString(":/icons/") + icon));
+    _ui.plateButton->show();
+    // checkable toggle for the color plate: each picker space configures a
+    // single plate shape, so checking flips between it and sliders-only
+    auto plateButtonPolicy = _ui.plateButton->sizePolicy();
+    plateButtonPolicy.setRetainSizeWhenHidden(true);
+    _ui.plateButton->setSizePolicy(plateButtonPolicy);
+    connect(_ui.plateButton, &QToolButton::toggled, this, [this](bool checked) {
+        if (_update.pending()) return;
+        auto shape = ColorPlateType::None;
+        if (checked) {
+            if (auto it = _pages.find(_mode); it != end(_pages)) {
+                if (auto space = space_type(it->second)) {
+                    shape = Linea::UI::ColorPlate::plateTypeFor(*space);
+                }
             }
-        });
-    }
+        }
+        set_plate_type(shape);
+    });
 
-    _flat_color.getPicker().colorSpaceChanged().connect([](Type type) { store_color_type(type); });
+    _flat_color.getPicker().colorSpaceChanged().connect([this](Type type) {
+        store_color_type(type);
+        sync_plate_button();
+    });
 
     connect(&_mesh, &MeshEditor::changed, this, [this](SPGradient* mesh) { fire_mesh_changed(mesh); });
     /*
@@ -399,7 +406,10 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
     connect(&_gradient, &GradientEditor::signalChanged, this,
             [this](SPGradient* gradient) { fire_gradient_changed(gradient, _mode); });
     _gradient.setContentsMargins(0, 4, 0, 0);
-    _gradient.getPicker().colorSpaceChanged().connect([](Type type) { store_color_type(type); });
+    _gradient.getPicker().colorSpaceChanged().connect([this](Type type) {
+        store_color_type(type);
+        sync_plate_button();
+    });
 
     // force height to reveal a list of patterns:
     _pattern.setObjectName("PatternEditorPopup");
@@ -494,18 +504,12 @@ void PaintSelectorImpl::_set_mode(PaintMode mode) {
     // show the corresponding editor page
     if (auto it = _pages.find(mode); it != end(_pages)) {
         _ui.stack->setCurrentWidget(it->second);
-        // sync plate type buttons with the current page
+        // sync the plate toggle with the current page
         auto type = get_plate_type(it->second);
         if (type.has_value()) {
             has_color_picker = true;
-            // reflect the plate type in the menu button's icon — look the type
-            // up in pickers, don't index by raw enum value
-            auto pit = std::find_if(std::begin(pickers), std::end(pickers),
-                                    [&type](auto& p) { return p.type == *type; });
-            if (pit != std::end(pickers)) {
-                auto scoped = _update.block();
-                _ui.menuButton->setIcon(QIcon(QString(":/icons/") + pit->icon));
-            }
+            auto scoped = _update.block();
+            sync_plate_button();
         }
     }
     if (auto it = _mode_buttons.find(mode == PaintMode::Hatch ? PaintMode::Pattern : mode); it != end(_mode_buttons)) {
@@ -513,8 +517,8 @@ void PaintSelectorImpl::_set_mode(PaintMode mode) {
         it->second->setChecked(true);
     }
     // color picker available?
-    _ui.menuButton->setEnabled(has_color_picker);
-    _ui.menuButton->setVisible(has_color_picker);
+    _ui.plateButton->setEnabled(has_color_picker);
+    _ui.plateButton->setVisible(has_color_picker);
 
     // Notify parent layouts that our size may have changed (AdaptiveStack
     // reports the current page's size, not the tallest page).
@@ -541,6 +545,36 @@ std::optional<ColorPlateType> PaintSelectorImpl::get_plate_type(QWidget* page) c
     }
 
     return {};
+}
+
+std::optional<Space::Type> PaintSelectorImpl::space_type(QWidget* page) {
+    if (page == &_flat_color) {
+        return _flat_color.getPicker().spaceType();
+    } else if (page == &_gradient) {
+        return _gradient.getPicker().spaceType();
+    }
+
+    return {};
+}
+
+void PaintSelectorImpl::sync_plate_button() {
+    auto it = _pages.find(_mode);
+    if (it == end(_pages)) return;
+
+    const auto type = get_plate_type(it->second);
+    const auto space = space_type(it->second);
+    if (!type || !space) return;
+
+    _ui.plateButton->setChecked(*type != ColorPlateType::None);
+    // icon/tooltip advertise the plate shape configured for this space,
+    // even while the plate is toggled off — never a sliders icon
+    const auto shape = Linea::UI::ColorPlate::plateTypeFor(*space);
+    const auto pit = std::find_if(std::begin(pickers), std::end(pickers),
+                                  [shape](auto& p) { return p.type == shape; });
+    if (pit != std::end(pickers)) {
+        _ui.plateButton->setIcon(QIcon(QString(":/icons/") + pit->icon));
+        _ui.plateButton->setToolTip(tr(pit->tooltip));
+    }
 }
 
 void PaintSelectorImpl::set_gradient(SPGradient* gradient, SPStop* selected_stop) {

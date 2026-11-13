@@ -37,6 +37,7 @@ struct PlateAxes {
 struct PlateSpec {
     Type polar = Type::NONE; // space of wheel/ring plates; must be HSV-like: 0 hue (angle), 1 saturation (radius), 2 value
     Type rect = Type::NONE;  // space of the rectangular plate
+    Type ring = Type::NONE;  // space of the ring plate
     PlateAxes axes;          // channel roles in the 'rect' space
     bool gamut = false;      // 'rect' is unbounded: draw it clipped to the requested gamut
     bool shared_hue = false; // this space's hue channel is the plate spaces' hue (no conversion residue)
