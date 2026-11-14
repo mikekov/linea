@@ -203,14 +203,21 @@ target_sources(linea_base PRIVATE
 # configure with values known at configure time
 configure_file(inkscape-version.cpp.in ${CMAKE_BINARY_DIR}/src/inkscape-version.cpp.in @ONLY)
 
-# configure further at build time (always built as run_always.txt is never actually created)
+# configure further at build time; re-run only when the git revision can change
+set(_inkscape_version_deps ${CMAKE_BINARY_DIR}/src/inkscape-version.cpp.in)
+if(EXISTS ${CMAKE_SOURCE_DIR}/.git/HEAD)
+    list(APPEND _inkscape_version_deps ${CMAKE_SOURCE_DIR}/.git/HEAD ${CMAKE_SOURCE_DIR}/.git/index)
+endif()
+
 add_custom_command(
-    OUTPUT inkscape-version.cpp run_always.txt
+    OUTPUT inkscape-version.cpp
     COMMAND ${CMAKE_COMMAND}
         -DINKSCAPE_SOURCE_DIR=${CMAKE_SOURCE_DIR}
         -DINKSCAPE_BINARY_DIR=${CMAKE_BINARY_DIR}
         -P ${CMAKE_SOURCE_DIR}/CMakeScripts/inkscape-version.cmake
-    COMMENT "Generating inkscape-version.cpp")
+    DEPENDS ${_inkscape_version_deps}
+    COMMENT "Updating inkscape-version.cpp"
+)
 
 target_sources(linea_base PRIVATE
   ${CMAKE_BINARY_DIR}/src/inkscape-version.cpp
