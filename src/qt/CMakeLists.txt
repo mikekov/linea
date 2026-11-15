@@ -18,6 +18,9 @@ target_sources(linea_base PRIVATE
     ui/license-panel.cpp
     ui/metadata-panel.cpp
     ui/number-edit.cpp
+    ui/linked-number-pair.cpp
+    ui/linked-number-pair.h
+    ui/linked-number-pair.ui
     ui/radio-button-group.cpp
     ui/radio-button-group.h
     ui/radio-toggle.cpp

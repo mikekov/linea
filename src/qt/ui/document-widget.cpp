@@ -180,11 +180,14 @@ void DocumentWidget::onDimensionChanged(double x, double y, const Unit* unit, Pa
 void DocumentWidget::onResizeToFit() {
     if (_update.pending() || !_document || !_desktop) return;
 
-    auto scoped = _update.block();
-    auto& pm = _document->getPageManager();
-    pm.selectPage(0);
-    pm.fitToSelection(_desktop->getSelection(), true);
-    DocumentUndo::done(_document, RC_("Undo", "Resize page to fit"), "");
+    {
+        auto scoped = _update.block();
+        auto& pm = _document->getPageManager();
+        pm.selectPage(0);
+        pm.fitToSelection(_desktop->getSelection(), true);
+        DocumentUndo::done(_document, RC_("Undo", "Resize page to fit"), "");
+    }
+    update(_document->getNamedView(), _document->getRoot());
 }
 
 void DocumentWidget::updateViewboxUi(SPDocument* document) {

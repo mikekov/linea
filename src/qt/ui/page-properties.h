@@ -82,7 +82,7 @@ private Q_SLOTS:
     void onScaleXChanged(double v);
     void onPortraitClicked();
     void onLandscapeClicked();
-    void onLinkWidthHeightClicked();
+    void onLinkWidthHeightToggled(bool locked);
     void onLinkScaleContentToggled(bool checked);
     void onViewboxToggled(bool expanded);
     void onPageTemplateTriggered(int index);

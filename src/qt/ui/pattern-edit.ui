@@ -316,7 +316,7 @@
           </property>
 
           <!-- Row 0: Scale label -->
-          <item row="0" column="0" colspan="3">
+          <item row="0" column="0" colspan="2">
             <widget class="QLabel" name="scaleLabel">
               <property name="text">
                 <string>Scale</string>
@@ -326,12 +326,9 @@
               </property>
             </widget>
           </item>
-          <!-- Row 1: scale-x | scale-y | link -->
-          <item row="1" column="0">
-            <widget class="Linea::UI::NumberEdit" name="scaleX" native="true">
-              <property name="toolTip">
-                <string>Scale X</string>
-              </property>
+          <!-- Row 1: linked scale-x / scale-y -->
+          <item row="1" column="0" colspan="2">
+            <widget class="Linea::UI::LinkedNumberPair" name="scalePair">
               <property name="minimum">
                 <double>0.01</double>
               </property>
@@ -344,52 +341,29 @@
               <property name="decimals">
                 <number>3</number>
               </property>
-              <property name="label">
+              <property name="keptFractionDigits">
+                <number>2</number>
+              </property>
+              <property name="firstLabel">
                 <string>X</string>
               </property>
-              <property name="keptFractionDigits">
-                <number>2</number>
+              <property name="firstToolTip">
+                <string>Scale X</string>
               </property>
-            </widget>
-          </item>
-          <item row="1" column="1">
-            <widget class="Linea::UI::NumberEdit" name="scaleY" native="true">
-              <property name="toolTip">
-                <string>Scale Y</string>
-              </property>
-              <property name="minimum">
-                <double>0.01</double>
-              </property>
-              <property name="maximum">
-                <double>1000.0</double>
-              </property>
-              <property name="singleStep">
-                <double>0.01</double>
-              </property>
-              <property name="decimals">
-                <number>3</number>
-              </property>
-              <property name="label">
+              <property name="secondLabel">
                 <string>Y</string>
               </property>
-              <property name="keptFractionDigits">
-                <number>2</number>
+              <property name="secondToolTip">
+                <string>Scale Y</string>
               </property>
-            </widget>
-          </item>
-          <item row="1" column="2">
-            <widget class="QPushButton" name="linkScaleButton">
-              <property name="toolTip">
+              <property name="linkToolTip">
                 <string>Link X and Y scale</string>
-              </property>
-              <property name="checkable">
-                <bool>true</bool>
               </property>
             </widget>
           </item>
 
           <!-- Row 2: Stroke label -->
-          <item row="2" column="0" colspan="3">
+          <item row="2" column="0" colspan="2">
             <widget class="QLabel" name="strokeLabel">
               <property name="text">
                 <string>Stroke</string>
@@ -427,7 +401,7 @@
           </item>
 
           <!-- Row 4: Rotation label -->
-          <item row="4" column="0" colspan="3">
+          <item row="4" column="0" colspan="2">
             <widget class="QLabel" name="rotationLabel">
               <property name="text">
                 <string>Rotation</string>
@@ -465,7 +439,7 @@
           </item>
 
           <!-- Row 6: Offset label -->
-          <item row="6" column="0" colspan="3">
+          <item row="6" column="0" colspan="2">
             <widget class="QLabel" name="offsetLabel">
               <property name="text">
                 <string>Offset</string>
@@ -522,7 +496,7 @@
           </item>
 
           <!-- Row 8: Gap label -->
-          <item row="8" column="0" colspan="3">
+          <item row="8" column="0" colspan="2">
             <widget class="QLabel" name="gapLabel">
               <property name="text">
                 <string>Gap</string>
@@ -579,7 +553,7 @@
           </item>
 
           <!-- Row 10: Pitch label -->
-          <item row="10" column="0" colspan="3">
+          <item row="10" column="0" colspan="2">
             <widget class="QLabel" name="pitchLabel">
               <property name="text">
                 <string>Pitch</string>
@@ -636,6 +610,12 @@
       <class>Linea::UI::NumberEdit</class>
       <extends>QWidget</extends>
       <header>qt/ui/number-edit.h</header>
+      <container>0</container>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::LinkedNumberPair</class>
+      <extends>QWidget</extends>
+      <header>qt/ui/linked-number-pair.h</header>
       <container>0</container>
     </customwidget>
     <customwidget>

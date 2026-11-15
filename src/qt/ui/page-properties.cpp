@@ -16,6 +16,7 @@
 #include <cmath>
 
 #include "color-picker.h"
+#include "linked-number-pair.h"
 #include "number-edit.h"
 #include "ui_page-properties.h"
 #include "unit-tracker.h"
@@ -55,7 +56,7 @@ PageProperties::PageProperties(QWidget* parent)
 
     // Configure NumberEdits
     constexpr double MAX_DIM = 100000.0;
-    for (auto edit : {_ui->pageWidth, _ui->pageHeight}) {
+    for (auto edit : {_ui->pageSizePair->first(), _ui->pageSizePair->second()}) {
         edit->setRange(0.001, MAX_DIM);
         edit->setDecimals(4);
         edit->setSingleStep(1.0);
@@ -149,8 +150,8 @@ void PageProperties::buildTemplateMenu() {
 // ---- Connections ----
 
 void PageProperties::setupConnections() {
-    connect(_ui->pageWidth, SIGNAL(valueChanged(double)), this, SLOT(onPageWidthChanged(double)));
-    connect(_ui->pageHeight, SIGNAL(valueChanged(double)), this, SLOT(onPageHeightChanged(double)));
+    connect(_ui->pageSizePair->first(), SIGNAL(valueChanged(double)), this, SLOT(onPageWidthChanged(double)));
+    connect(_ui->pageSizePair->second(), SIGNAL(valueChanged(double)), this, SLOT(onPageHeightChanged(double)));
 
     connect(_ui->viewboxWidth, SIGNAL(valueChanged(double)), this, SLOT(onViewboxWidthChanged(double)));
     connect(_ui->viewboxHeight, SIGNAL(valueChanged(double)), this, SLOT(onViewboxHeightChanged(double)));
@@ -160,7 +161,7 @@ void PageProperties::setupConnections() {
     connect(_ui->portraitButton, &QRadioButton::clicked, this, &PageProperties::onPortraitClicked);
     connect(_ui->landscapeButton, &QRadioButton::clicked, this, &PageProperties::onLandscapeClicked);
 
-    connect(_ui->linkWidthHeight, &QPushButton::clicked, this, &PageProperties::onLinkWidthHeightClicked);
+    connect(_ui->pageSizePair, &LinkedNumberPair::linkToggled, this, &PageProperties::onLinkWidthHeightToggled);
 
     connect(_ui->linkScaleContent, &QPushButton::toggled, this, &PageProperties::onLinkScaleContentToggled);
 
@@ -287,8 +288,8 @@ void PageProperties::onPageTemplateTriggered(int index) {
 
     {
         auto scoped = _update.block();
-        _ui->pageWidth->setValue(width);
-        _ui->pageHeight->setValue(height);
+        _ui->pageSizePair->first()->setValue(width);
+        _ui->pageSizePair->second()->setValue(height);
         _pageUnitsTracker->setActiveUnitByAbbr(page.unit->abbr.c_str());
         _currentPageUnit = _pageUnitsTracker->getActiveUnit();
         _ui->docUnitsLabel->setText(QString::fromStdString(page.unit->abbr));
@@ -315,10 +316,10 @@ void PageProperties::onPageUnitChanged(int /*index*/) {
     // Convert displayed values from old unit to new unit
     {
         auto scoped = _update.block();
-        Quantity w(_ui->pageWidth->value(), oldUnit->abbr.c_str());
-        Quantity h(_ui->pageHeight->value(), oldUnit->abbr.c_str());
-        _ui->pageWidth->setValue(w.value(newUnit));
-        _ui->pageHeight->setValue(h.value(newUnit));
+        Quantity w(_ui->pageSizePair->first()->value(), oldUnit->abbr.c_str());
+        Quantity h(_ui->pageSizePair->second()->value(), oldUnit->abbr.c_str());
+        _ui->pageSizePair->first()->setValue(w.value(newUnit));
+        _ui->pageSizePair->second()->setValue(h.value(newUnit));
     }
 
     _ui->docUnitsLabel->setText(QString::fromStdString(newUnit->abbr));
@@ -346,7 +347,7 @@ void PageProperties::changedLinkedValue(bool widthChanging, NumberEdit* wedit, N
 void PageProperties::setPageSizeLinked(bool widthChanging) {
     if (_update.pending()) return;
     if (_lockedSizeRatio) {
-        changedLinkedValue(widthChanging, _ui->pageWidth, _ui->pageHeight);
+        changedLinkedValue(widthChanging, _ui->pageSizePair->first(), _ui->pageSizePair->second());
     }
     updatePageSize();
 }
@@ -366,8 +367,8 @@ void PageProperties::updatePageSize(bool templateSelected) {
     auto scoped = _update.block();
 
     const auto unit = _pageUnitsTracker->getActiveUnit();
-    double width = _ui->pageWidth->value();
-    double height = _ui->pageHeight->value();
+    double width = _ui->pageSizePair->first()->value();
+    double height = _ui->pageSizePair->second()->value();
 
     // Portrait/landscape buttons
     if (std::abs(width - height) > 1e-9) {
@@ -396,10 +397,10 @@ void PageProperties::swapWidthHeight() {
     if (_update.pending()) return;
     {
         auto scoped = _update.block();
-        double w = _ui->pageWidth->value();
-        double h = _ui->pageHeight->value();
-        _ui->pageWidth->setValue(h);
-        _ui->pageHeight->setValue(w);
+        double w = _ui->pageSizePair->first()->value();
+        double h = _ui->pageSizePair->second()->value();
+        _ui->pageSizePair->first()->setValue(h);
+        _ui->pageSizePair->second()->setValue(w);
     }
     updatePageSize();
 }
@@ -427,24 +428,22 @@ void PageProperties::onScaleXChanged(double v) {
 
 void PageProperties::onPortraitClicked() {
     if (_update.pending()) return;
-    double w = _ui->pageWidth->value();
-    double h = _ui->pageHeight->value();
+    double w = _ui->pageSizePair->first()->value();
+    double h = _ui->pageSizePair->second()->value();
     if (w > h) swapWidthHeight();
 }
 
 void PageProperties::onLandscapeClicked() {
     if (_update.pending()) return;
-    double w = _ui->pageWidth->value();
-    double h = _ui->pageHeight->value();
+    double w = _ui->pageSizePair->first()->value();
+    double h = _ui->pageSizePair->second()->value();
     if (w < h) swapWidthHeight();
 }
 
-void PageProperties::onLinkWidthHeightClicked() {
-    _lockedSizeRatio = !_lockedSizeRatio;
-    _ui->linkWidthHeight->setToolTip(_lockedSizeRatio ? tr("Unlock width/height ratio")
-                                                      : tr("Lock width/height ratio"));
-    _ui->linkWidthHeight->setIcon(
-        QIcon(_lockedSizeRatio && _sizeRatio > 0 ? ":/icons/entries-linked" : ":/icons/entries-unlinked"));
+void PageProperties::onLinkWidthHeightToggled(bool locked) {
+    _lockedSizeRatio = locked;
+    _ui->pageSizePair->setLinkToolTip(locked ? tr("Unlock width/height ratio")
+                                           : tr("Lock width/height ratio"));
 }
 
 void PageProperties::onLinkScaleContentToggled(bool checked) {
@@ -515,8 +514,8 @@ void PageProperties::setDimension(Dimension dimension, double x, double y) {
     switch (dimension) {
         case Dimension::PageSize:
         case Dimension::PageTemplate:
-            _ui->pageWidth->setValue(x);
-            _ui->pageHeight->setValue(y);
+            _ui->pageSizePair->first()->setValue(x);
+            _ui->pageSizePair->second()->setValue(y);
             updatePageSize(dimension == Dimension::PageTemplate);
             break;
         case Dimension::Scale:

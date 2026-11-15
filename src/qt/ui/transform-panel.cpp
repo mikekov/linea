@@ -27,6 +27,7 @@
 #include "document-undo.h"
 #include "preferences.h"
 #include "selection.h"
+#include "linked-number-pair.h"
 #include "number-edit.h"
 #include "tab-strip.h"
 #include "util/transform-objects.h"
@@ -47,16 +48,12 @@ TransformPanel::TransformPanel(QWidget* parent)
 {
     _ui->setupUi(this);
 
-    // setMinimumWidth(std::max(_ui->transformPage->sizeHint().width(),
-                            //  _ui->matrixPage->sizeHint().width()));
-
     // restore persisted state before setting up UI that reads it
-    _linkedScale = Preferences::get()->getBool(kPrefLinkedScale, false);
+    _ui->scalePair->setLinked(Preferences::get()->getBool(kPrefLinkedScale, false));
     _curPage     = Preferences::get()->getInt(kPrefPage, PageTransforms);
     _ui->currentMatrix->setChecked(Preferences::get()->getBool(kPrefReplaceMatrix, false));
 
     setupTabStrip();
-    setupIcons();
     setupConnections();
 
     resetToDefaults();
@@ -82,11 +79,6 @@ void TransformPanel::setupTabStrip() {
     });
 }
 
-void TransformPanel::setupIcons() {
-    // _ui->resetBtn->setIcon(QIcon(":/icons/reset-settings"));
-    _ui->linkScaleBtn->setIcon(QIcon(_linkedScale ? ":/icons/entries-linked" : ":/icons/entries-unlinked"));
-}
-
 void TransformPanel::setupConnections() {
     // Apply / Duplicate buttons
     connect(_ui->applyBtn,     &QPushButton::clicked, this, [this]{ onApply(false); });
@@ -95,18 +87,9 @@ void TransformPanel::setupConnections() {
     // Reset button
     connect(_ui->resetBtn, &QToolButton::clicked, this, [this]{ resetToDefaults(); });
 
-    // Scale link
-    connect(_ui->scaleX, &NumberEdit::valueChanged, this, [this](double v) {
-        if (_linkedScale) _ui->scaleY->setValue(v);
-    });
-    connect(_ui->scaleY, &NumberEdit::valueChanged, this, [this](double v) {
-        if (_linkedScale) _ui->scaleX->setValue(v);
-    });
-    connect(_ui->linkScaleBtn, &QToolButton::clicked, this, [this] {
-        _linkedScale = !_linkedScale;
-        Preferences::get()->setBool(kPrefLinkedScale, _linkedScale);
-        if (_linkedScale) _ui->scaleY->setValue(_ui->scaleX->value());
-        _ui->linkScaleBtn->setIcon(QIcon(_linkedScale ? ":/icons/entries-linked" : ":/icons/entries-unlinked"));
+    // Scale link; the widget handles mirroring via copyLinked
+    connect(_ui->scalePair, &LinkedNumberPair::linkToggled, this, [this](bool linked) {
+        Preferences::get()->setBool(kPrefLinkedScale, linked);
     });
 
     // current-matrix checkbox
@@ -162,7 +145,7 @@ void TransformPanel::showPage(int page) {
     _ui->matrixPage->setVisible(page == PageMatrix);
     _ui->matrixPage->setEnabled(page == PageMatrix);
 
-    auto* tab = (page == PageTransforms) ? _tabTransform : _tabMatrix;
+    auto tab = (page == PageTransforms) ? _tabTransform : _tabMatrix;
     if (tab) _ui->tabStrip->selectTab(*tab);
 }
 
@@ -174,8 +157,8 @@ void TransformPanel::resetToDefaults() {
     _ui->moveY->setValue(0);
     _ui->relativeMove->setChecked(true);
     _ui->rotate->setValue(0);
-    _ui->scaleX->setValue(100);
-    _ui->scaleY->setValue(100);
+    _ui->scalePair->first()->setValue(100);
+    _ui->scalePair->second()->setValue(100);
     _ui->skewX->setValue(0);
     _ui->skewY->setValue(0);
 }
@@ -237,8 +220,8 @@ void TransformPanel::onApply(bool duplicate) {
         changed = true;
     }
 
-    const double sx = _ui->scaleX->value();
-    const double sy = _ui->scaleY->value();
+    const double sx = _ui->scalePair->first()->value();
+    const double sy = _ui->scalePair->second()->value();
     if (sx != 100 || sy != 100) {
         const bool transformStroke = Preferences::get()->getBool("/options/transform/stroke", true);
         const bool preserve        = Preferences::get()->getBool("/options/preservetransform/value", false);

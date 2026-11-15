@@ -33,6 +33,7 @@
 #include "preferences.h"
 #include "util-string/string-compare.h"
 
+#include "qt/ui/linked-number-pair.h"
 #include "qt/ui/number-edit.h"
 #include "qt/ui/popup-menu.h"
 #include "qt/ui/resizing-separator.h"
@@ -148,7 +149,6 @@ void PatternEditor::setupCustomWidgets() {
             [this] { _optionsPopup->showBelowWidget(_ui->optionsButton); });
 
     // --- Link-scale button (toggle) ---
-    _ui->linkScaleButton->setCheckable(true);
     updateScaleLinkIcon();
 
     _ui->patternCombo->setProperty("class", "flat-combobox");
@@ -206,32 +206,31 @@ void PatternEditor::connectSignals() {
     });
 
     // Scale link toggle
-    connect(_ui->linkScaleButton, &QPushButton::clicked, this, [this] {
+    connect(_ui->scalePair, &LinkedNumberPair::linkToggled, this, [this](bool linked) {
         if (_update.pending()) return;
         auto scoped(_update.block());
-        _scaleLinked = !_scaleLinked;
+        _scaleLinked = linked;
         if (_scaleLinked) {
             // match Y to X (mirrors GTK behaviour)
-            _ui->scaleX->setValue(_ui->scaleY->value());
+            _ui->scalePair->first()->setValue(_ui->scalePair->second()->value());
         }
-        updateScaleLinkIcon();
         if (_uniformSupported) Q_EMIT changed();
     });
 
     // Scale spins — enforce uniform scaling when linked
-    connect(_ui->scaleX, &NumberEdit::valueChanged, this, [this](double value) {
+    connect(_ui->scalePair->first(), &NumberEdit::valueChanged, this, [this](double value) {
         if (_update.pending()) return;
         if (_scaleLinked) {
             auto scoped(_update.block());
-            _ui->scaleY->setValue(value);
+            _ui->scalePair->second()->setValue(value);
         }
         Q_EMIT changed();
     });
-    connect(_ui->scaleY, &NumberEdit::valueChanged, this, [this](double value) {
+    connect(_ui->scalePair->second(), &NumberEdit::valueChanged, this, [this](double value) {
         if (_update.pending()) return;
         if (_scaleLinked) {
             auto scoped(_update.block());
-            _ui->scaleX->setValue(value);
+            _ui->scalePair->first()->setValue(value);
         }
         Q_EMIT changed();
     });
@@ -629,8 +628,8 @@ void PatternEditor::updateWidgetsFromPattern(const PatternItemPtr& pattern) {
     // Scale
     const double sx = item.transform.xAxis().length();
     const double sy = item.transform.yAxis().length();
-    _ui->scaleX->setValue(sx);
-    _ui->scaleY->setValue(sy);
+    _ui->scalePair->first()->setValue(sx);
+    _ui->scalePair->second()->setValue(sy);
 
     _scaleLinked      = item.uniform_scale.value_or(Geom::are_near(sx, sy));
     _uniformSupported = item.uniform_scale.has_value();
@@ -681,9 +680,7 @@ void PatternEditor::updateWidgetsFromPattern(const PatternItemPtr& pattern) {
 }
 
 void PatternEditor::updateScaleLinkIcon() {
-    _ui->linkScaleButton->setChecked(_scaleLinked);
-    _ui->linkScaleButton->setIcon(QIcon(
-        _scaleLinked ? ":/icons/entries-linked" : ":/icons/entries-unlinked"));
+    _ui->scalePair->setLinked(_scaleLinked);
 }
 
 // ─── Preview ─────────────────────────────────────────────────────────────────
@@ -740,7 +737,7 @@ std::optional<Inkscape::Colors::Color> PatternEditor::getSelectedColor() {
 
 Geom::Affine PatternEditor::getSelectedTransform() {
     Geom::Affine matrix;
-    matrix *= Geom::Scale(_ui->scaleX->value(), _ui->scaleY->value());
+    matrix *= Geom::Scale(_ui->scalePair->first()->value(), _ui->scalePair->second()->value());
     auto [item, _] = activeItem();
     if (item && !item->rotation.has_value()) {
         // Bake rotation into transform unless the item has a dedicated rotation attribute (hatch)

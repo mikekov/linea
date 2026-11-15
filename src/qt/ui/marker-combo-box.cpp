@@ -22,6 +22,7 @@
 #include "document.h"
 #include "helper/stock-items.h"
 #include "io/resource.h"
+#include "linked-number-pair.h"
 #include "number-edit.h"
 #include "object/sp-defs.h"
 #include "object/sp-marker.h"
@@ -66,11 +67,11 @@ QImage createNoMarkerImage(int width, int height, qreal dpr, int location) {
 SPMarker* findMarker(SPDocument* document, const std::string& markerId) {
     if (!document || markerId.empty()) return nullptr;
 
-    auto* defs = document->getDefs();
+    auto defs = document->getDefs();
     if (!defs) return nullptr;
 
     for (auto& child : defs->children) {
-        if (auto* marker = cast<SPMarker>(&child)) {
+        if (auto marker = cast<SPMarker>(&child)) {
             auto id = marker->getId();
             if (id && markerId == id) return marker;
         }
@@ -160,7 +161,7 @@ void MarkerComboBox::buildPopup() {
         if (index >= _allItems.size()) return;
 
         auto& item = _allItems[index];
-        auto* marker = findMarker(item.source, item.id);
+        auto marker = findMarker(item.source, item.id);
 
         QImage img = marker ? renderMarker(marker, rect.width(), rect.height())
                             : renderNoMarker(rect.width(), rect.height());
@@ -240,17 +241,16 @@ void MarkerComboBox::connectSignals() {
     });
 
     // Scale
-    connect(_popupUi->scaleX, &NumberEdit::valueChanged, this, [this](double) {
+    connect(_popupUi->scalePair->first(), &NumberEdit::valueChanged, this, [this](double) {
         setScale(true);
     });
-    connect(_popupUi->scaleY, &NumberEdit::valueChanged, this, [this](double) {
+    connect(_popupUi->scalePair->second(), &NumberEdit::valueChanged, this, [this](double) {
         setScale(false);
     });
-    connect(_popupUi->linkScale, &QPushButton::toggled, this, [this](bool checked) {
+    connect(_popupUi->scalePair, &LinkedNumberPair::linkToggled, this, [this](bool checked) {
         if (_update.pending()) return;
         _scaleLinked = checked;
         sp_marker_set_uniform_scale(getActiveDocumentMarker(), _scaleLinked);
-        updateScaleLinkIcon();
     });
     connect(_popupUi->scaleWithStroke, &QCheckBox::toggled, this, [this](bool checked) {
         if (_update.pending()) return;
@@ -306,11 +306,11 @@ void MarkerComboBox::setOrientation(bool enableAngle, const char* value) {
 void MarkerComboBox::setScale(bool changeWidth) {
     if (_update.pending()) return;
 
-    auto* marker = getActiveDocumentMarker();
+    auto marker = getActiveDocumentMarker();
     if (!marker) return;
 
-    auto sx = _popupUi->scaleX->value();
-    auto sy = _popupUi->scaleY->value();
+    auto sx = _popupUi->scalePair->first()->value();
+    auto sy = _popupUi->scalePair->second()->value();
     auto width  = getAttribNum(marker, "markerWidth");
     auto height = getAttribNum(marker, "markerHeight");
 
@@ -318,18 +318,17 @@ void MarkerComboBox::setScale(bool changeWidth) {
         auto scoped(_update.block());
         if (changeWidth) {
             sy = height * (sx / width);
-            _popupUi->scaleY->setValue(sy);
+            _popupUi->scalePair->second()->setValue(sy);
         } else {
             sx = width * (sy / height);
-            _popupUi->scaleX->setValue(sx);
+            _popupUi->scalePair->first()->setValue(sx);
         }
     }
     sp_marker_set_size(marker, sx, sy);
 }
 
 void MarkerComboBox::updateScaleLinkIcon() {
-    _popupUi->linkScale->setIcon(QIcon(
-        _scaleLinked ? ":/icons/entries-linked" : ":/icons/entries-unlinked"));
+    _popupUi->scalePair->setLinked(_scaleLinked);
 }
 
 // --- Document / marker list ---
@@ -365,7 +364,7 @@ void MarkerComboBox::setCurrent(SPObject* marker) {
         if (!_isUpToDate) {
             refreshAfterModified();
         }
-        auto* sp_marker = cast<SPMarker>(marker);
+        auto sp_marker = cast<SPMarker>(marker);
         auto scoped(_update.block());
         updateWidgetsFromMarker(sp_marker);
         updatePreview();
@@ -405,11 +404,11 @@ std::vector<SPMarker*> MarkerComboBox::getMarkerList(SPDocument* source) {
     std::vector<SPMarker*> list;
     if (!source) return list;
 
-    auto* defs = source->getDefs();
+    auto defs = source->getDefs();
     if (!defs) return list;
 
     for (auto& child : defs->children) {
-        if (auto* marker = cast<SPMarker>(&child)) {
+        if (auto marker = cast<SPMarker>(&child)) {
             list.push_back(marker);
         }
     }
@@ -417,8 +416,8 @@ std::vector<SPMarker*> MarkerComboBox::getMarkerList(SPDocument* source) {
 }
 
 void MarkerComboBox::addMarkers(const std::vector<SPMarker*>& markers, SPDocument* source, bool history) {
-    for (auto* m : markers) {
-        auto* repr = m->getRepr();
+    for (auto m : markers) {
+        auto repr = m->getRepr();
         const char* markid = repr->attribute("inkscape:stockid");
         if (!markid) markid = repr->attribute("id");
 
@@ -527,7 +526,7 @@ void MarkerComboBox::updatePreview() {
 }
 
 void MarkerComboBox::updateMarkerName() {
-    auto* marker = getCurrentMarker();
+    auto marker = getCurrentMarker();
     if (!marker) {
         _popupUi->markerName->clear();
         return;
@@ -541,9 +540,7 @@ void MarkerComboBox::updateMarkerName() {
 
 void MarkerComboBox::updateWidgetsFromMarker(SPMarker* marker) {
     bool enabled = marker != nullptr;
-    _popupUi->scaleX->setEnabled(enabled);
-    _popupUi->scaleY->setEnabled(enabled);
-    _popupUi->linkScale->setEnabled(enabled);
+    _popupUi->scalePair->setEnabled(enabled);
     _popupUi->scaleWithStroke->setEnabled(enabled);
     _popupUi->orientAutoRev->setEnabled(enabled);
     _popupUi->orientAuto->setEnabled(enabled);
@@ -556,15 +553,14 @@ void MarkerComboBox::updateWidgetsFromMarker(SPMarker* marker) {
 
     if (!marker) return;
 
-    _popupUi->scaleX->setValue(getAttribNum(marker, "markerWidth"));
-    _popupUi->scaleY->setValue(getAttribNum(marker, "markerHeight"));
+    _popupUi->scalePair->first()->setValue(getAttribNum(marker, "markerWidth"));
+    _popupUi->scalePair->second()->setValue(getAttribNum(marker, "markerHeight"));
 
     auto units = getAttrib(marker, "markerUnits");
     _popupUi->scaleWithStroke->setChecked(units == "strokeWidth" || units.empty());
 
     auto aspect = getAttrib(marker, "preserveAspectRatio");
     _scaleLinked = aspect != "none";
-    _popupUi->linkScale->setChecked(_scaleLinked);
     updateScaleLinkIcon();
 
     _popupUi->offsetX->setValue(getAttribNum(marker, "refX"));
@@ -604,7 +600,7 @@ int MarkerComboBox::findMarkerIndex(SPMarker* marker) const {
 }
 
 SPMarker* MarkerComboBox::getActiveDocumentMarker() {
-    auto* item = getSelectedItem();
+    auto item = getSelectedItem();
     if (!item || item->id.empty()) return nullptr;
 
     if (item->stock) {
@@ -627,7 +623,7 @@ void MarkerComboBox::selectMarkerAt(int index) {
     auto& item = _allItems[index];
     _currentMarkerId = item.id;
 
-    auto* marker = getCurrentMarker();
+    auto marker = getCurrentMarker();
     auto scoped(_update.block());
     updateWidgetsFromMarker(marker);
     updatePreview();
@@ -635,7 +631,7 @@ void MarkerComboBox::selectMarkerAt(int index) {
 }
 
 std::pair<std::string, std::string> MarkerComboBox::getActiveMarkerUri() {
-    auto* item = getSelectedItem();
+    auto item = getSelectedItem();
     if (!item) return {};
 
     if (item->id == "none") {
@@ -645,10 +641,10 @@ std::pair<std::string, std::string> MarkerComboBox::getActiveMarkerUri() {
 
     bool stockid = item->stock;
     std::string markurn = stockid ? "urn:inkscape:marker:" + item->id : item->id;
-    auto* mark = cast<SPMarker>(get_stock_item(_document, markurn.c_str(), stockid));
+    auto mark = cast<SPMarker>(get_stock_item(_document, markurn.c_str(), stockid));
     if (!mark) return {};
 
-    auto* repr = mark->getRepr();
+    auto repr = mark->getRepr();
     auto id = repr->attribute("id");
     if (!id) return {};
 

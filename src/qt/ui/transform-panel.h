@@ -77,7 +77,6 @@ private:
     QWidget* _tabMatrix    = nullptr;
     SPDesktop* _desktop    = nullptr;
     int _curPage           = PageTransforms;
-    bool _linkedScale      = false;
 };
 
 } // namespace Linea::UI

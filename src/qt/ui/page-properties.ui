@@ -89,18 +89,6 @@
                 </property>
               </widget>
             </item>
-            <item row="2" column="2">
-              <widget class="QPushButton" name="pageResizeButton">
-                <property name="toolTip">
-                  <string>Resize page to content</string>
-                </property>
-                <property name="icon">
-                  <iconset>
-                    <normaloff>:/icons/pages-resize</normaloff>
-                  </iconset>
-                </property>
-              </widget>
-            </item>
 
             <!-- Row 3: Width / Height labels -->
             <item row="3" column="0" colspan="3">
@@ -114,38 +102,28 @@
               </widget>
             </item>
 
-            <!-- Row 4: Width, Height NumberEdits + link button -->
-            <item row="4" column="0">
-              <widget class="Linea::UI::NumberEdit" name="pageWidth">
-                <property name="label">
+            <!-- Row 4: linked Width/Height -->
+            <item row="4" column="0" colspan="2">
+              <widget class="Linea::UI::LinkedNumberPair" name="pageSizePair">
+                <property name="firstLabel">
                   <string>W</string>
                 </property>
-              </widget>
-            </item>
-            <item row="4" column="1">
-              <widget class="Linea::UI::NumberEdit" name="pageHeight">
-                <property name="label">
+                <property name="secondLabel">
                   <string>H</string>
+                </property>
+                <property name="linkToolTip">
+                  <string>Lock width/height ratio</string>
                 </property>
               </widget>
             </item>
             <item row="4" column="2">
-              <widget class="QPushButton" name="linkWidthHeight">
+              <widget class="QPushButton" name="pageResizeButton">
                 <property name="toolTip">
-                  <string>Lock width/height ratio</string>
-                </property>
-                <property name="flat">
-                  <bool>true</bool>
-                </property>
-                <property name="text">
-                  <string/>
-                </property>
-                <property name="maximumWidth">
-                  <number>28</number>
+                  <string>Resize page to content</string>
                 </property>
                 <property name="icon">
                   <iconset>
-                    <normaloff>:/icons/entries-unlinked</normaloff>
+                    <normaloff>:/icons/pages-resize</normaloff>
                   </iconset>
                 </property>
               </widget>
@@ -950,6 +928,11 @@
       <class>Linea::UI::NumberEdit</class>
       <extends>QWidget</extends>
       <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::LinkedNumberPair</class>
+      <extends>QWidget</extends>
+      <header>linked-number-pair.h</header>
     </customwidget>
     <customwidget>
       <class>Linea::UI::ColorPicker</class>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>LinkedNumberPair</class>
+  <widget class="QWidget" name="LinkedNumberPair">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,1">
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <item>
+        <widget class="Linea::UI::NumberEdit" name="firstEdit"/>
+      </item>
+      <item>
+        <widget class="QToolButton" name="linkButton">
+          <property name="autoRaise">
+            <bool>true</bool>
+          </property>
+          <property name="checkable">
+            <bool>true</bool>
+          </property>
+          <property name="minimumWidth">
+            <number>16</number>
+          </property>
+          <property name="maximumWidth">
+            <number>16</number>
+          </property>
+          <property name="styleSheet">
+            <string>QToolButton { padding-left: 0px; padding-right: 0px; } QToolButton:checked { background-color: transparent; }</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/entries-unlinked</normaloff>
+              <normalon>:/icons/entries-linked</normalon>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="Linea::UI::NumberEdit" name="secondEdit"/>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::NumberEdit</class>
+      <extends>QWidget</extends>
+      <header>number-edit.h</header>
+    </customwidget>
+  </customwidgets>
+</ui>
