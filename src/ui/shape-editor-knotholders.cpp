@@ -389,7 +389,8 @@ RectKnotHolderEntityWH::set_internal(Geom::Point const &p, Geom::Point const &or
 
     Geom::Point s = p;
 
-    if (state & INK_CONTROL_MASK) {
+    bool const preserve_ratio = item->preservesAspectRatio();
+    if (preserve_ratio || (state & INK_CONTROL_MASK)) {
         // original width/height when drag started
         gdouble const w_orig = (origin[Geom::X] - initialXY.x());
         gdouble const h_orig = (origin[Geom::Y] - initialXY.y());
@@ -409,7 +410,7 @@ RectKnotHolderEntityWH::set_internal(Geom::Point const &p, Geom::Point const &or
         double oppositeY = initialXY.y();
         if (fabs(minx) > fabs(miny)) {
             // snap to horizontal or diagonal
-            if (minx != 0 && fabs(miny/minx) > 0.5 * 1/ratio && (SGN(minx) == SGN(miny))) {
+            if (preserve_ratio || (minx != 0 && fabs(miny/minx) > 0.5 * 1/ratio && (SGN(minx) == SGN(miny)))) {
                 // closer to the diagonal and in same-sign quarters, change both using ratio
                 s = snap_knot_position_constrained(p, Inkscape::Snapper::SnapConstraint(p_handle, Geom::Point(-ratio, -1)), state);
                 minx = s[Geom::X] - origin[Geom::X];
@@ -428,7 +429,7 @@ RectKnotHolderEntityWH::set_internal(Geom::Point const &p, Geom::Point const &or
 
         } else {
             // snap to vertical or diagonal
-            if (miny != 0 && fabs(minx/miny) > 0.5 * ratio && (SGN(minx) == SGN(miny))) {
+            if (preserve_ratio || (miny != 0 && fabs(minx/miny) > 0.5 * ratio && (SGN(minx) == SGN(miny)))) {
                 // closer to the diagonal and in same-sign quarters, change both using ratio
                 s = snap_knot_position_constrained(p, Inkscape::Snapper::SnapConstraint(p_handle, Geom::Point(-ratio, -1)), state);
                 // Dead assignment: Value stored to 'minx' is never read
@@ -531,7 +532,8 @@ RectKnotHolderEntityXY::knot_set(Geom::Point const &p, Geom::Point const &origin
 
     Geom::Point s = p;
     gdouble opposite_of_opposite_X, opposite_of_opposite_Y;
-    if (state & INK_CONTROL_MASK) {
+    bool const preserve_ratio = item->preservesAspectRatio();
+    if (preserve_ratio || (state & INK_CONTROL_MASK)) {
         // original width/height when drag started
         gdouble w_orig = initial_opposite_XY.x() - origin[Geom::X];
         gdouble h_orig = initial_opposite_XY.y() - origin[Geom::Y];
@@ -549,7 +551,7 @@ RectKnotHolderEntityXY::knot_set(Geom::Point const &p, Geom::Point const &origin
 
         if (fabs(minx) > fabs(miny)) {
             // snap to horizontal or diagonal
-            if (minx != 0 && fabs(miny/minx) > 0.5 * 1/ratio && (SGN(minx) == SGN(miny))) {
+            if (preserve_ratio || (minx != 0 && fabs(miny/minx) > 0.5 * 1/ratio && (SGN(minx) == SGN(miny)))) {
                 // closer to the diagonal and in same-sign quarters, change both using ratio
                 s = snap_knot_position_constrained(p, Inkscape::Snapper::SnapConstraint(p_handle, Geom::Point(-ratio, -1)), state);
                 minx = s[Geom::X] - origin[Geom::X];
@@ -567,7 +569,7 @@ RectKnotHolderEntityXY::knot_set(Geom::Point const &p, Geom::Point const &origin
             opposite_of_opposite_X = s[Geom::X];
         } else {
             // snap to vertical or diagonal
-            if (miny != 0 && fabs(minx/miny) > 0.5 *ratio && (SGN(minx) == SGN(miny))) {
+            if (preserve_ratio || (miny != 0 && fabs(minx/miny) > 0.5 *ratio && (SGN(minx) == SGN(miny)))) {
                 // closer to the diagonal and in same-sign quarters, change both using ratio
                 s = snap_knot_position_constrained(p, Inkscape::Snapper::SnapConstraint(p_handle, Geom::Point(-ratio, -1)), state);
                 // Dead assignment: Value stored to 'minx' is never read

@@ -63,6 +63,7 @@ private:
     TransformPanel* _transformPanel = nullptr;
     SPDesktop* _desktop = nullptr;
     OperationBlocker _update;
+    double _whRatio = 1.0;
 };
 
 } // namespace UI

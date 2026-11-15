@@ -53,6 +53,7 @@ static SPStyleProp const props[] = {
     {SPAttr::INKSCAPE_PATH_EFFECT, "inkscape:path-effect"},
     {SPAttr::INKSCAPE_HIGHLIGHT_COLOR, "inkscape:highlight-color"},
     {SPAttr::INKSCAPE_SPRAY_ORIGIN, "inkscape:spray-origin"},
+    {SPAttr::INKSCAPE_PRESERVE_ASPECT_RATIO, "inkscape:preserve-aspect-ratio"},
     /* SPAnchor */
     {SPAttr::XLINK_HREF, "xlink:href"},
     {SPAttr::XLINK_TYPE, "xlink:type"},

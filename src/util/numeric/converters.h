@@ -16,6 +16,7 @@
  */
 
 #include <glib.h>
+#include <cstdlib>
 #include <iostream>
 #include <cstring>
 #include <sstream>
@@ -64,17 +65,15 @@ inline bool read_bool(const char* value, bool default_value)
 {
     if (!value)
         return default_value;
-    switch (value[0]) {
-        case 't':
-            if (strncmp(value, "true", 4) == 0)
-                return true;
-            break;
-        case 'f':
-            if (strncmp(value, "false", 5) == 0)
-                return false;
-            break;
-    }
-    return default_value;
+    if (!g_ascii_strcasecmp(value, "true") ||
+        !g_ascii_strcasecmp(value, "yes") ||
+        !g_ascii_strcasecmp(value, "y"))
+        return true;
+    if (!g_ascii_strcasecmp(value, "false") ||
+        !g_ascii_strcasecmp(value, "no") ||
+        !g_ascii_strcasecmp(value, "n"))
+        return false;
+    return atoi(value) != 0;
 }
 
 /* convert ascii representation to double

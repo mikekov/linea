@@ -77,17 +77,16 @@
           </property>
         </widget>
       </item>
-      <item row="3" column="0">
-        <widget class="Linea::UI::NumberEdit" name="widthEdit">
-          <property name="label">
+      <item row="3" column="0" colspan="2">
+        <widget class="Linea::UI::LinkedNumberPair" name="sizePair">
+          <property name="firstLabel">
             <string>W</string>
           </property>
-        </widget>
-      </item>
-      <item row="3" column="1">
-        <widget class="Linea::UI::NumberEdit" name="heightEdit">
-          <property name="label">
+          <property name="secondLabel">
             <string>H</string>
+          </property>
+          <property name="linkToolTip">
+            <string>Lock width/height ratio</string>
           </property>
         </widget>
       </item>
@@ -110,6 +109,11 @@
       <class>Linea::UI::NumberEdit</class>
       <extends>QWidget</extends>
       <header>number-edit.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::LinkedNumberPair</class>
+      <extends>QWidget</extends>
+      <header>linked-number-pair.h</header>
     </customwidget>
   </customwidgets>
   <resources/>

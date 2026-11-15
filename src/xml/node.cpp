@@ -19,6 +19,7 @@
 #include "svg/stringstream.h"
 #include "svg/css-ostringstream.h"
 #include "svg/svg-length.h"
+#include "util/numeric/converters.h"
 
 namespace Inkscape{
 namespace XML {
@@ -54,15 +55,7 @@ bool Node::getAttributeBoolean(Util::const_char_ptr key, bool default_value) con
         return default_value;
     }
 
-    if (!g_ascii_strcasecmp(v, "true") ||
-        !g_ascii_strcasecmp(v, "yes") ||
-        !g_ascii_strcasecmp(v, "y") ||
-        (atoi(v) != 0))
-    {
-        return true;
-    } else {
-        return false;
-    }
+    return Inkscape::Util::read_bool(v, false);
 }
 
 int Node::getAttributeInt(Util::const_char_ptr key, int default_value) const

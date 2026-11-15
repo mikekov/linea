@@ -14,6 +14,7 @@
 
 #include <cmath>
 
+#include "linked-number-pair.h"
 #include "number-edit.h"
 #include "number-range.h"
 #include "popup-menu.h"
@@ -43,10 +44,10 @@ SizeWidget::SizeWidget(QWidget* parent)
     _ui->yEdit->setRange(NumberRange::minimum, NumberRange::maximum);
     _ui->yEdit->setDecimals(NumberRange::decimals);
 
-    _ui->widthEdit->setRange(0, NumberRange::maximum);
-    _ui->widthEdit->setDecimals(NumberRange::decimals);
-    _ui->heightEdit->setRange(0, NumberRange::maximum);
-    _ui->heightEdit->setDecimals(NumberRange::decimals);
+    _ui->sizePair->first()->setRange(0, NumberRange::maximum);
+    _ui->sizePair->first()->setDecimals(NumberRange::decimals);
+    _ui->sizePair->second()->setRange(0, NumberRange::maximum);
+    _ui->sizePair->second()->setDecimals(NumberRange::decimals);
 
     // _ui->xEdit->setHasFrame(true);
     connect(_ui->transform, &QPushButton::clicked, this, &SizeWidget::onTransformClicked);
@@ -70,8 +71,19 @@ void SizeWidget::bind(Props::Binder& binder) {
         auto rect = sp_bbox_to_xywh(s.bbox, desktop->getSelection(), desktop, unit);
         _ui->xEdit->setValue(rect.min().x());
         _ui->yEdit->setValue(rect.min().y());
-        _ui->widthEdit->setValue(rect.width());
-        _ui->heightEdit->setValue(rect.height());
+        _ui->sizePair->first()->setValue(rect.width());
+        _ui->sizePair->second()->setValue(rect.height());
+        if (rect.height() > 0) {
+            _whRatio = rect.width() / rect.height();
+        }
+    });
+
+    // Read: aspect-ratio lock state comes from the selected elements
+    // (inkscape:preserve-aspect-ratio); mixed selections show as unlocked.
+    binder.bindField(Props::Field::preserve_aspect_ratio, [this](const Props::SelectionState& s) {
+        auto scoped = _update.block();
+        _ui->sizePair->setLinked(s.element.preserve_aspect_ratio.is_single() &&
+                                 s.element.preserve_aspect_ratio.value());
     });
 
     // Write: each edit calls sp_transform_selected_items with the full rect,
@@ -92,19 +104,45 @@ void SizeWidget::bind(Props::Binder& binder) {
 
     binder.track(connect(_ui->xEdit, &NumberEdit::valueChanged, this,
         [this, applyTransform](double x) {
-            applyTransform(x, _ui->yEdit->value(), _ui->widthEdit->value(), _ui->heightEdit->value());
+            applyTransform(x, _ui->yEdit->value(), _ui->sizePair->first()->value(), _ui->sizePair->second()->value());
         }));
     binder.track(connect(_ui->yEdit, &NumberEdit::valueChanged, this,
         [this, applyTransform](double y) {
-            applyTransform(_ui->xEdit->value(), y, _ui->widthEdit->value(), _ui->heightEdit->value());
+            applyTransform(_ui->xEdit->value(), y, _ui->sizePair->first()->value(), _ui->sizePair->second()->value());
         }));
-    binder.track(connect(_ui->widthEdit, &NumberEdit::valueChanged, this,
+    binder.track(connect(_ui->sizePair->first(), &NumberEdit::valueChanged, this,
         [this, applyTransform](double w) {
-            applyTransform(_ui->xEdit->value(), _ui->yEdit->value(), w, _ui->heightEdit->value());
+            double h = _ui->sizePair->second()->value();
+            if (_ui->sizePair->isLinked() && _whRatio > 0) {
+                h = w / _whRatio;
+                auto scoped = _update.block();
+                _ui->sizePair->second()->setValue(h);
+            }
+            applyTransform(_ui->xEdit->value(), _ui->yEdit->value(), w, h);
         }));
-    binder.track(connect(_ui->heightEdit, &NumberEdit::valueChanged, this,
+    binder.track(connect(_ui->sizePair->second(), &NumberEdit::valueChanged, this,
         [this, applyTransform](double h) {
-            applyTransform(_ui->xEdit->value(), _ui->yEdit->value(), _ui->widthEdit->value(), h);
+            double w = _ui->sizePair->first()->value();
+            if (_ui->sizePair->isLinked() && _whRatio > 0) {
+                w = h * _whRatio;
+                auto scoped = _update.block();
+                _ui->sizePair->first()->setValue(w);
+            }
+            applyTransform(_ui->xEdit->value(), _ui->yEdit->value(), w, h);
+        }));
+
+    // Write: toggle persists on the selected elements (inkscape:preserve-aspect-ratio).
+    // Capturing the ratio on link makes the first resize preserve it.
+    binder.track(connect(_ui->sizePair, &LinkedNumberPair::linkToggled, this,
+        [this, editor](bool linked) {
+            if (_update.pending()) return;
+            if (linked) {
+                auto h = _ui->sizePair->second()->value();
+                if (h > 0) {
+                    _whRatio = _ui->sizePair->first()->value() / h;
+                }
+            }
+            editor->set(Props::preserve_aspect_ratio, linked);
         }));
 
     binder.track(connect(_ui->roundButton, &QPushButton::clicked, this,
@@ -115,7 +153,7 @@ void SizeWidget::bind(Props::Binder& binder) {
                 _ui->yEdit->setValue(std::round(_ui->yEdit->value()));
             }
             applyTransform(_ui->xEdit->value(), _ui->yEdit->value(),
-                           _ui->widthEdit->value(), _ui->heightEdit->value());
+                           _ui->sizePair->first()->value(), _ui->sizePair->second()->value());
         }));
 
     // Visible when there's a selection, but not when only a lone <svg> is selected.

@@ -60,6 +60,7 @@
 #include "live_effects/lpeobject-reference.h"
 
 #include "ui/util.h"
+#include "util/numeric/converters.h"
 #include "util/units.h"
 #include "util/uri.h"
 
@@ -79,6 +80,7 @@ SPItem::SPItem()
 
     transform_center_x = 0;
     transform_center_y = 0;
+    preserve_aspect_ratio = false;
 
     freeze_stroke_width = false;
     _is_evaluated = true;
@@ -223,6 +225,13 @@ bool SPItem::isLocked() const {
         }
     }
     return false;
+}
+
+void SPItem::setPreserveAspectRatio(bool preserve) {
+    setAttribute(sp_attribute_name(SPAttr::INKSCAPE_PRESERVE_ASPECT_RATIO),
+                 preserve ? "true" : nullptr);
+    updateRepr();
+    document->_emitModified();
 }
 
 void SPItem::setLocked(bool locked, bool recursive) {
@@ -524,6 +533,7 @@ void SPItem::build(SPDocument *document, Inkscape::XML::Node *repr) {
     object->readAttr(SPAttr::CONNECTOR_AVOID);
     object->readAttr(SPAttr::CONNECTION_POINTS);
     object->readAttr(SPAttr::INKSCAPE_HIGHLIGHT_COLOR);
+    object->readAttr(SPAttr::INKSCAPE_PRESERVE_ASPECT_RATIO);
 
     SPObject::build(document, repr);
 #ifdef OBJECT_TRACE
@@ -622,6 +632,9 @@ void SPItem::set(SPAttr key, gchar const* value) {
                 item->transform_center_y = 0;
             }
             object->requestDisplayUpdate(SP_OBJECT_MODIFIED_FLAG);
+            break;
+        case SPAttr::INKSCAPE_PRESERVE_ASPECT_RATIO:
+            item->preserve_aspect_ratio = Inkscape::Util::read_bool(value, false);
             break;
         case SPAttr::SYSTEM_LANGUAGE:
         case SPAttr::REQUIRED_FEATURES:
@@ -889,6 +902,8 @@ Inkscape::XML::Node* SPItem::write(Inkscape::XML::Document *xml_doc, Inkscape::X
             repr->setAttributeSvgDouble("inkscape:transform-center-y", y);
         } else
             repr->removeAttribute("inkscape:transform-center-y");
+        repr->setAttribute("inkscape:preserve-aspect-ratio",
+                           item->preserve_aspect_ratio ? "true" : nullptr);
     }
 
     if (getClipObject()) {

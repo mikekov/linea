@@ -660,6 +660,17 @@ void apply_locked(const EditTarget& target, const bool& locked) {
     target.item()->setLocked(locked);
 }
 
+std::optional<bool> read_preserve_aspect_ratio(SPItem* item) {
+    if (!item) return std::nullopt;
+    return item->preservesAspectRatio();
+}
+
+void apply_preserve_aspect_ratio(const EditTarget& target, const bool& preserve) {
+    auto item = target.item();
+    if (!item) return;
+    item->setPreserveAspectRatio(preserve);
+}
+
 // ===========================================================================
 // Typography readers and appliers
 // ===========================================================================

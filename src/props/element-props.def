@@ -138,6 +138,11 @@ LINEA_PROP(bool, locked,
            (apply_locked),
            "object-locked", RC_("Undo", "Set locked"))
 
+LINEA_PROP(bool, preserve_aspect_ratio,
+           (read_preserve_aspect_ratio),
+           (apply_preserve_aspect_ratio),
+           "object-preserve-aspect", RC_("Undo", "Set preserve aspect ratio"))
+
 // --- live path effects (read-only; count for change tracking) ---
 LINEA_PROP_RO(int, lpe_count,
               ([](SPItem* item) -> std::optional<int> {

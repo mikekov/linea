@@ -239,6 +239,9 @@ void apply_description(const EditTarget& target, const std::string& description)
 std::optional<bool> read_locked(SPItem* item);
 void apply_locked(const EditTarget& target, const bool& locked);
 
+std::optional<bool> read_preserve_aspect_ratio(SPItem* item);
+void apply_preserve_aspect_ratio(const EditTarget& target, const bool& preserve);
+
 // ---------------------------------------------------------------------------
 // Typography properties (tier 3: named accessors)
 //

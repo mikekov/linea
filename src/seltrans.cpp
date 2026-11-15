@@ -1047,6 +1047,17 @@ static double sign(double const x)
              : 1 );
 }
 
+/** True if any selected item carries inkscape:preserve-aspect-ratio. */
+static bool preserves_aspect_ratio(Inkscape::Selection *selection)
+{
+    for (auto item : selection->items_vector()) {
+        if (item->preservesAspectRatio()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 gboolean Inkscape::SelTrans::scaleRequest(Geom::Point &pt, guint state)
 {
     originRequest(pt, state);
@@ -1081,7 +1092,8 @@ gboolean Inkscape::SelTrans::scaleRequest(Geom::Point &pt, guint state)
         // In all other cases we should try to snap now
         Inkscape::PureScale  *bb, *sn;
 
-        if (confine || Inkscape::Preferences::get()->getBool("/tools/select/lock_aspect_ratio", false)) {
+        if (confine != preserves_aspect_ratio(_selection) ||
+            Inkscape::Preferences::get()->getBool("/tools/select/lock_aspect_ratio", false)) {
             // Scale is locked to a 1:1 aspect ratio, so that s[X] must be made to equal s[Y].
             //
             // The aspect-ratio must be locked before snapping
@@ -1164,6 +1176,9 @@ gboolean Inkscape::SelTrans::stretchRequest(Geom::Point &pt, guint state, bool i
     _absolute_affine = Geom::identity(); //Initialize the scaler
 
     auto confine = Modifiers::Modifier::get(Modifiers::Type::TRANS_CONFINE)->active(state);
+    // Per-item inkscape:preserve-aspect-ratio inverts the modifier: locked by
+    // default, Ctrl unlocks
+    confine = confine != preserves_aspect_ratio(_selection);
     auto increments = Modifiers::Modifier::get(Modifiers::Type::TRANS_INCREMENT)->active(state);
     auto no_snap = Modifiers::Modifier::get(Modifiers::Type::TRANS_NO_SNAPPING)->active(state);
 

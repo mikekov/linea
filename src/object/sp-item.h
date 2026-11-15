@@ -130,6 +130,7 @@ public:
     mutable unsigned bbox_valid : 1;
     double transform_center_x;
     double transform_center_y;
+    bool preserve_aspect_ratio;
     bool freeze_stroke_width;
 
     // Used in the layers/objects dialog, this remembers if this item's
@@ -175,6 +176,12 @@ public:
     bool isSensitive() const {
         return sensitive;
     };
+
+    // Preserve aspect ratio when resizing (inkscape:preserve-aspect-ratio)
+    bool preservesAspectRatio() const {
+        return preserve_aspect_ratio;
+    };
+    void setPreserveAspectRatio(bool preserve);
 
     void setHighlight(Inkscape::Colors::Color color);
     bool isHighlightSet() const;
