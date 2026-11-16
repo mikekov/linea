@@ -28,6 +28,9 @@
 - add support for color fonts
 - editing gradient after copying an object - gradient stops don't update
 x don't open twice the same file from the home page; activate existing tab
+- cannot delete selected gradient stop in a gradient editor with a kbd shortcut Del
+- fix oklch color picker to select correct srgb colors
+- oklch color sliders should only show colors inside srgb/p3 gamut
 
 ## Missing features
 
@@ -39,6 +42,7 @@ x math expressions for number edit widget
 - allow multipage selection and mixing page and element selections
 - linux build to AppImage + linux-specific workarounds (clipboard, etc.)
 - windows build and win-specific workarounds
+- number edit spin box - smaller step with ctrl key
 
 ## UI Panels & Dialogs, widgets
 
@@ -103,6 +107,7 @@ x expose rgb_hex_colors setting
 
 - expose adv snapping options?
 - render grid behind objects option?
+- add modular grid margin TRBL
 
 ## Document & File
 

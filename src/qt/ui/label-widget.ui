@@ -63,6 +63,9 @@
               <normaloff>:/icons/text-input</normaloff>
             </iconset>
           </property>
+          <property name="toolTip">
+            <string>Edit description</string>
+          </property>
         </widget>
       </item>
       <item row="1" column="2">
