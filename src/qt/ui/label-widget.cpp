@@ -12,10 +12,8 @@
 
 #include "label-widget.h"
 
-#include <QLabel>
 #include <QLineEdit>
-#include <QGridLayout>
-#include <QPushButton>
+#include <QToolButton>
 
 #include "desktop.h"
 #include "description-widget.h"
@@ -26,35 +24,17 @@
 #include "props/editor.h"
 #include "props/selection-state.h"
 #include "selection.h"
+#include "transform-panel.h"
 #include "ui/util.h"
+#include "ui_label-widget.h"
 #include "util-string/context-string.h"
 
 namespace Linea::UI {
 
 LabelWidget::LabelWidget(QWidget* parent)
-    : QWidget(parent) {
-    _layout = new QGridLayout(this);
-    _layout->setContentsMargins(0, 0, 0, 0);
-    _layout->setSpacing(4);
-    _layout->setColumnStretch(0, 1);
-
-    // Create label
-    _label = new QLabel(tr("Selection"), this);
-    _label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    _label->setProperty("class", "panel-label");
-    _label->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    _layout->addWidget(_label, 0, 0);
-
-    // Create QLineEdit for editable label
-    _lineEdit = new QLineEdit(this);
-    _lineEdit->setPlaceholderText(tr("Enter label..."));
-    _layout->addWidget(_lineEdit, 1, 0);
-
-    // Create button to open description editor
-    _button = new QPushButton(this);
-    _button->setIcon(QIcon(":/icons/text-input"));
-    _button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    _layout->addWidget(_button, 1, 1);
+    : QWidget(parent)
+    , _ui(std::make_unique<Ui::LabelWidget>()) {
+    _ui->setupUi(this);
 
     // Build popup with DescriptionWidget as content
     _popup = new PopupMenu(this);
@@ -62,9 +42,11 @@ LabelWidget::LabelWidget(QWidget* parent)
     _descriptionWidget->setFixedSize(260, 240);
     _popup->setContent(_descriptionWidget);
 
-    connect(_button, &QPushButton::clicked, this, [this]() {
-        _popup->showBelowWidget(_button);
+    connect(_ui->descriptionButton, &QToolButton::clicked, this, [this]() {
+        _popup->showBelowWidget(_ui->descriptionButton);
     });
+
+    connect(_ui->transform, &QToolButton::clicked, this, &LabelWidget::onTransformClicked);
 
     // Prevent horizontal stretching
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -93,7 +75,7 @@ void LabelWidget::bind(Props::Binder& binder) {
     // Write: only meaningful for single-item selection. Editing the label
     // sets inkscape:label on the object and records one undo step.
     auto tag = binder.editor()->tag();
-    binder.track(QObject::connect(_lineEdit, &QLineEdit::editingFinished, _lineEdit,
+    binder.track(QObject::connect(_ui->lineEdit, &QLineEdit::editingFinished, _ui->lineEdit,
         [this, tag]() {
             if (_update.pending()) return;
             auto sel = _desktop->getSelection();
@@ -101,7 +83,7 @@ void LabelWidget::bind(Props::Binder& binder) {
             auto item = sel->single();
             if (!item || !item->document) return;
 
-            auto new_label = _lineEdit->text().toStdString();
+            auto new_label = _ui->lineEdit->text().toStdString();
             auto current = item->label();
             if (new_label == (current ? current : "")) return;
 
@@ -120,23 +102,44 @@ void LabelWidget::refreshLabel() {
     auto scoped = _update.block();
     auto sel = _desktop->getSelection();
     if (!sel || sel->isEmpty()) {
-        _lineEdit->clear();
-        _lineEdit->setEnabled(false);
+        _ui->lineEdit->clear();
+        _ui->lineEdit->setEnabled(false);
         return;
     }
     auto item = sel->single();
     if (!item) {
-        _lineEdit->setText(tr("%n items", nullptr, static_cast<int>(sel->size())));
-        _lineEdit->setEnabled(false);
+        _ui->lineEdit->setText(tr("%n items", nullptr, static_cast<int>(sel->size())));
+        _ui->lineEdit->setEnabled(false);
         return;
     }
     // user-defined label takes priority; fall back to synthetic name
     if (auto label = item->label()) {
-        _lineEdit->setText(QString::fromUtf8(label));
+        _ui->lineEdit->setText(QString::fromUtf8(label));
     } else {
-        _lineEdit->setText(get_synthetic_object_name(item));
+        _ui->lineEdit->setText(get_synthetic_object_name(item));
     }
-    _lineEdit->setEnabled(true);
+    _ui->lineEdit->setEnabled(true);
+}
+
+void LabelWidget::onTransformClicked() {
+    if (!_transformPopup) {
+        _transformPopup = new PopupMenu(this);
+        _transformPanel = new TransformPanel();
+        _transformPopup->setContent(_transformPanel);
+
+        if (_desktop) {
+            _transformPanel->setDesktop(_desktop);
+        }
+    }
+
+    if (_desktop) {
+        auto selection = _desktop->getSelection();
+        if (selection) {
+            _transformPanel->updateUi(*selection);
+        }
+    }
+
+    _transformPopup->showLeftOfWidget(_ui->transform);
 }
 
 } // namespace Linea::UI

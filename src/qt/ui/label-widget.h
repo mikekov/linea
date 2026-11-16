@@ -13,10 +13,9 @@
 #include "ui/operation-blocker.h"
 
 QT_BEGIN_NAMESPACE
-class QLabel;
-class QLineEdit;
-class QGridLayout;
-class QPushButton;
+namespace Ui {
+class LabelWidget;
+}
 QT_END_NAMESPACE
 
 class SPDesktop;
@@ -31,6 +30,7 @@ namespace UI {
 
 class DescriptionWidget;
 class PopupMenu;
+class TransformPanel;
 
 /**
  * Widget for editing object label.
@@ -48,15 +48,17 @@ public:
 
     void bind(Props::Binder& binder);
 
+private Q_SLOTS:
+    void onTransformClicked();
+
 private:
     void refreshLabel();
 
-    QGridLayout* _layout = nullptr;
-    QLabel* _label = nullptr;
-    QLineEdit* _lineEdit = nullptr;
-    QPushButton* _button = nullptr;
+    std::unique_ptr<Ui::LabelWidget> _ui;
     PopupMenu* _popup = nullptr;
     DescriptionWidget* _descriptionWidget = nullptr;
+    PopupMenu* _transformPopup = nullptr;
+    TransformPanel* _transformPanel = nullptr;
     SPDesktop* _desktop = nullptr;
     OperationBlocker _update;
 };

@@ -55,7 +55,7 @@
         </widget>
       </item>
       <item row="1" column="2">
-        <widget class="QPushButton" name="roundButton">
+        <widget class="QToolButton" name="roundButton">
           <property name="toolTip">
             <string>Round values to the nearest integer</string>
           </property>
@@ -91,14 +91,14 @@
         </widget>
       </item>
       <item row="3" column="2">
-        <widget class="QPushButton" name="transform">
+        <widget class="QToolButton" name="roundSizeButton">
+          <property name="toolTip">
+            <string>Round values to the nearest integer</string>
+          </property>
           <property name="icon">
             <iconset>
-              <normaloff>:/icons/object-transform</normaloff>
+              <normaloff>:/icons/rounding</normaloff>
             </iconset>
-          </property>
-          <property name="text">
-            <string/>
           </property>
         </widget>
       </item>

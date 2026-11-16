@@ -30,6 +30,7 @@ target_sources(linea_base PRIVATE
     ui/object-tree-toolbar.ui
     ui/opacity-widget.cpp
     ui/label-widget.cpp
+    ui/label-widget.ui
     ui/description-widget.cpp
     ui/description-widget.ui
     ui/rectangle-widget.cpp

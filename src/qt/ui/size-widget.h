@@ -19,8 +19,6 @@
 
 #include "ui/operation-blocker.h"
 
-class SPDesktop;
-
 namespace Ui {
 class SizeWidget;
 }
@@ -32,8 +30,6 @@ class Binder;
 }
 
 namespace UI {
-class PopupMenu;
-class TransformPanel;
 
 /**
  * Widget for editing position (x, y) and dimensions (width, height).
@@ -52,16 +48,9 @@ public:
     ~SizeWidget() override;
 
     void bind(Props::Binder& binder);
-    void setDesktop(SPDesktop* desktop);
-
-private Q_SLOTS:
-    void onTransformClicked();
 
 private:
     std::unique_ptr<Ui::SizeWidget> _ui;
-    PopupMenu* _transformPopup = nullptr;
-    TransformPanel* _transformPanel = nullptr;
-    SPDesktop* _desktop = nullptr;
     OperationBlocker _update;
     double _whRatio = 1.0;
 };

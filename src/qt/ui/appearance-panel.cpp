@@ -125,8 +125,6 @@ void AppearancePanel::setDesktop(SPDesktop* desktop, SPDocument* document, Props
     _stylePanel->setDesktop(desktop);
     _stylePanel->setDocument(document);
 
-    // Set desktop on size widget for transform panel
-    _sizeWidget->setDesktop(desktop);
     _textPanel->setDesktop(desktop);
     _textPanel->setDocument(document);
 

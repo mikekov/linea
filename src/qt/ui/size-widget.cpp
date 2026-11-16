@@ -12,13 +12,12 @@
 
 #include "size-widget.h"
 
+#include <QToolButton>
 #include <cmath>
 
 #include "linked-number-pair.h"
 #include "number-edit.h"
 #include "number-range.h"
-#include "popup-menu.h"
-#include "transform-panel.h"
 #include "ui_size-widget.h"
 
 #include "desktop.h"
@@ -48,9 +47,6 @@ SizeWidget::SizeWidget(QWidget* parent)
     _ui->sizePair->first()->setDecimals(NumberRange::decimals);
     _ui->sizePair->second()->setRange(0, NumberRange::maximum);
     _ui->sizePair->second()->setDecimals(NumberRange::decimals);
-
-    // _ui->xEdit->setHasFrame(true);
-    connect(_ui->transform, &QPushButton::clicked, this, &SizeWidget::onTransformClicked);
 }
 
 SizeWidget::~SizeWidget() = default;
@@ -145,7 +141,7 @@ void SizeWidget::bind(Props::Binder& binder) {
             editor->set(Props::preserve_aspect_ratio, linked);
         }));
 
-    binder.track(connect(_ui->roundButton, &QPushButton::clicked, this,
+    binder.track(connect(_ui->roundButton, &QToolButton::clicked, this,
         [this, applyTransform]() {
             {
                 auto scoped = _update.block();
@@ -156,33 +152,19 @@ void SizeWidget::bind(Props::Binder& binder) {
                            _ui->sizePair->first()->value(), _ui->sizePair->second()->value());
         }));
 
+    binder.track(connect(_ui->roundSizeButton, &QToolButton::clicked, this,
+        [this, applyTransform]() {
+            {
+                auto scoped = _update.block();
+                _ui->sizePair->first()->setValue(std::round(_ui->sizePair->first()->value()));
+                _ui->sizePair->second()->setValue(std::round(_ui->sizePair->second()->value()));
+            }
+            applyTransform(_ui->xEdit->value(), _ui->yEdit->value(),
+                           _ui->sizePair->first()->value(), _ui->sizePair->second()->value());
+        }));
+
     // Visible when there's a selection, but not when only a lone <svg> is selected.
     binder.visibleWhen(this, Props::Cond::hasSelection && !(Props::Cond::singleSelection && Props::Cond::allOf<&Props::Counts::svgs>));
-}
-
-void SizeWidget::setDesktop(SPDesktop* desktop) {
-    _desktop = desktop;
-}
-
-void SizeWidget::onTransformClicked() {
-    if (!_transformPopup) {
-        _transformPopup = new PopupMenu(this);
-        _transformPanel = new TransformPanel();
-        _transformPopup->setContent(_transformPanel);
-
-        if (_desktop) {
-            _transformPanel->setDesktop(_desktop);
-        }
-    }
-
-    if (_desktop) {
-        auto selection = _desktop->getSelection();
-        if (selection) {
-            _transformPanel->updateUi(*selection);
-        }
-    }
-
-    _transformPopup->showLeftOfWidget(_ui->transform);
 }
 
 } // namespace Linea::UI
