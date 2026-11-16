@@ -27,6 +27,7 @@ namespace Linea::UI {
 
 // Forward declaration
 class SimpleGridViewport;
+class ScrollBarAutoHide;
 
 /**
  * Simple "virtual" grid that arranges rectangular cells in columns and rows
@@ -68,6 +69,9 @@ public:
     void setActiveBackground(bool active);
     // if true, the grid widget resizes to fit all cells and scrollbars are disabled
     void setSizeToContents(bool autoSize);
+    // if true, the vertical scroll bar is never painted; scrolling still works
+    // and the AlwaysOn gutter stays reserved so the width is stable
+    void setScrollBarHidden(bool hidden);
     // width of the vertical scroll bar
     int verticalScrollBarWidth() const;
 
@@ -129,6 +133,7 @@ private:
 
     QScrollArea* _scrollArea;
     SimpleGridViewport* _viewport;
+    ScrollBarAutoHide* _scrollBarAutoHide;
     using Size = Geom::IntPoint;
     Size _cellSize;  // requested cell size
     Size _gap;        // requested gap

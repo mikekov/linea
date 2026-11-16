@@ -119,7 +119,7 @@ void ColorPaletteWidget::paintColor(QPainter* painter, const Geom::IntRect& rect
                                     const PaletteFileData::ColorItem& item) const {
     auto rgb = QColor::fromRgba(0xffffffff);
     bool none = false;
-    const auto* c = std::get_if<Inkscape::Colors::Color>(&item);
+    auto c = std::get_if<Inkscape::Colors::Color>(&item);
     if (c) {
         rgb = QColor::fromRgba(static_cast<QRgb>(c->toARGB()));
     } else if (std::holds_alternative<PaletteFileData::None>(item)) {

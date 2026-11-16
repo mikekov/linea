@@ -7,6 +7,7 @@
 #ifndef LINEA_UI_WIDGET_UTILS_H
 #define LINEA_UI_WIDGET_UTILS_H
 
+#include <QObject>
 #include <QPoint>
 #include <QSize>
 #include <functional>
@@ -15,6 +16,8 @@ class QAbstractButton;
 class QColor;
 class QPainter;
 class QRect;
+class QScrollArea;
+class QScrollBar;
 class QString;
 class QWidget;
 class QLayout;
@@ -37,6 +40,47 @@ void applyHorizontalPadding(QWidget* widget, int left, int right);
  * The filter object is parented to `follower`, so it is destroyed with it.
  */
 void syncVisibility(QWidget* follower, QWidget* leader);
+
+/**
+ * Companion for a QScrollArea that hides the vertical scroll bar whenever
+ * there is nothing to scroll (maximum() == 0):
+ *
+ * - Reserved (default): for a QScrollArea using Qt::ScrollBarAlwaysOn — keeps
+ *   the gutter reserved so content width is stable, but hides the vertical
+ *   scroll bar itself whenever there is nothing to scroll. The scroll area
+ *   force-shows the bar on every layout pass, so visibility is re-applied
+ *   after LayoutRequest/Resize events on the area and its viewport. Only
+ *   manages the bar while the policy is ScrollBarAlwaysOn — switching the
+ *   policy (e.g. ScrollBarAlwaysOff) is left to Qt.
+ *
+ * - Overlay: sets Qt::ScrollBarAlwaysOff on the scroll area so no gutter space
+ *   is reserved, and floats a vertical QScrollBar directly over the right edge
+ *   of the viewport whenever content is scrollable.
+ *
+ * Parented to the scroll area; construct it and forget it. setForceHidden()
+ * additionally suppresses the bar even when content is scrollable.
+ */
+class ScrollBarAutoHide : public QObject {
+public:
+    enum Mode { Reserved, Overlay };
+
+    explicit ScrollBarAutoHide(QScrollArea* scrollArea, Mode mode = Reserved);
+    void setForceHidden(bool hidden);
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+private:
+    void apply();
+    void scheduleApply();
+    void updateOverlayGeometry();
+
+    QScrollArea* _scrollArea;
+    QScrollBar* _overlayBar = nullptr;
+    Mode _mode;
+    bool _forceHidden = false;
+    bool _applyScheduled = false;
+};
 
 /**
  * Restore `window`'s position and size from preferences under `prefsPath`

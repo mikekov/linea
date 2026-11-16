@@ -31,6 +31,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "widget-utils.h"
+
 namespace Linea::UI {
 
 SimpleGrid::SimpleGrid(QWidget* parent)
@@ -66,6 +68,10 @@ void SimpleGrid::construct() {
 
     setFocusPolicy(Qt::StrongFocus);
 
+    // AlwaysOn keeps the gutter reserved so the content width stays stable;
+    // the helper hides the bar itself when there is nothing to scroll.
+    _scrollBarAutoHide = new ScrollBarAutoHide(_scrollArea);
+
     // Connect scroll bar value changed to trigger repaint
     connect(_scrollArea->verticalScrollBar(), &QScrollBar::valueChanged, this, [this]() {
         _viewport->update();
@@ -91,6 +97,10 @@ void SimpleGrid::setSizeToContents(bool autoSize) {
     _scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setSizePolicy(QSizePolicy::Expanding, _sizeToContents ? QSizePolicy::Fixed : QSizePolicy::Expanding);
     resizeLayout();
+}
+
+void SimpleGrid::setScrollBarHidden(bool hidden) {
+    _scrollBarAutoHide->setForceHidden(hidden);
 }
 
 int SimpleGrid::verticalScrollBarWidth() const {
@@ -126,7 +136,7 @@ void SimpleGrid::SimpleGridViewport::paintEvent(QPaintEvent* event) {
 
 bool SimpleGrid::SimpleGridViewport::event(QEvent* event) {
     if (event->type() == QEvent::ToolTip) {
-        auto* helpEvent = static_cast<QHelpEvent*>(event);
+        auto helpEvent = static_cast<QHelpEvent*>(event);
         auto cell = _grid->getCellIndex(helpEvent->pos().x(), helpEvent->pos().y());
         if (cell >= 0 && _grid->_tooltipFunc) {
             QString text = _grid->_tooltipFunc(cell);

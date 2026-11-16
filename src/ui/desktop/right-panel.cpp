@@ -34,13 +34,14 @@
 namespace Linea::UI {
 
 namespace {
-constexpr int SIDE_PADDING = 5;
+constexpr int SIDE_PADDING = 15;
+constexpr int SCROLLBAR_PADDING = 10;
 }
 
 RightPanel::RightPanel(QWidget* parent)
     : CollapsiblePanel(parent) {
     setResizableEdge(Qt::LeftEdge);
-    setMinimumWidth(210);
+    setMinimumWidth(SIDE_PADDING + 200 + SCROLLBAR_PADDING);
 
     buildUi();
     connectSignals();
@@ -51,7 +52,7 @@ RightPanel::~RightPanel() = default;
 void RightPanel::buildUi() {
     // --- Content widgets ---
 
-    _propertiesPanel = new DocumentPropertiesPanel(nullptr, SIDE_PADDING, SIDE_PADDING);
+    _propertiesPanel = new DocumentPropertiesPanel(nullptr, SIDE_PADDING, SCROLLBAR_PADDING);
 
     // _symbolsWidget = new SymbolsWidget();
     // _symbolsWidget->setContentsMargins(SIDE_PADDING, 0, SIDE_PADDING, 0);

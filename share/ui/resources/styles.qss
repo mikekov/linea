@@ -454,19 +454,19 @@ QSplitter::handle:vertical {
 /* Scrollbars - modern overlay style without ugly arrow buttons */
 QScrollBar:vertical {
     background-color: transparent;
-    width: 8px;
+    width: 7px;
     margin: 0;
     border: none;
 }
 
 QScrollBar::handle:vertical {
-    background-color: palette(mid);
-    border-radius: 4px;
+    background-color: palette(midlight);
+    border-radius: 3px;
     min-height: 20px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background-color: palette(text);
+    background-color: palette(mid);
 }
 
 /* Hide ugly up/down arrow buttons */
@@ -484,19 +484,19 @@ QScrollBar::sub-page:vertical {
 /* Horizontal scrollbar */
 QScrollBar:horizontal {
     background-color: transparent;
-    height: 8px;
+    height: 7px;
     margin: 0;
     border: none;
 }
 
 QScrollBar::handle:horizontal {
-    background-color: palette(mid);
-    border-radius: 4px;
+    background-color: palette(midlight);
+    border-radius: 3px;
     min-width: 20px;
 }
 
 QScrollBar::handle:horizontal:hover {
-    background-color: palette(text);
+    background-color: palette(mid);
 }
 
 QScrollBar::add-line:horizontal,

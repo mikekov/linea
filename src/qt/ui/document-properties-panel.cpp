@@ -52,7 +52,7 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
     scrollArea->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     scrollArea->setFrameShape(QFrame::NoFrame);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    new ScrollBarAutoHide(scrollArea, ScrollBarAutoHide::Overlay);
 
     // Create a container widget for the UI content
     _containerWidget = new QWidget(this);

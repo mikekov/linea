@@ -18,6 +18,10 @@
 #include <QObject>
 #include <QPointer>
 #include <QScreen>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <QSignalBlocker>
+#include <QStyle>
 #include <QTimer>
 #include <QVariantAnimation>
 #include <QWidget>
@@ -188,6 +192,123 @@ private:
 };
 
 } // namespace
+
+ScrollBarAutoHide::ScrollBarAutoHide(QScrollArea* scrollArea, Mode mode)
+    : QObject(scrollArea)
+    , _scrollArea(scrollArea)
+    , _mode(mode) {
+    auto bar = scrollArea->verticalScrollBar();
+    if (_mode == Overlay) {
+        scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        _overlayBar = new QScrollBar(Qt::Vertical, scrollArea);
+        _overlayBar->setCursor(Qt::ArrowCursor);
+        _overlayBar->setAttribute(Qt::WA_OpaquePaintEvent, false);
+        _overlayBar->hide();
+        _overlayBar->installEventFilter(this);
+
+        connect(bar, &QScrollBar::valueChanged, this, [this, bar](int value) {
+            QSignalBlocker blocker(_overlayBar);
+            _overlayBar->setRange(bar->minimum(), bar->maximum());
+            _overlayBar->setValue(value);
+        });
+        connect(_overlayBar, &QScrollBar::valueChanged, bar, &QScrollBar::setValue);
+    } else {
+        auto sp = bar->sizePolicy();
+        sp.setRetainSizeWhenHidden(true);
+        bar->setSizePolicy(sp);
+        bar->installEventFilter(this);
+    }
+
+    scrollArea->installEventFilter(this);
+    scrollArea->viewport()->installEventFilter(this);
+    connect(bar, &QScrollBar::rangeChanged, this, [this](int, int) { apply(); });
+    apply();
+}
+
+void ScrollBarAutoHide::setForceHidden(bool hidden) {
+    if (_forceHidden == hidden) return;
+    _forceHidden = hidden;
+    apply();
+}
+
+void ScrollBarAutoHide::scheduleApply() {
+    if (_applyScheduled) return;
+    _applyScheduled = true;
+    QTimer::singleShot(0, this, [this] {
+        _applyScheduled = false;
+        apply();
+    });
+}
+
+bool ScrollBarAutoHide::eventFilter(QObject* watched, QEvent* event) {
+    const auto type = event->type();
+    if (_mode == Overlay && watched == _overlayBar) {
+        if (type == QEvent::StyleChange) {
+            _overlayBar->setAttribute(Qt::WA_OpaquePaintEvent, false);
+            scheduleApply();
+        } else if (type == QEvent::ShowToParent) {
+            scheduleApply();
+        }
+        return false;
+    }
+
+    if (_mode == Reserved && watched == _scrollArea->verticalScrollBar()) {
+        if (type == QEvent::StyleChange || type == QEvent::ShowToParent) {
+            scheduleApply();
+        }
+        return false;
+    }
+
+    bool onScrollArea = watched == _scrollArea || watched == _scrollArea->viewport();
+    bool layoutEvent = type == QEvent::LayoutRequest || type == QEvent::Resize || type == QEvent::StyleChange;
+    if (onScrollArea && layoutEvent) {
+        if (_mode == Overlay) {
+            updateOverlayGeometry();
+        }
+        // deferred: the scroll area re-shows the bar while handling this
+        // very event; apply after its layout pass completes
+        scheduleApply();
+    }
+    return false;
+}
+
+void ScrollBarAutoHide::updateOverlayGeometry() {
+    if (!_overlayBar) return;
+    _overlayBar->ensurePolished();
+    _overlayBar->setAttribute(Qt::WA_OpaquePaintEvent, false);
+    const QRect cr = _scrollArea->contentsRect();
+    const int w = _overlayBar->sizeHint().width();
+    const QRect barRect = QStyle::visualRect(
+        _scrollArea->layoutDirection(), cr,
+        QRect(cr.right() - w + 1, cr.top(), w, cr.height()));
+    _overlayBar->setGeometry(barRect);
+    _overlayBar->raise();
+}
+
+void ScrollBarAutoHide::apply() {
+    auto bar = _scrollArea->verticalScrollBar();
+    const bool shouldShow = bar->maximum() > 0 && !_forceHidden;
+    if (_mode == Overlay) {
+        {
+            QSignalBlocker blocker(_overlayBar);
+            _overlayBar->setRange(bar->minimum(), bar->maximum());
+            _overlayBar->setPageStep(bar->pageStep());
+            _overlayBar->setSingleStep(bar->singleStep());
+            _overlayBar->setValue(bar->value());
+        }
+        updateOverlayGeometry();
+        _overlayBar->setVisible(shouldShow);
+        return;
+    }
+
+    if (_scrollArea->verticalScrollBarPolicy() != Qt::ScrollBarAlwaysOn) return;
+    auto sp = bar->sizePolicy();
+    if (!sp.retainSizeWhenHidden()) {
+        sp.setRetainSizeWhenHidden(true);
+        bar->setSizePolicy(sp);
+    }
+    bar->setVisible(shouldShow);
+}
 
 void applyHorizontalPadding(QWidget* widget, int left, int right) {
     if (!widget) return;

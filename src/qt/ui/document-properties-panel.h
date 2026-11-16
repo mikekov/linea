@@ -37,6 +37,7 @@ class SizeWidget;
 #include "size-widget.h"
 
 QT_BEGIN_NAMESPACE
+class QScrollArea;
 class QStackedWidget;
 QT_END_NAMESPACE
 
