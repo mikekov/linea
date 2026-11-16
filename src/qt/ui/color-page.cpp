@@ -5,6 +5,7 @@
 
 #include "color-page.h"
 
+#include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -90,30 +91,45 @@ ColorPage::ColorPage(std::shared_ptr<Inkscape::Colors::Space::AnySpace> space,
         int row = 0;
 
         // Optional sliders above the channel edits. By default just the hue
-        // and alpha channels; with all_sliders every channel gets one.
+        // and alpha channels; with all_sliders every channel gets one,
+        // prefixed by the channel's name label.
         // They bind to the same holder, so segments and sliders stay in sync.
         auto sliders = _sliders = new QVBoxLayout();
         sliders->setContentsMargins(0, 0, 0, 0);
         sliders->setSpacing(6);
-        auto add_slider = [this, sliders](const Space::Component& component) {
+        auto make_slider = [this](const Space::Component& component) {
             auto slider = new ColorSlider(_space_color, component, this);
             slider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            sliders->addWidget(slider);
             return slider;
         };
         if (all_sliders) {
+            // The grid's label column sizes to the widest channel name so
+            // all sliders stay left-aligned.
+            auto labeled = new QGridLayout();
+            labeled->setContentsMargins(0, 0, 0, 0);
+            labeled->setVerticalSpacing(6);
+            labeled->setHorizontalSpacing(0);
+            sliders->addLayout(labeled);
             const auto hue = components.hue_index();
-            for (unsigned i = 0; i < components.size(); ++i) {
-                auto* slider = add_slider(components[i]);
+            for (int i = 0; i < components.size(); ++i) {
+                auto label = new QLabel(QString::fromStdString(components[i].name), this);
+                label->setProperty("class", "panel-label");
+                // panel-label has margin-top: 2px, which would push the text
+                // below the slider's vertical center
+                label->setStyleSheet("margin-top: 0px; margin-left: 1px;");
+                labeled->addWidget(label, i, 0, Qt::AlignVCenter);
+                auto slider = make_slider(components[i]);
+                labeled->addWidget(slider, i, 1, Qt::AlignVCenter);
                 if (hue && i == *hue) _hue_slider = slider;
             }
         } else {
             if (auto hue = components.hue_index()) {
-                _hue_slider = add_slider(components[*hue]);
+                _hue_slider = make_slider(components[*hue]);
+                sliders->addWidget(_hue_slider);
             }
             for (auto& component : components) {
                 if (component.id == "alpha") {
-                    add_slider(component);
+                    sliders->addWidget(make_slider(component));
                     break;
                 }
             }
