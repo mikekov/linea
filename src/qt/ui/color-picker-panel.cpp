@@ -10,7 +10,7 @@
 #include <QIcon>
 #include <QLabel>
 #include <QMenu>
-#include <QPushButton>
+#include <QToolButton>
 #include <QSpacerItem>
 #include <QVBoxLayout>
 #include <glibmm/ustring.h>
@@ -84,7 +84,7 @@ void ColorPickerPanel::buildBottomBar() {
     });
 
     _swatchMenu = createColorClipboardMenu(_colorSet, [this] { return _spaceType; }, this, _ui->hexEdit);
-    connect(_ui->optionsBtn, &QPushButton::clicked, this, [this] {
+    connect(_ui->optionsBtn, &QToolButton::clicked, this, [this] {
         // popup anchored under the button, aligned to its right edge
         const QPoint br = _ui->optionsBtn->mapToGlobal(_ui->optionsBtn->rect().bottomRight());
         _swatchMenu->popup(br - QPoint(_swatchMenu->sizeHint().width(), 0));

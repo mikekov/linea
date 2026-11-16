@@ -90,9 +90,9 @@
                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred"/>
                 </property>
                 <property name="class" stdset="0">
-                  <string>button-bar</string>
+                  <string>active-frame</string>
                 </property>
-                <layout class="QHBoxLayout" name="frameLayout">
+                <layout class="QHBoxLayout" name="frameLayout" stretch="1,0">
                   <property name="spacing">
                     <number>0</number>
                   </property>
@@ -111,21 +111,30 @@
                   <!-- hex color entry; ColorSet is assigned in code -->
                   <item>
                     <widget class="Linea::UI::ColorEntry" name="hexEdit">
-                      <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Minimum"/>
+                      <property name="class" stdset="0">
+                        <string>cell-editor</string>
                       </property>
                       <property name="frame">
                         <bool>false</bool>
                       </property>
-                      <property name="class" stdset="0">
+                      <!-- <property name="class" stdset="0">
                         <string>button-bar</string>
-                      </property>
+                      </property> -->
                     </widget>
                   </item>
                   <item>
-                    <widget class="QPushButton" name="optionsBtn">
+                    <widget class="QToolButton" name="optionsBtn">
                       <property name="class" stdset="0">
                         <string>narrow-button</string>
+                      </property>
+                      <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed"/>
+                      </property>
+                      <property name="maximumSize">
+                        <size>
+                          <width>16</width>
+                          <height>22</height>
+                        </size>
                       </property>
                       <property name="toolTip">
                         <string>Click for copy/paste options</string>
