@@ -31,6 +31,7 @@ x don't open twice the same file from the home page; activate existing tab
 - cannot delete selected gradient stop in a gradient editor with a kbd shortcut Del
 - fix oklch color picker to select correct srgb colors
 - oklch color sliders should only show colors inside srgb/p3 gamut
+- right panel - reserve space for a scrollbar, so it doesn't push the content
 
 ## Missing features
 

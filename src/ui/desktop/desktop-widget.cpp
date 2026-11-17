@@ -176,8 +176,9 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     _colorPalettePanel = new ColorPalettePanel(_canvasContainer);
     _colorPalette = _colorPalettePanel->palette();
     _colorPalette->setAlignment(ColorPaletteWidget::Alignment::Vertical);
-    _colorPalette->setMargins(6, 5, 0, 5);
+    _colorPalette->setMargins(5, 5, 0, 5);
     _colorPalettePanel->setResizableEdge(Qt::Edge::LeftEdge);
+    _colorPalettePanel->setEdgeHighlight(true);
     connect(_colorPalette, &ColorPaletteWidget::cellClicked, this,
             [this](const auto& color, Qt::KeyboardModifiers modifiers, Qt::MouseButtons buttons) {
                 bool stroke = !!(buttons & Qt::LeftButton) == !!(modifiers & Qt::ShiftModifier);

@@ -14,13 +14,109 @@
 
 #include <QCursor>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QResizeEvent>
+#include <QSignalBlocker>
+#include <QVariantAnimation>
 
 namespace Linea::UI {
 
 namespace {
 
 constexpr Qt::Edge ALL_EDGES[] = {Qt::LeftEdge, Qt::TopEdge, Qt::RightEdge, Qt::BottomEdge};
+
+// crossfade tempo, matching the number-edit hover controls
+constexpr int HANDLE_FADE_IN_MS = 70;
+constexpr int HANDLE_FADE_OUT_MS = 200;
+
+// The invisible drag strip along a resizable edge. Fades a 1px accent line
+// in at the panel's boundary when hovered — the strip itself is the hit
+// zone, so its enter/leave is exactly "over the resizable edge". Mouse
+// presses are left unhandled so they propagate to the parent for resizing.
+class ResizeHandle : public QWidget {
+public:
+    ResizeHandle(Qt::Edge edge, QWidget* parent)
+        : QWidget(parent)
+        , _edge(edge) {
+        QObject::connect(&_fade, &QVariantAnimation::valueChanged, this, [this](const QVariant& v) {
+            _opacity = v.toDouble();
+            update();
+        });
+    }
+
+    // the highlight is opt-in on the parent widget; when off, hover and
+    // drag state is still tracked but the line never fades in
+    void setHighlight(bool on) {
+        _highlight = on;
+        if (!on) {
+            _fade.stop();
+            _opacity = 0;
+            update();
+        } else {
+            fade(_dragged || _hovered);
+        }
+    }
+
+    // keep the edge lit for the whole drag — the cursor leaves the strip
+    // the moment the panel starts resizing
+    void setDragged(bool dragged) {
+        _dragged = dragged;
+        fade(_dragged || _hovered);
+    }
+
+protected:
+    void enterEvent(QEnterEvent*) override {
+        _hovered = true;
+        fade(true);
+    }
+
+    void leaveEvent(QEvent*) override {
+        _hovered = false;
+        if (!_dragged) {
+            fade(false);
+        }
+    }
+
+    void paintEvent(QPaintEvent*) override {
+        if (_opacity <= 0 || !_highlight) return;
+        QPainter p(this);
+        p.setOpacity(_opacity);
+        p.fillRect(edgeLine(), palette().color(QPalette::Mid));
+    }
+
+private:
+    void fade(bool show) {
+        if (!_highlight) return;
+        // reconfiguring a stopped animation re-emits valueChanged at the
+        // stale currentTime — that would corrupt _opacity before start()
+        {
+            const QSignalBlocker blocker(&_fade);
+            _fade.stop();
+            _fade.setDuration(show ? HANDLE_FADE_IN_MS : HANDLE_FADE_OUT_MS);
+            _fade.setStartValue(_opacity);
+            _fade.setEndValue(show ? 1.0 : 0.0);
+        }
+        _fade.start();
+    }
+
+    // the parent's boundary line is this strip's outermost row/column
+    QRect edgeLine() const {
+        switch (_edge) {
+            case Qt::LeftEdge:   return {0, 0, 1, height()};
+            case Qt::RightEdge:  return {width() - 1, 0, 1, height()};
+            case Qt::TopEdge:    return {0, 0, width(), 1};
+            case Qt::BottomEdge: return {0, height() - 1, width(), 1};
+        }
+        return {};
+    }
+
+    Qt::Edge _edge;
+    qreal _opacity = 0;
+    bool _hovered = false;
+    bool _dragged = false;
+    bool _highlight = false;
+    QVariantAnimation _fade;
+};
 
 int edgeIndex(Qt::Edge edge) {
     switch (edge) {
@@ -54,6 +150,19 @@ void ResizableEdgeWidget::setResizableEdge(Qt::Edge edge) {
     setResizableEdges(Qt::Edges(edge));
 }
 
+void ResizableEdgeWidget::setEdgeHighlight(bool on) {
+    _edgeHighlight = on;
+    for (auto handle : _handles) {
+        if (handle) {
+            static_cast<ResizeHandle*>(handle)->setHighlight(on);
+        }
+    }
+}
+
+bool ResizableEdgeWidget::edgeHighlight() const {
+    return _edgeHighlight;
+}
+
 void ResizableEdgeWidget::setResizeStep(const QSize& step) {
     _resizeStep = step;
 }
@@ -76,9 +185,10 @@ QWidget* ResizableEdgeWidget::handleWidget(Qt::Edge edge) {
         return nullptr;
     }
     if (!_handles[i]) {
-        _handles[i] = new QWidget(this);
+        _handles[i] = new ResizeHandle(edge, this);
         _handles[i]->setCursor(cursorForEdges(Qt::Edges(edge)));
         _handles[i]->setProperty("class", "resize-handle");
+        static_cast<ResizeHandle*>(_handles[i])->setHighlight(_edgeHighlight);
     }
     return _handles[i];
 }
@@ -193,6 +303,11 @@ void ResizableEdgeWidget::mousePressEvent(QMouseEvent* event) {
         _dragStartPos = event->globalPosition().toPoint();
         _dragStartSize = size();
         setCursor(cursorForEdges(edges));
+        for (Qt::Edge edge : ALL_EDGES) {
+            if (_dragEdges & edge) {
+                static_cast<ResizeHandle*>(handleWidget(edge))->setDragged(true);
+            }
+        }
         event->accept();
         return;
     }
@@ -249,6 +364,11 @@ void ResizableEdgeWidget::mouseReleaseEvent(QMouseEvent* event) {
         _resizing = false;
         _dragEdges = {};
         unsetCursor();
+        for (auto handle : _handles) {
+            if (handle) {
+                static_cast<ResizeHandle*>(handle)->setDragged(false);
+            }
+        }
         event->accept();
         return;
     }

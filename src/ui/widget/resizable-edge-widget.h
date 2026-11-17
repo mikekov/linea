@@ -42,6 +42,10 @@ public:
     // convenience for enabling a single edge
     void setResizableEdge(Qt::Edge edge);
 
+    // opt-in hover/drag highlight of the panel's edge line; off by default
+    void setEdgeHighlight(bool on);
+    bool edgeHighlight() const;
+
     // drag increments applied per axis; a component <= 1 disables snapping on it
     void setResizeStep(const QSize& step);
     QSize resizeStep() const;
@@ -78,6 +82,7 @@ private:
     Qt::Edges _resizableEdges;       ///< enabled edges (empty = resizing off)
     Qt::Edges _dragEdges;            ///< edges being dragged (may be a corner pair)
     bool _resizing = false;
+    bool _edgeHighlight = false;
     QPoint _dragStartPos;
     QSize _dragStartSize;
     QSize _resizeStep{1, 1};

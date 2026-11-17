@@ -16,6 +16,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QSignalBlocker>
 #include <QStyle>
 #include <QStyleOption>
 #include <QTimer>
@@ -210,10 +211,16 @@ public:
         }
         if (_showing == show) return;
         _showing = show;
-        _anim.stop();
-        _anim.setDuration(durationMs);
-        _anim.setStartValue(_fade);
-        _anim.setEndValue(show ? 1.0 : 0.0);
+        // reconfiguring a stopped animation re-emits valueChanged at the
+        // stale currentTime (corrupting _fade), and stop() itself emits
+        // finished() — which would hide the widget just as a fade-out starts
+        {
+            const QSignalBlocker blocker(&_anim);
+            _anim.stop();
+            _anim.setDuration(durationMs);
+            _anim.setStartValue(_fade);
+            _anim.setEndValue(show ? 1.0 : 0.0);
+        }
         if (show) _w->setVisible(true);
         _anim.start();
     }

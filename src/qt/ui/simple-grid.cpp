@@ -104,7 +104,7 @@ void SimpleGrid::setScrollBarHidden(bool hidden) {
 }
 
 int SimpleGrid::verticalScrollBarWidth() const {
-    return 12;
+    return 10;
     // this overshoots: 17px
     return style()->pixelMetric(QStyle::PixelMetric::PM_ScrollBarExtent);
     // return _scrollArea->verticalScrollBar() ? _scrollArea->verticalScrollBar()->width() : 0;
