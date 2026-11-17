@@ -850,6 +850,8 @@ void SPDesktopWidget::dockPanels(bool dock) {
     _overlayLayout->activate();
     _leftPanel->setRounded(!dock);
     _rightPanel->setRounded(!dock);
+    _leftPanel->setDocked(dock);
+    _rightPanel->setDocked(dock);
     _toolbar->setRounded(!dock);
     _toolbar->setStretch(dock);
     _colorPalettePanel->setVisible(dock && _colorPaletteVisible);

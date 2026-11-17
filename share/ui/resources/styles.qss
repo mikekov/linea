@@ -229,6 +229,19 @@ QLabel[smallLabel="true"] {
     border-radius: 0px;
 }
 
+/* Docked panels sit flush against the window — a single separator line on
+   the canvas-facing edge replaces the floating frame. Listed after the
+   generic border rule so it wins at equal specificity. */
+.overlay-panel[docked="true"] {
+    border: none;
+}
+.overlay-panel[dock-edge="left"] {
+    border-left: 1px solid palette(mid);
+}
+.overlay-panel[dock-edge="right"] {
+    border-right: 1px solid palette(mid);
+}
+
 /* Welcome page panels */
 QWidget[class="welcome-panel"] {
     background-color:  palette(button);

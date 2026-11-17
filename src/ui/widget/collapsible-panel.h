@@ -52,6 +52,10 @@ public:
     void setRounded(bool rounded);
     bool rounded() const;
 
+    /// Docked panels sit flush against the window — marks the container so
+    /// the stylesheet can show a separator on the canvas-facing edge only.
+    void setDocked(bool docked);
+
 Q_SIGNALS:
     void collapsedChanged(bool collapsed);
 

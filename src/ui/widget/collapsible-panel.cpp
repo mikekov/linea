@@ -185,6 +185,25 @@ bool CollapsiblePanel::rounded() const {
     return _rounded;
 }
 
+void CollapsiblePanel::setDocked(bool docked) {
+    // the separator goes on the canvas-facing edge — the same edge the
+    // panel is resized from (LeftPanel: right, RightPanel: left)
+    QString edge;
+    if (docked) {
+        const Qt::Edges edges = resizableEdges();
+        if (edges & Qt::RightEdge) {
+            edge = "right";
+        } else if (edges & Qt::LeftEdge) {
+            edge = "left";
+        }
+    }
+    _ui->containerWidget->setProperty("docked", docked);
+    _ui->containerWidget->setProperty("dock-edge", edge);
+    _ui->containerWidget->style()->unpolish(_ui->containerWidget);
+    _ui->containerWidget->style()->polish(_ui->containerWidget);
+    _ui->containerWidget->update();
+}
+
 void CollapsiblePanel::onToggleClicked() {
     setCollapsed(!_collapsed);
 }
