@@ -75,6 +75,11 @@ protected:
         QStyleOptionFrame option;
         option.initFrom(_edit);
         QRect contents = _edit->style()->subElementRect(QStyle::SE_LineEditContents, &option, _edit);
+        // the line edit clips its text to contents minus the text margins —
+        // the erasure must stop at the same bound or the background ramp
+        // would wipe the parent's frame where scrolled text can't reach
+        const QMargins margins = _edit->textMargins();
+        contents.adjust(margins.left(), margins.top(), -margins.right(), -margins.bottom());
 
         // Locate the text origin from the leftmost visible character:
         // cursorPositionAt reads the line control's real layout, so
@@ -149,6 +154,10 @@ private:
 
 // width of the hover-only step arrow zones at the spinbox edges
 constexpr int ARROW_W = 16;
+// text clip inset: the line edit spans the whole field edge-to-edge, so
+// scrolled/overflowing text and the fade overlay's erasure would paint
+// right over the parent's 1px frame — keep them a couple pixels inside
+constexpr int EDGE_INSET = 2;
 // side of the square the pan icon is rendered into, centered in the zone
 constexpr int ARROW_ICON = 16;
 
@@ -613,7 +622,11 @@ QString NumberEdit::label() const {
 }
 
 void NumberEdit::setHovered(bool hovered) {
+    // disabled fields never show the hover arrows
+    if (hovered && (!isEnabled() || !_spinBox->isEnabled())) return;
+
     if (_spinBox->property("hovered").toBool() == hovered) return;
+
     _spinBox->setProperty("hovered", hovered);
     _spinBox->style()->unpolish(_spinBox);
     _spinBox->style()->polish(_spinBox);
@@ -655,7 +668,7 @@ void NumberEdit::updateTextMargins() {
         }
     }
     if (le) {
-        le->setTextMargins(left, 0, 0, 0);
+        le->setTextMargins(qMax(left, EDGE_INSET), 0, EDGE_INSET, 0);
     }
     updateIndicatorVisibility();
     _spinBox->updateGeometry(); // the label's footprint feeds the size hint
@@ -849,6 +862,12 @@ bool NumberEdit::eventFilter(QObject* watched, QEvent* event) {
                 setHovered(false);
             }
         });
+    }
+    else if (event->type() == QEvent::EnabledChange
+             && (watched == this || watched == _spinBox)
+             && (!isEnabled() || !_spinBox->isEnabled())) {
+        // disabled while hovered — retract the arrows
+        setHovered(false);
     }
     else if (watched == _indicator && event->type() == QEvent::Resize) {
         // the label is never laid out — it auto-sizes to sizeHint on first
