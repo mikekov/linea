@@ -35,6 +35,7 @@ public:
     QWidget* contentWidget() const;
 
     void setContentMargins(int left, int top, int right, int bottom);
+    QMargins contentMargins() const;
 
     void setCollapsed(bool collapsed);
     bool isCollapsed() const;
@@ -54,7 +55,7 @@ public:
 
     /// Docked panels sit flush against the window — marks the container so
     /// the stylesheet can show a separator on the canvas-facing edge only.
-    void setDocked(bool docked);
+    virtual void setDocked(bool docked);
 
 Q_SIGNALS:
     void collapsedChanged(bool collapsed);

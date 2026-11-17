@@ -104,6 +104,10 @@ void CollapsiblePanel::setContentMargins(int left, int top, int right, int botto
     _ui->contentLayout->setContentsMargins(left, top, right, bottom);
 }
 
+QMargins CollapsiblePanel::contentMargins() const {
+    return _ui->contentLayout->contentsMargins();
+}
+
 void CollapsiblePanel::setCollapsed(bool collapsed) {
     if (_collapsed == collapsed) {
         return;

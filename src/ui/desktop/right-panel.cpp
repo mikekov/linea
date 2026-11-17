@@ -42,12 +42,21 @@ RightPanel::RightPanel(QWidget* parent)
     : CollapsiblePanel(parent) {
     setResizableEdge(Qt::LeftEdge);
     setMinimumWidth(SIDE_PADDING + 200 + SCROLLBAR_PADDING);
+    _floatingBottomMargin = contentMargins().bottom();
 
     buildUi();
     connectSignals();
 }
 
 RightPanel::~RightPanel() = default;
+
+void RightPanel::setDocked(bool docked) {
+    CollapsiblePanel::setDocked(docked);
+    // flush with the window's bottom edge while docked; restore the
+    // designer margin when floating again
+    const auto m = contentMargins();
+    setContentMargins(m.left(), m.top(), m.right(), docked ? 0 : _floatingBottomMargin);
+}
 
 void RightPanel::buildUi() {
     // --- Content widgets ---

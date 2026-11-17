@@ -46,6 +46,9 @@ public:
     void setDesktop(SPDesktop* desktop);
     void clear();
 
+    /// Flush against the window's bottom edge while docked.
+    void setDocked(bool docked) override;
+
     void saveSettings(QSettings& settings);
     void restoreSettings(QSettings& settings);
 
@@ -67,6 +70,7 @@ private:
     NumberEdit* _zoomEdit = nullptr;
     QToolButton* _rotationButton = nullptr;
     NumberEdit* _rotationEdit = nullptr;
+    int _floatingBottomMargin = 0;
 };
 
 } // namespace Linea::UI
