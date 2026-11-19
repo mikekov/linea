@@ -252,18 +252,21 @@ void canvas_color_mode_toggle(SPDesktop* desktop) {
 #endif
 }
 
+static Inkscape::CanvasItemDrawing* get_drawing(SPDesktop* desktop) {
+    return desktop ? desktop->getCanvasDrawing() : nullptr;
+}
 /**
  * Toggle pixel preview (drawing rendered at a capped resolution) on/off.
  */
 void canvas_pixel_preview_toggle(SPDesktop* desktop) {
-    if (!desktop) return;
-    auto drawing = desktop->getCanvasDrawing();
+    auto drawing = get_drawing(desktop);
+    if (!drawing) return;
     drawing->set_pixel_preview(!drawing->get_pixel_preview());
 }
 
 void canvas_pixel_preview_off(SPDesktop* desktop) {
-    if (!desktop) return;
-    auto drawing = desktop->getCanvasDrawing();
+    auto drawing = get_drawing(desktop);
+    if (!drawing) return;
     drawing->set_pixel_preview(false);
 }
 
@@ -271,30 +274,30 @@ void canvas_pixel_preview_off(SPDesktop* desktop) {
  * Turn on pixel preview (1.0 = 100%, 2.0 = 200%).
  */
 void canvas_pixel_preview_cap(SPDesktop* desktop, double cap) {
-    if (!desktop) return;
-    auto drawing = desktop->getCanvasDrawing();
+    auto drawing = get_drawing(desktop);
+    if (!drawing) return;
     drawing->set_pixel_preview(true);
     drawing->set_pixel_preview_cap(cap);
 }
 
 bool get_canvas_pixel_preview(SPDesktop* desktop) {
-    return desktop && desktop->getCanvasDrawing()->get_pixel_preview();
+    auto drawing = get_drawing(desktop);
+    return drawing && drawing->get_pixel_preview();
 }
 
 bool get_canvas_pixel_preview_off(SPDesktop* desktop) {
-    return !desktop || !desktop->getCanvasDrawing()->get_pixel_preview();
+    auto drawing = get_drawing(desktop);
+    return !drawing || !drawing->get_pixel_preview();
 }
 
 bool get_canvas_pixel_preview_100(SPDesktop* desktop) {
-    if (!desktop) return false;
-    auto drawing = desktop->getCanvasDrawing();
-    return drawing->get_pixel_preview() && drawing->get_pixel_preview_cap() == 1.0;
+    auto drawing = get_drawing(desktop);
+    return drawing && drawing->get_pixel_preview() && drawing->get_pixel_preview_cap() == 1.0;
 }
 
 bool get_canvas_pixel_preview_200(SPDesktop* desktop) {
-    if (!desktop) return false;
-    auto drawing = desktop->getCanvasDrawing();
-    return drawing->get_pixel_preview() && drawing->get_pixel_preview_cap() == 2.0;
+    auto drawing = get_drawing(desktop);
+    return drawing && drawing->get_pixel_preview() && drawing->get_pixel_preview_cap() == 2.0;
 }
 
 /**
