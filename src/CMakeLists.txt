@@ -25,6 +25,7 @@ target_sources(linea_base PRIVATE
   document-update.cpp
   document.cpp
   event-log.cpp
+  feature-support.cpp
   file.cpp
   filter-chemistry.cpp
   filter-enums.cpp
@@ -105,6 +106,7 @@ target_sources(linea_base PRIVATE
   enums.h
   event-log.h
   event.h
+  feature-support.h
   file.h
   fill-or-stroke.h
   filter-chemistry.h

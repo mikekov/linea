@@ -120,15 +120,19 @@ public:
     }
 };
 
-class RightAlignedMenuFilter : public QObject {
+enum class MenuXAlign { Right, Center };
+
+class AlignedMenuFilter : public QObject {
     QMenu* menu;
-    int arrow_width;
+    MenuXAlign align;
+    int offset;
 
 public:
-    RightAlignedMenuFilter(QMenu* m, int w)
+    AlignedMenuFilter(QMenu* m, MenuXAlign a, int o = 0)
         : QObject(m)
         , menu(m)
-        , arrow_width(w) {}
+        , align(a)
+        , offset(o) {}
 
     bool eventFilter(QObject* obj, QEvent* event) override {
         if (event->type() == QEvent::Show) {
@@ -136,7 +140,9 @@ public:
             if (button) {
                 QPoint br = button->mapToGlobal(QPoint(button->width(), button->height()));
 
-                int x = br.x() - menu->width() + arrow_width;
+                int x = align == MenuXAlign::Center
+                    ? br.x() - (button->width() + menu->width()) / 2
+                    : br.x() - menu->width() + offset;
                 int y = br.y() + 1;
 
                 if (auto screen = button->screen()) {
@@ -408,7 +414,11 @@ QMenu* createCustomMenu(QWidget* parent, std::span<const char* const> action_ids
 }
 
 void installRightAlignedMenuFilter(QMenu* menu, int arrow_width) {
-    menu->installEventFilter(new RightAlignedMenuFilter(menu, arrow_width));
+    menu->installEventFilter(new AlignedMenuFilter(menu, MenuXAlign::Right, arrow_width));
+}
+
+void installCenteredMenuFilter(QMenu* menu) {
+    menu->installEventFilter(new AlignedMenuFilter(menu, MenuXAlign::Center));
 }
 
 } // namespace Linea::UI

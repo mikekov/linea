@@ -29,6 +29,7 @@
 #include "display/rendermode.h"
 #include "message-context.h"
 #include "object/sp-gradient.h" // TODO refactor enums out to their own .h file
+#include "preferences.h"
 #include "util/element-properties.h"
 #include "qt/util/virtual-node-type.h"
 
@@ -647,6 +648,7 @@ private:
 
     sigc::scoped_connection _y_axis_flipped;
     sigc::scoped_connection _layer_changed_connection;
+    Inkscape::PrefObserver _translucency_pref_observer;
 
     void reconstruction_start();
     void reconstruction_finish();

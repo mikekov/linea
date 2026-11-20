@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" version="2.0" id="svg1" inkscape:version="1.5-dev-linea (abc684d, 2026-11-19, custom)" sodipodi:docname="on-green-symbolic.svg" standalone="no" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <defs id="defs1" />
+  <style id="style1">
+.success { fill: #1b722f; }
+  </style>
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.1" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:zoom="2" inkscape:cx="7.75" inkscape:cy="8" inkscape:window-width="1512" inkscape:window-height="916" inkscape:window-maximized="0" inkscape:current-layer="svg1">
+    <inkscape:grid type="xygrid" id="grid1" units="px" originx="0" originy="0" spacingx="1" spacingy="1" empcolor="#6aabcb" empopacity="0.3607843137" color="#6aabcb" opacity="0.180392" empspacing="5" enabled="true" visible="true" />
+  </sodipodi:namedview>
+  <circle style="opacity:0.3;stroke:none" id="path2" cx="8" cy="8" r="7" class="success" />
+  <g id="on" />
+  <path style="fill:none;stroke:black;stroke-width:1.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1" d="M 5.396056492,6.424868408 8,10.1599645 14.64685186,0.645839693" id="path3" sodipodi:nodetypes="ccc" />
+  <path style="fill:none;stroke:#000000" id="path4" sodipodi:type="arc" sodipodi:cx="8" sodipodi:cy="8" sodipodi:rx="6.5" sodipodi:ry="6.5" sodipodi:start="5.813891172" sodipodi:end="5.209524831" sodipodi:arc-type="arc" d="M 13.79727033,5.060330502 A 6.5,6.5 0 0 1 11.7787688,13.28875281 6.5,6.5 0 0 1 3.340270367,12.53176784 6.5,6.5 0 0 1 2.818490686,4.07546675 6.5,6.5 0 0 1 11.09991531,2.286811306" sodipodi:open="true" />
+</svg>

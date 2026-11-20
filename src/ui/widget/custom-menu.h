@@ -56,6 +56,10 @@ void createCustomMenuInto(QMenu* menu, std::span<const CustomMenuItem> items, bo
 
 void installRightAlignedMenuFilter(QMenu* menu, int arrow_width = 16);
 
+// Center the menu horizontally under its parent button (same vertical rules:
+// below the button, flipping above at the screen edge).
+void installCenteredMenuFilter(QMenu* menu);
+
 } // namespace Linea::UI
 
 #endif // LINEA_UI_WIDGET_CUSTOM_MENU_H

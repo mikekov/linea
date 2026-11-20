@@ -13,7 +13,15 @@ import argparse
 from pathlib import Path
 
 
-def process_svg_file(input_path, output_path, color, background_color, recolor=True):
+# Semantic style classes get lighter fill variants in the dark theme so the
+# accents stay legible on dark backgrounds. Matched by class name, not color.
+SEMANTIC_DARK_COLORS = {
+    'success': '#4ab563',
+    'error': '#f94657',
+}
+
+
+def process_svg_file(input_path, output_path, color, background_color, recolor=True, semantic_colors=None):
     """Process a single SVG file: normalize the header for Qt resource loading and,
     when recolor is True, replace black/white with the specified theme colors."""
     with open(input_path, 'r', encoding='utf-8') as f:
@@ -42,21 +50,38 @@ def process_svg_file(input_path, output_path, color, background_color, recolor=T
             modified_content = modified_content.replace('#ffffff', background_color)
             modified_content = modified_content.replace('#FFFFFF', background_color)
 
+        # Change colors in a style block for a dark theme. Target semantic classes (.success/.error)
+        if semantic_colors:
+            for cls, new_color in semantic_colors.items():
+                pattern = r'(\.' + cls + r'\s*\{[^}]*?fill\s*:\s*)#[0-9a-fA-F]{3,6}'
+                modified_content = re.sub(
+                    r'(<style\b[^>]*>.*?</style>)',
+                    lambda m: re.sub(pattern, r'\g<1>' + new_color, m.group(1)),
+                    modified_content,
+                    flags=re.DOTALL,
+                )
+
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(modified_content)
 
 
-def process_icons(source_dirs, output_dir, color, background_color):
+def process_icons(source_dirs, output_dir, color, background_color, semantic_colors=None):
     """Process all SVG files from every source dir into one output dir."""
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
+
+    # Drop stale outputs from previous runs: icons renamed or deleted in the
+    # sources would otherwise linger here and produce duplicate qrc aliases.
+    for stale in output_path.glob('*.svg'):
+        stale.unlink()
 
     for source_dir in source_dirs:
         for svg_file in Path(source_dir).glob('*.svg'):
             output_file = output_path / svg_file.name
             # files without the -symbolic suffix keep their own colors
             recolor = svg_file.stem.endswith('-symbolic')
-            process_svg_file(svg_file, output_file, color, background_color, recolor)
+            process_svg_file(svg_file, output_file, color, background_color, recolor,
+                             semantic_colors if recolor else None)
             print(f"Processed: {svg_file.name} -> {color} on {background_color}" if recolor
                   else f"Copied: {svg_file.name} (colors intact)")
 
@@ -128,7 +153,8 @@ def main():
 
     # Process dark theme icons
     print("Processing dark theme icons...")
-    process_icons(source_dirs, dark_output, args.dark_color, args.dark_bg_color)
+    process_icons(source_dirs, dark_output, args.dark_color, args.dark_bg_color,
+                  SEMANTIC_DARK_COLORS)
     generate_qrc(dark_output, dark_qrc, "/")
 
     print()

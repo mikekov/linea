@@ -103,6 +103,11 @@ target_sources(linea_base PRIVATE
 	widget/toolbar.ui
 	widget/custom-menu.cpp
 	widget/main-toolbar.cpp
+	widget/mask-operations-popup.cpp
+	widget/mask-operations-popup.ui
+	widget/operations-popup.cpp
+	widget/path-operations-popup.cpp
+	widget/path-operations-popup.ui
 	widget/flow-layout.cpp
 	widget/paint-enums.cpp
 	widget/registry.cpp

@@ -25,6 +25,7 @@
 #include "object/sp-namedview.h"
 #include "object/sp-item.h"
 #include "object/sp-item-group.h"
+#include "feature-support.h"
 #include "preferences.h"
 #include "ui/desktop/desktop-widget.h"
 #include "selection.h"
@@ -292,6 +293,14 @@ void SPDesktop::setupCanvasDrawing() {
     _layer_changed_connection = _layerManager->connectCurrentLayerChanged([this](SPGroup *group) {
         updateTranslucencyGroups();
     });
+
+    // Re-evaluate when the effect is toggled while already inside a group.
+    _translucency_pref_observer = Inkscape::Preferences::PreferencesObserver::create("/options",
+        [this](auto &entry) {
+            if (entry.getPath() == "/options/translucency_groups/value") {
+                updateTranslucencyGroups();
+            }
+        });
 
     // Connect drawing events to desktop handler to match GTK behavior
     _canvasDrawing->connect_drawing_event(sigc::mem_fun(*this, &SPDesktop::drawingHandler));
@@ -1654,23 +1663,15 @@ Inkscape::CanvasItemGroup* SPDesktop::getCanvasPagesFg() const {
  */
 void SPDesktop::updateTranslucencyGroups()
 {
-    auto const prefs = Inkscape::Preferences::get();
-
-    SPGroup *group = _layerManager->currentLayer();
-    switch(prefs->getInt("/options/translucency_groups/value", 1)) {
-        case 0: // Off mode
-            group = nullptr;
-            break;
-        case 1: // Group mode, only groups
-            if (group->isLayer()) {
-                group = nullptr;
-            }
-            break;
-        case 2: // Layer mode, any layer
-            break;
-    }
-    // The selected group is solid, everything else is translucent
-    _translucency_groups->setSolidItem(_translucency_key, group);
+    // The isolated group is solid, everything else is translucent.
+    // Group state (group_isolation_active) is the trigger; the preference
+    // merely enables/disables the visual effect.
+    const bool enabled =
+        Preferences::get()->getInt("/options/translucency_groups/value", 1) != 0;
+    _translucency_groups->setSolidItem(_translucency_key,
+        enabled && Linea::group_isolation_active(*_layerManager)
+            ? _layerManager->currentLayer()
+            : nullptr);
 }
 
 // } // namespace QtUI

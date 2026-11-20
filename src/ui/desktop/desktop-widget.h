@@ -214,6 +214,8 @@ private:
 
     // Selection sync
     sigc::scoped_connection _selectionChanged;
+    sigc::scoped_connection _layerChanged;
+    sigc::scoped_connection _stateChanged;
     sigc::scoped_connection _styleChanged;
     sigc::scoped_connection _desktopStyleChanged;
     sigc::scoped_connection _desktopToolChanged;

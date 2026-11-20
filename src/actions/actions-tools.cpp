@@ -35,6 +35,7 @@
 #include "seltrans.h"
 #include "ui/tool/multi-path-manipulator.h"
 #include "ui/tool/node-types.h"
+#include "ui/tools/booleans-tool.h"
 #include "ui/tools/connector-tool.h"
 #include "ui/tools/node-tool.h"
 #include "ui/tools/pen-tool.h"
@@ -119,6 +120,19 @@ void start_stkey(SPDesktop* desk, Inkscape::SelTrans::StickyTransform type) {
     }
 
     select_tool->_seltrans->grab_stkey(desk->point(), type);
+}
+
+void booleans_finish(SPDesktop* desk, bool commit) {
+    if (!desk || !is_tool("ShapeBuilder", desk)) return;
+
+    auto tool = dynamic_cast<Inkscape::UI::Tools::InteractiveBooleansTool*>(desk->getTool());
+    if (!tool) return;
+
+    if (commit) {
+        tool->shape_commit();
+    } else {
+        tool->shape_cancel();
+    }
 }
 
 void focus_first_widget(SPDesktop* desk) {
@@ -245,8 +259,12 @@ const auto toolMeta = std::to_array<ActionSpec<SPDesktop>>({
         [](auto desk){ tool_switch("Select", desk); }, [](auto desk){ return is_tool("Select", desk); }},
     {"tool-node",        N_("Node"),           SECTION, N_("Edit paths by nodes"),                   "tool-node-editor",
         [](auto desk){ tool_switch("Node", desk); }, [](auto desk){ return is_tool("Node", desk); }},
-    {"tool-shape-builder", N_("Shape Builder"), SECTION, N_("Build shapes with the Boolean tool"),   "draw-booleans",
+    {"tool-shape-builder", N_("Shape Builder"), SECTION, N_("Build shapes with the Boolean tool"),   "shape-builder",
         [](auto desk){ tool_switch("ShapeBuilder", desk); }, [](auto desk){ return is_tool("ShapeBuilder", desk); }},
+    {"tool-shape-builder-accept", N_("Accept Shapes"), SECTION, N_("Apply the shape builder result and return to Select"), "on-green",
+        [](auto desk){ booleans_finish(desk, true); }, nullptr, nullptr, [](auto desk){ return is_tool("ShapeBuilder", desk); }},
+    {"tool-shape-builder-cancel", N_("Cancel Shape Builder"), SECTION, N_("Discard the shape builder result and return to Select"), "off-red",
+        [](auto desk){ booleans_finish(desk, false); }, nullptr, nullptr, [](auto desk){ return is_tool("ShapeBuilder", desk); }},
     {"tool-rect",        N_("Rectangle"),      SECTION, N_("Create rectangles and squares"),         "draw-rectangle",
         [](auto desk){ tool_switch("Rect", desk); }, [](auto desk){ return is_tool("Rect", desk); }},
     {"tool-ellipse",     N_("Oval"),           SECTION, N_("Create circles, ellipses and arcs"),     "draw-ellipse",

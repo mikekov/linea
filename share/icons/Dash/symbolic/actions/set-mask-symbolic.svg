@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" version="2.0" id="svg1" inkscape:version="1.5-dev-linea (abc684d, 2026-11-19, custom)" sodipodi:docname="set-mask-symbolic.svg" standalone="no" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <defs id="defs1">
+    <linearGradient id="gradient4" inkscape:collect="always">
+      <stop style="stop-color:#000000;stop-opacity:0.7498337766;" offset="0" id="stop4" />
+      <stop style="stop-color:#000000;stop-opacity:0;" offset="1" id="stop5" />
+    </linearGradient>
+    <linearGradient inkscape:collect="always" xlink:href="#gradient4" id="linearGradient5" x1="2" y1="8" x2="14" y2="8" gradientUnits="userSpaceOnUse" />
+  </defs>
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.1" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:zoom="56" inkscape:cx="7.991071429" inkscape:cy="8" inkscape:window-width="1512" inkscape:window-height="916" inkscape:window-maximized="0" inkscape:current-layer="svg1">
+    <inkscape:grid type="xygrid" id="grid1" units="px" originx="0" originy="0" spacingx="1" spacingy="1" empcolor="#6aabcb" empopacity="0.3607843137" color="#6aabcb" opacity="0.1803921569" empspacing="5" enabled="true" visible="false" />
+  </sodipodi:namedview>
+  <g id="overlay-mask" transform="matrix(1.75,0,0,1.75,-13,-13)">
+    <path id="Subtract" d="M 16,16 H 8 V 8 h 8 z M 11.98609098,8.571428571 C 10.10566004,8.571428571 8.581363586,10.1064 8.581363586,12 c 0,1.8936 1.524296454,3.42857143 3.404727394,3.42857143 1.88043094,0 3.40472739,-1.53497143 3.40472739,-3.42857143 0,-1.8936 -1.52429645,-3.428571429 -3.40472739,-3.428571429 z" fill="black" sodipodi:nodetypes="cccccsssss" />
+  </g>
+  <circle style="fill:url(#linearGradient5);stroke:none" id="path4" cx="8" cy="8" r="6" />
+</svg>

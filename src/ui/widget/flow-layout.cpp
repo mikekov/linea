@@ -20,6 +20,13 @@ bool isEdgeSpacer(QLayoutItem* item) {
     return (item->expandingDirections() & Qt::Horizontal) == 0;
 }
 
+// Hidden widget items contribute nothing — standard layout behavior.
+// (Not isEmpty(): QSpacerItem::isEmpty() is always true and would
+// wrongly drop spacers.)
+bool itemVisible(QLayoutItem const* item) {
+    return !item->widget() || !item->widget()->isHidden();
+}
+
 }
 FlowLayout::FlowLayout(QWidget* parent, int margin, int hSpacing, int vSpacing)
     : QLayout(parent)
@@ -108,6 +115,7 @@ QSize FlowLayout::minimumSize() const {
 
     int minW = 1;
     for (const QLayoutItem* item : _items) {
+        if (!itemVisible(item)) continue;
         minW = std::max(minW, item->sizeHint().width());
     }
 
@@ -126,10 +134,10 @@ QSize FlowLayout::sizeHint() const {
 
     int start = 0;
     int end = static_cast<int>(_items.size()) - 1;
-    while (start < _items.size() && isEdgeSpacer(_items[start])) {
+    while (start < _items.size() && (isEdgeSpacer(_items[start]) || !itemVisible(_items[start]))) {
         ++start;
     }
-    while (end >= start && isEdgeSpacer(_items[end])) {
+    while (end >= start && (isEdgeSpacer(_items[end]) || !itemVisible(_items[end]))) {
         --end;
     }
     if (start > end) {
@@ -141,12 +149,14 @@ QSize FlowLayout::sizeHint() const {
     int hSpace = horizontalSpacing();
 
     for (int i = start; i <= end; ++i) {
+        if (!itemVisible(_items[i])) continue;
+
         QSize sz = _items[i]->sizeHint();
-        width += sz.width();
-        height = std::max(height, sz.height());
-        if (i != end) {
+        if (width > 0) {
             width += hSpace;
         }
+        width += sz.width();
+        height = std::max(height, sz.height());
     }
 
     return {width + left + right, height + top + bottom};
@@ -181,6 +191,14 @@ QSize FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
     int left, top, right, bottom;
     getContentsMargins(&left, &top, &right, &bottom);
 
+    std::vector<QLayoutItem*> items;
+    items.reserve(_items.size());
+    for (QLayoutItem* item : _items) {
+        if (itemVisible(item)) {
+            items.push_back(item);
+        }
+    }
+
     QRect effective = rect.adjusted(+left, +top, -right, -bottom);
     effective.setWidth(std::max(1, effective.width()));
     effective.setHeight(std::max(1, effective.height()));
@@ -192,15 +210,15 @@ QSize FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
     int maxRowWidth = 0;
 
     int i = 0;
-    while (i < _items.size()) {
+    while (i < items.size()) {
         int rowStart = i;
         int fixedItemWidth = 0;
         int stretchCount = 0;
         int rowHeight = 0;
 
         // Collect items for the current row.
-        while (i < _items.size()) {
-            QLayoutItem* item = _items[i];
+        while (i < items.size()) {
+            QLayoutItem* item = items[i];
             bool stretch = (item->expandingDirections() & Qt::Horizontal) != 0;
             int itemW = stretch ? 1 : item->sizeHint().width();
             int projected = fixedItemWidth + itemW + ((i == rowStart) ? 0 : spaceX);
@@ -220,17 +238,17 @@ QSize FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
         int rowEnd = i;
         if (rowEnd == rowStart) {
             // Defensive: a single oversized item still needs to be laid out.
-            rowHeight = std::max(rowHeight, _items[rowStart]->sizeHint().height());
+            rowHeight = std::max(rowHeight, items[rowStart]->sizeHint().height());
             rowEnd = ++i;
         }
 
         // Suppress fixed spacers that would sit at the left/right edge of a wrapped row.
         int first = rowStart;
         int last = rowEnd - 1;
-        while (first < rowEnd && isEdgeSpacer(_items[first])) {
+        while (first < rowEnd && isEdgeSpacer(items[first])) {
             ++first;
         }
-        while (last >= rowStart && isEdgeSpacer(_items[last])) {
+        while (last >= rowStart && isEdgeSpacer(items[last])) {
             --last;
         }
         if (first > last) {
@@ -244,7 +262,7 @@ QSize FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
         stretchCount = 0;
         rowHeight = 0;
         for (int k = placeStart; k < placeEnd; ++k) {
-            QLayoutItem* item = _items[k];
+            QLayoutItem* item = items[k];
             bool stretch = (item->expandingDirections() & Qt::Horizontal) != 0;
             fixedItemWidth += stretch ? 1 : item->sizeHint().width();
             if (stretch) {
@@ -277,7 +295,7 @@ QSize FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
         }
 
         for (int k = placeStart; k < placeEnd; ++k) {
-            QLayoutItem* item = _items[k];
+            QLayoutItem* item = items[k];
             bool stretch = (item->expandingDirections() & Qt::Horizontal) != 0;
             QSize hint = item->sizeHint();
             int w = hint.width();
@@ -306,7 +324,7 @@ QSize FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
         }
 
         y += rowHeight;
-        if (i < _items.size()) {
+        if (i < items.size()) {
             y += spaceY;
         }
     }

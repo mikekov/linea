@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" version="2.0" id="svg1" inkscape:version="1.5-dev-linea (abc684d, 2026-11-19, custom)" sodipodi:docname="clip-inverted-symbolic.svg" standalone="no" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview id="namedview1" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.1" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:zoom="34.66776251" inkscape:cx="8.148780871" inkscape:cy="7.182465263" inkscape:window-width="1512" inkscape:window-height="916" inkscape:window-maximized="0" inkscape:current-layer="svg1">
+    <inkscape:grid type="xygrid" id="grid1" units="px" originx="0" originy="0" spacingx="1" spacingy="1" empcolor="#6aabcb" empopacity="0.3607843137" color="#6aabcb" opacity="0.1803921569" empspacing="5" enabled="true" visible="false" />
+  </sodipodi:namedview>
+  <g id="overlay-clip" clip-path="url(#clip0_3684_42751)" transform="rotate(-90,8.00049,8.87963832)">
+    <path id="Union" d="m 14.793,8.85578 c 0.1012,-0.12144 0.2847,-0.12935 0.3965,-0.01757 0.3663,0.36638 0.3932,0.95158 0.0615,1.34959 l -1.9199,2.3018 0.5293,0.6543 c 0.1943,-0.092 0.4113,-0.1436 0.6406,-0.1436 0.8284,0 1.5,0.6716 1.5,1.5 -2e-4,0.8283 -0.6717,1.5 -1.5,1.5 -0.8283,0 -1.4998,-0.6717 -1.5,-1.5 0,-0.3271 0.1055,-0.6295 0.2832,-0.876 L 12.5,12.6556 11.7168,13.6243 c 0.1779,0.2466 0.2842,0.5487 0.2842,0.876 -2e-4,0.8283 -0.6717,1.5 -1.5,1.5 -0.82832,0 -1.49981,-0.6717 -1.50002,-1.5 0,-0.8284 0.67157,-1.5 1.50002,-1.5 0.2286,0 0.4447,0.0521 0.6386,0.1436 L 11.668,12.4905 9.74805,10.1878 C 9.41638,9.78984 9.44335,9.2046 9.80957,8.83821 9.92132,8.72645 10.1048,8.73441 10.2061,8.85578 L 12.5,11.6077 Z m -4.292,4.94432 c -0.3866,0 -0.70022,0.3136 -0.70022,0.7002 2.2e-4,0.3864 0.31372,0.7002 0.70022,0.7002 0.3864,0 0.7,-0.3138 0.7002,-0.7002 0,-0.3866 -0.3136,-0.7002 -0.7002,-0.7002 z m 4,0 c -0.3866,0 -0.7002,0.3136 -0.7002,0.7002 2e-4,0.3864 0.3137,0.7002 0.7002,0.7002 0.3864,0 0.7,-0.3138 0.7002,-0.7002 0,-0.3866 -0.3136,-0.7002 -0.7002,-0.7002 z" fill="black" />
+  </g>
+  <defs id="defs1">
+    <clipPath id="clip0_3684_42751">
+      <rect width="16" height="16" fill="white" id="rect1" />
+    </clipPath>
+  </defs>
+  <path id="path1" style="stroke:#000000;stroke-width:1;stroke-dasharray:1, 1" d="m 8.495638823,4.471478712 -1.938899148,-0.0100696 c -1.621627546,-0.0258139 -3.098414473,0.932932262 -3.739321573,2.427608307 -0.6409071,1.494676046 -0.319168935,3.229649021 0.814662185,4.393065591 1.13383112,1.16341658 2.855493986,1.52516385 4.359363546,0.91596785 1.503869557,-0.609196 2.492494467,-2.06884197 2.503263247,-3.695919548 l 0.005725,-2.810880063" sodipodi:nodetypes="ccssscc" />
+  <path id="path2" style="opacity:0.15;fill:#000000" d="M 11,4 H 6.5 C 4.014718627,4 2,6.01471863 2,8.5 2,10.98528137 4.014718627,13 6.5,13 8.98528137,13 11,10.98528137 11,8.5 V 4 L 13,2 V 15 H 0 V 2 h 13 z" sodipodi:nodetypes="cssssccccccc" />
+</svg>

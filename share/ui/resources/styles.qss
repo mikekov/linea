@@ -688,6 +688,23 @@ Linea--UI--IconComboBox:pressed {
     background-color: palette(mid);
 }
 
+/* Popup tile grid — icon-over-label QToolButton tiles plus separator frames
+   (PathOperationsPopup, MaskOperationsPopup) */
+QWidget[class="tile-popup"] QToolButton {
+    font-size: 10px;
+    padding: 4px 2px;
+    border-radius: 4px;
+}
+
+QWidget[class="tile-popup"] QToolButton:hover {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+QWidget[class="tile-popup"] QFrame {
+    color: palette(mid);
+}
+
 /* Popup menu styling */
 QWidget[class="popup-menu"] {
     border-radius: 8px;

@@ -32,7 +32,9 @@
 #include "dialog/xml-settings-dialog.h"
 #include "document-undo.h"
 #include "document.h"
+#include "feature-support.h"
 #include "layer-manager.h"
+#include "props/selection-state-model.h"
 #include "interpreter.h"
 #include "linea-application.h"
 #include "object-tree-view.h"
@@ -530,6 +532,11 @@ void SPDesktopWidget::_clearPanels() {
 void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
     if (!desktop) {
         _clearPanels();
+        _toolbar->setShapeBuilderVisible(false);
+        _toolbar->setPathOpsVisible(false);
+        _toolbar->setMaskOpsVisible(false);
+        _toolbar->setShapeBuilderCancelVisible(false);
+        _toolbar->setIsolationExitVisible(false);
         _canvasFrame->setCurrentCanvas(nullptr, nullptr);
         return;
     }
@@ -542,6 +549,11 @@ void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
         // warning
         g_warning("SPDesktopWidget: Desktop not found in canvas map!");
         _clearPanels();
+        _toolbar->setShapeBuilderVisible(false);
+        _toolbar->setPathOpsVisible(false);
+        _toolbar->setMaskOpsVisible(false);
+        _toolbar->setShapeBuilderCancelVisible(false);
+        _toolbar->setIsolationExitVisible(false);
         _canvasFrame->setCurrentCanvas(nullptr, nullptr);
         return;
     }
@@ -553,6 +565,7 @@ void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
     _selectionChanged = desktop->getSelection()->connectChanged([this](Inkscape::Selection* sel) {
         _leftPanel->updateSelectionFromDesktop();
         _updateBothPanels();
+        _toolbar->setShapeBuilderVisible(Linea::shape_builder_supported(sel));
         if (sel && !sel->isEmpty()) {
             _restorePreviousTool();
         }
@@ -571,13 +584,26 @@ void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
         // on a shape), check the corresponding tool action.
         ActionRegistry::get().syncAllActions();
 
-        // selection takes precedent over tool style: don't update if there's a selection
-        if (_desktop && !_desktop->getSelection()->isEmpty()) return;
-
         updatePaintIndicator(_toolbar->paintIndicator(), _desktop);
     });
 
+    _layerChanged = desktop->layerManager().connectCurrentLayerChanged([this, desktop](SPGroup*) {
+        _toolbar->setIsolationExitVisible(Linea::group_isolation_active(desktop->layerManager()));
+    });
+
+    _stateChanged = desktop->stateModel()->signalChanged().connect(
+        [this](const Linea::Props::SelectionState& state, const Linea::Props::SelectionDelta&, unsigned) {
+            _toolbar->setPathOpsVisible(Linea::path_operations_supported(state));
+            _toolbar->setMaskOpsVisible(Linea::mask_operations_supported(state));
+            _toolbar->setShapeBuilderCancelVisible(Linea::shape_builder_active(state));
+        });
+
     _updateBothPanels();
+    _toolbar->setShapeBuilderVisible(Linea::shape_builder_supported(desktop->getSelection()));
+    _toolbar->setPathOpsVisible(Linea::path_operations_supported(desktop->stateModel()->state()));
+    _toolbar->setMaskOpsVisible(Linea::mask_operations_supported(desktop->stateModel()->state()));
+    _toolbar->setShapeBuilderCancelVisible(Linea::shape_builder_active(desktop->stateModel()->state()));
+    _toolbar->setIsolationExitVisible(Linea::group_isolation_active(desktop->layerManager()));
     refreshPaintIndicator(_toolbar->paintIndicator(), _colorPalette, desktop,
                           Linea::query_style_properties(desktop->getSelection()->items()));
 }

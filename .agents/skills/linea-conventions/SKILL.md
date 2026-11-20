@@ -68,6 +68,16 @@ If you find yourself copying code from another file, **stop**. Do not paste even
 
 Before editing, identify the canonical implementation and reuse it directly. After editing, compare the changed logic against all matches found during the search and consolidate any overlap before building. When reviewing your own changes before finishing, check: did I write anything that already exists elsewhere? If yes, consolidate.
 
+#### Repetition inside one file or one edit
+
+This rule is not only about copying between files. If the same expression, guard, cast, accessor call, predicate, or property stanza appears **more than twice in one file or one change**, extract it once:
+
+- Repeated null-guard/accessor expressions (e.g. `x ? x->getY() : nullptr` in several functions) → one file-local `static` helper.
+- Repeated per-widget setup → one loop over the widgets, or one QSS rule for shared styling (`.ui` `<style>` blocks, `class` properties, stylesheets) — not N copies of `<property>`/setter calls.
+- The same condition tested in several places → one named predicate.
+
+Single-line code counts: repetition is about occurrences, not block size. The trigger is the **third** repetition — write a helper at two uses if it's clearly warranted, but a third copy means extract it; never paste a fourth.
+
 ### Always use `auto`, never `auto*`
 
 When the right-hand side of a declaration is a pointer (`new`, `cast<>`, `static_cast<T*>`, `getFirstStop()`, any pointer-returning call), write `auto`, **not** `auto*`.

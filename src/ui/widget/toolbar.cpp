@@ -251,6 +251,12 @@ void Toolbar::setCentered(bool centered) {
     _flow_layout->setCentering(centered);
 }
 
+QSize Toolbar::sizeHint() const {
+    if (!_flow_layout) return QWidget::sizeHint();
+
+    return _flow_layout->sizeHint().expandedTo(minimumSize()).boundedTo(maximumSize());
+}
+
 int Toolbar::heightForWidth(int width) const {
     return _ui->containerWidget ? _ui->containerWidget->heightForWidth(width) : -1;
 }
@@ -265,10 +271,27 @@ QWidget* Toolbar::containerWidget() const {
 
 Toolbar::~Toolbar() = default;
 
-QToolButton* Toolbar::addButton(const std::string& action_id) {
+QToolButton* Toolbar::createButton(const std::string& action_id) {
     auto& a = ActionRegistry::get();
     auto button = new QToolButton(this);
     bindAction(button, a.action(action_id));
+    return button;
+}
+
+QToolButton* Toolbar::createPopupButton(const QIcon& icon, const QString& tooltip, QWidget* popup) {
+    auto button = new QToolButton(this);
+    button->setIcon(icon);
+    button->setToolTip(tooltip);
+    button->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    // Width fits icon + menu indicator (a fixed 30px square would squeeze
+    // the pan-down over the icon).
+    setMenuButtonSize(button);
+    attachPopupWidget(button, popup);
+    return button;
+}
+
+QToolButton* Toolbar::addButton(const std::string& action_id) {
+    auto button = createButton(action_id);
     _flow_layout->insertWidget(_insert_pos++, button);
     return button;
 }
@@ -331,6 +354,18 @@ void Toolbar::attachDynamicMenu(QToolButton* button,
 
         createCustomMenuInto(menu, items, true);
     });
+}
+
+void Toolbar::attachPopupWidget(QToolButton* button, QWidget* widget) {
+    auto menu = new QMenu(button);
+    menu->setObjectName("customToolMenu");
+    auto action = new QWidgetAction(menu);
+    action->setDefaultWidget(widget);
+    menu->addAction(action);
+    button->setMenu(menu);
+    button->setPopupMode(QToolButton::InstantPopup);
+    // Center the menu horizontally under the button.
+    installCenteredMenuFilter(menu);
 }
 
 QToolButton* Toolbar::addDynamicDropDownButton(std::function<std::vector<Linea::UI::CustomMenuItem>()> builder) {

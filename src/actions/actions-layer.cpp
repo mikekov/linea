@@ -494,7 +494,7 @@ static auto layer_action_defs = std::to_array<ActionSpec<SPDesktop>>({
 
     //se use Layer technology even if they don't act on layers.
     {"selection-group-enter",           N_("Enter Group"),                      SECTION_SELECT,    N_("Enter group"),                                   nullptr, group_enter},
-    {"selection-group-exit",            N_("Exit Group"),                       SECTION_SELECT,    N_("Exit group"),                                    nullptr, group_exit},
+    {"selection-group-exit",            N_("Exit Group"),                       SECTION_SELECT,    N_("Exit group"),                                    "exit", group_exit},
     // clang-format on
 });
 

@@ -76,6 +76,12 @@ void updatePaintIndicatorPart(PaintIndicator* p, const std::optional<Linea::Pain
     }
 }
 
+// Return true if there are no SPItems selected; ignore selected SPObjects,
+// as those do not affect the paint indicator
+bool isSelectionEmpty(Inkscape::Selection* selection) {
+    return !selection || selection->items().empty();
+}
+
 } // namespace
 
 void updatePaintIndicator(PaintIndicator* p, const Linea::mixed_property<Linea::PaintProp>& fill,
@@ -97,7 +103,7 @@ void updatePaintIndicator(PaintIndicator* p, const Linea::mixed_property<Linea::
 
 void updatePaintIndicator(PaintIndicator* p, SPDesktop* desktop) {
     // if selection is not empty, don't change paint indicator
-    if (!desktop || !desktop->getSelection()->isEmpty()) return;
+    if (!desktop || !isSelectionEmpty(desktop->getSelection())) return;
 
     auto tool = desktop->getTool();
 
@@ -119,7 +125,7 @@ void refreshPaintIndicator(PaintIndicator* p, ColorPaletteWidget* palette, SPDes
                            const Linea::PresentationState& presentation) {
     if (!desktop) return;
 
-    if (desktop->getSelection()->isEmpty()) {
+    if (isSelectionEmpty(desktop->getSelection())) {
         palette->updateCurrentColorIndicator({}, {});
         updatePaintIndicator(p, desktop);
     } else {

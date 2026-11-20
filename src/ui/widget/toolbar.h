@@ -89,6 +89,11 @@ public:
 
     void addWidget(QWidget* widget);
 
+    // Attach a caller-provided widget as the button's popup. The widget is
+    // built once (unlike attachDynamicMenu which rebuilds on each open).
+    // Ownership transfers to the popup menu; a drop-down indicator is shown.
+    void attachPopupWidget(QToolButton* button, QWidget* widget);
+
     // Access the underlying layout insert position (for subclass customisation).
     int insertPos() const { return _insert_pos; }
 
@@ -100,11 +105,22 @@ public:
 
     void setCentered(bool centered);
 
+    QSize sizeHint() const override;
     int heightForWidth(int width) const override;
     QSize sizeForWidth(int width) const;
 
 protected:
     QWidget* containerWidget() const;
+
+    // Create an action-bound button without inserting it into the layout —
+    // for subclass-managed containers (e.g. reserved slots).
+    QToolButton* createButton(const std::string& action_id);
+
+    // Create an icon button with a pan-down drop-down indicator whose popup
+    // is a caller-provided widget (built once). Not inserted into the layout.
+    QToolButton* createPopupButton(const QIcon& icon, const QString& tooltip, QWidget* popup);
+
+    int buttonSize() const { return _button_size; }
 
 private:
     std::unique_ptr<Ui::Toolbar> _ui;
@@ -114,7 +130,6 @@ private:
     int _button_size = 0;
 
     void setButtonSize(QToolButton* button);
-    int buttonSize() const { return _button_size; }
 
     QAction* getAction(QToolButton* button) const;
     void disconnectAction(QToolButton* button);

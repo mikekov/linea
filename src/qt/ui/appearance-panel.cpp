@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "desktop.h"
+#include "feature-support.h"
 #include "image-widget.h"
 #include "label-widget.h"
 #include "page-widget.h"
@@ -145,9 +146,7 @@ void AppearancePanel::setDesktop(SPDesktop* desktop, SPDocument* document, Props
 
     // path operations need two shapes/paths to work
     _binder->visibleWhen(_pathOperations, [](const Props::SelectionState& s) {
-        auto& c = s.element.count;
-        auto n = c.paths + c.rectangles + c.ellipses + c.stars + c.polygon_paths + c.lines + c.textual;
-        return n >= 2;
+        return path_operations_supported(s);
     });
 
 }

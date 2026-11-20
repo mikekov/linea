@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>MaskOperationsPopup</class>
+  <widget class="QWidget" name="MaskOperationsPopup">
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,1">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="horizontalSpacing"><number>0</number></property>
+      <property name="verticalSpacing"><number>0</number></property>
+
+      <item row="0" column="0">
+        <widget class="QToolButton" name="setClipButton">
+          <property name="text"><string>Set Clip</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/clip</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-clip</string></property>
+        </widget>
+      </item>
+      <item row="0" column="1">
+        <widget class="QToolButton" name="inverseClipButton">
+          <property name="text"><string>Inverse Clip</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/clip-inverted</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-inverse-clip</string></property>
+        </widget>
+      </item>
+
+      <item row="1" column="0">
+        <widget class="QToolButton" name="clipGroupButton">
+          <property name="text"><string>Clip Group</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/clip-group</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-clip-group</string></property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="QToolButton" name="setMaskButton">
+          <property name="text"><string>Set Mask</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/set-mask</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-mask</string></property>
+        </widget>
+      </item>
+      <!-- Clip operations -
+      <item row="0" column="0">
+        <widget class="QToolButton" name="setClipButton">
+          <property name="text"><string>Set Clip</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/overlay-clip</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-clip</string></property>
+        </widget>
+      </item>
+      <item row="0" column="1">
+        <widget class="QToolButton" name="inverseClipButton">
+          <property name="text"><string>Inverse Clip</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/powerclip</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-inverse-clip</string></property>
+        </widget>
+      </item>
+      <item row="0" column="2">
+        <widget class="QToolButton" name="releaseClipButton">
+          <property name="text"><string>Release Clip</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/path-clip-edit</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-release-clip</string></property>
+        </widget>
+      </item>
+
+      !- Mask operations -
+      <item row="1" column="0">
+        <widget class="QToolButton" name="setMaskButton">
+          <property name="text"><string>Set Mask</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/overlay-mask</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-mask</string></property>
+        </widget>
+      </item>
+      <item row="1" column="1">
+        <widget class="QToolButton" name="inverseMaskButton">
+          <property name="text"><string>Inverse Mask</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/powermask</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-inverse-mask</string></property>
+        </widget>
+      </item>
+      <item row="1" column="2">
+        <widget class="QToolButton" name="releaseMaskButton">
+          <property name="text"><string>Release Mask</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/path-mask-edit</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-release-mask</string></property>
+        </widget>
+      </item>
+
+      !- Group separator -
+      <item row="2" column="0" colspan="3">
+        <widget class="QFrame" name="separator">
+          <property name="frameShape"><enum>QFrame::HLine</enum></property>
+        </widget>
+      </item>
+
+      !- Clip group -
+      <item row="3" column="0">
+        <widget class="QToolButton" name="clipGroupButton">
+          <property name="text"><string>Clip Group</string></property>
+          <property name="icon"><iconset><normaloff>:/icons/overlay-clipmask</normaloff></iconset></property>
+          <property name="actionName" stdset="0"><string>object-set-clip-group</string></property>
+        </widget>
+      </item>
+      -->
+    </layout>
+  </widget>
+</ui>
