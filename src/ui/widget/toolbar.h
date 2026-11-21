@@ -7,6 +7,7 @@
 #ifndef LINEA_UI_WIDGET_TOOLBAR_H
 #define LINEA_UI_WIDGET_TOOLBAR_H
 
+#include <QMargins>
 #include <QWidget>
 #include <memory>
 #include <span>
@@ -47,6 +48,7 @@ public:
 
     // set margins around the toolbar
     void setMargins(int left, int top, int right, int bottom);
+    QMargins margins() const;
 
     // Add a single action-bound button at the current insertion position.
     QToolButton* addButton(const std::string& action_id);

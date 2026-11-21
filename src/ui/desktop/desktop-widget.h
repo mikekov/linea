@@ -12,6 +12,7 @@
 #include <QSettings>
 #include <QStackedWidget>
 #include <QWidget>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <sigc++/scoped_connection.h>
@@ -44,6 +45,9 @@ class LineaWindow;
 class SPDesktop;
 namespace Inkscape::UI::Widget {
 class Canvas;
+}
+namespace Inkscape::Css {
+class DocumentCustomCSSProperties;
 }
 
 namespace Glib {
@@ -202,6 +206,9 @@ private:
     // Color palette
     void _applyPalette(int index);
     void _applyTileSize(Linea::UI::ColorPaletteOptions::TileSize size);
+    // Document swatch strip: root custom properties of the first <svg:style>
+    std::unique_ptr<Inkscape::Css::DocumentCustomCSSProperties> _docSwatches;
+    void _refreshDocumentSwatches();
 
     // Pages tool auto-switching
     void _switchToPagesTool();

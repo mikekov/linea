@@ -53,7 +53,7 @@ namespace UI::Dialog {
  * @param parent      Parent window (may be nullptr).
  * @param pref_path   Inkscape prefs key used to persist the last-used directory.
  * @param accept      Label for the accept button (e.g. "Open" or "Import").
- * @return            List of selected files (empty if cancelled).
+ * @return            List of selected files (empty if canceled).
  */
 [[nodiscard]] std::vector<Glib::RefPtr<Gio::File>> choose_file_open_images(
     const Glib::ustring& title,
@@ -70,7 +70,7 @@ namespace UI::Dialog {
  * @param filters         Qt file-type filter string (e.g. from create_export_filters()).
  * @param file_name       Initial file name.
  * @param current_folder  Initial folder; updated to the parent of the selected file.
- * @return                Selected file, or empty if cancelled.
+ * @return                Selected file, or empty if canceled.
  */
 [[nodiscard]] Glib::RefPtr<Gio::File> choose_file_save(
     const Glib::ustring& title,
@@ -87,7 +87,7 @@ namespace UI::Dialog {
  * @param mime_type       MIME type to derive a file filter from.
  * @param file_name       Initial file name.
  * @param current_folder  Initial folder; updated to the parent of the selected file.
- * @return                Selected file, or empty if cancelled.
+ * @return                Selected file, or empty if canceled.
  */
 [[nodiscard]] Glib::RefPtr<Gio::File> choose_file_save(
     const Glib::ustring& title,

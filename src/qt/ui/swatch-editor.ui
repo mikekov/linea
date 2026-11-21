@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>SwatchEditor</class>
+  <widget class="QWidget" name="SwatchEditor">
+    <property name="windowTitle">
+      <string>Swatch Editor</string>
+    </property>
+    <property name="minimumHeight">
+      <number>220</number>
+    </property>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+
+      <item row="0" column="0">
+        <widget class="QListWidget" name="swatchList">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>1</horstretch>
+              <verstretch>1</verstretch>
+            </sizepolicy>
+          </property>
+          <property name="iconSize">
+            <size>
+              <width>20</width>
+              <height>20</height>
+            </size>
+          </property>
+          <property name="editTriggers">
+            <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+          </property>
+        </widget>
+      </item>
+      <item row="0" column="1" colspan="1">
+        <layout class="QVBoxLayout" name="buttonLayout">
+          <property name="leftMargin">
+            <number>0</number>
+          </property>
+          <property name="topMargin">
+            <number>0</number>
+          </property>
+          <property name="rightMargin">
+            <number>0</number>
+          </property>
+          <property name="bottomMargin">
+            <number>0</number>
+          </property>
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="addButton">
+              <property name="toolTip">
+                <string>Add new swatch</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/plus</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="deleteButton">
+              <property name="enabled">
+                <bool>false</bool>
+              </property>
+              <property name="toolTip">
+                <string>Delete selected swatch</string>
+              </property>
+              <property name="icon">
+                <iconset>
+                  <normaloff>:/icons/minus</normaloff>
+                </iconset>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="buttonSpacer">
+              <property name="orientation">
+                <enum>Qt::Vertical</enum>
+              </property>
+            </spacer>
+          </item>
+        </layout>
+      </item>
+
+      <!-- Color picker placeholder - populated in code -->
+      <item row="2" column="0" colspan="2">
+        <widget class="QWidget" name="pickerPlaceholder" native="true">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
+      </item>
+
+    </layout>
+  </widget>
+</ui>

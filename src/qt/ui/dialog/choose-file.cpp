@@ -174,7 +174,7 @@ std::vector<Glib::RefPtr<Gio::File>> choose_file_open_images(const Glib::ustring
         return {};
     }
 
-    // Persist the directory for single-file selections (matches GTK behaviour).
+    // Persist the directory for single-file selections (matches GTK behavior).
     if (paths.size() == 1) {
         std::string dir = QFileInfo(paths.first()).dir().absolutePath().toStdString();
         Inkscape::Preferences::get()->setString(pref_path, dir);

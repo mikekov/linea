@@ -700,6 +700,9 @@ void ObjectTreeModel::buildVirtualDocumentProps() {
         _defsWatcher = std::make_unique<ObjectNodeWatcher>(this, pagesPtr, defs->getRepr());
     }
 
+    auto styles = std::make_unique<ObjectTreeItem>(VirtualNodeType::Styles, QObject::tr("Styles"), docPropsPtr);
+    docPropsPtr->addChild(std::move(styles));
+
     auto about = std::make_unique<ObjectTreeItem>(VirtualNodeType::About, QObject::tr("About"), docPropsPtr);
     docPropsPtr->addChild(std::move(about));
 

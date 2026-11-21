@@ -36,7 +36,7 @@ static const rdf_license_t _proprietary_license =
 
 // Other/custom license
 static const rdf_license_t _other_license =
-  {Q_("MetadataLicence|Other"), "", nullptr};
+  {Q_("MetadataLicense|Other"), "", nullptr};
 
 LicensePanel::LicensePanel(QWidget* parent)
     : QWidget(parent)

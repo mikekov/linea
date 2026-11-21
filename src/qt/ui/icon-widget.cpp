@@ -50,7 +50,7 @@ void IconWidget::paintEvent(QPaintEvent* event) {
     if (_icon.isNull()) return;
 
     QPainter painter(this);
-    // Centre the icon rect within the widget
+    // Center the icon rect within the widget
     QRect iconRect(0, 0, _iconSize.width(), _iconSize.height());
     iconRect.moveCenter(rect().center());
 
@@ -62,7 +62,7 @@ void IconWidget::paintEvent(QPaintEvent* event) {
 void IconWidget::changeEvent(QEvent* event) {
     // QPixmapCache::clear() is called during theme switches; Qt follows it
     // with ApplicationPaletteChange.  Trigger a repaint so the icon is
-    // re-rendered from its source with the new theme colours.
+    // re-rendered from its source with the new theme colors.
     if (event->type() == QEvent::ApplicationPaletteChange) {
         update();
     }

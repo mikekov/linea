@@ -44,10 +44,10 @@
 #include "qt/ui/console/console-panel.h"
 #include "qt/ui/console/console-widget.h"
 #include "qt/ui/document-properties-panel.h"
-#include "qt/ui/panel-switch.h"
 #include "qt/ui/welcome-page.h"
 #include "qt/ui/tab-strip.h"
 #include "selection.h"
+#include "style-helpers.h"
 #include "style-internal.h"
 #include "ui/dialog/global-palettes.h"
 #include "ui/desktop/update-paint-indicator.h"
@@ -202,6 +202,9 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
         ColorItem{Inkscape::Colors::Color::rgb(0xffffff)},
     };
     _colorPalette->setBasicColors(std::move(basicColors));
+
+    _docSwatches = std::make_unique<Inkscape::Css::DocumentCustomCSSProperties>(
+        [this] { _refreshDocumentSwatches(); });
 
     // Wire the options popup so palette / tile-size changes apply live.
     auto options = _colorPalettePanel->options();
@@ -524,6 +527,7 @@ void SPDesktopWidget::_clearPanels() {
     _styleChanged.disconnect();
     _desktopStyleChanged.disconnect();
     _desktopToolChanged.disconnect();
+    _docSwatches->setDocument(nullptr);
 
     _leftPanel->clear();
     _rightPanel->clear();
@@ -561,6 +565,8 @@ void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
     // Delegate panel content updates to the panel classes
     _leftPanel->setDesktop(desktop);
     _rightPanel->setDesktop(desktop);
+
+    _docSwatches->setDocument(desktop->getDocument());
 
     _selectionChanged = desktop->getSelection()->connectChanged([this](Inkscape::Selection* sel) {
         _leftPanel->updateSelectionFromDesktop();
@@ -894,6 +900,19 @@ void SPDesktopWidget::onFocus(bool has_focus) {
 
 bool SPDesktopWidget::dialogsDocked() const {
     return _overlayLayout->panelMode(_leftPanel) == OverlayLayout::Mode::Docked;
+}
+
+// Push the document's ':root' custom properties into the swatch strip.
+void SPDesktopWidget::_refreshDocumentSwatches() {
+    std::vector<Swatch> swatches;
+    for (auto& prop : _docSwatches->properties()) {
+        if (auto color = Inkscape::Colors::Color::parse(prop.value)) {
+            color->setName(prop.name);
+            swatches.emplace_back(Swatch{prop, std::move(*color)});
+        }
+        // Non-color properties stay in the stylesheet but are not swatches.
+    }
+    _colorPalette->setSwatchColors(std::move(swatches));
 }
 
 void SPDesktopWidget::_applyPalette(int index) {

@@ -21,6 +21,7 @@
 #include <glib.h>
 #include "ui/tools/tool-base.h"
 #include "util/style-utils.h"
+#include "flat-color.h"
 
 class SPCSSAttr;
 class SPDesktop;
@@ -106,7 +107,7 @@ int sp_desktop_query_style(SPDesktop *desktop, SPStyle *style, int property);
 // if no color is provided, assign "none".
 // If a tool is passed and the selection is empty, the color is also saved to
 // the tool's own style preference (/tools/<tool>/style).
-void sp_desktop_apply_color(SPDesktop* desktop, const std::optional<Inkscape::Colors::Color>& maybeColor, bool stroke, UI::Tools::ToolBase* tool = nullptr);
+void sp_desktop_apply_color(SPDesktop* desktop, const Linea::FlatColor& maybeColor, bool stroke, UI::Tools::ToolBase* tool = nullptr);
 
 // Classify the desktop's current style fill and stroke.
 std::tuple<Linea::PaintProp, Linea::PaintProp, SPIPaintOrder> sp_desktop_get_current_style_paints(SPDesktop* desktop, UI::Tools::ToolBase* tool);

@@ -26,6 +26,8 @@
 #include "metadata-panel.h"
 #include "selection.h"
 #include "separator.h"
+#include "style-helpers.h"
+#include "styles-panel.h"
 #include "util/object-modified-tags.h"
 #include "widget-utils.h"
 #include "props/binder.h"
@@ -152,12 +154,16 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
     // Create pages panel
     _pagesPanel = new PagesPanel(this);
 
+    // Create styles panel
+    _stylesPanel = new StylesPanel(this);
+
     // Add panels to the stacked widget
     _stackedWidget->addWidget(_containerWidget);
     _stackedWidget->addWidget(_aboutPanel);
     _stackedWidget->addWidget(_gridsPanel);
     _stackedWidget->addWidget(_guidesPanel);
     _stackedWidget->addWidget(_pagesPanel);
+    _stackedWidget->addWidget(_stylesPanel);
 
     // Apply left/right padding as content margins to the child panels.
     // The appearance panel is skipped: it receives the padding values in its
@@ -167,7 +173,7 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
         _eraserWidget, _tweakWidget, _sprayWidget, _paintbucketWidget,
         _connectorWidget, _zoomWidget, _nodeWidget,
         _aboutPanel, _documentWidget, _displayWidget,
-        _gridsPanel, _guidesPanel, _pagesPanel,
+        _gridsPanel, _guidesPanel, _pagesPanel, _stylesPanel,
     }) {
         applyHorizontalPadding(widget, paddingLeft, paddingRight);
     }
@@ -215,6 +221,7 @@ void DocumentPropertiesPanel::setSelection(SPDesktop* desktop) {
         _pagesPanel->setDesktop(nullptr);
         _pagesPanel->setDocument(nullptr);
         _pagesPanel->update(nullptr);
+        _stylesPanel->setDocument(nullptr);
         showObjectProperties();
     }
 
@@ -278,6 +285,13 @@ void DocumentPropertiesPanel::setSelection(SPDesktop* desktop) {
 void DocumentPropertiesPanel::onSelectionChanged() {
     if (!_selection || _updatingFromSelection.pending()) return;
 
+    // The first root-level <style> element is what the virtual Styles node
+    // edits — selecting it shows the same panel.
+    if (auto obj = _selection->single();
+        obj && obj->getRepr() == Inkscape::Css::first_style_element(_document)) {
+        showStyles(_document);
+        return;
+    }
     showObjectProperties();
 }
 
@@ -295,6 +309,9 @@ void DocumentPropertiesPanel::showProperties(Linea::UI::VirtualNodeType node) {
             break;
         case Linea::UI::VirtualNodeType::Pages:
             showPages(_desktop->getDocument());
+            break;
+        case Linea::UI::VirtualNodeType::Styles:
+            showStyles(_desktop->getDocument());
             break;
         case Linea::UI::VirtualNodeType::About:
             showDocumentMetadata(_desktop->getDocument());
@@ -353,6 +370,12 @@ void DocumentPropertiesPanel::showPages(SPDocument* document) {
     _pagesPanel->setDesktop(_desktop);
     _pagesPanel->update(document);
     _stackedWidget->setCurrentWidget(_pagesPanel);
+}
+
+void DocumentPropertiesPanel::showStyles(SPDocument* document) {
+    _stylesPanel->setDocument(document);
+    _stylesPanel->setDesktop(_desktop);
+    _stackedWidget->setCurrentWidget(_stylesPanel);
 }
 
 } // namespace Linea::UI

@@ -104,7 +104,7 @@ FontBrowser::FontBrowser(QWidget* parent)
         } else if (_categoryPopup && _categoryPopup->isVisible()) {
             _categoryPopup->hide();
         } else {
-            Q_EMIT cancelled();
+            Q_EMIT canceled();
         }
     });
 

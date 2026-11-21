@@ -63,7 +63,7 @@ Q_SIGNALS:
     // emitted when the user confirms a font (double-click or Enter)
     void fontSelected(const QString& fontspec);
     // emitted on Esc — the host can dismiss/close the browser
-    void cancelled();
+    void canceled();
 
 protected:
     void showEvent(QShowEvent* event) override;

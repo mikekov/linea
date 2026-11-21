@@ -72,6 +72,8 @@ void setLightThemePalette(QPalette& palette) {
     palette.setColor(QPalette::Shadow, QColor::fromRgbF(0.0, 0.0, 0.0, 0.08));
     palette.setColor(QPalette::Highlight, highlight);
     palette.setColor(QPalette::Accent, accent);
+    // disabled colors
+    palette.setColor(QPalette::Disabled, QPalette::Window, light);
     palette.setColor(QPalette::Disabled, QPalette::Text, disabledText);
     palette.setColor(QPalette::Disabled, QPalette::ButtonText, disabledText);
     palette.setColor(QPalette::Disabled, QPalette::WindowText, disabledText);

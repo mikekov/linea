@@ -54,7 +54,7 @@ static QRect activeArea(int fullWidth, int fullHeight) {
 }
 
 /**
- * Map an x-coordinate within the widget to a normalised [0, 1] value.
+ * Map an x-coordinate within the widget to a normalized [0, 1] value.
  */
 double ColorSlider::valueAtX(double x) const {
     QRect area = activeArea(width(), height());
@@ -249,9 +249,9 @@ void ColorSlider::paintEvent(QPaintEvent* /*event*/) {
     QRect area = activeArea(width(), height());
     if (area.isEmpty()) return;
 
-    // --- Build the track rectangle (with rounded ends, centred vertically) ---
+    // --- Build the track rectangle (with rounded ends, centered vertically) ---
     QRect track = area;
-    track.adjust(-4, 0, 4, 0); // stretch so the rounded ends sit under thumb centres
+    track.adjust(-4, 0, 4, 0); // stretch so the rounded ends sit under thumb centers
     int vMargin = (area.height() - TRACK_HEIGHT) / 2;
     track.adjust(0, vMargin, 0, -vMargin);
     track.setHeight(TRACK_HEIGHT);

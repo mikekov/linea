@@ -88,7 +88,7 @@ public:
                     QWidget* parent = nullptr);
     ~PdfImportDialog() override;
 
-    /// Run as a modal QDialog. Returns true if accepted, false if cancelled.
+    /// Run as a modal QDialog. Returns true if accepted, false if canceled.
     bool showDialog();
 
     // ---- getters (call after showDialog() returns true) ----

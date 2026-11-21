@@ -260,6 +260,12 @@ target_sources(linea_base PRIVATE
     ui/style-panel.cpp
     ui/style-panel.h
     ui/style-panel.ui
+    ui/styles-panel.cpp
+    ui/styles-panel.h
+    ui/styles-panel.ui
+    ui/swatch-editor.cpp
+    ui/swatch-editor.h
+    ui/swatch-editor.ui
     util/drawing-utils.cpp
     util/drawing-utils.h
     util/macos-utils.h

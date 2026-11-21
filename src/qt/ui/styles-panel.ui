@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>StylesPanel</class>
+  <widget class="QWidget" name="StylesPanel">
+    <property name="windowTitle">
+      <string>Styles</string>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      <property name="spacing">
+        <number>4</number>
+      </property>
+      <item>
+        <widget class="QSplitter" name="splitter">
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
+          </property>
+          <widget class="QWidget" name="editorPane" native="true">
+            <layout class="QVBoxLayout" name="editorPaneLayout">
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <property name="spacing">
+                <number>4</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="headingLabel">
+                  <property name="text">
+                    <string>Styles</string>
+                  </property>
+                  <property name="class" stdset="0">
+                    <string>panel-heading</string>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <!-- CSS editor placeholder - populated in code -->
+                <widget class="QWidget" name="editorPlaceholder" native="true">
+                  <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                      <horstretch>1</horstretch>
+                      <verstretch>1</verstretch>
+                    </sizepolicy>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="swatchPane" native="true">
+            <layout class="QVBoxLayout" name="swatchPaneLayout">
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <property name="spacing">
+                <number>4</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="swatchesHeading">
+                  <property name="text">
+                    <string>Swatches</string>
+                  </property>
+                  <property name="class" stdset="0">
+                    <string>panel-heading</string>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <widget class="Linea::UI::SwatchEditor" name="swatchEditor"/>
+              </item>
+              <item>
+                <spacer name="swatchSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                    <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                    <size>
+                      <width>0</width>
+                      <height>6</height>
+                    </size>
+                  </property>
+                </spacer>
+              </item>
+            </layout>
+          </widget>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <customwidgets>
+    <customwidget>
+      <class>Linea::UI::SwatchEditor</class>
+      <extends>QWidget</extends>
+      <header>swatch-editor.h</header>
+    </customwidget>
+  </customwidgets>
+  <resources/>
+  <connections/>
+</ui>

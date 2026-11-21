@@ -228,6 +228,10 @@ void Toolbar::setMargins(int left, int top, int right, int bottom) {
     _flow_layout->setContentsMargins(left, top, right, bottom);
 }
 
+QMargins Toolbar::margins() const {
+    return _flow_layout->contentsMargins();
+}
+
 void Toolbar::setDefaultButtonSize(int size) {
     _button_size = size;
 }

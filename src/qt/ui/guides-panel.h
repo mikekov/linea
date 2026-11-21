@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
  * @file
- * Guides panel — show/lock guides and guide colours (Qt version).
+ * Guides panel — show/lock guides and guide colors (Qt version).
  */
 
 #ifndef LINEA_UI_GUIDES_PANEL_H
@@ -32,7 +32,7 @@ namespace Linea::UI {
 class GuideWidget;
 
 /**
- * Passive panel for guide visibility, locking, and colour settings.
+ * Passive panel for guide visibility, locking, and color settings.
  *
  * update(SPNamedView*) reads guide state directly from the namedview.
  * Write callbacks also go straight to the namedview — no SPDesktop needed.

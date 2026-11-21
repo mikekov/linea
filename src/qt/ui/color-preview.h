@@ -41,7 +41,7 @@ public:
     void setBorderRadius(int radius);
 
     // edges kept square instead of rounded — for a swatch butt-joined to a
-    // neighbouring control, e.g. an entry frame sharing one side
+    // neighboring control, e.g. an entry frame sharing one side
     void setFlatEdges(Qt::Edges edges);
 
     // checkerboard tile size in pixels

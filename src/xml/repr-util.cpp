@@ -403,6 +403,19 @@ Inkscape::XML::Node const *sp_repr_lookup_name( Inkscape::XML::Node const *repr,
     return found;
 }
 
+Glib::ustring sp_repr_text_content(const Inkscape::XML::Node* repr) {
+    Glib::ustring ret;
+    if (!repr) {
+        return ret;
+    }
+    for (const Inkscape::XML::Node* child = repr->firstChild(); child != nullptr; child = child->next()) {
+        if (child->type() == Inkscape::XML::NodeType::TEXT_NODE) {
+            ret += child->content();
+        }
+    }
+    return ret;
+}
+
 Glib::ustring sp_repr_lookup_content(Inkscape::XML::Node const *repr, gchar const *name, Glib::ustring otherwise)
 {
     if (auto node = sp_repr_lookup_name(repr, name, 1)) {

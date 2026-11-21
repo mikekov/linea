@@ -94,6 +94,9 @@ void RightPanel::buildUi() {
 
 void RightPanel::buildHeader() {
     auto tb = new Toolbar();
+    auto margins = tb->margins();
+    // align toolbar with panels below
+    tb->setMargins(SIDE_PADDING, margins.top(), SCROLLBAR_PADDING, margins.bottom());
 
     // auto ext = tb->addButton("dialog-open-extension-gallery");
     // auto extensionPopup = new PopupMenu();

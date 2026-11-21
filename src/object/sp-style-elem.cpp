@@ -23,6 +23,7 @@
 #include "libnrtype/font-factory.h" // For font-rule
 #include "xml/document.h"                               // for Document
 #include "xml/node.h"                                   // for Node, NodeType
+#include "xml/repr.h"                                   // for sp_repr_text_content
 
 void SPStyleElemTextNodeObserver::notifyContentChanged(Inkscape::XML::Node &, Inkscape::Util::ptr_shared,
                                                        Inkscape::Util::ptr_shared)
@@ -117,22 +118,6 @@ Inkscape::XML::Node* SPStyleElem::write(Inkscape::XML::Document* xml_doc, Inksca
 
     return repr;
 }
-
-
-/** Returns the concatenation of the content of the text children of the specified object. */
-static Glib::ustring
-concat_children(Inkscape::XML::Node const &repr)
-{
-    Glib::ustring ret;
-    // effic: Initialising ret to a reasonable starting size could speed things up.
-    for (Inkscape::XML::Node const *rch = repr.firstChild(); rch != nullptr; rch = rch->next()) {
-        if ( rch->type() == Inkscape::XML::NodeType::TEXT_NODE ) {
-            ret += rch->content();
-        }
-    }
-    return ret;
-}
-
 
 
 /* Callbacks for SAC-style libcroco parser. */
@@ -472,7 +457,7 @@ void SPStyleElem::read_content() {
     ParseTmp parse_tmp(style_sheet, document);
 
     //XML Tree being used directly here while it shouldn't be.
-    Glib::ustring const text = concat_children(*getRepr());
+    Glib::ustring const text = sp_repr_text_content(getRepr());
     if (!(text.find_first_not_of(" \t\r\n") != std::string::npos)) {
         return;
     }

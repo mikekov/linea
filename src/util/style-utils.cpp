@@ -24,12 +24,26 @@
 #include "style.h"
 #include "style-enums.h"
 #include "ui/widget/paint-enums.h"
-// #include "ui/widget/stroke-style.h"
 #include "util/units.h"
 #include "preferences.h" //TODO - remove
 #include "svg/css-ostringstream.h"
 
 namespace Linea {
+
+namespace {
+
+// Extract the custom property name from a var(--name[, fallback]) token.
+std::optional<std::string> css_var_name(std::string_view value) {
+    auto open = value.find('(');
+    if (open == std::string_view::npos) return std::nullopt;
+    auto close = value.find_first_of(",)", open + 1);
+    auto name = value.substr(open + 1, close == std::string_view::npos ? close : close - open - 1);
+    auto first = name.find_first_not_of(" \t");
+    if (first == std::string_view::npos) return std::nullopt;
+    return std::string(name.substr(first, name.find_last_not_of(" \t") - first + 1));
+}
+
+} // namespace
 
 // Classify a paint into a PaintProp, examining all paint combinations
 // and setting the appropriate mode and associated data.
@@ -69,7 +83,12 @@ PaintProp classify_paint(const SPIPaint& paint, double opacity) {
         }
     }
     else if (paint.isColor() && paint.paintSource == SP_CSS_PAINT_ORIGIN_NORMAL && !paint.isDerived()) {
-        p.mode  = paint.cssVarValue() ? PaintMode::CssSwatch : PaintMode::Solid;
+        if (auto var = paint.cssVarValue()) {
+            p.mode = PaintMode::CssSwatch;
+            p.css_var_name = css_var_name(var->raw());
+        } else {
+            p.mode = PaintMode::Solid;
+        }
         p.color = paint.getColor();
         p.color->setOpacity(opacity);
     }

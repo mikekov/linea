@@ -144,6 +144,9 @@ Inkscape::XML::Node const *sp_repr_lookup_name(Inkscape::XML::Node const *repr,
 
 Glib::ustring sp_repr_lookup_content(Inkscape::XML::Node const *repr, gchar const *name, Glib::ustring otherwise = {});
 
+// Returns the concatenation of the content of the text children of the specified node.
+Glib::ustring sp_repr_text_content(const Inkscape::XML::Node* repr);
+
 std::vector<Inkscape::XML::Node const *> sp_repr_lookup_name_many(Inkscape::XML::Node const *repr,
                                                                   char const *name,
                                                                   int maxdepth = -1);

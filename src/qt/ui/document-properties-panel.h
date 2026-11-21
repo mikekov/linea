@@ -63,6 +63,7 @@ class LicensePanel;
 class GridsPanel;
 class GuidesPanel;
 class PagesPanel;
+class StylesPanel;
 class PopupMenu;
 class ExportWidget;
 class Separator;
@@ -101,6 +102,7 @@ public:
     void showDocumentProperties(SPDocument* document);
     void showDisplayProperties(SPDocument* document);
     void showPages(SPDocument* document);
+    void showStyles(SPDocument* document);
 
     // Prevent copying
     DocumentPropertiesPanel(const DocumentPropertiesPanel&) = delete;
@@ -133,6 +135,8 @@ private:
     DisplayWidget* _displayWidget = nullptr;
     // document pages
     PagesPanel* _pagesPanel = nullptr;
+    // document stylesheet
+    StylesPanel* _stylesPanel = nullptr;
     // -----------------------------------------
     // document object properties
     DynamicSizeStackedWidget* _toolWidgetStack = nullptr;

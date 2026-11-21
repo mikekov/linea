@@ -78,6 +78,15 @@ This rule is not only about copying between files. If the same expression, guard
 
 Single-line code counts: repetition is about occurrences, not block size. The trigger is the **third** repetition — write a helper at two uses if it's clearly warranted, but a third copy means extract it; never paste a fourth.
 
+### Data-layer tokens stay out of UI code
+
+UI code — widgets, panels, dialogs, everything under `src/qt/` and `src/ui/` — must not decode or construct data-layer encodings. This includes CSS syntax (`--` name prefixes, `var()`, selectors, declaration text), repr node/attribute names, URI schemes, and serialization formats. If you write `starts_with("--")`, `substr(2)`, or any string surgery on a model value inside UI code, that is an architecture violation — not a convenience.
+
+- If a UI element needs a human-readable form of a model value, the **model/data layer exposes it** (e.g. `display_name()`); the UI consumes it verbatim.
+- If UI behavior must depend on a value's internal structure, add an explicit API at the owning layer instead of sniffing tokens in widget code.
+- When a value crosses the UI boundary and the UI needs both the machine form and the display form, pass a struct carrying both — never make the UI recover one from the other.
+- Low-level mechanisms (repr nodes, watchers, XML details) are wrapped behind model abstractions before UI ever sees them. Do not forward raw handles "temporarily".
+
 ### Always use `auto`, never `auto*`
 
 When the right-hand side of a declaration is a pointer (`new`, `cast<>`, `static_cast<T*>`, `getFirstStop()`, any pointer-returning call), write `auto`, **not** `auto*`.

@@ -240,7 +240,7 @@ void TextPanel::setupConnections() {
         selectFontspec(fontspec);
         _fontBrowserPopup->hide();
     });
-    connect(_fontBrowser, &FontBrowser::cancelled, this, [this] {
+    connect(_fontBrowser, &FontBrowser::canceled, this, [this] {
         _fontBrowserPopup->hide();
     });
 

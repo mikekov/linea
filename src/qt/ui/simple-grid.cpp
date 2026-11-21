@@ -616,13 +616,27 @@ void SimpleGrid::drawContent(QPainter* painter, int width, int height) {
 void SimpleGrid::calcLayout() {
     // calculate layout based on how wide the grid is in the scrolled window
     // and the height of the scrolled window (which is our viewport)
+    auto prevColsRows = _colsRows;
     int width = _scrollArea->viewport()->width();
     int height = _scrollArea->height();
     _layoutValid = calcLayout(width, height);
+    if (_colsRows != prevColsRows) {
+        auto emitted = _colsRows;
+        Q_EMIT gridSizeChanged(_colsRows);
+        // A listener may adjust _cellCount in response to the new column count;
+        // recalculate once so row count and viewport size stay consistent.
+        if (!_layoutValid) {
+            _layoutValid = calcLayout(width, height);
+            if (_colsRows != emitted) {
+                Q_EMIT gridSizeChanged(_colsRows);
+            }
+        }
+    }
 }
 
 bool SimpleGrid::calcLayout(int width, int height) {
     if (width <= 0 || height <= 0 || _cellSize.x() <= 0 || _cellSize.y() <= 0 || _cellCount == 0) {
+        _colsRows = {};
         _cellPitch = {};
         _areaSize = {};
         _viewport->setMinimumSize(0, 0);

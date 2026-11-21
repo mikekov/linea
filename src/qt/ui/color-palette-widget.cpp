@@ -27,6 +27,32 @@ namespace Linea::UI {
 
 using Inkscape::UI::Dialog::PaletteFileData;
 
+namespace {
+
+// Note: _grid is a single container for both document swatches and palette colors.
+// Below functions and methods (calcTotalCells, cellToGridPos, entryAtGridPos) are
+// used to simulate two-grid layout using a single SimpleGrid. This is done to
+// facilitate scrolling; a single scroolbar is used for both sets of tiles, but
+// the tiles still reflow independently in multi-column layout, maintaining the
+// visual separation between the two collections and keeping palette colors next
+// to each other.
+
+// Number of rows needed to fit itemCount tiles across the given number of columns (0 when empty).
+std::size_t bandRowCount(std::size_t itemCount, int columns) {
+    return (itemCount + columns - 1) / columns;
+}
+
+// Map local (col, row) coordinates inside a sub-grid band back to a container index.
+std::size_t subGridIndex(int col, int row, int columns, std::size_t bandRows,
+                         ColorPaletteWidget::Alignment alignment) {
+    if (alignment == ColorPaletteWidget::Alignment::Horizontal) {
+        return static_cast<std::size_t>(row) * columns + col;
+    }
+    return static_cast<std::size_t>(col) * bandRows + row;
+}
+
+} // namespace
+
 ColorPaletteWidget::ColorPaletteWidget(QWidget* parent)
     : QWidget(parent) {
     _basicGrid = new SimpleGrid(this);
@@ -41,6 +67,10 @@ ColorPaletteWidget::ColorPaletteWidget(QWidget* parent)
     _basicGrid->setSizeToContents(true);
     _basicGrid->setFlow(SimpleGrid::Flow::Horizontal);
     _basicGrid->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    // Empty strip grids must be hidden: a size-to-contents SimpleGrid with
+    // no cells falls back to the scroll area's default sizeHint, leaving a
+    // large gap in the layout.
+    _basicGrid->setVisible(false);
 
     _grid = new SimpleGrid(this);
     _grid->setSelectable(false);
@@ -68,9 +98,17 @@ ColorPaletteWidget::ColorPaletteWidget(QWidget* parent)
     });
 
     connect(_grid, &SimpleGrid::cellPress, this, [this](int index, Qt::KeyboardModifiers modifiers, Qt::MouseButtons buttons) {
-        if (index >= 0 && index < static_cast<int>(_palette.colors.size())) {
-            emitColorClicked(_palette.colors[index], modifiers, buttons);
+        auto entry = entryForCell(index);
+        if (auto swatch = std::get_if<const Linea::Swatch*>(&entry)) {
+            Q_EMIT cellClicked(**swatch, modifiers, buttons);
+        } else if (auto color = std::get_if<const PaletteFileData::ColorItem*>(&entry)) {
+            emitColorClicked(**color, modifiers, buttons);
         }
+    });
+
+    // Changing column count alters how many empty gap cells sit between swatches and palette.
+    connect(_grid, &SimpleGrid::gridSizeChanged, this, [this](Geom::IntPoint colsRows) {
+        _grid->setCellCount(calcTotalCells(std::max(1, colsRows.x())));
     });
 
     _basicGrid->setDrawFunc(
@@ -80,8 +118,12 @@ ColorPaletteWidget::ColorPaletteWidget(QWidget* parent)
         });
 
     _grid->setDrawFunc([this](QPainter* painter, std::uint32_t index, const Geom::IntRect& rect, bool /*selected*/) {
-        if (index >= _palette.colors.size()) return;
-        paintColor(painter, rect, _palette.colors[index]);
+        auto entry = entryForCell(static_cast<int>(index));
+        if (auto swatch = std::get_if<const Linea::Swatch*>(&entry)) {
+            paintColor(painter, rect, (*swatch)->color(), true);
+        } else if (auto color = std::get_if<const PaletteFileData::ColorItem*>(&entry)) {
+            paintColor(painter, rect, **color);
+        }
     });
 
     _basicGrid->setTooltipFunc([this](int index) -> QString {
@@ -92,10 +134,14 @@ ColorPaletteWidget::ColorPaletteWidget(QWidget* parent)
     });
 
     _grid->setTooltipFunc([this](int index) -> QString {
-        if (index < 0 || index >= static_cast<int>(_palette.colors.size())) {
-            return {};
+        auto entry = entryForCell(index);
+        if (auto swatch = std::get_if<const Linea::Swatch*>(&entry)) {
+            return QString::fromStdString((*swatch)->displayName());
         }
-        return colorTooltip(_palette.colors[index]);
+        if (auto color = std::get_if<const PaletteFileData::ColorItem*>(&entry)) {
+            return colorTooltip(**color);
+        }
+        return {};
     });
 }
 
@@ -106,17 +152,102 @@ void ColorPaletteWidget::setMargins(int left, int top, int right, int bottom) {
 void ColorPaletteWidget::setBasicColors(std::vector<PaletteFileData::ColorItem> basics) {
     _basics = std::move(basics);
     _basicGrid->setCellCount(_basics.size());
+    _basicGrid->setVisible(!_basics.empty());
     _basicGrid->invalidate();
+}
+
+void ColorPaletteWidget::setSwatchColors(std::vector<Linea::Swatch> swatches) {
+    _swatches = std::move(swatches);
+    updateGrid();
 }
 
 void ColorPaletteWidget::setPaletteData(PaletteFileData data) {
     _palette = std::move(data);
-    _grid->setCellCount(_palette.colors.size());
-    _grid->invalidate();
+    updateGrid();
+}
+
+// Calculate the cell count _grid needs to simulate two stacked grids (swatches above palette).
+std::size_t ColorPaletteWidget::calcTotalCells(int columns) const {
+    if (columns <= 0) return 0;
+
+    const auto swatchCount = _swatches.size();
+    const auto paletteCount = _palette.colors.size();
+    if (swatchCount == 0) return paletteCount;
+    if (paletteCount == 0) return swatchCount;
+
+    const auto cols = static_cast<std::size_t>(columns);
+    const auto swatchRows = bandRowCount(swatchCount, columns);
+    if (_alignment == Alignment::Horizontal) {
+        // Pad the swatch band to full rows so the palette starts at column 0 of the next row.
+        return swatchRows * cols + paletteCount;
+    }
+
+    // In vertical (column-major) flow, SimpleGrid indexes cells as col * totalRows + row and
+    // skips indices >= cellCount. The count must both cover the highest occupied swatch/palette
+    // index and be large enough for SimpleGrid to allocate all swatchRows + paletteRows rows.
+    const auto paletteRows = bandRowCount(paletteCount, columns);
+    const auto totalRows = swatchRows + paletteRows;
+    const auto lastSwatch = ((swatchCount - 1) / swatchRows) * totalRows + ((swatchCount - 1) % swatchRows);
+    const auto lastPalette = ((paletteCount - 1) / paletteRows) * totalRows + swatchRows + ((paletteCount - 1) % paletteRows);
+    const auto minForRows = (totalRows - 1) * cols + 1;
+    return std::max({minForRows, lastSwatch + 1, lastPalette + 1});
+}
+
+// Inverse of SimpleGrid's (col, row) -> index mapping.
+Geom::IntPoint ColorPaletteWidget::cellToGridPos(int index, int columns, int totalRows) const {
+    if (_alignment == Alignment::Horizontal) {
+        return {index % columns, index / columns};
+    }
+    return {index / totalRows, index % totalRows};
+}
+
+// Rows [0, swatchRows) belong to the swatch band; rows [swatchRows, swatchRows + paletteRows)
+// belong to the palette band. Unfilled slots in either band return monostate (empty cell).
+ColorPaletteWidget::CellEntry ColorPaletteWidget::entryAtGridPos(
+    Geom::IntPoint pos, int columns, std::size_t swatchRows, std::size_t paletteRows) const {
+    if (pos.x() < 0 || pos.x() >= columns || pos.y() < 0) return {};
+
+    const auto row = static_cast<std::size_t>(pos.y());
+    if (row < swatchRows) {
+        auto idx = subGridIndex(pos.x(), pos.y(), columns, swatchRows, _alignment);
+        if (idx < _swatches.size()) {
+            return &_swatches[idx];
+        }
+        return {};
+    }
+
+    const auto localRow = row - swatchRows;
+    if (localRow < paletteRows) {
+        auto idx = subGridIndex(pos.x(), static_cast<int>(localRow), columns, paletteRows, _alignment);
+        if (idx < _palette.colors.size()) {
+            return &_palette.colors[idx];
+        }
+    }
+    return {};
+}
+
+// Translate a raw SimpleGrid cell index into its backing swatch or palette color, if any.
+ColorPaletteWidget::CellEntry ColorPaletteWidget::entryForCell(int index) const {
+    if (index < 0) return {};
+
+    const int columns = std::max(1, _grid->gridSize().x());
+    const auto swatchRows = bandRowCount(_swatches.size(), columns);
+    const auto paletteRows = bandRowCount(_palette.colors.size(), columns);
+    const auto totalRows = swatchRows + paletteRows;
+    if (totalRows == 0) return {};
+
+    auto pos = cellToGridPos(index, columns, static_cast<int>(totalRows));
+    return entryAtGridPos(pos, columns, swatchRows, paletteRows);
+}
+
+void ColorPaletteWidget::updateGrid() {
+    int columns = std::max(1, _grid->gridSize().x());
+    _grid->setCellCount(calcTotalCells(columns));
+    _grid->invalidate(false);
 }
 
 void ColorPaletteWidget::paintColor(QPainter* painter, const Geom::IntRect& rect,
-                                    const PaletteFileData::ColorItem& item) const {
+                                    const PaletteFileData::ColorItem& item, bool swatch) const {
     auto rgb = QColor::fromRgba(0xffffffff);
     bool none = false;
     auto c = std::get_if<Inkscape::Colors::Color>(&item);
@@ -136,7 +267,7 @@ void ColorPaletteWidget::paintColor(QPainter* painter, const Geom::IntRect& rect
     painter->setPen(Qt::NoPen);
     painter->drawRoundedRect(tile, radius, radius);
 
-    if (_swatchIndicator) {
+    if (swatch) {
         painter->save();
 
         QPainterPath clip;
@@ -177,9 +308,15 @@ void ColorPaletteWidget::paintColor(QPainter* painter, const Geom::IntRect& rect
         painter->drawLine(r.bottomLeft(), r.topRight());
     }
 
-    const bool is_fill = none ? _currentFill.none : _currentFill.solid && _currentFill.solid->rgb() == rgb.rgb();
-    const bool is_stroke =
-        none ? _currentStroke.none : _currentStroke.solid && _currentStroke.solid->rgb() == rgb.rgb();
+    // Swatch tiles match by custom property name only: var(--x) lights up
+    // exactly the tile it references, never a tile sharing the resolved
+    // color.
+    const bool is_fill = swatch ? (c && _currentFill.cssVar && *_currentFill.cssVar == c->getName())
+                                : none ? _currentFill.none
+                                       : _currentFill.solid && _currentFill.solid->rgb() == rgb.rgb();
+    const bool is_stroke = swatch ? (c && _currentStroke.cssVar && *_currentStroke.cssVar == c->getName())
+                                  : none ? _currentStroke.none
+                                         : _currentStroke.solid && _currentStroke.solid->rgb() == rgb.rgb();
 
     if (is_fill || is_stroke) {
         auto color = c ? *c : Inkscape::Colors::Color::white();
@@ -252,7 +389,7 @@ void ColorPaletteWidget::emitColorClicked(const PaletteFileData::ColorItem& item
     if (const auto& color = std::get_if<Inkscape::Colors::Color>(&item)) {
         Q_EMIT cellClicked(*color, modifiers, buttons);
     } else if (std::holds_alternative<PaletteFileData::None>(item)) {
-        Q_EMIT cellClicked(std::nullopt, modifiers, buttons);
+        Q_EMIT cellClicked(std::monostate{}, modifiers, buttons);
     }
 }
 
@@ -260,7 +397,9 @@ void ColorPaletteWidget::setAlignment(Alignment alignment) {
     if (_alignment == alignment) return;
 
     _alignment = alignment;
-    _grid->setFlow(_alignment == Alignment::Horizontal ? SimpleGrid::Flow::Horizontal : SimpleGrid::Flow::Vertical);
+    auto flow = _alignment == Alignment::Horizontal ? SimpleGrid::Flow::Horizontal : SimpleGrid::Flow::Vertical;
+    _grid->setFlow(flow);
+    updateGrid();
 }
 
 void ColorPaletteWidget::setTileSize(int tile) {
@@ -297,18 +436,26 @@ int ColorPaletteWidget::snapResizeWidth(int newWidth) const {
 bool ColorPaletteWidget::CurrentColor::update(const mixed_property<PaintProp>& paint) {
     bool isNone = false;
     std::optional<QColor> color;
+    std::optional<std::string> var;
 
     if (paint.is_single()) {
-        if (paint.value().mode == Inkscape::UI::Widget::PaintMode::Solid && paint.value().color) {
-            color = QColor::fromRgba(static_cast<QRgb>(paint.value().color->toARGB()));
-        } else if (paint.value().mode == Inkscape::UI::Widget::PaintMode::None) {
+        auto& v = paint.value();
+        if (v.mode == Inkscape::UI::Widget::PaintMode::Solid && v.color) {
+            color = QColor::fromRgba(static_cast<QRgb>(v.color->toARGB()));
+        } else if (v.mode == Inkscape::UI::Widget::PaintMode::None) {
             isNone = true;
+        }
+        // CssSwatch populates only cssVar — a var() reference is not a
+        // color and must never match regular tiles by resolved RGB.
+        if (v.mode == Inkscape::UI::Widget::PaintMode::CssSwatch) {
+            var = v.css_var_name;
         }
     }
 
-    if (none != isNone || color != solid) {
+    if (none != isNone || color != solid || var != cssVar) {
         none = isNone;
         solid = color;
+        cssVar = var;
         return true;
     }
 
@@ -323,12 +470,6 @@ void ColorPaletteWidget::updateCurrentColorIndicator(const mixed_property<PaintP
         _grid->invalidate(false);
         _basicGrid->invalidate(false);
     }
-}
-
-void ColorPaletteWidget::setSwatchIndicator(bool swatch) {
-    _swatchIndicator = swatch;
-    _grid->invalidate(false);
-    _basicGrid->invalidate(false);
 }
 
 int ColorPaletteWidget::verticalScrollBarWidth() const {

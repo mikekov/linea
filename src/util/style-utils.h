@@ -48,6 +48,9 @@ struct PaintProp {
     // Solid: flat color value.
     std::optional<Colors::Color> color;
 
+    // CssSwatch: the referenced custom property name, e.g. "--brand".
+    std::optional<std::string> css_var_name;
+
     // Paint server (gradient, mesh, pattern, hatch, etc.).
     // Below are decoded values, so one will be set.
     SPPaintServer* server = nullptr;

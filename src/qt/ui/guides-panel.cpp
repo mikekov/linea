@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /**
  * @file
- * Guides panel — show/lock guides and guide colours (Qt version).
+ * Guides panel — show/lock guides and guide colors (Qt version).
  */
 
 #include "guides-panel.h"
@@ -84,7 +84,7 @@ GuidesPanel::GuidesPanel(QWidget* parent)
     _ui->guideHighlightColor->setUndo(true);
     _ui->guideHighlightColor->setUseTransparency(true);
 
-    // Set initial colours before any update() call.
+    // Set initial colors before any update() call.
     _ui->guideColor->setColor(Inkscape::Colors::Color::rgba(0x0000ff, 0.6));
     _ui->guideHighlightColor->setColor(Inkscape::Colors::Color::rgba(0xff0000, 0.6));
 

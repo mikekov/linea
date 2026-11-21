@@ -21,7 +21,7 @@ namespace Linea::UI {
  * paint itself on every paint event.  When the application palette changes
  * (which happens right after QPixmapCache::clear() during a theme switch),
  * the widget schedules a repaint so that the icon is re-fetched from its
- * source and rendered in the new theme colours.
+ * source and rendered in the new theme colors.
  */
 class IconWidget : public QWidget {
     Q_OBJECT

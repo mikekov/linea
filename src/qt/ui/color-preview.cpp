@@ -38,10 +38,6 @@ static void addRoundedRect(QPainterPath& path, const QRectF& r,
     path.closeSubpath();
 }
 
-static void addRoundedRect(QPainterPath& path, const QRectF& r, double radius) {
-    addRoundedRect(path, r, radius, radius, radius, radius);
-}
-
 static QColor fromRgba32(std::uint32_t rgba) {
     return QColor(
         (rgba >> 24) & 0xff,
@@ -418,7 +414,7 @@ void ColorPreview::paintEvent(QPaintEvent*) {
         contentRadius = std::max(0.0, contentRadius - 1.0);
     }
 
-    // flat edges drop both corners on that side (butt-joined neighbour)
+    // flat edges drop both corners on that side (butt-joined neighbor)
     const double radiusL = (_flat_edges & Qt::LeftEdge)  ? 0.0 : contentRadius;
     const double radiusR = (_flat_edges & Qt::RightEdge) ? 0.0 : contentRadius;
 

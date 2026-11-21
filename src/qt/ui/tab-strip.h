@@ -162,8 +162,8 @@ Q_SIGNALS:
     void dndBegin();
 
     /// Emitted when a drag-and-drop operation ends.
-    /// @p cancelled is true when the drag was aborted without a drop.
-    void dndEnd(bool cancelled);
+    /// @p canceled is true when the drag was aborted without a drop.
+    void dndEnd(bool canceled);
 
 protected:
     QSize sizeHint() const override;

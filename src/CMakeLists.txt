@@ -69,9 +69,11 @@ target_sources(linea_base PRIVATE
   snapped-line.cpp
   snapped-point.cpp
   snapper.cpp
+  style-helpers.cpp
   style-internal.cpp
   style-text.cpp
   style.cpp
+  swatch-type.cpp
   text-chemistry.cpp
   text-editing.cpp
   transf_mat_3x4.cpp
@@ -164,9 +166,11 @@ target_sources(linea_base PRIVATE
   streq.h
   strneq.h
   style-enums.h
+  style-helpers.h
   style-internal.h
   style-text.h
   style.h
+  swatch-type.h
   syseq.h
   text-chemistry.h
   text-editing.h

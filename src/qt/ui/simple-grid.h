@@ -74,6 +74,8 @@ public:
     void setScrollBarHidden(bool hidden);
     // width of the vertical scroll bar
     int verticalScrollBarWidth() const;
+    // current grid dimensions in columns (x) and rows (y)
+    Geom::IntPoint gridSize() const { return _colsRows; }
 
     // cell layout direction: Horizontal (left-to-right, top-to-bottom) or Vertical (top-to-bottom, left-to-right)
     enum class Flow { Horizontal, Vertical };
@@ -81,7 +83,7 @@ public:
     Flow flow() const;
 
     // register callback to draw cells, one at a time, given painter, cell index, area and selected status
-    using DrawFunc = std::function<void(QPainter* painter, std::uint32_t index, const Geom::IntRect& rect, bool selected)>;
+    using DrawFunc = std::function<void (QPainter* painter, std::uint32_t index, const Geom::IntRect& rect, bool selected)>;
     void setDrawFunc(DrawFunc func);
 
     // register callback to get tooltip text for a cell
@@ -97,6 +99,8 @@ Q_SIGNALS:
     void cellSelected(int index);
     // emitted when the user tries to "open" a cell by double-clicking or pressing Enter key
     void cellOpened(int index);
+    // emitted when the calculated column/row count changes
+    void gridSizeChanged(Geom::IntPoint colsRows);
 
 protected:
     void resizeEvent(QResizeEvent* event) override;

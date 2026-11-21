@@ -749,7 +749,7 @@ void TabStrip::_startDrag(TabItem* tab, QPoint pressOffset) {
     {
         QPainter p(&dragPixmap);
         p.setOpacity(0.85);
-        // Fill with the active tab background palette colour
+        // Fill with the active tab background palette color
         QStyleOption opt;
         opt.initFrom(this);
         opt.rect = QRect(QPoint(0, 0), tab->rect.size());
@@ -770,16 +770,16 @@ void TabStrip::_startDrag(TabItem* tab, QPoint pressOffset) {
     qdrag->setPixmap(dragPixmap);
     qdrag->setHotSpot(pressOffset);
 
-    Q_EMIT dndBegin(); // re-emit: live drag was cancelled before escalating to QDrag
+    Q_EMIT dndBegin(); // re-emit: live drag was canceled before escalating to QDrag
 
     // exec() runs a nested event loop; the rest of finish happens after it returns
     Qt::DropAction result = qdrag->exec(Qt::MoveAction);
 
     // If the drag was not accepted by any drop target, treat it as a float request
-    bool cancelled = (result == Qt::IgnoreAction);
+    bool canceled = (result == Qt::IgnoreAction);
 
     if (_drag) { // may have been cleared by dropEvent already
-        _finishDrag(cancelled);
+        _finishDrag(canceled);
     }
 }
 

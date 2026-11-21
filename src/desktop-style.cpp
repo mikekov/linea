@@ -1822,7 +1822,7 @@ boost::intrusive_ptr<SPCSSAttr> new_css_attr() {
     return boost::intrusive_ptr(sp_repr_css_attr_new(), false);
 }
 
-void sp_desktop_apply_color(SPDesktop* desktop, const std::optional<Colors::Color>& maybeColor, bool stroke, UI::Tools::ToolBase* tool) {
+void sp_desktop_apply_color(SPDesktop* desktop, const Linea::FlatColor& paint, bool stroke, UI::Tools::ToolBase* tool) {
     if (!desktop) return;
 
     auto attr_name = stroke ? "stroke" : "fill";
@@ -1830,13 +1830,18 @@ void sp_desktop_apply_color(SPDesktop* desktop, const std::optional<Colors::Colo
 
     std::optional<Inkscape::Util::Internal::ContextString> description;
 
-    if (!maybeColor) {
+    if (const auto* color = std::get_if<Inkscape::Colors::Color>(&paint)) {
+        sp_repr_css_set_property_string(css.get(), attr_name, color->toString());
+        description = stroke ? RC_("Undo", "Set stroke color from swatch") : RC_("Undo", "Set fill color from swatch");
+    }
+    else if (const auto* swatch = std::get_if<Linea::Swatch>(&paint)) {
+        // Document swatch: retain the custom property as a var() reference.
+        sp_repr_css_set_property_string(css.get(), attr_name, swatch->cssVar());
+        description = stroke ? RC_("Undo", "Set stroke color from swatch") : RC_("Undo", "Set fill color from swatch");
+    }
+    else {
         sp_repr_css_set_property(css.get(), attr_name, "none");
         description = stroke ? RC_("Undo", "Set stroke color to none") : RC_("Undo", "Set fill color to none");
-    }
-    else { //if (const auto& color = *maybeColor) {
-        sp_repr_css_set_property_string(css.get(), attr_name, maybeColor->toString());
-        description = stroke ? RC_("Undo", "Set stroke color from swatch") : RC_("Undo", "Set fill color from swatch");
     }
     /* else if (auto const graddata = std::get_if<GradientData>(&data)) {
         auto grad = graddata->gradient;

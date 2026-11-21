@@ -832,6 +832,16 @@ QComboBox {
     border: 1px solid palette(midlight);
 }
 
+/* Entry fields fill the frame with zero margins, so the frame's background
+   only shows if the fields inside it are transparent. */
+.active-frame QLineEdit {
+    background-color: transparent;
+}
+
+.active-frame:disabled {
+    background-color: palette(disabled, window);
+}
+
 .normal-background {
     background-color: palette(window);
 }

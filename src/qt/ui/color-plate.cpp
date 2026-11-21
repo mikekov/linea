@@ -183,7 +183,7 @@ std::optional<unsigned> ColorPlate::hueChannel() const {
 }
 
 bool ColorPlate::achromatic(const Color& plate) const {
-    // whiteness+blackness saturate to grey in hwb — near-zero w,b is a
+    // whiteness+blackness saturate to gray in hwb — near-zero w,b is a
     // fully saturated color, the opposite of the channel-floor test below
     if (_space == Type::HWB) {
         return plate[1] + plate[2] >= 1.0 - ACHROMATIC_CHROMA;
@@ -327,7 +327,7 @@ void ColorPlate::syncOverlays() {
 
     auto host = window();
     const auto active = activeArea();
-    const bool show = isVisible() && host && active.width() > 0 && active.height() > 0;
+    const bool show = isVisible() && isEnabled() && host && active.width() > 0 && active.height() > 0;
     for (size_t i = 0; i < pts.size(); ++i) {
         auto& overlay = _overlays[i];
         if (!show) {
@@ -390,9 +390,10 @@ void ColorPlate::resizeEvent(QResizeEvent* event) {
 // spacing) still pick the nearest edge color — like the old padding did.
 // Those events are delivered to the plate's ancestors, so catch them here.
 bool ColorPlate::eventFilter(QObject* watched, QEvent* event) {
-    if (watched == this || !isVisible() || !watched->isWidgetType()) {
+    if (watched == this || !isVisible() || !isEnabled() || !watched->isWidgetType()) {
         return QWidget::eventFilter(watched, event);
     }
+
     switch (event->type()) {
         case QEvent::MouseButtonPress: {
             auto me = static_cast<QMouseEvent*>(event);

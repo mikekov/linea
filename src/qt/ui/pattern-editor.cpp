@@ -211,7 +211,7 @@ void PatternEditor::connectSignals() {
         auto scoped(_update.block());
         _scaleLinked = linked;
         if (_scaleLinked) {
-            // match Y to X (mirrors GTK behaviour)
+            // match Y to X
             _ui->scalePair->first()->setValue(_ui->scalePair->second()->value());
         }
         if (_uniformSupported) Q_EMIT changed();
@@ -293,7 +293,7 @@ void PatternEditor::connectSignals() {
     });
 }
 
-// ─── Lazy initialisation ─────────────────────────────────────────────────────
+// ─── Lazy initialization ─────────────────────────────────────────────────────
 
 void PatternEditor::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);

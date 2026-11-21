@@ -9,14 +9,20 @@
 #include <QFileInfo>
 #include <QFont>
 #include <QFontDatabase>
+#include <QFontMetrics>
 #include <QGuiApplication>
 #include <QHash>
+#include <QPaintEvent>
+#include <QPainter>
+#include <QPainterPath>
 #include <QPalette>
 #include <QPlainTextEdit>
 #include <QRegularExpression>
 #include <QStringList>
 #include <QSyntaxHighlighter>
+#include <QTextBlock>
 #include <QTextDocument>
+#include <QTextLayout>
 #include <QXmlStreamReader>
 
 #include <algorithm>
@@ -25,7 +31,9 @@
 #include <vector>
 
 #include "attributes.h"
+#include "colors/color.h"
 #include "colors/parser.h"
+#include "colors/utils.h"
 #include "io/resource.h"
 #include "object/sp-factory.h"
 #include "style-enums.h"
@@ -225,17 +233,68 @@ QTextCharFormat makeFormat(const QColor& color, bool bold = false) {
     return fmt;
 }
 
+QString joinPatternAlternatives(QStringList names) {
+    for (auto& name : names) {
+        name = QRegularExpression::escape(name);
+    }
+    // Longer alternatives must come first so e.g. stroke-width wins over stroke.
+    std::sort(names.begin(), names.end(), [](const QString& a, const QString& b) {
+        return a.size() > b.size();
+    });
+    return names.join(QLatin1Char('|'));
+}
+
+QStringList cssColorFunctionNames() {
+    QStringList names;
+    for (const auto& name : Inkscape::Colors::Parsers::get().getCssFunctionNames()) {
+        names.append(QString::fromStdString(name));
+    }
+    return names;
+}
+
+const QRegularExpression& cssColorTokenPattern() {
+    static const QRegularExpression pattern = [] {
+        QStringList funcs = cssColorFunctionNames();
+        funcs.append(QStringLiteral("url"));
+        const QString expr =
+            QStringLiteral("(?<![\\w#.@-])(?:#[0-9a-fA-F]{3,8}(?![\\w-])(?!\\s*\\{)|(?:") +
+            joinPatternAlternatives(std::move(funcs)) +
+            QStringLiteral(")\\([^()]*\\)|[A-Za-z]+(?![\\w(-])(?!\\s*[:{]))");
+        return QRegularExpression(expr, QRegularExpression::CaseInsensitiveOption);
+    }();
+    return pattern;
+}
+
+// A color value in a text block, shown as an in-line color patch.
+struct ColorPatch {
+    int pos;
+    int len;
+    QColor color;
+};
+
+class ColorBlockData : public QTextBlockUserData {
+public:
+    std::vector<ColorPatch> patches;
+    // Horizontal gap reserved after each token's last char (letter spacing)
+    // for the patch to be painted into.
+    int gap = 0;
+};
+
 class RuleHighlighter : public QSyntaxHighlighter {
 public:
     struct Rule {
         QRegularExpression pattern;
         QTextCharFormat format;
+        // Matched text (comments, strings) is never scanned for color patches.
+        bool hidesColors = false;
     };
 
-    RuleHighlighter(QTextDocument* parent, std::vector<Rule> rules, bool svgPath = false)
+    RuleHighlighter(QTextDocument* parent, std::vector<Rule> rules, bool svgPath = false,
+                    bool colorPatches = false)
         : QSyntaxHighlighter(parent)
         , _rules(std::move(rules))
-        , _svgPath(svgPath) {}
+        , _svgPath(svgPath)
+        , _colorPatches(colorPatches) {}
 
     void setRules(std::vector<Rule> rules) {
         _rules = std::move(rules);
@@ -258,12 +317,19 @@ protected:
             highlightSvgPath(text);
             return;
         }
+        std::vector<std::pair<int, int>> opaque;
         for (const auto& rule : _rules) {
             auto it = rule.pattern.globalMatch(text);
             while (it.hasNext()) {
                 const auto match = it.next();
                 setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+                if (_colorPatches && rule.hidesColors) {
+                    opaque.emplace_back(match.capturedStart(), match.capturedEnd());
+                }
             }
+        }
+        if (_colorPatches) {
+            highlightColorPatches(text, opaque);
         }
     }
 
@@ -322,8 +388,44 @@ private:
         }
     }
 
+    // Record a ColorPatch for every token that parses as a CSS color, and
+    // reserve space after it via letter spacing for the painted patch.
+    void highlightColorPatches(const QString& text, const std::vector<std::pair<int, int>>& opaque) {
+        // Hex literals, identifiers, and function calls (validation decides).
+        const auto& re = cssColorTokenPattern();
+
+        auto data = new ColorBlockData;
+        data->gap = qRound(QFontMetricsF(document()->defaultFont()).height() * 0.8) + 4;
+
+        auto it = re.globalMatch(text);
+        while (it.hasNext()) {
+            const auto match = it.next();
+            const int start = match.capturedStart();
+            const int len = match.capturedLength();
+            const bool hidden = std::any_of(opaque.begin(), opaque.end(),
+                [start, len](const auto& range) { return start < range.second && start + len > range.first; });
+            if (hidden) {
+                continue;
+            }
+            const auto color = Inkscape::Colors::Color::parse(match.captured().toStdString());
+            if (!color) {
+                continue;
+            }
+            const uint32_t rgba = color->toRGBA();
+            data->patches.push_back({start, len,
+                QColor(SP_RGBA32_R_U(rgba), SP_RGBA32_G_U(rgba), SP_RGBA32_B_U(rgba),
+                       SP_RGBA32_A_U(rgba))});
+            QTextCharFormat gap = format(start + len - 1);
+            gap.setFontLetterSpacingType(QFont::AbsoluteSpacing);
+            gap.setFontLetterSpacing(data->gap);
+            setFormat(start + len - 1, 1, gap);
+        }
+        setCurrentBlockUserData(data);
+    }
+
     std::vector<Rule> _rules;
     bool _svgPath = false;
+    bool _colorPatches = false;
     QTextCharFormat _pathCommand;
     QTextCharFormat _pathNode;
     QTextCharFormat _pathControl;
@@ -342,14 +444,7 @@ Formatter noReformat() {
 
 QRegularExpression makeKeywordPattern(QStringList names, const QString& lookahead,
                                       QRegularExpression::PatternOptions options = QRegularExpression::NoPatternOption) {
-    for (auto& name : names) {
-        name = QRegularExpression::escape(name);
-    }
-    // Longer alternatives must come first so e.g. stroke-width wins over stroke.
-    std::sort(names.begin(), names.end(), [](const QString& a, const QString& b) {
-        return a.size() > b.size();
-    });
-    return QRegularExpression(QStringLiteral("(?<![\\w-])(?:") + names.join(QLatin1Char('|')) +
+    return QRegularExpression(QStringLiteral("(?<![\\w-])(?:") + joinPatternAlternatives(std::move(names)) +
                                   QStringLiteral(")") + lookahead,
                               options);
 }
@@ -367,10 +462,7 @@ const QRegularExpression& cssPropertyNamePattern() {
 
 const QRegularExpression& cssFunctionNamePattern() {
     static const QRegularExpression pattern = [] {
-        QStringList names;
-        for (const auto& name : Inkscape::Colors::Parsers::get().getCssFunctionNames()) {
-            names.append(QString::fromStdString(name));
-        }
+        QStringList names = cssColorFunctionNames();
         // "url" (paint servers/filters/markers) and "var" (custom-property references
         // resolved in SPStyle::_mergeDecl) are not color parsers.
         names.append(QStringLiteral("url"));
@@ -447,9 +539,9 @@ const QRegularExpression& cssValueKeywordPattern() {
 std::vector<Rule> makeCssRules(const ColorTheme& t) {
     std::vector<Rule> rules;
     // Single-line block comments only; multi-line CSS comments are rare here.
-    rules.push_back({QRegularExpression("/\\*.*?\\*/"), makeFormat(t.comment)});
-    rules.push_back({QRegularExpression("//.*"), makeFormat(t.comment)});
-    rules.push_back({QRegularExpression(R"("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')"), makeFormat(t.string)});
+    rules.push_back({QRegularExpression("/\\*.*?\\*/"), makeFormat(t.comment), true});
+    rules.push_back({QRegularExpression("//.*"), makeFormat(t.comment), true});
+    rules.push_back({QRegularExpression(R"("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')"), makeFormat(t.string), true});
     // Value keywords come before property names so a keyword that is also a
     // property name keeps the property color (later rules overwrite earlier ones).
     rules.push_back({cssValueKeywordPattern(), makeFormat(t.css_value)});
@@ -459,8 +551,8 @@ std::vector<Rule> makeCssRules(const ColorTheme& t) {
     // Custom (--x) and vendor (-x) properties are stored without being understood
     // (SPStyle::_mergeDecl); shown non-bold to distinguish them from known properties.
     // The known-property rule follows and overwrites, so e.g. -inkscape-font-specification stays bold.
-    rules.push_back({QRegularExpression(QStringLiteral(R"((?<![\w-])--?[A-Za-z_][\w-]*(?=\s*:))")), makeFormat(t.property)});
-    rules.push_back({cssPropertyNamePattern(), makeFormat(t.property, true)});
+    rules.push_back({QRegularExpression(QStringLiteral(R"((?<![\w-])--?[A-Za-z_][\w-]*(?=\s*:))")), makeFormat(t.property), true});
+    rules.push_back({cssPropertyNamePattern(), makeFormat(t.property, true), true});
     rules.push_back({cssFunctionNamePattern(), makeFormat(t.value)});
     rules.push_back({QRegularExpression(R"(\B#[0-9a-fA-F]{3,8}\b)"), makeFormat(t.number)});
     rules.push_back({QRegularExpression(R"(\b[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?(?:px|pt|em|rem|ex|ch|cm|mm|in|pc|%)?\b)"), makeFormat(t.number)});
@@ -527,6 +619,154 @@ QString minifyCss(const QString& css) {
     return out;
 }
 
+// File-scope CSS formatter for <style> element content: breaks the
+// stylesheet into lines (one declaration per line, braces on their own
+// lines, depth-indented). Strings, comments and parenthesized values such
+// as url(data:...;base64,...) are emitted verbatim.
+QString prettifyStylesheet(const QString& css) {
+    QString out;
+    out.reserve(css.size() + css.size() / 4);
+
+    int parens = 0;
+    QChar quote;
+    bool comment = false;
+    bool pendingSpace = false;
+    // Per open brace: whether the block holds declarations (a ruleset or a
+    // declaration-style at-rule like @font-face) vs nested rules (@media).
+    std::vector<bool> declBlock;
+
+    auto lastChar = [&out] { return out.isEmpty() ? QChar() : out.back(); };
+    auto flushSpace = [&] {
+        if (!pendingSpace) return;
+        pendingSpace = false;
+        const QChar last = lastChar();
+        if (last != ' ' && last != '\n' && last != '(' && last != '{') {
+            out += ' ';
+        }
+    };
+    auto newline = [&] {
+        while (!out.isEmpty() && out.back() == ' ') {
+            out.chop(1);
+        }
+        if (!out.isEmpty() && out.back() != '\n') {
+            out += '\n';
+        }
+        out.append(QString(2 * declBlock.size(), ' '));
+        pendingSpace = false;
+    };
+
+    const qsizetype n = css.size();
+    for (qsizetype i = 0; i < n; ++i) {
+        const QChar c = css[i];
+
+        if (comment) {
+            out += c;
+            if (c == '*' && i + 1 < n && css[i + 1] == '/') {
+                out += '/';
+                ++i;
+                comment = false;
+            }
+            continue;
+        }
+        if (!quote.isNull()) {
+            out += c;
+            if (c == '\\' && i + 1 < n) {
+                out += css[++i];
+                continue;
+            }
+            if (c == quote) quote = QChar();
+            continue;
+        }
+        if (c == '/' && i + 1 < n && css[i + 1] == '*') {
+            flushSpace();
+            out += "/*";
+            ++i;
+            comment = true;
+            continue;
+        }
+        if (c == '"' || c == '\'') {
+            flushSpace();
+            out += c;
+            quote = c;
+            continue;
+        }
+        if (c == '\\' && i + 1 < n) {
+            flushSpace();
+            out += c;
+            out += css[++i];
+            continue;
+        }
+        if (c.isSpace()) {
+            pendingSpace = true;
+            continue;
+        }
+
+        if (parens == 0) {
+            if (c == '{') {
+                // Classify the block by the text chunk preceding '{': an
+                // at-rule whose block holds nested rules vs a ruleset or a
+                // declaration-style at-rule like @font-face.
+                qsizetype j = out.size() - 1;
+                while (j >= 0 && out[j].isSpace()) --j;
+                const qsizetype chunkEnd = j;
+                while (j >= 0 && out[j] != '\n' && out[j] != '{' && out[j] != '}' && out[j] != ';') --j;
+                const QString chunk = out.mid(j + 1, chunkEnd - j).trimmed();
+                bool declarations = true;
+                if (!chunk.isEmpty() && chunk.front() == '@') {
+                    qsizetype w = 1;
+                    while (w < chunk.size() && (chunk[w].isLetterOrNumber() || chunk[w] == '-')) ++w;
+                    static const QStringList containers =
+                        {"media", "supports", "keyframes", "layer", "scope", "document", "-moz-document"};
+                    declarations = !containers.contains(chunk.mid(1, w - 1).toLower());
+                }
+                declBlock.push_back(declarations);
+
+                const QChar last = lastChar();
+                if (last != ' ' && last != '\n' && last != '(' && last != '{' && !out.isEmpty()) {
+                    out += ' ';
+                }
+                out += '{';
+                newline();
+                continue;
+            }
+            if (c == '}') {
+                if (!declBlock.empty()) declBlock.pop_back();
+                newline();
+                out += '}';
+                newline();
+                continue;
+            }
+            if (c == ';') {
+                out += ';';
+                newline();
+                continue;
+            }
+            if (c == ',') {
+                out += ", ";
+                pendingSpace = false;
+                continue;
+            }
+            if (c == ':' && !declBlock.empty() && declBlock.back()) {
+                out += ": ";
+                pendingSpace = false;
+                continue;
+            }
+        }
+
+        if (c == '(') {
+            ++parens;
+        } else if (c == ')' && parens > 0) {
+            --parens;
+        }
+        flushSpace();
+        out += c;
+    }
+
+    QString result = out.trimmed();
+    if (!result.isEmpty()) result += '\n';
+    return result;
+}
+
 QString minifySvgd(const QString& d) {
     QString out = d;
     QRegularExpression re("[\\s]+");
@@ -553,9 +793,68 @@ private:
     std::unique_ptr<QPlainTextEdit> _editor;
 };
 
+// QPlainTextEdit that paints in-line color patches into the letter-spacing
+// gaps reserved by RuleHighlighter's ColorBlockData.
+class ColorPatchEdit : public QPlainTextEdit {
+public:
+    using QPlainTextEdit::QPlainTextEdit;
+
+protected:
+    void paintEvent(QPaintEvent* event) override {
+        QPlainTextEdit::paintEvent(event);
+
+        QPainter painter(viewport());
+        painter.setRenderHint(QPainter::Antialiasing);
+        const QPointF offset = contentOffset();
+        const QColor checkerDark(0xcc, 0xcc, 0xcc);
+        for (QTextBlock block = firstVisibleBlock(); block.isValid(); block = block.next()) {
+            const QRectF geo = blockBoundingGeometry(block).translated(offset);
+            if (geo.top() > event->rect().bottom()) {
+                break;
+            }
+            auto data = static_cast<ColorBlockData*>(block.userData());
+            if (!data || geo.bottom() < event->rect().top()) {
+                continue;
+            }
+            for (const auto& patch : data->patches) {
+                QTextLine line = block.layout()->lineForTextPosition(patch.pos + patch.len - 1);
+                if (!line.isValid()) {
+                    continue;
+                }
+                // x where the cursor after the token sits, i.e. the far edge
+                // of the reserved letter-spacing gap. cursorToX positions are
+                // relative to the block text, not the wrapped line.
+                const qreal endX = line.cursorToX(patch.pos + patch.len);
+                const qreal size = std::min<qreal>(data->gap - 4, line.height() - 3);
+                const QRectF rect(geo.left() + line.x() + endX - data->gap + 2,
+                                  geo.top() + line.y() + (line.height() - size) / 2.0,
+                                  size, size);
+
+                painter.save();
+                QPainterPath clip;
+                clip.addRoundedRect(rect, 2.5, 2.5);
+                painter.setClipPath(clip);
+                painter.fillRect(rect, Qt::white);
+                if (patch.color.alpha() < 255) {
+                    const qreal half = rect.width() / 2.0;
+                    painter.fillRect(QRectF(rect.topLeft(), QSizeF(half, half)), checkerDark);
+                    painter.fillRect(QRectF(rect.center(), QSizeF(half, half)), checkerDark);
+                }
+                painter.fillRect(rect, patch.color);
+                painter.restore();
+
+                painter.setPen(palette().color(QPalette::Mid));
+                painter.setBrush(Qt::NoBrush);
+                painter.drawRoundedRect(rect, 2.5, 2.5);
+            }
+        }
+    }
+};
+
 class HighlightingEditView : public TextEditView {
 public:
-    HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify, bool svgPath = false);
+    HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify,
+                         bool svgPath = false, bool colorPatches = false);
 
     void setStyle(const QString& /*theme*/) override;
     void setText(const QString& text) override;
@@ -592,9 +891,10 @@ QPlainTextEdit& PlainTextEditView::getEditor() const {
     return *_editor;
 }
 
-HighlightingEditView::HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify, bool svgPath)
-    : _editor(std::make_unique<QPlainTextEdit>())
-    , _highlighter(std::make_unique<RuleHighlighter>(_editor->document(), std::vector<Rule>{}, svgPath))
+HighlightingEditView::HighlightingEditView(RuleBuilder builder, Formatter prettify, Formatter minify,
+                                           bool svgPath, bool colorPatches)
+    : _editor(std::make_unique<ColorPatchEdit>())
+    , _highlighter(std::make_unique<RuleHighlighter>(_editor->document(), std::vector<Rule>{}, svgPath, colorPatches))
     , _builder(std::move(builder))
     , _prettify(std::move(prettify))
     , _minify(std::move(minify)) {
@@ -734,9 +1034,9 @@ std::unique_ptr<TextEditView> TextEditView::create(SyntaxMode mode) {
         case SyntaxMode::PlainText:
             return std::make_unique<PlainTextEditView>();
         case SyntaxMode::InlineCss:
-            return std::make_unique<HighlightingEditView>(makeCssRules, &prettifyCss, &minifyCss);
+            return std::make_unique<HighlightingEditView>(makeCssRules, &prettifyCss, &minifyCss, false, true);
         case SyntaxMode::CssStyle:
-            return std::make_unique<HighlightingEditView>(makeCssRules, noReformat(), noReformat());
+            return std::make_unique<HighlightingEditView>(makeCssRules, &prettifyStylesheet, noReformat(), false, true);
         case SyntaxMode::SvgPathData:
             return std::make_unique<HighlightingEditView>(makeSvgPathRules, &prettifySvgd, &minifySvgd, true);
         case SyntaxMode::SvgPolyPoints:
