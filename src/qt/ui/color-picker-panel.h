@@ -16,6 +16,7 @@
 #include "color-plate.h"
 #include "colors/color.h"
 #include "colors/spaces/enum.h"
+#include "flat-color.h"
 
 QT_BEGIN_NAMESPACE
 class QMenu;
@@ -27,6 +28,7 @@ QT_END_NAMESPACE
 
 class SPDesktop;
 namespace Inkscape::UI::Tools { class DropperTool; }
+namespace Linea { class RecentColors; }
 
 namespace Linea::UI {
 
@@ -55,6 +57,12 @@ public:
     void setPlateType(ColorPlateType plate);
     ColorPlateType getPlateType() const;
     Inkscape::Colors::Space::Type spaceType() const { return _spaceType; }
+    // enable/disable recent colors widget
+    void showRecentColors(bool show);
+
+    // emitted when a recent-colors tile is clicked; Color entries are also
+    // pushed into the holder, a Swatch is the host's to apply as a var() reference
+    sigc::signal<void(const FlatColor&)>& recentColorClicked();
 
     sigc::signal<void(Inkscape::Colors::Space::Type)>& colorSpaceChanged();
 
@@ -70,6 +78,9 @@ private:
     void removeWidgets();
     void switchPage(Inkscape::Colors::Space::Type space, ColorPlateType plateType);
     void updateColor();
+    void bindRecentColors();
+    void updateRecentColors();
+    void setRecentVisible(bool show);
     void pickColor();
     void cancelPick();
     void endPick();
@@ -92,7 +103,13 @@ private:
     sigc::scoped_connection _colorChanged;
     sigc::scoped_connection _colorPicking;
     sigc::scoped_connection _colorPickingCancel;
+    // recent colors strip state; _recentColors is owned by the bound document
+    Linea::RecentColors* _recentColors = nullptr;
+    sigc::scoped_connection _recentChanged;
+    sigc::scoped_connection _docReplaced;
+    bool _showRecent = false;
     Inkscape::UI::Tools::DropperTool* _pickTool = nullptr; // valid only while _colorPicking is connected
+    sigc::signal<void(const FlatColor&)> _recentColorClicked;
     sigc::signal<void(Inkscape::Colors::Space::Type)> _colorSpaceChanged;
 };
 

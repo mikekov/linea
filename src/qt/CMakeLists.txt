@@ -143,6 +143,8 @@ target_sources(linea_base PRIVATE
     ui/simple-grid.h
     ui/color-palette-widget.cpp
     ui/color-palette-widget.h
+    ui/recent-colors-widget.cpp
+    ui/recent-colors-widget.h
     ui/color-palette-panel.cpp
     ui/color-palette-panel.h
     ui/color-palette-options.cpp

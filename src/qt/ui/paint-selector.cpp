@@ -112,6 +112,7 @@ public:
                   ? ColorPlate::plateTypeFor(space)
                   : ColorPlateType::None,
               colors)) {
+        _picker->showRecentColors(true);
         auto layout = new QVBoxLayout(this);
         layout->setContentsMargins(0, 0, 0, 0);
         layout->addWidget(_picker.get());
@@ -177,6 +178,8 @@ public:
 
     void setDesktop(SPDesktop* desktop) override {
         _desktop = desktop;
+        _flat_color.getPicker().setDesktop(desktop);
+        _gradient.getPicker().setDesktop(desktop);
         // _swatch.set_desktop(desktop);
     }
     void setDocument(SPDocument* document) override {
@@ -376,6 +379,14 @@ PaintSelectorImpl::PaintSelectorImpl(bool support_no_paint, bool support_fill_ru
     _flat_color.getPicker().colorSpaceChanged().connect([this](Type type) {
         store_color_type(type);
         sync_plate_button();
+    });
+
+    _flat_color.getPicker().recentColorClicked().connect([this](const Linea::FlatColor& flat) {
+        if (_update.pending()) return;
+        if (auto swatch = std::get_if<Linea::Swatch>(&flat)) {
+            auto scoped = _update.block();
+            Q_EMIT cssSwatchChanged(*swatch);
+        }
     });
 
     connect(&_mesh, &MeshEditor::changed, this, [this](SPGradient* mesh) { fire_mesh_changed(mesh); });

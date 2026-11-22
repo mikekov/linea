@@ -153,6 +153,26 @@
         </widget>
       </item>
       <item>
+        <widget class="QLabel" name="recentLabel">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+          <property name="text">
+            <string>Recent colors</string>
+          </property>
+          <property name="class" stdset="0">
+            <string>panel-label</string>
+          </property>
+        </widget>
+      </item>
+      <item>
+        <widget class="Linea::UI::RecentColorsWidget" name="recentColors">
+          <property name="visible">
+            <bool>false</bool>
+          </property>
+        </widget>
+      </item>
+      <item>
         <spacer name="spacer">
           <property name="orientation">
             <enum>Qt::Orientation::Vertical</enum>
@@ -177,6 +197,11 @@
       <class>Linea::UI::ColorEntry</class>
       <extends>QLineEdit</extends>
       <header>color-entry.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::RecentColorsWidget</class>
+      <extends>QWidget</extends>
+      <header>recent-colors-widget.h</header>
     </customwidget>
   </customwidgets>
   <resources/>

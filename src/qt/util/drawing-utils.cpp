@@ -19,6 +19,7 @@
 #include "2geom/affine.h"
 #include "libnrtype/font-instance.h"
 #include "colors/color.h"
+#include "colors/utils.h"
 #include "object/sp-gradient.h"
 #include "object/sp-stop.h"
 
@@ -42,6 +43,125 @@ QPixmap checkerPattern(const QColor& base, int tile) {
     pt.fillRect(tile, tile, tile, tile, other);
     pt.end();
     return p;
+}
+
+void paintColorTile(QPainter* painter, const Geom::IntRect& rect, const QPalette& palette, const ColorTileParams& params) {
+    auto rgb = QColor::fromRgba(0xffffffff);
+    auto c = params.color ? &*params.color : nullptr;
+    if (c) {
+        rgb = QColor::fromRgba(static_cast<QRgb>(c->toARGB()));
+    } else if (!params.none) {
+        // nothing to draw
+        return;
+    }
+
+    auto tile = QRectF(rect.left(), rect.top(), rect.width(), rect.height());
+    double radius = 2.0;
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setBrush(rgb);
+    painter->setPen(Qt::NoPen);
+    painter->drawRoundedRect(tile, radius, radius);
+
+    if (params.swatch) {
+        painter->save();
+
+        QPainterPath clip;
+        clip.addRoundedRect(tile, radius, radius);
+        painter->setClipPath(clip);
+
+        auto side = std::min(tile.width(), tile.height()) / 2.5;
+        auto line = 1.5;
+        auto left = tile.left();
+        auto top = tile.top();
+
+        painter->setPen(Qt::NoPen);
+
+        QPainterPath separator;
+        separator.moveTo(left, top + side);
+        separator.lineTo(left, top + side - line);
+        separator.lineTo(left + side - line, top);
+        separator.lineTo(left + side, top);
+        separator.closeSubpath();
+        painter->setBrush(QColor::fromHslF(0, 0, 1, 0.7));
+        painter->drawPath(separator);
+
+        QPainterPath triangle;
+        triangle.moveTo(left, top + side - line);
+        triangle.lineTo(left, top);
+        triangle.lineTo(left + side - line, top);
+        triangle.closeSubpath();
+        painter->setBrush(QColor::fromHslF(0, 0, 0.25));
+        painter->drawPath(triangle);
+
+        painter->restore();
+    }
+
+    if (params.none) {
+        // draw diagonal line
+        painter->setPen(QPen(Qt::red, 1.5));
+        auto r = tile.adjusted(2, 2, -2, -2);
+        painter->drawLine(r.bottomLeft(), r.topRight());
+    }
+
+    if (params.fill || params.stroke) {
+        auto color = c ? *c : Inkscape::Colors::Color::white();
+        const auto lightness = Inkscape::Colors::get_perceptual_lightness(color);
+        auto [gray, alpha] = Inkscape::Colors::get_contrasting_color(lightness);
+
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor::fromRgbF(gray, gray, gray, alpha));
+
+        auto w = tile.width();
+        auto h = tile.height();
+        auto minwh = std::min(w, h);
+        auto center = tile.center();
+        auto scale = minwh / 2.0;
+
+        if (params.fill) {
+            painter->drawEllipse(center, 0.35 * scale, 0.35 * scale);
+        }
+
+        if (params.stroke) {
+            QPainterPath ring;
+            ring.addEllipse(center, 0.65 * scale, 0.65 * scale);
+            ring.addEllipse(center, 0.5 * scale, 0.5 * scale);
+            ring.setFillRule(Qt::OddEvenFill);
+            painter->drawPath(ring);
+        }
+    }
+
+    // relief effect
+    QLinearGradient grad(rect.left(), rect.top(), rect.right(), rect.bottom());
+    auto w = palette.color(QPalette::Window);
+    auto b = palette.color(QPalette::WindowText);
+    QColor white = w;
+    white.setAlphaF(w.alphaF() * 0.30);
+    QColor black = b;
+    black.setAlphaF(b.alphaF() * 0.15);
+    grad.setColorAt(0, white);
+    grad.setColorAt(0.48, white);
+    white.setAlphaF(0);
+    grad.setColorAt(0.49, white);
+    auto a = black.alphaF();
+    black.setAlphaF(0);
+    grad.setColorAt(0.50, black);
+    black.setAlphaF(a);
+    grad.setColorAt(0.51, black);
+    grad.setColorAt(1, black);
+    QPen pen(QBrush(grad), 1.0);
+    painter->setPen(pen);
+    painter->setBrush(Qt::NoBrush);
+    tile.adjust(0.5, 0.5, -0.5, -0.5);
+    radius -= 0.5;
+    painter->drawRoundedRect(tile, radius, radius);
+}
+
+QString colorTooltip(const Inkscape::Colors::Color& color) {
+    auto name = color.getName();
+    if (!name.empty()) {
+        return QString::fromStdString(name);
+    }
+    return QString::fromStdString(color.toString(false));
 }
 
 QColor getStandardBorderColor(bool darkTheme) {

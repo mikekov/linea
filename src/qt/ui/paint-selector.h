@@ -14,6 +14,7 @@
 #include "colors/color.h"
 #include "object/sp-gradient.h"
 #include "qt/ui/color-picker-panel.h"
+#include "swatch-type.h"
 #include "ui/widget/edit-operation.h"
 #include "ui/widget/paint-enums.h"
 #include "util/style-utils.h"
@@ -74,6 +75,8 @@ public:
 
 Q_SIGNALS:
     void flatColorChanged(const Inkscape::Colors::Color& color);
+    // a document swatch (CSS custom property) was picked — apply it as a var() reference
+    void cssSwatchChanged(const Linea::Swatch& swatch);
     void modeChanged(Inkscape::UI::Widget::PaintMode mode);
     void gradientChanged(SPGradient* gradient, SPGradientType type);
     void swatchChanged(SPGradient* swatch, Inkscape::UI::EditOperation op, SPGradient* replacement,

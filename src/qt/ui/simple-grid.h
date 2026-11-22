@@ -72,6 +72,11 @@ public:
     // if true, the vertical scroll bar is never painted; scrolling still works
     // and the AlwaysOn gutter stays reserved so the width is stable
     void setScrollBarHidden(bool hidden);
+    // if true, the vertical scroll bar is turned off entirely; no gutter is reserved
+    void setScrollBarSuppressed(bool suppressed);
+    // if true, cells are laid out in a single row (Horizontal flow) or a single
+    // column (Vertical flow) with no wrapping
+    void setSingleLine(bool singleLine);
     // width of the vertical scroll bar
     int verticalScrollBarWidth() const;
     // current grid dimensions in columns (x) and rows (y)
@@ -134,6 +139,7 @@ private:
     void selectCell(int index);
     void openCell(int index);
     void scrollTo(int cell);
+    void updateScrollBarPolicy();
 
     QScrollArea* _scrollArea;
     SimpleGridViewport* _viewport;
@@ -155,6 +161,8 @@ private:
     bool _stretchCells = true;
     bool _selectable = true;
     bool _sizeToContents = false;
+    bool _singleLine = false;
+    bool _scrollBarSuppressed = false;
     Flow _flow = Flow::Horizontal;
     Size _areaSize;
     int _clickedCell = -1;

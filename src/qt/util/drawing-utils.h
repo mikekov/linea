@@ -14,7 +14,9 @@
 #include <QRectF>
 #include <functional>
 #include <cstdint>
+#include <optional>
 
+#include "colors/color.h"
 #include "2geom/int-rect.h"
 #include "2geom/affine.h"
 
@@ -29,6 +31,26 @@ namespace Linea::UI {
  * This uses the perceived brightness formula given at: https://www.w3.org/TR/AERT/#color-contrast
  */
 double getLuminance(const QColor& color);
+
+// What to paint in a color tile.
+struct ColorTileParams {
+    std::optional<Inkscape::Colors::Color> color; // solid color; empty with none=false paints nothing
+    bool none = false;    // "no color" tile: white with a red diagonal
+    bool swatch = false;  // draw the document-swatch corner marker
+    bool fill = false;    // draw the current-fill indicator dot
+    bool stroke = false;  // draw the current-stroke indicator ring
+};
+
+/**
+ * Paint a single color tile: rounded color fill, optional swatch corner marker,
+ * red diagonal for "no color", current fill/stroke indicators and a relief border.
+ */
+void paintColorTile(QPainter* painter, const Geom::IntRect& rect, const QPalette& palette, const ColorTileParams& params);
+
+/**
+ * Tooltip text for a color: its name if non-empty, else its string form without opacity.
+ */
+QString colorTooltip(const Inkscape::Colors::Color& color);
 
 /**
  * Create a checkerboard pattern pixmap for use as a QBrush.

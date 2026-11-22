@@ -93,10 +93,28 @@ void SimpleGrid::setSizeToContents(bool autoSize) {
     if (_sizeToContents == autoSize) return;
 
     _sizeToContents = autoSize;
-    _scrollArea->setVerticalScrollBarPolicy(_sizeToContents ? Qt::ScrollBarAlwaysOff : Qt::ScrollBarAlwaysOn);
+    updateScrollBarPolicy();
     _scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setSizePolicy(QSizePolicy::Expanding, _sizeToContents ? QSizePolicy::Fixed : QSizePolicy::Expanding);
     resizeLayout();
+}
+
+void SimpleGrid::updateScrollBarPolicy() {
+    _scrollArea->setVerticalScrollBarPolicy((_sizeToContents || _scrollBarSuppressed) ? Qt::ScrollBarAlwaysOff : Qt::ScrollBarAlwaysOn);
+}
+
+void SimpleGrid::setScrollBarSuppressed(bool suppressed) {
+    if (_scrollBarSuppressed == suppressed) return;
+
+    _scrollBarSuppressed = suppressed;
+    updateScrollBarPolicy();
+}
+
+void SimpleGrid::setSingleLine(bool singleLine) {
+    if (_singleLine == singleLine) return;
+
+    _singleLine = singleLine;
+    invalidate();
 }
 
 void SimpleGrid::setScrollBarHidden(bool hidden) {
@@ -643,7 +661,9 @@ bool SimpleGrid::calcLayout(int width, int height) {
         return false;
     }
 
-    auto columns = std::max(1, (width + _gap.x()) / (_cellSize.x() + _gap.x()));
+    auto columns = _singleLine
+        ? (_flow == Flow::Horizontal ? static_cast<int>(_cellCount) : 1)
+        : std::max(1, (width + _gap.x()) / (_cellSize.x() + _gap.x()));
     _cellPitch.x() = _stretchCells ? width / columns : _cellSize.x() + _gap.x();
     auto rows = static_cast<int>((_cellCount + columns - 1) / columns); // round up
     _cellPitch.y() = _cellSize.y() + _gap.y();

@@ -23,11 +23,14 @@
 #include "color-plate.h"
 #include "color-preview.h"
 #include "preferences.h"
+#include "recent-colors.h"
+#include "recent-colors-widget.h"
 
 #include "colors/color.h"
 #include "colors/manager.h"
 #include "colors/spaces/base.h"
 #include "desktop.h"
+#include "document.h"
 #include "inkscape.h"
 #include "qt/util/surface-format.h"
 #include "ui/cursor-utils.h"
@@ -61,6 +64,17 @@ ColorPickerPanel::ColorPickerPanel(
     createColorPage(space, type);
 
     _colorChanged = _colorSet->signal_changed.connect([this]() { updateColor(); });
+
+    // flat colors push into the picker directly; a swatch goes out on
+    // recentColorClicked for the host to apply as a var() reference —
+    // the holder cannot carry one
+    connect(_ui->recentColors, &RecentColorsWidget::cellClicked, this,
+            [this](const FlatColor& entry, Qt::KeyboardModifiers, Qt::MouseButtons) {
+                if (auto color = std::get_if<Color>(&entry)) {
+                    _colorSet->set(*color);
+                }
+                _recentColorClicked.emit(entry);
+            });
 }
 
 ColorPickerPanel::~ColorPickerPanel() { cancelPick(); }
@@ -196,10 +210,62 @@ void ColorPickerPanel::switchPage(Space::Type space, ColorPlateType plateType) {
 
 void ColorPickerPanel::setDesktop(SPDesktop* desktop) {
     _desktop = desktop;
+    if (_showRecent) {
+        bindRecentColors();
+    }
 }
 
 void ColorPickerPanel::setColor(const Inkscape::Colors::Color& color) {
     _colorSet->set(color);
+}
+
+void ColorPickerPanel::showRecentColors(bool show) {
+    if (show == _showRecent) return;
+
+    _showRecent = show;
+    if (show) {
+        bindRecentColors();
+    } else {
+        _docReplaced.disconnect();
+        _recentChanged.disconnect();
+        _recentColors = nullptr;
+        setRecentVisible(false);
+    }
+}
+
+// (Re)bind the strip to the current document's recent colors; keeps following
+// document replacement on the desktop while the strip is enabled.
+void ColorPickerPanel::bindRecentColors() {
+    _docReplaced.disconnect();
+    _recentChanged.disconnect();
+    _recentColors = nullptr;
+
+    auto document = _desktop ? _desktop->getDocument() : nullptr;
+    if (!document) {
+        _ui->recentColors->setEntries({});
+        setRecentVisible(false);
+        return;
+    }
+
+    _docReplaced = _desktop->connectDocumentReplaced(
+        [this](SPDesktop*, SPDocument*) { bindRecentColors(); });
+
+    _recentColors = &document->getRecentColors();
+    _recentChanged = _recentColors->signal_changed().connect([this] { updateRecentColors(); });
+    updateRecentColors();
+}
+
+void ColorPickerPanel::updateRecentColors() {
+    if (!_recentColors) return;
+
+    _ui->recentColors->setEntries(_recentColors->entries());
+    // an empty strip is dead vertical space; the enabled flag only arms it
+    setRecentVisible(_showRecent && !_ui->recentColors->entries().empty());
+}
+
+void ColorPickerPanel::setRecentVisible(bool show) {
+    _ui->recentLabel->setVisible(show);
+    _ui->recentColors->setVisible(show);
 }
 
 void ColorPickerPanel::setPickerType(Space::Type type) {
@@ -221,6 +287,10 @@ void ColorPickerPanel::setPlateType(ColorPlateType plate) {
 
 ColorPlateType ColorPickerPanel::getPlateType() const {
     return _plateType;
+}
+
+sigc::signal<void(const FlatColor&)>& ColorPickerPanel::recentColorClicked() {
+    return _recentColorClicked;
 }
 
 sigc::signal<void(Space::Type)>& ColorPickerPanel::colorSpaceChanged() {

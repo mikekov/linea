@@ -64,6 +64,19 @@ std::vector<QMetaObject::Connection> bindPaintSelectorToEditor(PaintSelector* se
         }));
 
     conns.push_back(QObject::connect(
+        selector, &PaintSelector::cssSwatchChanged, context, [editor, fill](const Linea::Swatch& swatch) {
+            const auto undoKey = fill ? "change-fill" : "change-stroke";
+            auto css = new_css_attr();
+            sp_repr_css_set_property_string(css.get(), fill ? "fill" : "stroke", swatch.cssVar());
+            editor->apply(PaintEditDelegate::CssOp{css}, undoKey,
+                          fill ? RC_("Undo", "Set fill color from swatch")
+                               : RC_("Undo", "Set stroke color from swatch"));
+            if (auto desktop = editor->desktop()) {
+                desktop->getDocument()->getRecentColors().noteSwatch(swatch, undoKey);
+            }
+        }));
+
+    conns.push_back(QObject::connect(
         selector, &PaintSelector::gradientChanged, context, [editor, fill](SPGradient* vector, SPGradientType type) {
             editor->apply(PaintEditDelegate::GradientOp{vector, type, fill},
                           fill ? "fill-gradient-change" : "stroke-gradient-change",
