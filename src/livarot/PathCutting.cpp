@@ -74,18 +74,21 @@ void  Path::DashPolylineFromStyle(SPStyle *style, float scale, float min_len)
         }
 
         // Convert relative positions to absolute positions
-        int nbD = n_dash;
-        std::vector<float> dashes(n_dash);
         if (dlen > 0) {
-            while (dash_offset >= dlen) dash_offset -= dlen;
+            while (dash_offset >= dlen)
+                dash_offset -= dlen;
+            while (dash_offset < 0.0)
+                dash_offset += dlen;
         }
+
+        std::vector<float> dashes(n_dash);
         dashes[0] = dash[0];
-        for (int i = 1; i < nbD; ++i) {
+        for (int i = 1; i < n_dash; ++i) {
             dashes[i] = dashes[i-1] + dash[i];
         }
 
         // modulo dlen
-        DashPolyline(0.0, 0.0, dlen, nbD, dashes.data(), true, dash_offset);
+        DashPolyline(0.0, 0.0, dlen, n_dash, dashes.data(), true, dash_offset);
     }
 }
 
