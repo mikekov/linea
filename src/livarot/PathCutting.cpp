@@ -33,7 +33,7 @@ void  Path::DashPolyline(float head,float tail,float body,int nbD, const float d
 {
   if ( nbD <= 0 || body <= 0.0001 ) return; // pas de tirets, en fait
 
-  std::vector<path_lineto> orig_pts = pts;
+  std::vector<path_lineto> orig_pts = std::move(pts);
   pts.clear();
 
   int       lastMI=-1;
