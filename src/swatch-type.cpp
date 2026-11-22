@@ -19,4 +19,19 @@ std::string Swatch::tryRename(std::string name) {
     return *newName;
 }
 
+std::vector<Swatch> swatches_from_properties(const std::vector<Inkscape::Css::CustomCSSProperty>& properties,
+                                             bool name_colors) {
+    std::vector<Swatch> swatches;
+    for (auto& prop : properties) {
+        if (auto color = Inkscape::Colors::Color::parse(prop.value)) {
+            if (name_colors) {
+                color->setName(prop.name);
+            }
+            swatches.emplace_back(Swatch{prop, std::move(*color)});
+        }
+        // Non-color properties stay in the stylesheet but are not swatches.
+    }
+    return swatches;
+}
+
 } // namespace Linea

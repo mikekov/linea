@@ -17,6 +17,8 @@
 
 #include "desktop-style.h"
 #include "document-undo.h"
+#include "document.h"
+#include "recent-colors.h"
 #include "message-context.h"
 #include "selection.h"
 #include "style.h"
@@ -308,6 +310,8 @@ bool DropperTool::root_handler(CanvasEvent const &event)
             if (!_desktop->getSelection()->isEmpty()) {
                 DocumentUndo::done(_desktop->getDocument(), RC_("Undo", "Set picked color"), INKSCAPE_ICON("color-picker"));
             }
+
+            _desktop->getDocument()->getRecentColors().noteColor(*picked_color, nullptr);
 
             if (dropping) {
                 selection->setList(old_selection);

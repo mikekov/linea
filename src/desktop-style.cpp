@@ -28,6 +28,8 @@
 #include "colors/color-set.h"
 #include "desktop.h"
 #include "document-undo.h"
+#include "document.h"
+#include "recent-colors.h"
 #include "filter-chemistry.h"
 #include "inkscape.h"
 #include "selection.h"
@@ -1217,8 +1219,8 @@ objects_query_fontvariants (const std::vector<SPItem*> &objects, SPStyle *style_
         texts ++;
 
         SPILigatures* ligatures_in = &(style->font_variant_ligatures);
-        auto*         position_in  = &(style->font_variant_position);
-        auto*         caps_in      = &(style->font_variant_caps);
+        auto          position_in  = &(style->font_variant_position);
+        auto          caps_in      = &(style->font_variant_caps);
         SPINumeric*   numeric_in   = &(style->font_variant_numeric);
         SPIEastAsian* asian_in     = &(style->font_variant_east_asian);
 
@@ -1830,11 +1832,11 @@ void sp_desktop_apply_color(SPDesktop* desktop, const Linea::FlatColor& paint, b
 
     std::optional<Inkscape::Util::Internal::ContextString> description;
 
-    if (const auto* color = std::get_if<Inkscape::Colors::Color>(&paint)) {
+    if (const auto color = std::get_if<Inkscape::Colors::Color>(&paint)) {
         sp_repr_css_set_property_string(css.get(), attr_name, color->toString());
         description = stroke ? RC_("Undo", "Set stroke color from swatch") : RC_("Undo", "Set fill color from swatch");
     }
-    else if (const auto* swatch = std::get_if<Linea::Swatch>(&paint)) {
+    else if (const auto swatch = std::get_if<Linea::Swatch>(&paint)) {
         // Document swatch: retain the custom property as a var() reference.
         sp_repr_css_set_property_string(css.get(), attr_name, swatch->cssVar());
         description = stroke ? RC_("Undo", "Set stroke color from swatch") : RC_("Undo", "Set fill color from swatch");
@@ -1864,4 +1866,10 @@ void sp_desktop_apply_color(SPDesktop* desktop, const Linea::FlatColor& paint, b
     sp_desktop_set_style(desktop, css.get());
 
     DocumentUndo::done(desktop->getDocument(), *description, "");
+
+    if (const auto color = std::get_if<Inkscape::Colors::Color>(&paint)) {
+        desktop->getDocument()->getRecentColors().noteColor(*color, nullptr);
+    } else if (const auto swatch = std::get_if<Linea::Swatch>(&paint)) {
+        desktop->getDocument()->getRecentColors().noteSwatch(*swatch, nullptr);
+    }
 }

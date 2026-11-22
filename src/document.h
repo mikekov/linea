@@ -67,6 +67,10 @@ namespace Avoid {
 class Router;
 }
 
+namespace Linea {
+class RecentColors;
+}
+
 class Persp3D;
 class Persp3DImpl;
 class SPDefs;
@@ -233,6 +237,10 @@ public:
 
     Inkscape::Selection *getSelection() { return _selection.get(); }
 
+    // Per-document most-recently-used color list (lazily created; loads
+    // persisted entries from the namedview on first access).
+    Linea::RecentColors& getRecentColors();
+
     // Styling
     CRCascade    *getStyleCascade() { return style_cascade; }
 
@@ -366,6 +374,9 @@ public:
 
     // Document undo/redo ----------------------
     unsigned long serial() const { return _serial; }  // Returns document's unique number.
+    // Serial of the most recent undo commit; a new undo step bumps it,
+    // a coalesced commit keeps it.
+    unsigned long undoCommitSerial() const { return _undo_commit_serial; }
     bool isSeeking() const {return seeking;} // In a transition between two "good" states of document?
     bool isPartial() const {return partial != nullptr;} // In partianl undo/redo transaction
     void resetKey() { actionkey.clear(); }
@@ -450,6 +461,8 @@ private:
 
     bool seeking; // Related to undo/redo/unique id
     unsigned long _serial; // Unique document number (used by undo/redo).
+    unsigned long _undo_commit_serial = 0; // Bumped for each new Event pushed onto `undo`.
+    std::unique_ptr<Linea::RecentColors> _recent_colors; // Lazily created recent-colors list.
     Glib::ustring actionkey; // Last action key, used to combine actions in undo.
     double action_expires; // Expire time for last action key
     std::optional<std::chrono::steady_clock::time_point> undo_timer; // Timer for last action key

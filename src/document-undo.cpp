@@ -201,6 +201,7 @@ void Inkscape::DocumentUndo::maybeDoneInternal(SPDocument *doc, gchar const *key
     } else {
         Inkscape::Event *event = new Inkscape::Event(log, event_description.c_str(), icon_name);
         doc->undo.push_back(event);
+        ++doc->_undo_commit_serial;
         if (!temporary) {
             doc->undoStackObservers.notifyUndoCommitEvent(event);
         }

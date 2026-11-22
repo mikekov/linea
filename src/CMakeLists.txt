@@ -56,6 +56,7 @@ target_sources(linea_base PRIVATE
   proj_pt.cpp
   pure-transform.cpp
   rdf.cpp
+  recent-colors.cpp
   rubberband.cpp
   selcue.cpp
   selection-chemistry.cpp
@@ -148,6 +149,7 @@ target_sources(linea_base PRIVATE
   proj_pt.h
   pure-transform.h
   rdf.h
+  recent-colors.h
   rubberband.h
   selcue.h
   selection-chemistry.h

@@ -904,15 +904,7 @@ bool SPDesktopWidget::dialogsDocked() const {
 
 // Push the document's ':root' custom properties into the swatch strip.
 void SPDesktopWidget::_refreshDocumentSwatches() {
-    std::vector<Swatch> swatches;
-    for (auto& prop : _docSwatches->properties()) {
-        if (auto color = Inkscape::Colors::Color::parse(prop.value)) {
-            color->setName(prop.name);
-            swatches.emplace_back(Swatch{prop, std::move(*color)});
-        }
-        // Non-color properties stay in the stylesheet but are not swatches.
-    }
-    _colorPalette->setSwatchColors(std::move(swatches));
+    _colorPalette->setSwatchColors(swatches_from_properties(_docSwatches->properties(), true));
 }
 
 void SPDesktopWidget::_applyPalette(int index) {

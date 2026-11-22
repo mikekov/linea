@@ -48,6 +48,7 @@
 #include "object/sp-tspan.h"
 #include "object/sp-root.h"
 #include "object/sp-object-iterator.h"
+#include "recent-colors.h"
 #include "style.h"
 
 #include "svg/svg.h"
@@ -886,7 +887,11 @@ SPStop* sp_gradient_add_stop_at(SPGradient* gradient, double offset) {
 void sp_set_gradient_stop_color(SPDocument* document, SPStop* stop, Colors::Color const &color) {
    sp_repr_set_css_double(stop->getRepr(), "offset", stop->offset);
    stop->setColor(color);
-   DocumentUndo::maybeDone(document, "gradient:stop:color", RC_("Undo", "Change gradient stop color"), INKSCAPE_ICON("color-gradient"));
+   const auto gradient = cast<SPGradient>(stop->parent);
+   // Per-stop key so coalescing only merges consecutive edits of one stop.
+   const auto key = "gradient:stop:color:" + std::to_string(sp_number_of_stops_before_stop(gradient, stop));
+   DocumentUndo::maybeDone(document, key.c_str(), RC_("Undo", "Change gradient stop color"), INKSCAPE_ICON("color-gradient"));
+   document->getRecentColors().noteColor(color, key.c_str());
 }
 
 SPStop* sp_item_gradient_get_stop(SPItem *item, GrPointType point_type, guint point_i, Inkscape::PaintTarget fill_or_stroke) {

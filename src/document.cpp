@@ -50,14 +50,9 @@
 #include "3rdparty/libcroco/src/cr-sel-eng.h"
 #include "3rdparty/libcroco/src/cr-selector.h"
 #include "3rdparty/libcroco/src/cr-term.h"
-#include "actions/actions-edit-document.h"
-#include "actions/actions-effect.h"
-#include "actions/actions-undo-document.h"
 #include "colors/document-cms.h"
 #include "debug/console-output-undo-observer.h"
 #include "desktop.h"
-#include "display/control/canvas-item-drawing.h"
-#include "display/drawing.h"
 #include "document-undo.h"
 #include "document-update.h"
 #include "event-log.h"
@@ -80,10 +75,9 @@
 #include "object/sp-symbol.h"
 #include "page-manager.h"
 #include "rdf.h"
+#include "recent-colors.h"
 #include "selection.h"
 #include "style.h"
-#include "ui/widget/canvas.h"
-#include "ui/desktop/desktop-widget.h"
 #include "util/units.h"
 #include "xml/croco-node-iface.h"
 #include "xml/event-fns.h"
@@ -216,6 +210,13 @@ int SPDocument::get_new_doc_number()
 Inkscape::XML::Node *SPDocument::getReprNamedView()
 {
     return sp_repr_lookup_name (rroot, "sodipodi:namedview");
+}
+
+Linea::RecentColors& SPDocument::getRecentColors() {
+    if (!_recent_colors) {
+        _recent_colors = std::make_unique<Linea::RecentColors>(*this);
+    }
+    return *_recent_colors;
 }
 
 /**

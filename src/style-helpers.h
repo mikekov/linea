@@ -96,6 +96,18 @@ struct CustomCSSProperty {
 // Custom properties of the first ':root { ... }' rule in the stylesheet, in order.
 std::vector<CustomCSSProperty> root_custom_properties(std::string_view css);
 
+// The CSS var() function call referencing a custom property (name
+// includes the "--" prefix).
+std::string css_var(std::string_view name);
+
+// Extract the custom property name from a var(--name[, fallback]) token.
+// Returns std::nullopt when value (after trimming) is not a var() call.
+std::optional<std::string> parse_css_var(std::string_view value);
+
+// Custom properties of the first ':root' rule in the document's first
+// <svg:style> element, read directly without a watcher.
+std::vector<CustomCSSProperty> document_custom_properties(SPDocument* document);
+
 // Replace the value of a custom property in the first ':root' rule.
 // Returns false if the property is not defined there.
 bool set_root_custom_property(std::string& css, std::string_view name, std::string_view value);

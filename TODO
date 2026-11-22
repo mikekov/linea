@@ -32,6 +32,7 @@ x don't open twice the same file from the home page; activate existing tab
 - fix oklch color picker to select correct srgb colors
 - oklch color sliders should only show colors inside srgb/p3 gamut
 - right panel - reserve space for a scrollbar, so it doesn't push the content
+- rect/oval etc. cursor doesn't render in color if current tool fill is a swatch
 
 ## Missing features
 

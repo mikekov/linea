@@ -21,6 +21,7 @@
 #include "document-undo.h"
 #include "document.h"
 #include "preferences.h"
+#include "recent-colors.h"
 #include "style-helpers.h"
 #include "ui_swatch-editor.h"
 #include "util-string/context-string.h"
@@ -108,15 +109,7 @@ void SwatchEditor::reload() {
     const std::string selectedName =
         _selected >= 0 && _selected < static_cast<int>(_swatches.size()) ? _swatches[_selected].cssName() : std::string();
 
-    _swatches.clear();
-    for (auto& prop : _sheet->customProperties()) {
-        auto color = Inkscape::Colors::Color::parse(prop.value);
-        if (!color) {
-            // Not a color — preserved in the stylesheet but not a swatch.
-            continue;
-        }
-        _swatches.push_back({prop, std::move(*color)});
-    }
+    _swatches = swatches_from_properties(_sheet->customProperties());
 
     auto scoped = _update.block();
     QSignalBlocker listBlocker(_ui->swatchList);
@@ -180,6 +173,7 @@ void SwatchEditor::onItemRenamed(QListWidgetItem* item) {
         // by name, and the rebuilt list only contains the new name.
         swatch.setName(newName);
         writeCss(std::move(css));
+        _document->getRecentColors().renameSwatch(oldName, newName);
     } else {
         // Rejected by the stylesheet (e.g. duplicates an existing name).
         revert();

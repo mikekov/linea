@@ -144,11 +144,11 @@ void DocumentStyleSheet::setText(std::string const& text) {
 }
 
 std::vector<CustomCSSProperty> DocumentStyleSheet::customProperties() const {
-    return root_custom_properties(text());
+    return document_custom_properties(_document);
 }
 
 void DocumentStyleSheet::syncStyleElement() {
-    auto* elem = first_style_element(_document);
+    auto elem = first_style_element(_document);
     if (elem != _elem) {
         _subtree.reset();
         _elem = elem;
@@ -386,6 +386,32 @@ std::optional<std::string> normalize_custom_property_name(std::string_view input
         }
     }
     return name;
+}
+
+std::string css_var(std::string_view name) {
+    return "var(" + std::string(name) + ")";
+}
+
+std::optional<std::string> parse_css_var(std::string_view value) {
+    const auto token = trim(value);
+    if (!token.starts_with("var(")) {
+        return std::nullopt;
+    }
+    const auto open = token.find('(');
+    const auto close = token.find_first_of(",)", open + 1);
+    const auto name = trim(token.substr(open + 1, close == std::string_view::npos ? close : close - open - 1));
+    if (name.empty()) {
+        return std::nullopt;
+    }
+    return std::string(name);
+}
+
+std::vector<CustomCSSProperty> document_custom_properties(SPDocument* document) {
+    const auto elem = first_style_element(document);
+    if (!elem) {
+        return {};
+    }
+    return root_custom_properties(sp_repr_text_content(elem).raw());
 }
 
 std::vector<CustomCSSProperty> root_custom_properties(std::string_view css) {

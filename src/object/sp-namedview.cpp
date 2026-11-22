@@ -34,6 +34,7 @@
 #include "layer-manager.h"
 #include "page-manager.h"
 #include "preferences.h"
+#include "recent-colors.h"
 #include "sp-guide.h"
 #include "sp-grid.h"
 #include "sp-page.h"
@@ -667,7 +668,7 @@ void sp_namedview_update_layers_from_document (SPDesktop *desktop)
     // if that didn't work out, look for the topmost layer
     if (!layer) {
         for (auto& iter: document->getRoot()->children) {
-            if (auto* grp = desktop->layerManager().asLayer(&iter)) {
+            if (auto grp = desktop->layerManager().asLayer(&iter)) {
                 layer = grp;
             }
         }
@@ -710,6 +711,8 @@ void sp_namedview_document_from_window(SPDesktop *desktop)
     if (auto layer = desktop->layerManager().currentLayer()) {
         view->setAttribute("inkscape:current-layer", layer->getId());
     }
+
+    desktop->getDocument()->getRecentColors().save(*view);
 }
 
 void SPNamedView::hide(SPDesktop const *desktop)

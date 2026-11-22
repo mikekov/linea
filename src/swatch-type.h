@@ -7,6 +7,7 @@
 #define LINEA_SWATCH_TYPE_H
 
 #include <string>
+#include <vector>
 
 #include "colors/color.h"
 #include "style-helpers.h"
@@ -24,7 +25,7 @@ public:
     const std::string& cssName() const { return _property.name; }
 
     // CSS var() function call for this swatch.
-    std::string cssVar() const { return "var(" + _property.name + ")"; }
+    std::string cssVar() const { return Inkscape::Css::css_var(_property.name); }
 
     // Prefix-free name for display.
     std::string displayName() const { return _property.display_name(); }
@@ -41,6 +42,11 @@ private:
     Inkscape::Css::CustomCSSProperty _property;
     Inkscape::Colors::Color _color;
 };
+
+// All color-valued properties as swatches, in order. When name_colors is
+// true, each parsed color is named after its property.
+std::vector<Swatch> swatches_from_properties(const std::vector<Inkscape::Css::CustomCSSProperty>& properties,
+                                             bool name_colors = false);
 
 } // namespace Linea
 

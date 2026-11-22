@@ -7,6 +7,8 @@
 
 #include "colors/color.h"
 #include "document-undo.h"
+#include "document.h"
+#include "recent-colors.h"
 #include "paint-selector.h"
 #include "props/editor.h"
 #include "style.h"
@@ -53,8 +55,12 @@ std::vector<QMetaObject::Connection> bindPaintSelectorToEditor(PaintSelector* se
 
     conns.push_back(
         QObject::connect(selector, &PaintSelector::flatColorChanged, context, [editor, fill](const Color& color) {
-            editor->apply(PaintEditDelegate::CssOp{makePaintCss(fill, color)}, fill ? "change-fill" : "change-stroke",
+            const auto undoKey = fill ? "change-fill" : "change-stroke";
+            editor->apply(PaintEditDelegate::CssOp{makePaintCss(fill, color)}, undoKey,
                           fill ? RC_("Undo", "Set fill color") : RC_("Undo", "Set stroke color"));
+            if (auto desktop = editor->desktop()) {
+                desktop->getDocument()->getRecentColors().noteColor(color, undoKey);
+            }
         }));
 
     conns.push_back(QObject::connect(

@@ -20,6 +20,7 @@
 #include "object/sp-hatch.h"
 #include "object/sp-text.h"
 #include "object/sp-flowtext.h"
+#include "style-helpers.h"
 #include "style-internal.h"
 #include "style.h"
 #include "style-enums.h"
@@ -30,21 +31,6 @@
 
 namespace Linea {
 
-namespace {
-
-// Extract the custom property name from a var(--name[, fallback]) token.
-std::optional<std::string> css_var_name(std::string_view value) {
-    auto open = value.find('(');
-    if (open == std::string_view::npos) return std::nullopt;
-    auto close = value.find_first_of(",)", open + 1);
-    auto name = value.substr(open + 1, close == std::string_view::npos ? close : close - open - 1);
-    auto first = name.find_first_not_of(" \t");
-    if (first == std::string_view::npos) return std::nullopt;
-    return std::string(name.substr(first, name.find_last_not_of(" \t") - first + 1));
-}
-
-} // namespace
-
 // Classify a paint into a PaintProp, examining all paint combinations
 // and setting the appropriate mode and associated data.
 PaintProp classify_paint(const SPIPaint& paint, double opacity) {
@@ -54,8 +40,8 @@ PaintProp classify_paint(const SPIPaint& paint, double opacity) {
     if (auto server = paint.isPaintserver() ? paint.href->getObject() : nullptr) {
         p.server = server;
 
-        if (auto* grad = cast<SPGradient>(server)) {
-            auto* vec = grad->getVector();
+        if (auto grad = cast<SPGradient>(server)) {
+            auto vec = grad->getVector();
             // selected stop (if any) for gradients only
             p.selected_stop = cast<SPStop>(const_cast<SPIPaint&>(paint).getTag());
             if (vec && vec->isSwatch()) {
@@ -85,7 +71,7 @@ PaintProp classify_paint(const SPIPaint& paint, double opacity) {
     else if (paint.isColor() && paint.paintSource == SP_CSS_PAINT_ORIGIN_NORMAL && !paint.isDerived()) {
         if (auto var = paint.cssVarValue()) {
             p.mode = PaintMode::CssSwatch;
-            p.css_var_name = css_var_name(var->raw());
+            p.css_var_name = Inkscape::Css::parse_css_var(var->raw());
         } else {
             p.mode = PaintMode::Solid;
         }
@@ -114,7 +100,7 @@ void visit_items(SPItem* item, StyleQueryFlags flags, const std::function<void(S
 
     if (enter_group || enter_text) {
         for (auto child = item->firstChild(); child; child = child->getNext()) {
-            if (auto* child_item = cast<SPItem>(child)) {
+            if (auto child_item = cast<SPItem>(child)) {
                 visit_items(child_item, flags, fn);
             }
         }
