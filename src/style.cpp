@@ -1144,6 +1144,28 @@ SPStyle::getFontFeatureString() {
     return feature_string;
 }
 
+FillStrokePaints::FillStrokePaints(SPStyle const &style)
+    : fill{style.fill}
+    , stroke{style.stroke}
+{}
+
+FillStrokePaints resolve_effective_paints(SPStyle const &style, FillStrokePaints const &context_paints)
+{
+    FillStrokePaints result{style};
+
+    if (result.fill.paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_FILL) {
+        result.fill = context_paints.fill;
+    } else if (result.fill.paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_STROKE) {
+        result.fill = context_paints.stroke;
+    }
+
+    if (result.stroke.paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_FILL) {
+        result.stroke = context_paints.fill;
+    } else if (result.stroke.paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_STROKE) {
+        result.stroke = context_paints.stroke;
+    }
+    return result;
+}
 
 // Internal
 /**

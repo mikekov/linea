@@ -363,6 +363,18 @@ public:
     std::map<std::string, std::string> extended_properties;
 };
 
+// Fill and stroke paints
+struct FillStrokePaints
+{
+    explicit FillStrokePaints(SPStyle const &style);
+
+    SPIPaint fill;
+    SPIPaint stroke;
+};
+
+/// A helper for computing resulting paints to handle SVG2's context-fill and context-stroke values.
+FillStrokePaints resolve_effective_paints(SPStyle const &style, FillStrokePaints const &context_paints);
+
 void sp_style_set_to_uri(SPStyle *style, bool isfill, Inkscape::URI const *uri); // ?
 
 char const *sp_style_get_css_unit_string(int unit);  // No change?

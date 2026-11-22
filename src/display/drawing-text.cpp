@@ -255,13 +255,9 @@ void DrawingText::setStyle(SPStyle const *style, SPStyle const *context_style)
     });
 }
 
-void DrawingText::setChildrenStyle(SPStyle const *context_style)
+void DrawingText::_setContextPaints(FillStrokePaints const &context_paints)
 {
-    DrawingGroup::setChildrenStyle(context_style);
-
-    defer([this, nrstyle = NRStyleData(_style, _context_style)] () mutable {
-        _nrstyle.set(std::move(nrstyle));
-    });
+    _nrstyle.set(NRStyleData(_style, context_paints));
 }
 
 unsigned DrawingText::_updateItem(Geom::IntRect const &area, UpdateContext const &ctx, unsigned flags, unsigned reset)

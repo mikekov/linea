@@ -19,6 +19,7 @@
 
 #include "util/cached_map.h"
 
+struct FillStrokePaints;
 class SPStyle;
 class FontInstance;
 
@@ -82,7 +83,9 @@ public:
     bool addComponent(std::shared_ptr<FontInstance> const &font, int unsigned glyph,
                       Geom::Affine const &trans, float width, float ascent, float descent, float phase_length);
     void setStyle(SPStyle const *style, SPStyle const *context_style = nullptr) override;
-    void setChildrenStyle(SPStyle const *context_style) override;
+
+private:
+    void _setContextPaints(FillStrokePaints const &context_paints) override;
 
 protected:
     ~DrawingText() override = default;

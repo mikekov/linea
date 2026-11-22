@@ -106,25 +106,13 @@ bool NRStyleData::Paint::ditherable() const
 }
 
 NRStyleData::NRStyleData(SPStyle const *style, SPStyle const *context_style)
-{
-    // Handle 'context-fill' and 'context-stroke': Work in progress
-    const SPIPaint *style_fill = &style->fill;
-    if (style_fill->paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_FILL) {
-        if (context_style) {
-            style_fill = &context_style->fill;
-        } else {
-            // A marker in the defs section will result in ending up here.
-            //std::cerr << "NRStyleData::set: 'context-fill': 'context_style' is NULL" << std::endl;
-        }
-    } else if (style_fill->paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_STROKE) {
-        if (context_style) {
-            style_fill = &context_style->stroke;
-        } else {
-            //std::cerr << "NRStyleData::set: 'context-stroke': 'context_style' is NULL" << std::endl;
-        }
-    }
+    : NRStyleData(style, FillStrokePaints(context_style ? *context_style : *style))
+{}
 
-    fill.set(style_fill);
+NRStyleData::NRStyleData(SPStyle const *style, FillStrokePaints const &context_paints)
+{
+    auto const paints = resolve_effective_paints(*style, context_paints);
+    fill.set(&paints.fill);
     fill.opacity = style->fill_opacity.as_double();
 
     switch (style->fill_rule.as_enum()) {
@@ -138,22 +126,7 @@ NRStyleData::NRStyleData(SPStyle const *style, SPStyle const *context_style)
             g_assert_not_reached();
     }
 
-    const SPIPaint *style_stroke = &style->stroke;
-    if (style_stroke->paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_FILL) {
-        if (context_style) {
-            style_stroke = &context_style->fill;
-        } else {
-            //std::cerr << "NRStyleData::set: 'context-fill': 'context_style' is NULL" << std::endl;
-        }
-    } else if (style_stroke->paintOrigin == SP_CSS_PAINT_ORIGIN_CONTEXT_STROKE) {
-        if (context_style) {
-            style_stroke = &context_style->stroke;
-        } else {
-            //std::cerr << "NRStyleData::set: 'context-stroke': 'context_style' is NULL" << std::endl;
-        }
-    }
-
-    stroke.set(style_stroke);
+    stroke.set(&paints.stroke);
     stroke.opacity = style->stroke_opacity.as_double();
     stroke_width = style->stroke_width.as_double();
     hairline = style->stroke_extensions.hairline;

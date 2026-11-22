@@ -16,6 +16,7 @@
 #include "display/drawing-item.h"
 #include "display/nr-style.h"
 
+struct FillStrokePaints;
 class SPStyle;
 
 namespace Inkscape {
@@ -29,7 +30,9 @@ public:
 
     void setPath(std::shared_ptr<Geom::PathVector const> curve);
     void setStyle(SPStyle const *style, SPStyle const *context_style = nullptr) override;
-    void setChildrenStyle(SPStyle const *context_style) override;
+
+private:
+    void _setContextPaints(FillStrokePaints const &context_paints) override;
 
 protected:
     ~DrawingShape() override = default;

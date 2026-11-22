@@ -379,8 +379,10 @@ void DrawingItem::setStyle(SPStyle const *style, SPStyle const *context_style)
 void DrawingItem::setChildrenStyle(SPStyle const *context_style)
 {
     _context_style = context_style;
-    for (auto &i : _children) {
-        i.setChildrenStyle(context_style);
+    if (context_style) {
+        defer([this, context_paints = FillStrokePaints(*context_style)]() {
+            _setContextPaintsOnChildren(context_paints);
+        });
     }
 }
 

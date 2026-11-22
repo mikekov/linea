@@ -21,6 +21,7 @@
 #include "drawing-paintserver.h"
 #include "initlock.h"
 
+struct FillStrokePaints;
 class SPPaintServer;
 class SPStyle;
 class SPIPaint;
@@ -42,7 +43,12 @@ inline CairoPatternUniqPtr copy(CairoPatternUniqPtr const &p)
 struct NRStyleData
 {
     NRStyleData();
+
+    /// @pre style != nullptr
     explicit NRStyleData(SPStyle const *style, SPStyle const *context_style = nullptr);
+
+    /// @pre style != nullptr
+    NRStyleData(SPStyle const *style, FillStrokePaints const &context_paints);
 
     enum class PaintType
     {
