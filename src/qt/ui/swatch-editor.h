@@ -17,9 +17,6 @@
 
 class SPDocument;
 class SPDesktop;
-namespace Inkscape::Css {
-class DocumentStyleSheet;
-} // namespace Inkscape::Css
 
 QT_BEGIN_NAMESPACE
 class QListWidgetItem;
@@ -78,7 +75,7 @@ private:
     std::unique_ptr<Ui::SwatchEditor> _ui;
     std::unique_ptr<ColorPickerPanel> _picker;
     std::shared_ptr<ColorHolder> _colors;
-    std::unique_ptr<Inkscape::Css::DocumentStyleSheet> _sheet;
+    sigc::scoped_connection _stylesheetChanged;
     sigc::scoped_connection _colorConn;
     OperationBlocker _update;
 };

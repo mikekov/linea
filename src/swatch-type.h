@@ -9,6 +9,11 @@
 #include <string>
 #include <vector>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+
 #include "colors/color.h"
 #include "style-helpers.h"
 
@@ -47,6 +52,19 @@ private:
 // true, each parsed color is named after its property.
 std::vector<Swatch> swatches_from_properties(const std::vector<Inkscape::Css::CustomCSSProperty>& properties,
                                              bool name_colors = false);
+
+struct swatch_by_name {};
+
+// A document's swatches: index 0 preserves stylesheet declaration order,
+// index swatch_by_name gives map-like lookup by custom property name.
+using SwatchSet = boost::multi_index_container<
+    Swatch,
+    boost::multi_index::indexed_by<
+        boost::multi_index::sequenced<>,
+        boost::multi_index::hashed_unique<
+            boost::multi_index::tag<swatch_by_name>,
+            boost::multi_index::const_mem_fun<Swatch, const std::string&, &Swatch::cssName>>
+    >>;
 
 } // namespace Linea
 

@@ -78,6 +78,8 @@
 #include "recent-colors.h"
 #include "selection.h"
 #include "style.h"
+#include "style-helpers.h"
+#include "swatch-type.h"
 #include "util/units.h"
 #include "xml/croco-node-iface.h"
 #include "xml/event-fns.h"
@@ -147,6 +149,8 @@ SPDocument::SPDocument()
 
     _page_manager = std::make_unique<Inkscape::PageManager>(this);
     _cms_manager = std::make_unique<Inkscape::Colors::DocumentCMS>(this);
+
+    _style_sheet = std::make_unique<Inkscape::Css::DocumentStyleSheet>([this] { onStyleSheetChanged(); });
 }
 
 SPDocument::~SPDocument() {
@@ -345,6 +349,10 @@ std::unique_ptr<SPDocument> SPDocument::createDoc(
     document->rdoc = rdoc;
     document->rroot = rroot;
     document->_parent_document = parent;
+
+    // Bind the document's swatch list to this document's stylesheet now
+    // that the repr root exists.
+    document->_style_sheet->setDocument(document.get());
 
     if (document->document_filename){
         g_free(document->document_filename);
@@ -1561,7 +1569,36 @@ std::vector<Glib::ustring> SPDocument::getLanguages() const
     return document_languages;
 }
 
-// CSS custom properties --------------------------------------------------
+// Document swatches ------------------------------------------------------
+
+void SPDocument::onStyleSheetChanged() {
+    _swatches.clear();
+    for (auto& swatch : Linea::swatches_from_properties(_style_sheet->customProperties(), true)) {
+        _swatches.push_back(std::move(swatch));
+    }
+    // Keep the resolved variables in step so var() paint references
+    // resolve against the current swatch definitions.
+    updateCssVariables();
+    _stylesheet_changed_signal.emit();
+}
+
+const Linea::Swatch* SPDocument::findSwatch(std::string_view name) const {
+    const auto& by_name = _swatches.get<Linea::swatch_by_name>();
+    auto it = by_name.find(std::string(name));
+    return it != by_name.end() ? &*it : nullptr;
+}
+
+std::string SPDocument::styleSheetText() const {
+    return _style_sheet->text();
+}
+
+void SPDocument::setStyleSheetText(std::string const& text) {
+    _style_sheet->setText(text);
+}
+
+sigc::connection SPDocument::connectStyleSheetChanged(sigc::slot<void ()>&& slot) {
+    return _stylesheet_changed_signal.connect(std::move(slot));
+}
 
 static void collect_css_variables_from_props(CRPropList* props, std::unordered_map<std::string, std::string>& out) {
     if (!props) return;

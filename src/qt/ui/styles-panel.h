@@ -9,16 +9,13 @@
 
 #include <QWidget>
 #include <memory>
+#include <sigc++/scoped_connection.h>
 
 #include "syntax.h"
 #include "ui/operation-blocker.h"
 
 class SPDocument;
 class SPDesktop;
-
-namespace Inkscape::Css {
-class DocumentStyleSheet;
-}
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -58,7 +55,7 @@ private:
 
     std::unique_ptr<Ui::StylesPanel> _ui;
     SPDocument* _document = nullptr;
-    std::unique_ptr<Inkscape::Css::DocumentStyleSheet> _sheet;
+    sigc::scoped_connection _stylesheetChanged;
     std::unique_ptr<Syntax::TextEditView> _editor;
     OperationBlocker _update;
     int _savedPanePosition = -1;

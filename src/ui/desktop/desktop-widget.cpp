@@ -203,9 +203,6 @@ SPDesktopWidget::SPDesktopWidget(Inkscape::UI::Widget::Canvas* canvas, LineaWind
     };
     _colorPalette->setBasicColors(std::move(basicColors));
 
-    _docSwatches = std::make_unique<Inkscape::Css::DocumentCustomCSSProperties>(
-        [this] { _refreshDocumentSwatches(); });
-
     // Wire the options popup so palette / tile-size changes apply live.
     auto options = _colorPalettePanel->options();
     connect(options, &Linea::UI::ColorPaletteOptions::paletteChanged, this,
@@ -527,7 +524,7 @@ void SPDesktopWidget::_clearPanels() {
     _styleChanged.disconnect();
     _desktopStyleChanged.disconnect();
     _desktopToolChanged.disconnect();
-    _docSwatches->setDocument(nullptr);
+    _swatchesChanged.disconnect();
 
     _leftPanel->clear();
     _rightPanel->clear();
@@ -566,7 +563,9 @@ void SPDesktopWidget::_updatePanelsForDesktop(SPDesktop* desktop) {
     _leftPanel->setDesktop(desktop);
     _rightPanel->setDesktop(desktop);
 
-    _docSwatches->setDocument(desktop->getDocument());
+    _swatchesChanged = desktop->getDocument()->connectStyleSheetChanged(
+        [this] { _refreshDocumentSwatches(); });
+    _refreshDocumentSwatches();
 
     _selectionChanged = desktop->getSelection()->connectChanged([this](Inkscape::Selection* sel) {
         _leftPanel->updateSelectionFromDesktop();
@@ -902,9 +901,17 @@ bool SPDesktopWidget::dialogsDocked() const {
     return _overlayLayout->panelMode(_leftPanel) == OverlayLayout::Mode::Docked;
 }
 
-// Push the document's ':root' custom properties into the swatch strip.
+// Push the document's swatches into the swatch strip.
 void SPDesktopWidget::_refreshDocumentSwatches() {
-    _colorPalette->setSwatchColors(swatches_from_properties(_docSwatches->properties(), true));
+    auto doc = _desktop ? _desktop->getDocument() : nullptr;
+    std::vector<Linea::Swatch> swatches;
+    if (doc) {
+        swatches.reserve(doc->swatches().size());
+        for (auto const& swatch : doc->swatches()) {
+            swatches.push_back(swatch);
+        }
+    }
+    _colorPalette->setSwatchColors(std::move(swatches));
 }
 
 void SPDesktopWidget::_applyPalette(int index) {

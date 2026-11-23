@@ -157,22 +157,6 @@ private:
     std::function<void()> _on_change;
 };
 
-// Read-only view limited to the ':root' custom properties.
-class DocumentCustomCSSProperties {
-public:
-    explicit DocumentCustomCSSProperties(std::function<void()> on_change)
-        : _sheet(std::move(on_change)) {}
-
-    // Rebind to another document; nullptr detaches. Fires on_change.
-    void setDocument(SPDocument* document) { _sheet.setDocument(document); }
-
-    // Custom properties of the first ':root' rule, in order.
-    std::vector<CustomCSSProperty> properties() const { return _sheet.customProperties(); }
-
-private:
-    DocumentStyleSheet _sheet;
-};
-
 } // namespace Inkscape::Css
 
 #endif // LINEA_STYLE_HELPERS_H

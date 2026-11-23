@@ -72,8 +72,6 @@ SwatchEditor::SwatchEditor(QWidget* parent)
     pickerLayout->setContentsMargins(0, 0, 0, 0);
     pickerLayout->addWidget(_picker.get());
 
-    _sheet = std::make_unique<Inkscape::Css::DocumentStyleSheet>([this] { onStyleContentChanged(); });
-
     connect(_ui->swatchList, &QListWidget::currentRowChanged, this, &SwatchEditor::onSwatchSelected);
     connect(_ui->swatchList, &QListWidget::itemChanged, this, &SwatchEditor::onItemRenamed);
     connect(_ui->addButton, &QPushButton::clicked, this, &SwatchEditor::onAdd);
@@ -87,7 +85,10 @@ void SwatchEditor::setDocument(SPDocument* document) {
     if (_document == document) return;
 
     _document = document;
-    _sheet->setDocument(document);
+    _stylesheetChanged.disconnect();
+    if (document) {
+        _stylesheetChanged = document->connectStyleSheetChanged([this] { onStyleContentChanged(); });
+    }
     // onStyleContentChanged skips reloads during pending updates; make
     // sure the list reflects the (possibly empty) document regardless.
     reload();
@@ -109,7 +110,13 @@ void SwatchEditor::reload() {
     const std::string selectedName =
         _selected >= 0 && _selected < static_cast<int>(_swatches.size()) ? _swatches[_selected].cssName() : std::string();
 
-    _swatches = swatches_from_properties(_sheet->customProperties());
+    _swatches.clear();
+    if (_document) {
+        _swatches.reserve(_document->swatches().size());
+        for (auto const& swatch : _document->swatches()) {
+            _swatches.push_back(swatch);
+        }
+    }
 
     auto scoped = _update.block();
     QSignalBlocker listBlocker(_ui->swatchList);
@@ -167,7 +174,7 @@ void SwatchEditor::onItemRenamed(QListWidgetItem* item) {
         return;
     }
 
-    auto css = _sheet->text();
+    auto css = _document->styleSheetText();
     if (Inkscape::Css::rename_root_custom_property(css, oldName, newName)) {
         // Update the name before writeCss — reload() preserves the selection
         // by name, and the rebuilt list only contains the new name.
@@ -187,7 +194,7 @@ void SwatchEditor::onColorChanged() {
     const auto& color = _colors->get();
     if (!color) return;
 
-    auto css = _sheet->text();
+    auto css = _document->styleSheetText();
     if (Inkscape::Css::set_root_custom_property(css, _swatches[_selected].cssName(), color->toString())) {
         _swatches[_selected].setColor(*color);
         writeCss(std::move(css));
@@ -207,7 +214,7 @@ void SwatchEditor::onAdd() {
     }
 
     const std::string value = _colors->isEmpty() ? "#000000" : _colors->getOrDefault().toString();
-    auto css = _sheet->text();
+    auto css = _document->styleSheetText();
     Inkscape::Css::add_root_custom_property(css, name, value);
     writeCss(std::move(css));
 
@@ -227,7 +234,7 @@ void SwatchEditor::onDelete() {
         return;
     }
     const int deleted = _selected;
-    auto css = _sheet->text();
+    auto css = _document->styleSheetText();
     if (Inkscape::Css::remove_root_custom_property(css, _swatches[_selected].cssName())) {
         writeCss(std::move(css));
         // Select whatever slid into the deleted row's slot — the next swatch,
@@ -242,9 +249,10 @@ void SwatchEditor::writeCss(std::string&& css) {
     if (!_document) return;
 
     auto scoped = _update.block();
-    // Element creation inside setText fires on_change synchronously; the
-    // pending update keeps the local state as the authority.
-    _sheet->setText(css);
+    // Element creation inside setStyleSheetText fires the document's
+    // stylesheet-changed signal synchronously; the pending update keeps the
+    // local state as the authority.
+    _document->setStyleSheetText(css);
     Inkscape::DocumentUndo::maybeDone(_document, "document-swatches", RC_("Undo", "Edit document swatches"), "");
     reload();
 }

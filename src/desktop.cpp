@@ -9,6 +9,8 @@
 #include <QCursor>
 
 #include <algorithm>
+#include <cstring>
+#include <optional>
 #include <ranges>
 
 #include "desktop-events.h"
@@ -29,6 +31,7 @@
 #include "preferences.h"
 #include "ui/desktop/desktop-widget.h"
 #include "selection.h"
+#include "style-helpers.h"
 
 #include "display/control/canvas-temporary-item.h"
 #include "display/control/canvas-temporary-item-list.h"
@@ -216,7 +219,7 @@ void SPDesktop::_attachDocument() {
 
     // Show document in drawing
     setupCanvasDrawing();
-    auto* drawing = _canvasDrawing ? _canvasDrawing->get_drawing() : nullptr;
+    auto drawing = _canvasDrawing ? _canvasDrawing->get_drawing() : nullptr;
     if (drawing) {
         if (auto drawing_item = _document->getRoot()->invoke_show(*drawing, dkey, SP_ITEM_SHOW_DISPLAY)) {
             drawing->root()->prependChild(drawing_item);
@@ -729,10 +732,10 @@ DrawingItem* SPDesktop::drawingItemAtPoint(const Geom::Point& point) const {
 
     // Pick on the Drawing root
     // This uses Inkscape's picking system
-    auto* drawing = _canvasDrawing->get_drawing();
+    auto drawing = _canvasDrawing->get_drawing();
     if (!drawing) return nullptr;
 
-    auto* root = drawing->root();
+    auto root = drawing->root();
     if (!root) return nullptr;
 
     // Pick with small delta for precise selection
@@ -1329,6 +1332,23 @@ void SPDesktop::applyCurrentOrToolStyle(Inkscape::XML::Node *repr, Glib::ustring
     }
 }
 
+// A swatch remembered in the desktop or tool style is a var(--name)
+// reference to a document custom property. When this document does not
+// define that property the raw var() would land in new objects' styles as
+// unparsed paint, so substitute black. References with an explicit var()
+// fallback resolve on their own and are left alone.
+static void unset_unresolved_var_paints(SPCSSAttr* css, SPDocument* document) {
+    if (!document) return;
+
+    for (const auto* attr : {"fill", "stroke"}) {
+        const auto* value = sp_repr_css_property(css, attr, nullptr);
+        const auto name = value ? Inkscape::Css::parse_css_var(value) : std::nullopt;
+        if (name && !strchr(value, ',') && !document->hasSwatch(*name)) {
+            sp_repr_css_set_property(css, attr, "black");
+        }
+    }
+}
+
 SPCSSAttr *
 SPDesktop::getCurrentOrToolStyle(Glib::ustring const &tool_path, bool with_text, const Glib::ustring &use_current_arg) const
 {
@@ -1373,6 +1393,8 @@ SPDesktop::getCurrentOrToolStyle(Glib::ustring const &tool_path, bool with_text,
     if (!with_text) {
         sp_css_attr_unset_text(css);
     }
+
+    unset_unresolved_var_paints(css, _document);
 
     return css; // Caller is responsible for sp_repr_css_attr_unref(css)
 }

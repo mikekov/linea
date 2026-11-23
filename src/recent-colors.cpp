@@ -29,12 +29,6 @@ std::string_view trim_token(std::string_view token) {
     return token.substr(begin, token.find_last_not_of(" \t\n\r") - begin + 1);
 }
 
-// The document's currently defined swatches (color-valued custom
-// properties of the first ':root' rule), resolved live.
-std::vector<Swatch> defined_swatches(SPDocument& document) {
-    return swatches_from_properties(Inkscape::Css::document_custom_properties(&document));
-}
-
 } // namespace
 
 RecentColors::RecentColors(SPDocument& document)
@@ -136,7 +130,6 @@ std::vector<FlatColor> RecentColors::entries() const {
         return out;
     }
 
-    const auto swatches = defined_swatches(_document);
     const auto head = _key(_entries.front());
     bool is_head = true;
     for (const auto& entry : _entries) {
@@ -151,9 +144,7 @@ std::vector<FlatColor> RecentColors::entries() const {
             out.push_back(*color);
         } else {
             const auto& name = std::get<std::string>(entry);
-            const auto swatch = std::find_if(swatches.begin(), swatches.end(),
-                                             [&name](const Swatch& s) { return s.cssName() == name; });
-            if (swatch != swatches.end()) {
+            if (auto swatch = _document.findSwatch(name)) {
                 out.push_back(*swatch);
             }
         }
@@ -167,13 +158,10 @@ std::vector<FlatColor> RecentColors::entries() const {
 void RecentColors::save(Inkscape::XML::Node& namedview) {
     _finalizeHead();
 
-    const auto swatches = defined_swatches(_document);
     std::string value;
     for (auto it = _entries.begin(); it != _entries.end();) {
         if (const auto name = std::get_if<std::string>(&*it)) {
-            const auto defined =
-                std::any_of(swatches.begin(), swatches.end(), [name](const Swatch& s) { return s.cssName() == *name; });
-            if (!defined) {
+            if (!_document.hasSwatch(*name)) {
                 it = _entries.erase(it);
                 continue;
             }

@@ -46,10 +46,6 @@ class SPDesktop;
 namespace Inkscape::UI::Widget {
 class Canvas;
 }
-namespace Inkscape::Css {
-class DocumentCustomCSSProperties;
-}
-
 namespace Glib {
 class ustring;
 }
@@ -206,8 +202,8 @@ private:
     // Color palette
     void _applyPalette(int index);
     void _applyTileSize(Linea::UI::ColorPaletteOptions::TileSize size);
-    // Document swatch strip: root custom properties of the first <svg:style>
-    std::unique_ptr<Inkscape::Css::DocumentCustomCSSProperties> _docSwatches;
+    // Document swatch strip: the document's swatches shown above the palette
+    sigc::scoped_connection _swatchesChanged;
     void _refreshDocumentSwatches();
 
     // Pages tool auto-switching

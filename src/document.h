@@ -27,6 +27,7 @@
 #include <queue>                               // for queue
 #include <span>
 #include <string>                              // for string
+#include <string_view>
 #include <vector>                              // for vector
 
 #include <boost/ptr_container/ptr_list.hpp>    // for ptr_list
@@ -46,6 +47,7 @@
 #include "3rdparty/libcroco/src/cr-cascade.h"  // for CRCascade
 
 #include "composite-undo-stack-observer.h"
+#include "swatch-type.h"
 
 // This variable is introduced with 0.92.1
 // with the introduction of automatic fix
@@ -69,6 +71,10 @@ class Router;
 
 namespace Linea {
 class RecentColors;
+}
+
+namespace Inkscape::Css {
+class DocumentStyleSheet;
 }
 
 class Persp3D;
@@ -197,6 +203,17 @@ private:
     std::queue<GQuark> pending_resource_changes;
 
     SPDocument *_searchForChild(std::string const &filename, SPDocument const *avoid = nullptr);
+
+    // Document swatches --------------------
+    // Watches the first <svg:style> element and maintains the document's
+    // swatch list — the color-valued custom properties of its ':root' rule,
+    // in stylesheet order and keyed by property name ("--name"). Bound in
+    // createDoc once the repr root exists.
+    std::unique_ptr<Inkscape::Css::DocumentStyleSheet> _style_sheet;
+    Linea::SwatchSet _swatches;
+    sigc::signal<void ()> _stylesheet_changed_signal;
+    void onStyleSheetChanged();
+
     /** Detect Y-axis orientation change.
      * \return true if change has been detected */
     bool has_yaxis_orientation_changed();
@@ -247,6 +264,18 @@ public:
     // Global CSS custom properties from <style> elements. Shared across the document.
     void updateCssVariables();
     Glib::ustring resolveCssVariableValue(char const *value) const;
+
+    // Document swatches --------------------
+    // The document's color swatches in stylesheet order, and the global
+    // stylesheet text they live in. Both are maintained live; the signal
+    // fires whenever the stylesheet changes.
+    const Linea::SwatchSet& swatches() const { return _swatches; }
+    const Linea::Swatch* findSwatch(std::string_view name) const;
+    bool hasSwatch(std::string_view name) const { return findSwatch(name) != nullptr; }
+
+    std::string styleSheetText() const;
+    void setStyleSheetText(std::string const& text);
+    sigc::connection connectStyleSheetChanged(sigc::slot<void ()>&& slot);
 
     // File information --------------------
 

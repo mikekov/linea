@@ -38,8 +38,6 @@ StylesPanel::StylesPanel(QWidget* parent)
 
     connect(&_editor->getEditor(), &QPlainTextEdit::textChanged, this, &StylesPanel::onEditorTextChanged);
 
-    _sheet = std::make_unique<Inkscape::Css::DocumentStyleSheet>([this] { onStyleContentChanged(); });
-
     _savedPanePosition = Inkscape::Preferences::get()->getIntLimited(
         "/dialogs/stylePanel/stylesHandlePos", 400, 40, 9999);
     connect(_ui->splitter, &QSplitter::splitterMoved, this, [](int pos, int) {
@@ -71,14 +69,17 @@ void StylesPanel::setDocument(SPDocument* document) {
     if (_document == document) return;
 
     _document = document;
-    _sheet->setDocument(document);
+    _stylesheetChanged.disconnect();
+    if (document) {
+        _stylesheetChanged = document->connectStyleSheetChanged([this] { onStyleContentChanged(); });
+    }
     _ui->swatchEditor->setDocument(document);
 
     // Different document: the editor must adopt its stylesheet even when
     // it holds unsaved edits from the previous document.
     if (!_update.pending()) {
         auto scoped = _update.block();
-        _editor->setText(QString::fromStdString(_sheet->text()));
+        _editor->setText(QString::fromStdString(document ? document->styleSheetText() : ""));
     }
 }
 
@@ -94,7 +95,7 @@ void StylesPanel::onStyleContentChanged() {
     // Typing writes through to the element on every keystroke, so the editor
     // and the stylesheet only diverge on external writes (e.g. the swatch
     // editor adding a property). Refresh when they differ.
-    const auto text = QString::fromStdString(_sheet->text());
+    const auto text = QString::fromStdString(_document ? _document->styleSheetText() : "");
     if (text == _editor->getText()) return;
 
     auto scoped = _update.block();
@@ -107,9 +108,9 @@ void StylesPanel::onEditorTextChanged() {
     const auto text = _editor->getText();
     auto scoped = _update.block();
 
-    // The root watcher fires synchronously on element creation inside
-    // setText; the pending update keeps the editor as the authority.
-    _sheet->setText(std::string(text.toUtf8().constData()));
+    // The stylesheet watcher fires synchronously on element creation inside
+    // setStyleSheetText; the pending update keeps the editor as the authority.
+    _document->setStyleSheetText(std::string(text.toUtf8().constData()));
     Inkscape::DocumentUndo::maybeDone(_document, "document-styles", RC_("Undo", "Edit document styles"), "");
 }
 
