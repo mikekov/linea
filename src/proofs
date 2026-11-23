@@ -324,12 +324,3 @@ style.cpp caller: preceded by explicit test for NULL:
      if (style == NULL)
          return NULL;
      return sp_css_attr_from_style (style, flags);
-
-
-
-
-# Local Variables:
-# mode:indented-text
-# fill-column:99
-# End:
-# vim: filetype=text:tabstop=8:fileencoding=utf-8:textwidth=99 :

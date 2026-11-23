@@ -119,14 +119,3 @@ bool sp_svg_transform_read(gchar const *str, Geom::Affine *transform)
 
     return false;
 }
-
-/*
-  Local Variables:
-  mode:c++
-  c-file-style:"stroustrup"
-  c-file-offsets:((innamespace . 0)(inline-open . 0)(case-label . +))
-  indent-tabs-mode:nil
-  fill-column:99
-  End:
-*/
-// vim: filetype=ragel:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:fileencoding=utf-8:textwidth=99 :
