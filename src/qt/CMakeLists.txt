@@ -292,6 +292,9 @@ target_sources(linea_base PRIVATE
     ui/text-panel.cpp
     ui/text-panel.h
     ui/text-panel.ui
+    ui/typography-panel.cpp
+    ui/typography-panel.h
+    ui/typography-panel.ui
     ui/decoration-options.cpp
     ui/decoration-options.h
     ui/decoration-options.ui

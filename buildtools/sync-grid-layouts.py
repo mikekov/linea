@@ -31,6 +31,7 @@ UI_FILES = [
     "ellipse-widget.ui",
     "star-widget.ui",
     "text-panel.ui",
+    "typography-panel.ui",
     "image-widget.ui",
     "export-widget.ui",
     "filter-widget.ui",

@@ -41,7 +41,6 @@ namespace Linea::Props { class Binder; struct SelectionState; }
 namespace Linea::UI {
 
 class CharacterViewer;
-class DecorationOptions;
 class EditorPanel;
 class FontBrowser;
 class PopupMenu;
@@ -121,11 +120,11 @@ private:
     int _lineheight_unit = 0;
 
     sigc::scoped_connection _font_stream;
-    sigc::scoped_connection _cursor_moved;
     OperationBlocker _update;
     int _variableFontsMaxHeight = 0;
-    DecorationOptions* _decorationOptions = nullptr;
-    PopupMenu* _decorationPopup = nullptr;
+    // Popup hosting _ui->typographyPanel (reparented on the fly) while
+    // the inline section is collapsed; shown via typographyOptionsBtn.
+    PopupMenu* _typographyPopup = nullptr;
     FontBrowser* _fontBrowser = nullptr;
     PopupMenu* _fontBrowserPopup = nullptr;
     CharacterViewer* _charViewer = nullptr;
