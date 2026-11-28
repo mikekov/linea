@@ -11,12 +11,13 @@
 
 #include "star-widget.h"
 
-#include <QPushButton>
+#include <QToolButton>
 
 #include "actions/action-registry.h"
 #include "number-edit.h"
 #include "ui_star-widget.h"
 #include "props/binder.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -24,6 +25,7 @@ StarWidget::StarWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::StarWidget>()) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 }
@@ -38,14 +40,14 @@ void StarWidget::bind(Props::Binder& binder) {
     binder.bind(Props::star_flatsided, _ui->shapeToggle);
 
     // Turn the selected star(s) / polygon(s) upright via the registered action.
-    binder.track(connect(_ui->alignButton, &QPushButton::clicked, this, [](bool) {
+    binder.track(connect(_ui->alignButton, &QToolButton::clicked, this, [](bool) {
         auto& registry = ActionRegistry::get();
         auto action = registry.action("object-star-turn-upright");
         action->trigger();
     }));
 
     // reset "randomize" and "rounded" values to defaults
-    binder.track(connect(_ui->resetButton, &QPushButton::clicked, this, [this]() {
+    binder.track(connect(_ui->resetButton, &QToolButton::clicked, this, [this]() {
         _ui->randomizedEdit->setValue(0.0);
         _ui->roundedEdit->setValue(0.0);
     }));
@@ -66,7 +68,7 @@ void StarWidget::bind(Props::Binder& binder) {
         _ui->spokeEdit->setVisible(visible);
         // _ui->spokeEdit->setEnabled(!is_flat);
         _ui->alignButton->setIcon(QIcon(polygon ? ":/icons/object-level" : ":/icons/object-star-level"));
-        _ui->shapeLabel->setText(polygon ? tr("Polygon") : tr("Star"));
+        // _ui->shapeLabel->setText(polygon ? tr("Polygon") : tr("Star"));
     });
 
     // Shown when the selection consists solely of stars or polygons.

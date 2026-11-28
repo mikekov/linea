@@ -108,7 +108,7 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
 
     _exportSeparator = new Separator(this);
     _exportWidget = new ExportWidget(this);
-    _exportWidget->layout()->setContentsMargins(paddingLeft, 0, paddingRight, 0);
+    // _exportWidget->layout()->setContentsMargins(paddingLeft, 0, paddingRight, 0);
     vbox->addWidget(_exportSeparator);
     vbox->addWidget(_exportWidget);
 
@@ -186,6 +186,7 @@ DocumentPropertiesPanel::DocumentPropertiesPanel(QWidget* parent, int paddingLef
     // Show object properties by default
     _stackedWidget->setCurrentWidget(_containerWidget);
 
+    vbox->addSpacing(8);
     vbox->addStretch();
 
     _stackedWidget->hide();

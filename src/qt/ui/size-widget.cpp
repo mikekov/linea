@@ -27,6 +27,7 @@
 #include "props/editor.h"
 #include "props/selection-state.h"
 #include "selection-chemistry.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -34,6 +35,7 @@ SizeWidget::SizeWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::SizeWidget>()) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     // Prevent horizontal stretching
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);

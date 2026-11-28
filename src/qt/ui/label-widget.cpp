@@ -12,6 +12,7 @@
 
 #include "label-widget.h"
 
+#include <QAction>
 #include <QLineEdit>
 #include <QToolButton>
 
@@ -26,6 +27,7 @@
 #include "selection.h"
 #include "transform-panel.h"
 #include "ui/util.h"
+#include "widget-utils.h"
 #include "ui_label-widget.h"
 #include "util-string/context-string.h"
 
@@ -35,6 +37,7 @@ LabelWidget::LabelWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::LabelWidget>()) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     // Build popup with DescriptionWidget as content
     _popup = new PopupMenu(this);
@@ -42,9 +45,13 @@ LabelWidget::LabelWidget(QWidget* parent)
     _descriptionWidget->setFixedSize(260, 240);
     _popup->setContent(_descriptionWidget);
 
-    connect(_ui->descriptionButton, &QToolButton::clicked, this, [this]() {
-        _popup->showBelowWidget(_ui->descriptionButton);
+    // Embedded "edit description" icon inside the line edit
+    auto action = _ui->lineEdit->addAction(QIcon(":/icons/edit"), QLineEdit::TrailingPosition);
+    action->setToolTip(tr("Edit description"));
+    connect(action, &QAction::triggered, this, [this]() {
+        _popup->showBelowWidget(_ui->lineEdit);
     });
+    UI::highlightEmbeddedIconsOnHover(_ui->lineEdit);
 
     connect(_ui->transform, &QToolButton::clicked, this, &LabelWidget::onTransformClicked);
 
@@ -93,6 +100,10 @@ void LabelWidget::bind(Props::Binder& binder) {
 
     // Bind the description popup's title and description fields.
     _descriptionWidget->bind(binder);
+
+    // Transform applies to items only — hide the button when the selection
+    // holds objects but no items.
+    binder.visibleWhen(_ui->transform, Props::Cond::hasSelection);
 
     // Visible only when there's a selection.
     binder.visibleWhen(this, Props::Cond::hasSelection || Props::Cond::hasPageSelection);

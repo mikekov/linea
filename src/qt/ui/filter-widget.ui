@@ -10,7 +10,7 @@
         <height>60</height>
       </rect>
     </property>
-    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+    <layout class="QGridLayout" name="mainGrid" columnstretch="0,1,0,1,0,0,0" columnminimumwidth="15,0,4,0,4,25,10">
       <property name="leftMargin">
         <number>0</number>
       </property>
@@ -23,10 +23,13 @@
       <property name="bottomMargin">
         <number>0</number>
       </property>
-      <property name="spacing">
+      <property name="horizontalSpacing">
+        <number>0</number>
+      </property>
+      <property name="verticalSpacing">
         <number>4</number>
       </property>
-      <item row="0" column="0" colspan="2">
+      <item row="0" column="1" colspan="3">
         <widget class="QLabel" name="headerLabel">
           <property name="text">
             <string>Filter</string>
@@ -36,8 +39,8 @@
           </property>
         </widget>
       </item>
-      <item row="0" column="2">
-        <widget class="QPushButton" name="addButton">
+      <item row="0" column="5">
+        <widget class="QToolButton" name="addButton">
           <property name="text">
             <string></string>
           </property>
@@ -52,7 +55,7 @@
         </widget>
       </item>
 
-      <item row="1" column="0">
+      <!-- <item row="1" column="1">
         <widget class="QPushButton" name="editorButton">
           <property name="text">
             <string>Editor</string>
@@ -67,7 +70,7 @@
           </property>
         </widget>
       </item>
-      <item row="1" column="1">
+      <item row="1" column="3">
         <widget class="QPushButton" name="galleryButton">
           <property name="text">
             <string>Gallery</string>
@@ -81,9 +84,9 @@
             <string>Filter gallery</string>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <item row="2" column="0" colspan="2">
+      <item row="2" column="1" colspan="3">
         <widget class="QLabel" name="blurLabel">
           <property name="text">
             <string>Gaussian Blur</string>
@@ -93,7 +96,7 @@
           </property>
         </widget>
       </item>
-      <item row="3" column="0" colspan="2">
+      <item row="3" column="1" colspan="3">
         <widget class="Linea::UI::SpinScale" name="blurScale" native="true">
           <property name="minimum">
             <double>0.000000000000000</double>
@@ -115,11 +118,11 @@
           </property>
         </widget>
       </item>
-      <item row="3" column="0" colspan="2">
+      <item row="3" column="1" colspan="3">
         <widget class="QLabel" name="filterLabel">
         </widget>
       </item>
-      <item row="3" column="0" colspan="2">
+      <item row="3" column="1" colspan="3">
         <widget class="QPushButton" name="filterButton">
           <property name="toolTip">
             <string>Filter applied to this object</string>
@@ -129,8 +132,8 @@
           </property>
         </widget>
       </item>
-      <item row="3" column="2">
-        <widget class="QPushButton" name="removeButton">
+      <item row="3" column="5">
+        <widget class="QToolButton" name="removeButton">
           <property name="toolTip">
             <string>Remove filter</string>
           </property>

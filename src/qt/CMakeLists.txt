@@ -324,6 +324,8 @@ target_sources(linea_base PRIVATE
     ui/export-widget.cpp
     ui/export-widget.h
     ui/export-widget.ui
+    ui/expander.cpp
+    ui/expander.h
     ui/console/console-widget.cpp
     ui/console/console-widget.h
     ui/console/console-completer.cpp

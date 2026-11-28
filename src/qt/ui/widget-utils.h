@@ -11,8 +11,10 @@
 #include <QPoint>
 #include <QSize>
 #include <functional>
+#include <vector>
 
 class QAbstractButton;
+class QLineEdit;
 class QColor;
 class QPainter;
 class QRect;
@@ -23,6 +25,8 @@ class QWidget;
 class QLayout;
 
 namespace Linea::UI {
+
+constexpr QSize defaultButtonSize = {24, 24};
 
 /**
  * Apply left/right padding as content margins to a widget's layout, leaving
@@ -40,6 +44,30 @@ void applyHorizontalPadding(QWidget* widget, int left, int right);
  * The filter object is parented to `follower`, so it is destroyed with it.
  */
 void syncVisibility(QWidget* follower, QWidget* leader);
+
+/**
+ * Same as syncVisibility, but `follower` stays visible while ANY of the
+ * `leaders` is visible — it hides only when all of them are hidden.
+ */
+void syncVisibilityAny(QWidget* follower, std::vector<QWidget*> leaders);
+
+/**
+ * Fix the size of every direct `QToolButton` child sitting in `column` of the
+ * widget's `mainGrid` to `size` (default 24x24). Stylesheet size constraints
+ * can't do this under the macOS style — it treats them as contents-box sizes
+ * — so the panels apply it in code after setupUi(). Call from each widget's
+ * ctor; finds `mainGrid` anywhere in the child tree.
+ */
+void fixColumnToolButtons(QWidget* widget, int column = 5, QSize size = defaultButtonSize);
+
+/**
+ * Give `edit`'s embedded action icons (added via QLineEdit::addAction) a
+ * hover state Qt doesn't provide: the Midlight background color fades in
+ * behind the icon and a pointing-hand cursor is shown. Does nothing while
+ * the line edit is disabled. Call after addAction(); an event filter is
+ * installed on each embedded button, parented to it.
+ */
+void highlightEmbeddedIconsOnHover(QLineEdit* edit);
 
 /**
  * Companion for a QScrollArea that hides the vertical scroll bar whenever
@@ -133,16 +161,19 @@ void paintFadedText(QPainter& painter, const QRect& rect, const QString& text,
  */
 void settleLayout(QWidget* widget);
 
+class Expander;
+
 /**
- * Wire `toggleBtn` to expand/collapse `container` with a smooth height
- * animation, updating `toggleBtn`'s icon between `:/icons/section-expand`
- * (collapsed) and `:/icons/section-collapse` (expanded), and persisting the
- * expanded state in preferences under `prefsPath` (if non-empty).
+ * Wire `expander` to expand/collapse `containers` with a smooth height
+ * animation, seeding `expander`'s state from preferences under `prefsPath`
+ * (if non-empty) and persisting it on toggle. All containers share one
+ * state and animate in sync — they make up a single logical section.
+ * The expander owns its own icon/state — clicking it flips the section.
  *
  * Returns a predicate querying the current expanded state (suitable for
  * composing into `Binder::visibleWhen` rules alongside other conditions).
  */
-std::function<bool()> setupCollapsibleSection(QAbstractButton* toggleBtn, QWidget* container,
+std::function<bool()> setupCollapsibleSection(Expander* expander, std::vector<QWidget*> containers,
                                               const char* prefsPath = nullptr, bool defaultExpanded = false);
 
 } // namespace Linea::UI

@@ -12,7 +12,7 @@
 #include "select-widget.h"
 
 #include <QAction>
-#include <QPushButton>
+#include <QAbstractButton>
 #include <array>
 
 #include "actions/action-registry.h"
@@ -30,9 +30,9 @@ SelectWidget::SelectWidget(QWidget* parent)
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     auto& registry = ActionRegistry::get();
-    auto connect_action = [this, &registry](QPushButton* button, const char* id) {
+    auto connect_action = [this, &registry](QAbstractButton* button, const char* id) {
         if (auto action = registry.action(id)) {
-            connect(button, &QPushButton::clicked, this, [action] { action->trigger(); });
+            connect(button, &QAbstractButton::clicked, this, [action] { action->trigger(); });
         }
     };
 

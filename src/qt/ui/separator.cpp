@@ -21,6 +21,7 @@ Separator::Separator(QWidget* parent)
     : QWidget(parent) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     setAttribute(Qt::WA_StyledBackground, true);
+    setContentsMargins(0, 4, 0, 4);
 }
 
 void Separator::setOpacity(qreal opacity) {

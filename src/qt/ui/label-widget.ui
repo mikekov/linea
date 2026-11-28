@@ -13,7 +13,7 @@
     <property name="windowTitle">
       <string>Label Widget</string>
     </property>
-    <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,0">
+    <layout class="QGridLayout" name="mainGrid" columnstretch="0,1,0,1,0,0,0" columnminimumwidth="15,0,4,0,4,25,10">
       <property name="leftMargin">
         <number>0</number>
       </property>
@@ -26,11 +26,14 @@
       <property name="bottomMargin">
         <number>0</number>
       </property>
-      <property name="spacing">
+      <property name="horizontalSpacing">
+        <number>0</number>
+      </property>
+      <property name="verticalSpacing">
         <number>4</number>
       </property>
 
-      <item row="0" column="0">
+      <!-- <item row="0" column="1">
         <widget class="QLabel" name="selectionLabel">
           <property name="text">
             <string>Selection</string>
@@ -48,27 +51,15 @@
             <string>panel-label</string>
           </property>
         </widget>
-      </item>
-      <item row="1" column="0">
+      </item> -->
+      <item row="1" column="1" colspan="3">
         <widget class="QLineEdit" name="lineEdit">
           <property name="placeholderText">
             <string>Enter label...</string>
           </property>
         </widget>
       </item>
-      <item row="1" column="1">
-        <widget class="QToolButton" name="descriptionButton">
-          <property name="icon">
-            <iconset>
-              <normaloff>:/icons/text-input</normaloff>
-            </iconset>
-          </property>
-          <property name="toolTip">
-            <string>Edit description</string>
-          </property>
-        </widget>
-      </item>
-      <item row="1" column="2">
+      <item row="1" column="5">
         <widget class="QToolButton" name="transform">
           <property name="icon">
             <iconset>

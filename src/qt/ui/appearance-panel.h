@@ -7,13 +7,13 @@
 #ifndef LINEA_UI_APPEARANCE_PANEL_H
 #define LINEA_UI_APPEARANCE_PANEL_H
 
+#include <memory>
 #include <QWidget>
 #include "desktop.h"
 #include "filter-widget.h"
 #include "lpe-widget.h"
 #include "path-operations.h"
 #include "selection.h"
-#include "ui/operation-blocker.h"
 #include "util/text-utils.h"
 
 QT_BEGIN_NAMESPACE
@@ -23,6 +23,10 @@ QT_END_NAMESPACE
 
 class SPDesktop;
 class SPDocument;
+
+namespace Ui {
+class AppearancePanel;
+}
 
 namespace Linea {
 
@@ -68,6 +72,8 @@ public:
 
     Props::Binder* binder() { return _binder; }
 
+    void bind(Props::Binder& binder);
+
 Q_SIGNALS:
 
 private:
@@ -93,8 +99,12 @@ private:
     PathWidget* _pathWidget = nullptr;
     FilterWidget* _filterWidget = nullptr;
     PathOperations* _pathOperations = nullptr;
+    Separator* _sizeSeparator = nullptr;
+    Separator* _styleSeparator = nullptr;
     Separator* _filterSeparator = nullptr;
     Separator* _lpeSeparator = nullptr;
+
+    std::unique_ptr<Ui::AppearancePanel> _ui;
 
     // Property system (per-desktop); widgets are re-bound on desktop change.
     // non-owning observing pointers

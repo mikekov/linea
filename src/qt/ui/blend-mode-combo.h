@@ -8,12 +8,22 @@
 #define LINEA_UI_BLEND_MODE_COMBO_H
 
 #include <QWidget>
+#include <span>
 
 #include "style-enums.h"
 
 namespace Linea::UI {
 
 class IconComboBox;
+
+struct BlendModeEntry {
+    SPBlendMode mode;
+    const char* label;
+    bool groupStart = false; // insert a separator before this entry in menus
+};
+
+// All blend modes in display order, grouped by category.
+std::span<const BlendModeEntry> blendModeEntries();
 
 /**
  * Blend mode selector wrapping IconComboBox.

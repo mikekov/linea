@@ -8,7 +8,7 @@
 
 #include <QComboBox>
 #include <QProgressBar>
-#include <QPushButton>
+#include <QToolButton>
 #include <QSignalBlocker>
 #include <QSizePolicy>
 #include <utility>
@@ -43,6 +43,7 @@
 #include "util/font-discovery.h"
 #include "util/text-utils.h"
 #include "util/units.h"
+#include "widget-utils.h"
 
 using Inkscape::DocumentUndo;
 using Inkscape::FontDiscovery;
@@ -68,6 +69,7 @@ TextPanel::TextPanel(QWidget* parent)
     , _tracker_lh(new UnitTracker(Inkscape::Util::UNIT_TYPE_LINEAR, this))
 {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     // Allow horizontal shrinking
     setMinimumWidth(0);
@@ -218,8 +220,9 @@ void TextPanel::setupUnitTrackers() {
 }
 
 void TextPanel::setupConnections() {
+    _ui->fontBrowserBtn->setFixedSize(defaultButtonSize);
     // Font browser popup
-    connect(_ui->fontBrowserBtn, &QPushButton::clicked, [this]() {
+    connect(_ui->fontBrowserBtn, &QToolButton::clicked, [this]() {
         _fontBrowser->fontList()->setFonts(_font_families);
         if (auto font = getSelectedFont()) {
             auto family = font->ff->get_name();
@@ -244,16 +247,18 @@ void TextPanel::setupConnections() {
         _fontBrowserPopup->hide();
     });
 
+    _ui->charViewerBtn->setFixedSize(defaultButtonSize);
     // Character viewer popup
-    connect(_ui->charViewerBtn, &QPushButton::clicked, this, [this]() {
+    connect(_ui->charViewerBtn, &QToolButton::clicked, this, [this]() {
         showCharacterViewer();
     });
     connect(_charViewer, &CharacterViewer::insertText, this, [this](const QString& text) {
         insertCharacters(text);
     });
 
+    _ui->editorBtn->setFixedSize(defaultButtonSize);
     // Text editor popup
-    connect(_ui->editorBtn, &QPushButton::clicked, this, [this]() {
+    connect(_ui->editorBtn, &QToolButton::clicked, this, [this]() {
         showTextEditor();
     });
     connect(_editor, &EditorPanel::accepted, this, [this]() {
@@ -293,8 +298,9 @@ void TextPanel::setupConnections() {
     _ui->orientationToggle->setButtonValues({0, 1, 2});
     _ui->directionToggle->setButtonValues({0, 1});
 
+    _ui->decorationMoreButton->setFixedSize(defaultButtonSize);
     // Decoration popover — shown as a popup below the "more" button.
-    connect(_ui->decorationMoreButton, &QPushButton::clicked, [this]() {
+    connect(_ui->decorationMoreButton, &QToolButton::clicked, [this]() {
         _decorationPopup->showBelowWidget(_ui->decorationMoreButton);
     });
 }

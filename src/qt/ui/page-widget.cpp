@@ -11,6 +11,7 @@
 #include "props/binder.h"
 #include "props/property-def.h"
 #include "ui_page-widget.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -18,6 +19,7 @@ PageWidget::PageWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::PageWidget>()) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     _ui->pageWidth->setRange(0.001, NumberRange::maximum);
     _ui->pageWidth->setDecimals(NumberRange::decimals);
@@ -28,7 +30,7 @@ PageWidget::PageWidget(QWidget* parent)
     _pagePopup = new PagePopup;
     _popup->setContent(_pagePopup);
 
-    connect(_ui->marginsButton, &QPushButton::clicked, this, &PageWidget::onMarginsClicked);
+    connect(_ui->marginsButton, &QToolButton::clicked, this, &PageWidget::onMarginsClicked);
 }
 
 PageWidget::~PageWidget() = default;

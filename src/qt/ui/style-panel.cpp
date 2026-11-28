@@ -6,6 +6,7 @@
 
 #include "style-panel.h"
 
+#include <QAction>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -19,6 +20,7 @@
 #include "colors/utils.h"
 #include "document-undo.h"
 #include "document.h"
+#include "expander.h"
 #include "icon-combobox.h"
 #include "icon-widget.h"
 #include "number-edit.h"
@@ -47,10 +49,8 @@
 #include "widget-utils.h"
 
 using Inkscape::Colors::Color;
-using Inkscape::UI::Widget::PaintDerivedMode;
 using Inkscape::UI::Widget::PaintMode;
 using Inkscape::Util::Quantity;
-using Inkscape::Util::UnitTable;
 using Linea::Util::new_css_attr;
 using Linea::Util::PaintEditDelegate;
 
@@ -283,18 +283,19 @@ void StylePanel::PaintStrip::bind(Props::Binder& binder) {
 
 StylePanel::StylePanel(unsigned int tag, QWidget* parent)
     : QWidget(parent)
-    , _ui(std::make_unique<Ui::AppearancePanel>())
+    , _ui(std::make_unique<Ui::StylePanel>())
     , _tag(tag) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     // Keep column 2 at least a reset-button wide even when the buttons are
     // hidden by visibility rules — otherwise the adjacent controls widen to
     // fill the gap. setColumnMinimumWidth holds the column without retaining
     // the hidden widgets' height (RetainSizeWhenHidden kept the rows from
     // collapsing when everything was hidden).
-    if (auto grid = qobject_cast<QGridLayout*>(layout())) {
-        grid->setColumnMinimumWidth(2, _ui->resetOpacity->sizeHint().width());
-    }
+    // if (auto grid = qobject_cast<QGridLayout*>(layout())) {
+    //     grid->setColumnMinimumWidth(2, _ui->resetOpacity->sizeHint().width());
+    // }
 
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
@@ -307,8 +308,6 @@ void StylePanel::construct() {
     setupPaintStrip(_fill, true);
     setupPaintStrip(_stroke, false);
     setupStrokeWidgets();
-    setupOpacity();
-    setupBlendMode();
 }
 
 void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
@@ -328,12 +327,12 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     strip.addBtn = isFill ? _ui->fillAdd : _ui->strokeAdd;
     strip.clearBtn = isFill ? _ui->fillClear : _ui->strokeClear;
     strip.clearBtn->setVisible(false);
-    strip.toggleBtn = isFill ? _ui->fillToggle : _ui->strokeToggle;
+    strip.toggleBtn = isFill ? _ui->fillExpander : _ui->strokeExpander;
     strip.selectorContainer = isFill ? _ui->fillSelectorContainer : _ui->strokeSelectorContainer;
-    strip.emptyLabel = isFill ? _ui->fillLabel2 : _ui->strokeLabel2;
-    strip.emptyLabel->setVisible(false);
-    strip.emptyLabel->setCursor(Qt::PointingHandCursor);
-    strip.emptyLabel->installEventFilter(this);
+    // strip.emptyLabel = isFill ? _ui->fillExpander : _ui->strokeExpander;
+    // strip.emptyLabel->setVisible(false);
+    // strip.emptyLabel->setCursor(Qt::PointingHandCursor);
+    // strip.emptyLabel->installEventFilter(this);
 
     // Create PaintSelector popup
     strip.selector = PaintSelector::create(false, isFill, true, false,
@@ -356,25 +355,27 @@ void StylePanel::setupPaintStrip(PaintStrip& strip, bool isFill) {
     }
 
     strip.isExpanded = setupCollapsibleSection(
-        strip.toggleBtn, strip.selectorContainer,
+        strip.toggleBtn,
+        isFill ? std::vector{strip.selectorContainer}
+               : std::vector{strip.selectorContainer, _ui->strokeOptionsContainer},
         isFill ? "/style-panel/fill_paint_expanded" : "/style-panel/stroke_paint_expanded");
 
-    auto typeLabel = isFill ? _ui->fillSelectorLabel : _ui->strokePaintTypeLabel;
-    typeLabel->setVisible(strip.isExpanded());
+    // auto typeLabel = isFill ? _ui->fillSelectorLabel : _ui->strokePaintTypeLabel;
+    // typeLabel->setVisible(strip.isExpanded());
     strip.paintBtn->setVisible(!strip.isExpanded());
     strip.alpha->setVisible(!strip.isExpanded());
-    connect(strip.toggleBtn, &QPushButton::clicked, this, [&strip, typeLabel]() {
+    connect(strip.toggleBtn, &Expander::clicked, this, [&strip]() {
         auto expanded = strip.isExpanded();
         strip.paintBtn->setVisible(!expanded);
         strip.alpha->setVisible(!expanded);
-        typeLabel->setVisible(expanded);
+        // typeLabel->setVisible(expanded);
     });
 }
 
 bool StylePanel::eventFilter(QObject* watched, QEvent* event) {
     PaintStrip* strip = nullptr;
-    if (watched == _fill.emptyLabel) strip = &_fill;
-    else if (watched == _stroke.emptyLabel) strip = &_stroke;
+    // if (watched == _fill.emptyLabel) strip = &_fill;
+    // else if (watched == _stroke.emptyLabel) strip = &_stroke;
 
     if (strip && event->type() == QEvent::MouseButtonRelease &&
         static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
@@ -400,18 +401,18 @@ void StylePanel::setupStrokeWidgets() {
     _strokeOptionsPopup = new PopupMenu(this);
     _strokeOptionsPopup->setContent(_strokeOptions);
 
-    connect(_ui->strokeOptionsBtn, &QPushButton::clicked, this,
+    connect(_ui->strokeOptionsBtn, &QToolButton::clicked, this,
             [this]() { _strokeOptionsPopup->showBelowWidget(_ui->strokeOptionsBtn); });
 
-    // Expand/collapse animation for the inline stroke options section
-    _isStrokeOptionsExpanded = setupCollapsibleSection(
-        _ui->strokeOptionsToggle, _ui->strokeOptionsContainer, "/style-panel/stroke_options_expanded");
+    // Stroke options share the stroke section's expanded state — the stroke
+    // expander animates selectorContainer and strokeOptionsContainer together.
+    _isStrokeOptionsExpanded = _stroke.isExpanded;
 
     // Popup button and inline section are mutually exclusive: hide the button
     // while the section is expanded. This handler runs after the section
     // controller's, so the expanded flag is already updated.
     _ui->strokeOptionsBtn->setVisible(!_isStrokeOptionsExpanded());
-    connect(_ui->strokeOptionsToggle, &QPushButton::clicked, this, [this]() {
+    connect(_ui->strokeExpander, &Expander::clicked, this, [this]() {
         _ui->strokeOptionsBtn->setVisible(!_isStrokeOptionsExpanded());
     });
 
@@ -429,22 +430,7 @@ void StylePanel::setupStrokeWidgets() {
     });
 
     // Track stroke widgets for show/hide
-    _strokeWidgets = {_ui->weightLabel, _ui->strokeWidth, _ui->unitPlaceholder, _ui->strokeOptionsToggle};
-}
-
-// --- Opacity ---
-
-void StylePanel::setupOpacity() {
-    // Reset opacity to 100% — the Binder's valueChanged connection handles the write.
-    connect(_ui->resetOpacity, &QPushButton::clicked, this, [this]() { _ui->opacity->setValue(1); });
-}
-
-// --- Blend mode ---
-
-void StylePanel::setupBlendMode() {
-    // Reset blend mode to normal — the Binder's modeChanged connection handles the write.
-    connect(_ui->resetBlendBtn, &QPushButton::clicked, this,
-            [this]() { _ui->blendCombo->setActiveById(SP_CSS_BLEND_NORMAL); });
+    _strokeWidgets = {_ui->weightLabel, _ui->strokeWidth, _ui->unitPlaceholder };
 }
 
 // --- Public API ---
@@ -483,28 +469,6 @@ void StylePanel::setDesktop(SPDesktop* desktop) {
 
 void StylePanel::bind(Props::Binder& binder) {
     using namespace Props::Cond;
-
-    // Opacity — SpinScale with percent scaling (model 0..1, UI 0..100).
-    // setFactor(100) is already applied in setupOpacity().
-    binder.bind(Props::opacity, _ui->opacity);
-
-    // Opacity controls visible only when there's a selection.
-    binder.visibleWhen(_ui->opacityLabel, hasSelection);
-    binder.visibleWhen(_ui->opacity, hasSelection);
-
-    // Reset-opacity button visible when opacity is not uniformly 100%
-    // (covers single-with-different-value and mixed selections).
-    binder.visibleWhen(_ui->resetOpacity, hasSelection && differsFrom(Props::opacity, 1.0));
-
-    // Blend mode — BlendModeCombo has WidgetTraits<SPBlendMode>.
-    binder.bind(Props::blend_mode, _ui->blendCombo);
-
-    binder.visibleWhen(_ui->blendLabel, hasSelection);
-    binder.visibleWhen(_ui->blendCombo, hasSelection);
-    binder.visibleWhen(_ui->bottomSpacer, hasSelection);
-
-    // Reset-blend button visible when blend mode is not uniformly Normal.
-    binder.visibleWhen(_ui->resetBlendBtn, hasSelection && differsFrom(Props::blend_mode, SP_CSS_BLEND_NORMAL));
 
     // Fill / stroke paint strips — paint read via bindField, alpha via bind(),
     // PaintSelector/add/clear writes via editor->apply() held by track().
@@ -568,19 +532,19 @@ void StylePanel::bind(Props::Binder& binder) {
         return p.value().mode == PaintMode::None;
     };
 
-    binder.visibleWhen(_ui->fillLabel, editable);
+    binder.visibleWhen(_ui->fillExpander, editable);
+    binder.enableWhen(_ui->fillExpander, editable && fillDefined);
     binder.visibleWhen(_fill.paintBtn, editable && fillDefined &&
         [this](const Props::SelectionState&) { return !_fill.isExpanded || !_fill.isExpanded(); });
     binder.visibleWhen(_fill.alpha, editable && fillDefined &&
         [this](const Props::SelectionState&) { return !_fill.isExpanded || !_fill.isExpanded(); });
     binder.visibleWhen(_fill.clearBtn, editable && fillDefined);
-    binder.visibleWhen(_fill.toggleBtn, editable && fillDefined);
     binder.visibleWhen(_fill.selectorContainer, editable && fillDefined &&
         [this](const Props::SelectionState&) { return _fill.isExpanded && _fill.isExpanded(); });
-    binder.visibleWhen(_ui->fillSelectorLabel, editable && fillDefined &&
-        [this](const Props::SelectionState&) { return _fill.isExpanded && _fill.isExpanded(); });
+    // binder.visibleWhen(_ui->fillSelectorLabel, editable && fillDefined &&
+        // [this](const Props::SelectionState&) { return _fill.isExpanded && _fill.isExpanded(); });
     binder.visibleWhen(_fill.addBtn, editable && fillNotDefined);
-    binder.visibleWhen(_fill.emptyLabel, editable && fillNotDefined);
+    // binder.visibleWhen(_fill.emptyLabel, editable && fillNotDefined);
 
     // "Stroke is defined" — same structure as fill.
     auto strokeDefined = [](const Props::SelectionState& s) {
@@ -596,23 +560,23 @@ void StylePanel::bind(Props::Binder& binder) {
         return p.value().mode == PaintMode::None;
     };
 
-    binder.visibleWhen(_ui->strokeSpacer, editable);
-    binder.visibleWhen(_ui->strokeLabel, editable);
+    binder.visibleWhen(_ui->strokeSeparator, editable);
+    binder.visibleWhen(_ui->strokeExpander, editable);
+    binder.enableWhen(_ui->strokeExpander, editable && strokeDefined);
     binder.visibleWhen(_stroke.paintBtn, editable && strokeDefined &&
         [this](const Props::SelectionState&) { return !_stroke.isExpanded || !_stroke.isExpanded(); });
     binder.visibleWhen(_stroke.alpha, editable && strokeDefined &&
         [this](const Props::SelectionState&) { return !_stroke.isExpanded || !_stroke.isExpanded(); });
     binder.visibleWhen(_stroke.clearBtn, editable && strokeDefined);
-    binder.visibleWhen(_stroke.toggleBtn, editable && strokeDefined);
     binder.visibleWhen(_stroke.selectorContainer, editable && strokeDefined &&
         [this](const Props::SelectionState&) { return _stroke.isExpanded && _stroke.isExpanded(); });
-    binder.visibleWhen(_ui->strokePaintTypeLabel, editable && strokeDefined &&
-        [this](const Props::SelectionState&) { return _stroke.isExpanded && _stroke.isExpanded(); });
+    // binder.visibleWhen(_ui->strokePaintTypeLabel, editable && strokeDefined &&
+    //     [this](const Props::SelectionState&) { return _stroke.isExpanded && _stroke.isExpanded(); });
     binder.visibleWhen(_stroke.addBtn, editable && strokeNotDefined);
-    binder.visibleWhen(_stroke.emptyLabel, editable && strokeNotDefined);
+    // binder.visibleWhen(_stroke.emptyLabel, editable && strokeNotDefined);
 
     // Stroke attribute widgets: visible only when stroke is defined.
-    binder.visibleWhen(_ui->strokeOptionsSpacer, editable);
+    binder.visibleWhen(_ui->appearanceSeparator, editable);
     for (auto w : _strokeWidgets) {
         binder.visibleWhen(w, editable && strokeDefined);
     }
@@ -635,7 +599,7 @@ void StylePanel::bind(Props::Binder& binder) {
     };
     binder.enableWhen(_ui->strokeWidth, hasSelection && strokeEnabled);
     binder.enableWhen(_ui->strokeOptionsBtn, hasSelection && strokeEnabled);
-    binder.enableWhen(_ui->strokeOptionsToggle, hasSelection && strokeEnabled);
+    // binder.enableWhen(_ui->strokeOptionsToggle, hasSelection && strokeEnabled);
     binder.enableWhen(_ui->strokeOptions, hasSelection && strokeEnabled);
 }
 

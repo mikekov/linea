@@ -19,14 +19,12 @@ class SPDesktop;
 class SPDocument;
 class SPItem;
 class SPObject;
-class QPushButton;
+class QToolButton;
 class QLabel;
 
-QT_BEGIN_NAMESPACE
 namespace Ui {
-class AppearancePanel;
+class StylePanel;
 }
-QT_END_NAMESPACE
 
 namespace Inkscape::Util {
 class Unit;
@@ -42,6 +40,7 @@ class PaintSelector;
 class PopupMenu;
 class StrokeOptions;
 class UnitTracker;
+class Expander;
 
 /**
  * Compact panel combining fill, stroke, opacity and blend mode controls.
@@ -74,11 +73,11 @@ private:
         bool isFill = true;
         PaintButton* paintBtn = nullptr;
         NumberEdit* alpha = nullptr;
-        QPushButton* addBtn = nullptr;
-        QPushButton* clearBtn = nullptr;
-        QPushButton* toggleBtn = nullptr;
+        QToolButton* addBtn = nullptr;
+        QToolButton* clearBtn = nullptr;
+        Expander* toggleBtn = nullptr;
         QWidget* selectorContainer = nullptr;
-        QLabel* emptyLabel = nullptr;
+        // QLabel* emptyLabel = nullptr;
         PaintSelector* selector = nullptr;
         PaintSelector* inlineSelector = nullptr;
         PopupMenu* popup = nullptr;
@@ -99,11 +98,9 @@ private:
     void construct();
     void setupPaintStrip(PaintStrip& strip, bool isFill);
     void setupStrokeWidgets();
-    void setupOpacity();
-    void setupBlendMode();
 
     // members
-    std::unique_ptr<Ui::AppearancePanel> _ui;
+    std::unique_ptr<Ui::StylePanel> _ui;
     PaintStrip _fill;
     PaintStrip _stroke;
 

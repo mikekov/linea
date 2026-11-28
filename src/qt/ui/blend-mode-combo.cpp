@@ -10,37 +10,36 @@ namespace Linea::UI {
 
 namespace {
 
-struct BlendEntry {
-    SPBlendMode mode;
-    const char* label;
-};
-
 // Blend modes grouped by category (matching GTK order)
-const BlendEntry blendModes[] = {
+const BlendModeEntry blendModes[] = {
     { SP_CSS_BLEND_NORMAL,     "Normal" },
     // Darken group
-    { SP_CSS_BLEND_DARKEN,     "Darken" },
+    { SP_CSS_BLEND_DARKEN,     "Darken",       true },
     { SP_CSS_BLEND_MULTIPLY,   "Multiply" },
     { SP_CSS_BLEND_COLORBURN,  "Color Burn" },
     // Lighten group
-    { SP_CSS_BLEND_LIGHTEN,    "Lighten" },
+    { SP_CSS_BLEND_LIGHTEN,    "Lighten",      true },
     { SP_CSS_BLEND_SCREEN,     "Screen" },
     { SP_CSS_BLEND_COLORDODGE, "Color Dodge" },
     // Contrast group
-    { SP_CSS_BLEND_OVERLAY,    "Overlay" },
+    { SP_CSS_BLEND_OVERLAY,    "Overlay",      true },
     { SP_CSS_BLEND_SOFTLIGHT,  "Soft Light" },
     { SP_CSS_BLEND_HARDLIGHT,  "Hard Light" },
     // Difference group
-    { SP_CSS_BLEND_DIFFERENCE, "Difference" },
+    { SP_CSS_BLEND_DIFFERENCE, "Difference",   true },
     { SP_CSS_BLEND_EXCLUSION,  "Exclusion" },
     // Color group
-    { SP_CSS_BLEND_HUE,        "Hue" },
+    { SP_CSS_BLEND_HUE,        "Hue",          true },
     { SP_CSS_BLEND_SATURATION, "Saturation" },
     { SP_CSS_BLEND_COLOR,      "Color" },
     { SP_CSS_BLEND_LUMINOSITY, "Luminosity" },
 };
 
 } // namespace
+
+std::span<const BlendModeEntry> blendModeEntries() {
+    return blendModes;
+}
 
 BlendModeCombo::BlendModeCombo(QWidget* parent)
     : QWidget(parent)
@@ -60,7 +59,7 @@ BlendModeCombo::BlendModeCombo(QWidget* parent)
 }
 
 void BlendModeCombo::populate() {
-    for (auto& entry : blendModes) {
+    for (auto& entry : blendModeEntries()) {
         _combo->addRow(QString(), tr(entry.label), static_cast<int>(entry.mode));
     }
     _combo->setActiveById(static_cast<int>(SP_CSS_BLEND_NORMAL));

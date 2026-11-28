@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-  <class>AppearancePanel</class>
-  <widget class="QWidget" name="AppearancePanel">
+  <class>StylePanel</class>
+  <widget class="QWidget" name="StylePanel">
     <property name="geometry">
       <rect>
         <x>0</x>
@@ -10,9 +10,9 @@
         <height>280</height>
       </rect>
     </property>
-    <layout class="QGridLayout" name="mainGrid" columnstretch="1,1,0">
+    <layout class="QGridLayout" name="mainGrid" columnstretch="0,1,0,1,0,0,0" columnminimumwidth="15,0,4,0,4,25,10">
       <property name="horizontalSpacing">
-        <number>4</number>
+        <number>0</number>
       </property>
       <property name="verticalSpacing">
         <number>4</number>
@@ -29,9 +29,8 @@
       <property name="bottomMargin">
         <number>0</number>
       </property>
-
-      <!-- Row 0: 8px gap -->
-      <item row="0" column="0" colspan="3">
+      <!-- Row 3: 8px gap -->
+      <!-- <item row="3" column="1" colspan="5">
         <spacer name="topSpacer">
           <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -46,10 +45,20 @@
             </size>
           </property>
         </spacer>
+      </item> -->
+      <item row="3" column="0" colspan="7">
+        <widget class="Linea::UI::Separator" name="appearanceSeparator"/>
       </item>
 
-      <!-- Row 1: Fill label + add/clear -->
-      <item row="1" column="0" colspan="2">
+      <!-- Row 4: Fill label + add/clear -->
+      <item row="4" column="0" colspan="4">
+        <widget class="Linea::UI::Expander" name="fillExpander">
+          <property name="label">
+            <string>Fill</string>
+          </property>
+        </widget>
+      </item>
+      <!-- <item row="4" column="1" colspan="3">
         <widget class="QLabel" name="fillLabel2">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -58,8 +67,8 @@
             </sizepolicy>
           </property>
         </widget>
-      </item>
-      <item row="1" column="0">
+      </item> -->
+      <!-- <item row="4" column="1">
         <widget class="QLabel" name="fillLabel">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -74,8 +83,8 @@
             <string>panel-heading</string>
           </property>
         </widget>
-      </item>
-      <item row="1" column="1" colspan="2" alignment="Qt::AlignRight">
+      </item> -->
+      <item row="4" column="5" colspan="1" alignment="Qt::AlignRight">
         <widget class="QWidget" name="fillButtons" native="true">
           <layout class="QHBoxLayout" name="fillButtonsLayout">
             <property name="spacing">
@@ -94,7 +103,7 @@
               <number>0</number>
             </property>
             <item>
-              <widget class="QPushButton" name="fillAdd">
+              <widget class="QToolButton" name="fillAdd">
                 <property name="toolTip">
                   <string>Add fill</string>
                 </property>
@@ -106,7 +115,7 @@
               </widget>
             </item>
             <item>
-              <widget class="QPushButton" name="fillClear">
+              <widget class="QToolButton" name="fillClear">
                 <property name="toolTip">
                   <string>No fill</string>
                 </property>
@@ -120,8 +129,8 @@
           </layout>
         </widget>
       </item>
-      <!-- Row 2: Fill controls + expand/collapse -->
-      <item row="3" column="0">
+      <!-- Row 5: Fill controls + expand/collapse -->
+      <item row="6" column="1">
         <widget class="QPushButton" name="fillButton">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -134,7 +143,7 @@
           </property>
         </widget>
       </item>
-      <item row="3" column="1">
+      <item row="6" column="3">
         <widget class="Linea::UI::NumberEdit" name="fillAlpha">
           <property name="suffix">
             <string>%</string>
@@ -160,8 +169,8 @@
         </widget>
       </item>
 
-      <!-- Row 3: Fill selector label -->
-      <item row="3" column="0" colspan="1">
+      <!-- Row 6: Fill selector label -->
+      <!-- <item row="6" column="1" colspan="1">
         <widget class="QLabel" name="fillSelectorLabel">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -176,8 +185,8 @@
             <string>panel-label</string>
           </property>
         </widget>
-      </item>
-      <item row="3" column="2">
+      </item> -->
+      <!-- <item row="6" column="5">
         <widget class="QPushButton" name="fillToggle">
           <property name="checkable">
             <bool>true</bool>
@@ -191,10 +200,10 @@
             </iconset>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <!-- Row 4: Fill paint selector -->
-      <item row="4" column="0" colspan="3">
+      <!-- Row 7: Fill paint selector -->
+      <item row="7" column="1" colspan="3">
         <widget class="QWidget" name="fillSelectorContainer">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -225,8 +234,8 @@
         </widget>
       </item>
 
-      <!-- Row 5: 8px gap -->
-      <item row="5" column="0" colspan="3">
+      <!-- Row 8: 8px gap -->
+      <!-- <item row="8" column="1" colspan="5">
         <widget class="QWidget" name="strokeSpacer" native="true">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -247,10 +256,21 @@
             </size>
           </property>
         </widget>
+      </item> -->
+
+      <item row="8" column="0" colspan="7">
+        <widget class="Linea::UI::Separator" name="strokeSeparator"/>
       </item>
 
-      <!-- Row 6: Stroke label + add/clear -->
-      <item row="6" column="0" colspan="2">
+      <!-- Row 9: Stroke label + add/clear -->
+      <item row="9" column="0" colspan="4">
+        <widget class="Linea::UI::Expander" name="strokeExpander">
+          <property name="label">
+            <string>Stroke</string>
+          </property>
+        </widget>
+      </item>
+      <!-- <item row="9" column="1" colspan="3">
         <widget class="QLabel" name="strokeLabel2">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -259,8 +279,8 @@
             </sizepolicy>
           </property>
         </widget>
-      </item>
-      <item row="6" column="0">
+      </item> -->
+      <!-- <item row="9" column="1">
         <widget class="QLabel" name="strokeLabel">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -275,8 +295,8 @@
             <string>panel-heading</string>
           </property>
         </widget>
-      </item>
-      <item row="6" column="1" colspan="2" alignment="Qt::AlignRight">
+      </item> -->
+      <item row="9" column="5" colspan="1" alignment="Qt::AlignRight">
         <widget class="QWidget" name="strokeButtons" native="true">
           <layout class="QHBoxLayout" name="strokeButtonsLayout">
             <property name="spacing">
@@ -295,7 +315,7 @@
               <number>0</number>
             </property>
             <item>
-              <widget class="QPushButton" name="strokeAdd">
+              <widget class="QToolButton" name="strokeAdd">
                 <property name="toolTip">
                   <string>Add stroke</string>
                 </property>
@@ -307,7 +327,7 @@
               </widget>
             </item>
             <item>
-              <widget class="QPushButton" name="strokeClear">
+              <widget class="QToolButton" name="strokeClear">
                 <property name="toolTip">
                   <string>No stroke</string>
                 </property>
@@ -321,8 +341,8 @@
           </layout>
         </widget>
       </item>
-      <!-- Row 7: Stroke controls + expand/collapse -->
-      <item row="7" column="0">
+      <!-- Row 10: Stroke controls + expand/collapse -->
+      <item row="10" column="1">
         <widget class="QPushButton" name="strokeButton">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -335,7 +355,7 @@
           </property>
         </widget>
       </item>
-      <item row="7" column="1">
+      <item row="10" column="3">
         <widget class="Linea::UI::NumberEdit" name="strokeAlpha">
           <property name="suffix">
             <string>%</string>
@@ -360,7 +380,7 @@
           </property>
         </widget>
       </item>
-      <item row="7" column="2">
+      <!-- <item row="10" column="5">
         <widget class="QPushButton" name="strokeToggle">
           <property name="checkable">
             <bool>true</bool>
@@ -374,8 +394,8 @@
             </iconset>
           </property>
         </widget>
-      </item>
-      <item row="7" column="0">
+      </item> -->
+      <!-- <item row="10" column="1">
         <widget class="QLabel" name="strokePaintTypeLabel">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -390,10 +410,10 @@
             <string>panel-label</string>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <!-- Row 8: Stroke paint selector -->
-      <item row="8" column="0" colspan="3">
+      <!-- Row 11: Stroke paint selector -->
+      <item row="11" column="1" colspan="3">
         <widget class="QWidget" name="strokeSelectorContainer">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -424,7 +444,7 @@
         </widget>
       </item>
 
-      <item row="9" column="0" colspan="2">
+      <item row="12" column="1" colspan="3">
         <widget class="QLabel" name="weightLabel">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -440,8 +460,8 @@
           </property>
         </widget>
       </item>
-      <!-- Row 10: Stroke width + unit + options -->
-      <item row="10" column="0">
+      <!-- Row 13: Stroke width + unit + options -->
+      <item row="13" column="1">
         <widget class="Linea::UI::NumberEdit" name="strokeWidth">
           <property name="minimum">
             <double>0.000000</double>
@@ -466,33 +486,29 @@
           </property>
         </widget>
       </item>
-      <item row="10" column="1">
-        <layout class="QHBoxLayout" name="unitLayout" stretch="1,0">
-          <item>
-            <widget class="QWidget" name="unitPlaceholder" native="true">
-              <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                </sizepolicy>
-              </property>
-            </widget>
-          </item>
-          <item>
-            <widget class="QPushButton" name="strokeOptionsBtn">
-              <property name="toolTip">
-                <string>Stroke options</string>
-              </property>
-              <property name="icon">
-                <iconset>
-                  <normaloff>:/icons/settings-vert</normaloff>
-                </iconset>
-              </property>
-            </widget>
-          </item>
-        </layout>
+      <item row="13" column="3">
+        <widget class="QWidget" name="unitPlaceholder" native="true">
+          <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+            </sizepolicy>
+          </property>
+        </widget>
       </item>
-      <item row="10" column="2">
+      <item row="13" column="5">
+        <widget class="QToolButton" name="strokeOptionsBtn">
+          <property name="toolTip">
+            <string>Stroke options</string>
+          </property>
+          <property name="icon">
+            <iconset>
+              <normaloff>:/icons/settings-vert</normaloff>
+            </iconset>
+          </property>
+        </widget>
+      </item>
+      <!-- <item row="13" column="5">
         <widget class="QPushButton" name="strokeOptionsToggle">
           <property name="checkable">
             <bool>true</bool>
@@ -506,10 +522,10 @@
             </iconset>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <!-- Row 11: Stroke options -->
-      <item row="11" column="0" colspan="3">
+      <!-- Row 14: Stroke options -->
+      <item row="14" column="1" colspan="5">
         <widget class="QWidget" name="strokeOptionsContainer">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -540,8 +556,8 @@
         </widget>
       </item>
 
-      <!-- Row 12: 8px gap -->
-      <item row="12" column="0" colspan="3">
+      <!-- Row 15: 8px gap -->
+      <!-- <item row="15" column="1" colspan="5">
         <widget class="QWidget" name="strokeOptionsSpacer" native="true">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -562,55 +578,9 @@
             </size>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <!-- Row 13: Opacity label -->
-      <item row="13" column="0" colspan="3">
-        <widget class="QLabel" name="opacityLabel">
-          <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-            </sizepolicy>
-          </property>
-          <property name="text">
-            <string>Opacity</string>
-          </property>
-          <property name="class" stdset="0">
-            <string>panel-label</string>
-          </property>
-        </widget>
-      </item>
-      <!-- Row 14: Opacity controls -->
-      <item row="14" column="0" colspan="2">
-        <widget class="Linea::UI::SpinScale" name="opacity">
-          <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-            </sizepolicy>
-          </property>
-          <property name="factor">
-            <double>100.0</double>
-          </property>
-          <property name="minimum">
-            <double>0.0</double>
-          </property>
-          <property name="maximum">
-            <double>1.0</double>
-          </property>
-          <property name="suffix">
-            <string>%</string>
-          </property>
-          <property name="decimals">
-            <number>0</number>
-          </property>
-          <property name="maxBlockCount">
-            <number>20</number>
-          </property>
-        </widget>
-      </item>
-      <item row="14" column="2">
+      <!-- <item row="17" column="5">
         <widget class="QPushButton" name="resetOpacity">
           <property name="toolTip">
             <string>Make fully opaque</string>
@@ -621,10 +591,10 @@
             </iconset>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <!-- Row 15: Blend mode label -->
-      <item row="15" column="0" colspan="3">
+      <!-- Row 18: Blend mode label -->
+      <!-- <item row="18" column="1" colspan="5">
         <widget class="QLabel" name="blendLabel">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -639,9 +609,9 @@
             <string>panel-label</string>
           </property>
         </widget>
-      </item>
-      <!-- Row 16: Blend mode controls -->
-      <item row="16" column="0" colspan="2">
+      </item> -->
+      <!-- Row 19: Blend mode controls -->
+      <!-- <item row="19" column="1" colspan="3">
         <widget class="Linea::UI::BlendModeCombo" name="blendCombo">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -651,7 +621,7 @@
           </property>
         </widget>
       </item>
-      <item row="16" column="2">
+      <item row="19" column="5">
         <widget class="QPushButton" name="resetBlendBtn">
           <property name="toolTip">
             <string>Normal blend mode</string>
@@ -662,10 +632,10 @@
             </iconset>
           </property>
         </widget>
-      </item>
+      </item> -->
 
-      <!-- Row 17: 8px gap -->
-      <item row="17" column="0" colspan="3">
+      <!-- Row 20: 8px gap -->
+      <!-- <item row="20" column="1" colspan="5">
         <widget class="QWidget" name="bottomSpacer" native="true">
           <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -686,7 +656,7 @@
             </size>
           </property>
         </widget>
-      </item>
+      </item> -->
 
     </layout>
   </widget>
@@ -710,6 +680,16 @@
       <class>Linea::UI::BlendModeCombo</class>
       <extends>QWidget</extends>
       <header>blend-mode-combo.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::Expander</class>
+      <extends>QWidget</extends>
+      <header>expander.h</header>
+    </customwidget>
+    <customwidget>
+      <class>Linea::UI::Separator</class>
+      <extends>QWidget</extends>
+      <header>separator.h</header>
     </customwidget>
   </customwidgets>
 </ui>

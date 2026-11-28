@@ -12,11 +12,12 @@
 
 #include "ellipse-widget.h"
 
-#include <QPushButton>
+#include <QToolButton>
 
 #include "number-edit.h"
 #include "ui_ellipse-widget.h"
 #include "props/binder.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -24,10 +25,11 @@ EllipseWidget::EllipseWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::EllipseWidget>()) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-    connect(_ui->roundButton, &QPushButton::clicked, this, &EllipseWidget::roundCxCy);
+    connect(_ui->roundButton, &QToolButton::clicked, this, &EllipseWidget::roundCxCy);
 }
 
 EllipseWidget::~EllipseWidget() = default;

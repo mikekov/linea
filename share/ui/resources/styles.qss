@@ -12,6 +12,7 @@ QWidget[class="NumberEdit"] {
 
 QWidget[class="NumberEdit"][frame="false"] {
     border: none;
+    background-color: transparent;
 }
 
 QWidget[class="NumberEdit"]:disabled {
@@ -161,6 +162,13 @@ QTreeView::branch:open:has-children:has-siblings {
     font-weight: 500;
     color: palette(dark);
     text-transform: uppercase;
+}
+
+/* Expander section header button */
+Linea--UI--Expander QToolButton {
+    color: palette(text);
+    font-size: 13px;
+    padding-left: 3px;
 }
 
 .dim-text {
@@ -409,6 +417,9 @@ QToolButton[class="tool-group-arrow"]::menu-indicator {
 QToolButton[class="popup-button"]::menu-indicator {
     image: none;
     width: 0;
+}
+QToolButton[class="popup-button"] {
+    padding: 1px; /* to center the icon */
 }
 
 /* Custom tool menu styling */
@@ -720,14 +731,14 @@ QWidget[class="popup-menu"] {
 }
 
 /* Linked button group */
-QPushButton.segment-first {
+QAbstractButton.segment-first {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
-QPushButton.segment-middle {
+QAbstractButton.segment-middle {
     border-radius: 0;
 }
-QPushButton.segment-last {
+QAbstractButton.segment-last {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
 }
@@ -987,4 +998,22 @@ Linea--UI--PanelSwitch QPushButton:checked {
 
 QListView#symbols-view {
     font-size: 10px;
+}
+
+QComboBox {
+    border: 1px solid palette(midlight);
+    border-radius: 4px;
+    padding: 2px;
+}
+QComboBox::drop-down {
+    /* the button area the arrow sits in */
+    border: none;             /* or border-left: 1px solid ... for a divider */
+    border-left: 1px solid palette(midlight);
+    width: 20px;
+}
+QComboBox::down-arrow {
+    /* the arrow itself — image replaces the default triangle */
+    image: url(:/icons/pan-down);
+    width: 16px;
+    height: 16px;
 }

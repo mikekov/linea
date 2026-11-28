@@ -41,22 +41,25 @@
         </widget>
       </item>
       <item row="0" column="2">
-        <widget class="QPushButton" name="selectOptionsBtn">
+        <widget class="QToolButton" name="selectOptionsBtn">
           <property name="toolTip">
             <string>Options</string>
           </property>
           <property name="class" stdset="0">
-            <string>no-menu-arrow</string>
+            <string>popup-button</string>
           </property>
           <property name="icon">
             <iconset>
-              <normaloff>:/icons/settings</normaloff>
+              <normaloff>:/icons/settings-vert</normaloff>
             </iconset>
+          </property>
+          <property name="popupMode">
+            <enum>QToolButton::InstantPopup</enum>
           </property>
         </widget>
       </item>
 
-      <item row="1" column="0" colspan="3">
+      <item row="1" column="0" colspan="2">
         <widget class="QWidget" name="gridContainer">
           <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
             <property name="leftMargin">
@@ -74,7 +77,7 @@
             <property name="spacing">
               <number>4</number>
             </property>
-            <item row="1" column="0" colspan="2">
+            <!-- <item row="1" column="0" colspan="2">
               <widget class="QLabel" name="selectWidgetTopLabel">
                 <property name="text">
                   <string>Arrange</string>
@@ -83,7 +86,7 @@
                   <string>panel-label</string>
                 </property>
               </widget>
-            </item>
+            </item> -->
             <item row="2" column="0" colspan="2">
               <layout class="QHBoxLayout" name="extraLayout">
                 <property name="spacing">
@@ -119,7 +122,13 @@
                       <number>0</number>
                     </property>
                     <item>
-                      <widget class="QPushButton" name="rotate_left_btn">
+                      <widget class="QToolButton" name="rotate_left_btn">
+                        <property name="sizePolicy" stdset="0">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                          </sizepolicy>
+                        </property>
                         <property name="toolTip">
                           <string>Rotate selection 90° counter-clockwise</string>
                         </property>
@@ -137,7 +146,13 @@
                       </widget>
                     </item>
                     <item>
-                      <widget class="QPushButton" name="rotate_right_btn">
+                      <widget class="QToolButton" name="rotate_right_btn">
+                        <property name="sizePolicy" stdset="0">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                          </sizepolicy>
+                        </property>
                         <property name="toolTip">
                           <string>Rotate selection 90° clockwise</string>
                         </property>
@@ -174,7 +189,13 @@
                       <number>0</number>
                     </property>
                     <item>
-                      <widget class="QPushButton" name="flip_horizontal_btn">
+                      <widget class="QToolButton" name="flip_horizontal_btn">
+                        <property name="sizePolicy" stdset="0">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                          </sizepolicy>
+                        </property>
                         <property name="toolTip">
                           <string>Flip selection horizontally</string>
                         </property>
@@ -192,7 +213,13 @@
                       </widget>
                     </item>
                     <item>
-                      <widget class="QPushButton" name="flip_vertical_btn">
+                      <widget class="QToolButton" name="flip_vertical_btn">
+                        <property name="sizePolicy" stdset="0">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                          </sizepolicy>
+                        </property>
                         <property name="toolTip">
                           <string>Flip selection vertically</string>
                         </property>
@@ -229,7 +256,13 @@
                       <number>0</number>
                     </property>
                     <item>
-                      <widget class="QPushButton" name="raise_one_step_btn">
+                      <widget class="QToolButton" name="raise_one_step_btn">
+                        <property name="sizePolicy" stdset="0">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                          </sizepolicy>
+                        </property>
                         <property name="toolTip">
                           <string>Raise selection one step</string>
                         </property>
@@ -247,7 +280,13 @@
                       </widget>
                     </item>
                     <item>
-                      <widget class="QPushButton" name="lower_one_step_btn">
+                      <widget class="QToolButton" name="lower_one_step_btn">
+                        <property name="sizePolicy" stdset="0">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                          </sizepolicy>
+                        </property>
                         <property name="toolTip">
                           <string>Lower selection one step</string>
                         </property>
@@ -269,7 +308,7 @@
               </layout>
             </item>
 
-            <item row="3" column="0" colspan="2">
+            <!-- <item row="3" column="0" colspan="2">
               <widget class="QLabel" name="alignLabel">
                 <property name="text">
                   <string>Align</string>
@@ -278,7 +317,7 @@
                   <string>panel-label</string>
                 </property>
               </widget>
-            </item>
+            </item> -->
             <item row="4" column="0" colspan="1">
               <layout class="QHBoxLayout" name="horizontalAlignLayout">
                 <property name="spacing">
@@ -297,14 +336,20 @@
                   <number>0</number>
                 </property>
                 <item>
-                  <widget class="QPushButton" name="align-horizontal-left">
+                  <widget class="QToolButton" name="align-horizontal-left">
+                    <property name="sizePolicy" stdset="0">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
                     <property name="toolTip">
                       <string>Align left edges</string>
                     </property>
                     <property name="text">
                       <string/>
                     </property>
-                    <property name="flat">
+                    <property name="autoRaise">
                       <bool>true</bool>
                     </property>
                     <property name="icon">
@@ -318,14 +363,20 @@
                   </widget>
                 </item>
                 <item>
-                  <widget class="QPushButton" name="align-horizontal-center">
+                  <widget class="QToolButton" name="align-horizontal-center">
+                    <property name="sizePolicy" stdset="0">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
                     <property name="toolTip">
                       <string>Center on vertical axis</string>
                     </property>
                     <property name="text">
                       <string/>
                     </property>
-                    <property name="flat">
+                    <property name="autoRaise">
                       <bool>true</bool>
                     </property>
                     <property name="icon">
@@ -339,14 +390,20 @@
                   </widget>
                 </item>
                 <item>
-                  <widget class="QPushButton" name="align-horizontal-right">
+                  <widget class="QToolButton" name="align-horizontal-right">
+                    <property name="sizePolicy" stdset="0">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
                     <property name="toolTip">
                       <string>Align right edges</string>
                     </property>
                     <property name="text">
                       <string/>
                     </property>
-                    <property name="flat">
+                    <property name="autoRaise">
                       <bool>true</bool>
                     </property>
                     <property name="icon">
@@ -379,14 +436,20 @@
                   <number>0</number>
                 </property>
                 <item>
-                  <widget class="QPushButton" name="align-vertical-top">
+                  <widget class="QToolButton" name="align-vertical-top">
+                    <property name="sizePolicy" stdset="0">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
                     <property name="toolTip">
                       <string>Align top edges</string>
                     </property>
                     <property name="text">
                       <string/>
                     </property>
-                    <property name="flat">
+                    <property name="autoRaise">
                       <bool>true</bool>
                     </property>
                     <property name="icon">
@@ -400,14 +463,20 @@
                   </widget>
                 </item>
                 <item>
-                  <widget class="QPushButton" name="align-vertical-center">
+                  <widget class="QToolButton" name="align-vertical-center">
+                    <property name="sizePolicy" stdset="0">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
                     <property name="toolTip">
                       <string>Center on horizontal axis</string>
                     </property>
                     <property name="text">
                       <string/>
                     </property>
-                    <property name="flat">
+                    <property name="autoRaise">
                       <bool>true</bool>
                     </property>
                     <property name="icon">
@@ -421,14 +490,20 @@
                   </widget>
                 </item>
                 <item>
-                  <widget class="QPushButton" name="align-vertical-bottom">
+                  <widget class="QToolButton" name="align-vertical-bottom">
+                    <property name="sizePolicy" stdset="0">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
                     <property name="toolTip">
                       <string>Align bottom edges</string>
                     </property>
                     <property name="text">
                       <string/>
                     </property>
-                    <property name="flat">
+                    <property name="autoRaise">
                       <bool>true</bool>
                     </property>
                     <property name="icon">
@@ -444,7 +519,7 @@
               </layout>
             </item>
             <!-- <item row="4" column="2" colspan="1">
-    <widget class="QPushButton" name="distributePanelBtn">
+    <widget class="QToolButton" name="distributePanelBtn">
      <property name="toolTip">
       <string>Distribute</string>
      </property>

@@ -10,7 +10,7 @@
         <height>32</height>
       </rect>
     </property>
-    <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,0">
+    <layout class="QGridLayout" name="mainGrid" columnstretch="0,1,0,1,0,0,0" columnminimumwidth="15,0,4,0,4,25,10">
       <property name="leftMargin">
         <number>0</number>
       </property>
@@ -23,10 +23,14 @@
       <property name="bottomMargin">
         <number>0</number>
       </property>
-      <property name="spacing">
+      <property name="horizontalSpacing">
+        <number>0</number>
+      </property>
+      <property name="verticalSpacing">
         <number>4</number>
       </property>
-      <item row="0" column="0" colspan="2">
+            
+<item row="0" column="1" colspan="3">
         <widget class="QLabel" name="pathLabel">
           <property name="text">
             <string>Path</string>
@@ -36,8 +40,8 @@
           </property>
         </widget>
       </item>
-      <item row="0" column="2">
-        <widget class="QPushButton" name="pathButton">
+      <item row="0" column="5">
+        <widget class="QToolButton" name="pathButton">
           <property name="icon">
             <iconset>
               <normaloff>:/icons/edit</normaloff>

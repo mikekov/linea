@@ -8,7 +8,7 @@
 
 #include <QEvent>
 #include <QMouseEvent>
-#include <QPushButton>
+#include <QToolButton>
 
 #include "point-widget.h"
 #include "preferences.h"
@@ -16,6 +16,7 @@
 #include "props/binder.h"
 #include "selection.h"
 #include "ui_path-widget.h"
+#include "widget-utils.h"
 
 namespace Linea::UI {
 
@@ -33,7 +34,8 @@ PathWidget::PathWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::PathWidget>()) {
     _ui->setupUi(this);
-    connect(_ui->pathButton, &QPushButton::clicked, this, &PathWidget::onPathButtonClicked);
+    fixColumnToolButtons(this);
+    connect(_ui->pathButton, &QToolButton::clicked, this, &PathWidget::onPathButtonClicked);
     _ui->pathLabel->setCursor(Qt::PointingHandCursor);
     _ui->pathLabel->installEventFilter(this);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);

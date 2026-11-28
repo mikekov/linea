@@ -33,6 +33,7 @@
 #include "props/binder.h"
 #include "qt/ui/popup-menu.h"
 #include "qt/ui/trace-panel.h"
+#include "qt/ui/widget-utils.h"
 #include "qt/util/drawing-utils.h"
 #include "style-enums.h"
 #include "trace/trace.h"
@@ -106,6 +107,7 @@ ImageWidget::ImageWidget(QWidget* parent)
     : QWidget(parent)
     , _ui(std::make_unique<Ui::ImageWidget>()) {
     _ui->setupUi(this);
+    fixColumnToolButtons(this);
 
     _ui->dpiEdit->setRange(1.0, 2400.0);
     _ui->dpiEdit->setDecimals(4);
@@ -120,7 +122,10 @@ ImageWidget::ImageWidget(QWidget* parent)
     };
     populate_icon_combobox(_ui->renderingCombo, enum_image_rendering, renderingLabels);
 
-    connect(_ui->changeButton, &QPushButton::clicked, this, &ImageWidget::onChangeImage);
+    auto changeAction = _ui->hrefEdit->addAction(QIcon(":/icons/document-open"), QLineEdit::TrailingPosition);
+    changeAction->setToolTip(tr("Link image..."));
+    connect(changeAction, &QAction::triggered, this, &ImageWidget::onChangeImage);
+    Linea::UI::highlightEmbeddedIconsOnHover(_ui->hrefEdit);
     connect(_ui->exportButton, &QPushButton::clicked, this, &ImageWidget::onExportImage);
     connect(_ui->embedButton, &QPushButton::clicked, this, &ImageWidget::onEmbed);
     connect(_ui->traceBtn, &QPushButton::clicked, this, &ImageWidget::onTrace);
@@ -184,7 +189,7 @@ void ImageWidget::bind(Linea::Props::Binder& binder) {
 
     auto updateUrlEnable = [this](const Linea::Props::SelectionState& s) {
         const auto& e = s.element;
-        _ui->hrefEdit->setEnabled(e.image_embedded.is_single() && !e.image_embedded.value());
+        _ui->hrefEdit->setReadOnly(!e.image_embedded.is_single() || e.image_embedded.value());
     };
     binder.bindField(Linea::Props::Field::image_embedded, updateUrlEnable);
 

@@ -10,6 +10,7 @@
 #include <QCoreApplication>
 #include <QEasingCurve>
 #include <QEvent>
+#include <QGridLayout>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QLayout>
@@ -17,18 +18,21 @@
 #include <QPainter>
 #include <QObject>
 #include <QPointer>
+#include <QLineEdit>
 #include <QScreen>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSignalBlocker>
 #include <QStyle>
 #include <QTimer>
+#include <QToolButton>
 #include <QVariantAnimation>
 #include <QWidget>
 #include <QWindow>
 #include <algorithm>
 #include <string>
 
+#include "expander.h"
 #include "preferences.h"
 #include "qt/util/motion.h"
 
@@ -36,28 +40,90 @@ namespace Linea::UI {
 
 namespace {
 
-// Event filter installed on the leader widget; mirrors its Show/Hide state
-// onto the follower. Parented to the follower so it dies with it.
+// Event filter installed on the leader widgets; mirrors their combined
+// Show/Hide state onto the follower (visible while any leader is).
+// Parented to the follower so it dies with it.
 class VisibilitySyncFilter : public QObject {
 public:
-    VisibilitySyncFilter(QWidget* follower, QWidget* leader)
+    VisibilitySyncFilter(QWidget* follower, std::vector<QWidget*> leaders)
         : QObject(follower)
-        , _follower(follower)
-        , _leader(leader) {
-        leader->installEventFilter(this);
+        , _follower(follower) {
+        for (auto leader : leaders) {
+            if (!leader) continue;
+            _leaders.push_back(leader);
+            leader->installEventFilter(this);
+        }
     }
 
 protected:
     bool eventFilter(QObject* /*watched*/, QEvent* event) override {
         if (event->type() == QEvent::Show || event->type() == QEvent::Hide) {
-            _follower->setVisible(_leader->isVisible());
+            _follower->setVisible(anyVisible());
         }
         return false;
     }
 
 private:
+    bool anyVisible() const {
+        for (auto leader : _leaders) {
+            if (leader && leader->isVisible()) return true;
+        }
+        return false;
+    }
+
     QWidget* _follower;
-    QPointer<QWidget> _leader;
+    std::vector<QPointer<QWidget>> _leaders;
+};
+
+// QLineEdit embeds addAction() icons as private QLineEditIconButton children
+// (a QToolButton subclass) whose paintEvent draws only the icon — no style
+// primitives, so stylesheets can't give it a hover state, and its opaque
+// paint path skips autoFillBackground fills. The hover tint is therefore
+// painted here during the button's Paint event, before the icon draws.
+// Parented to the button so it dies with it.
+class IconHoverFilter : public QObject {
+public:
+    using QObject::QObject;
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        auto w = static_cast<QWidget*>(watched);
+        if (event->type() == QEvent::Paint) {
+            if (_bg.alpha() > 0) {
+                QPainter p(w);
+                p.fillRect(w->rect(), _bg);
+            }
+            // returning false lets paintEvent draw the icon on top
+        } else if (event->type() == QEvent::Enter || event->type() == QEvent::Leave) {
+            if (event->type() == QEvent::Enter &&
+                (!w->isEnabled() || (w->parentWidget() && !w->parentWidget()->isEnabled())))
+                return false;
+            QColor target = w->palette().color(QPalette::Midlight);
+            target.setAlpha(event->type() == QEvent::Enter ? 255 : 0);
+            // Start from the target's RGB at the current alpha — Qt::transparent
+            // is black under the hood and interpolating its channels flashes dark.
+            QColor start = target;
+            start.setAlpha(_bg.alpha());
+            auto anim = new QVariantAnimation(this);
+            anim->setDuration(160);
+            anim->setStartValue(start);
+            anim->setEndValue(target);
+            connect(anim, &QVariantAnimation::valueChanged, this, [w, this](const QVariant& v) {
+                _bg = v.value<QColor>();
+                w->update();
+            });
+            anim->start(QAbstractAnimation::DeleteWhenStopped);
+        } else if (event->type() == QEvent::CursorChange) {
+            // QLineEditIconButton::updateCursor() re-sets the cursor on every
+            // setOpacity — keep re-asserting the pointing hand instead.
+            if (w->cursor().shape() != Qt::PointingHandCursor)
+                w->setCursor(Qt::PointingHandCursor);
+        }
+        return false;
+    }
+
+private:
+    QColor _bg{Qt::transparent};
 };
 
 // Event filter installed on a top-level window; restores its position and
@@ -323,7 +389,35 @@ void applyHorizontalPadding(QWidget* widget, int left, int right) {
 void syncVisibility(QWidget* follower, QWidget* leader) {
     if (!follower || !leader) return;
     follower->setVisible(leader->isVisible());
-    new VisibilitySyncFilter(follower, leader);
+    new VisibilitySyncFilter(follower, {leader});
+}
+
+void syncVisibilityAny(QWidget* follower, std::vector<QWidget*> leaders) {
+    if (!follower || leaders.empty()) return;
+    follower->setVisible(std::any_of(leaders.begin(), leaders.end(),
+        [](QWidget* w) { return w && w->isVisible(); }));
+    new VisibilitySyncFilter(follower, std::move(leaders));
+}
+
+void fixColumnToolButtons(QWidget* widget, int column, QSize size) {
+    if (!widget) return;
+    auto* grid = widget->findChild<QGridLayout*>(QStringLiteral("mainGrid"));
+    if (!grid) return;
+    for (int i = 0; i < grid->count(); ++i) {
+        int row, col, rowspan, colspan;
+        grid->getItemPosition(i, &row, &col, &rowspan, &colspan);
+        if (col != column) continue;
+        if (auto* btn = qobject_cast<QToolButton*>(grid->itemAt(i)->widget()))
+            btn->setFixedSize(size);
+    }
+}
+
+void highlightEmbeddedIconsOnHover(QLineEdit* edit) {
+    if (!edit || !edit->isEnabled()) return;
+    for (auto* button : edit->findChildren<QAbstractButton*>()) {
+        button->setCursor(Qt::PointingHandCursor);
+        button->installEventFilter(new IconHoverFilter(button));
+    }
 }
 
 void persistGeometry(QWidget* window, const char* prefsPath, QSize defaultSize) {
@@ -399,39 +493,51 @@ namespace {
 
 class CollapsibleSectionController : public QObject {
 public:
-    CollapsibleSectionController(QAbstractButton* toggleBtn, QWidget* container,
+    CollapsibleSectionController(Expander* toggleBtn, std::vector<QWidget*> containers,
                                  const char* prefsPath, bool defaultExpanded)
-        : QObject(container)
+        : QObject(toggleBtn)
         , _toggleBtn(toggleBtn)
-        , _container(container)
         , _prefsPath(prefsPath ? prefsPath : "")
         , _animation(new QVariantAnimation(this)) {
+        _containers.reserve(containers.size());
+        for (auto container : containers) {
+            _containers.push_back(container);
+        }
+
         _expanded = !_prefsPath.empty()
             ? Inkscape::Preferences::get()->getBool(_prefsPath, defaultExpanded)
             : defaultExpanded;
 
-        _container->setVisible(_expanded);
-        updateIcon();
+        for (auto container : _containers) {
+            if (container) container->setVisible(_expanded);
+        }
+        updateToggle();
 
         _animation->setEasingCurve(QEasingCurve::OutCubic);
 
         connect(_animation, &QVariantAnimation::valueChanged, this, [this](const QVariant& value) {
-            if (!_container) return;
-            _container->setFixedHeight(value.toInt());
-            settleLayout(_container->parentWidget() ? _container->parentWidget() : _container.data());
+            const qreal p = value.toReal();
+            for (int i = 0; i < static_cast<int>(_containers.size()); ++i) {
+                auto container = _containers[i];
+                if (!container) continue;
+                container->setFixedHeight(_startHeights[i] + qRound((_endHeights[i] - _startHeights[i]) * p));
+            }
+            settleLayout();
         });
 
         connect(_animation, &QVariantAnimation::finished, this, [this]() {
-            if (!_container) return;
-            if (!_expanded) {
-                _container->setVisible(false);
+            for (auto container : _containers) {
+                if (!container) continue;
+                if (!_expanded) {
+                    container->setVisible(false);
+                }
+                container->setMinimumHeight(0);
+                container->setMaximumHeight(QWIDGETSIZE_MAX);
             }
-            _container->setMinimumHeight(0);
-            _container->setMaximumHeight(QWIDGETSIZE_MAX);
-            settleLayout(_container->parentWidget() ? _container->parentWidget() : _container.data());
+            settleLayout();
         });
 
-        connect(_toggleBtn, &QAbstractButton::clicked, this, [this]() {
+        connect(_toggleBtn, &Expander::clicked, this, [this]() {
             toggle();
         });
     }
@@ -439,40 +545,65 @@ public:
     bool isExpanded() const { return _expanded; }
 
 private:
-    void updateIcon() {
+    QWidget* firstContainer() const {
+        for (auto container : _containers) {
+            if (container) return container;
+        }
+        return nullptr;
+    }
+
+    void settleLayout() {
+        auto container = firstContainer();
+        if (!container) return;
+        Linea::UI::settleLayout(container->parentWidget() ? container->parentWidget() : container);
+    }
+
+    // Push the tracked state into the expander — a no-op after a user click
+    // (the expander already flipped itself), seeds it on construction.
+    void updateToggle() {
         if (!_toggleBtn) return;
-        _toggleBtn->setIcon(QIcon(_expanded ? ":/icons/section-collapse" : ":/icons/section-expand"));
-        // checkable toggles show :checked (highlight) while expanded;
-        // no-op for non-checkable buttons
-        _toggleBtn->setChecked(_expanded);
+        _toggleBtn->setExpanded(_expanded);
     }
 
     void toggle() {
-        if (!_container) return;
+        if (!firstContainer()) return;
         _expanded = !_expanded;
-        updateIcon();
+        updateToggle();
 
         if (!_prefsPath.empty()) {
             Inkscape::Preferences::get()->setBool(_prefsPath, _expanded);
         }
 
+        _startHeights.clear();
+        _endHeights.clear();
+        for (auto container : _containers) {
+            if (!container) {
+                _startHeights.push_back(0);
+                _endHeights.push_back(0);
+                continue;
+            }
+            if (_expanded) {
+                _startHeights.push_back(0);
+                _endHeights.push_back(container->sizeHint().height());
+                container->setFixedHeight(0);
+                container->setVisible(true);
+            } else {
+                _startHeights.push_back(container->height());
+                _endHeights.push_back(0);
+            }
+        }
+
         _animation->stop();
         _animation->setDuration(effectiveAnimationDuration(200));
-        if (_expanded) {
-            int targetHeight = _container->sizeHint().height();
-            _container->setFixedHeight(0);
-            _container->setVisible(true);
-            _animation->setStartValue(0);
-            _animation->setEndValue(targetHeight);
-        } else {
-            _animation->setStartValue(_container->height());
-            _animation->setEndValue(0);
-        }
+        _animation->setStartValue(0.0);
+        _animation->setEndValue(1.0);
         _animation->start();
     }
 
-    QPointer<QAbstractButton> _toggleBtn;
-    QPointer<QWidget> _container;
+    QPointer<Expander> _toggleBtn;
+    std::vector<QPointer<QWidget>> _containers;
+    std::vector<int> _startHeights;
+    std::vector<int> _endHeights;
     std::string _prefsPath;
     QVariantAnimation* _animation = nullptr;
     bool _expanded = false;
@@ -480,12 +611,12 @@ private:
 
 } // namespace
 
-std::function<bool()> setupCollapsibleSection(QAbstractButton* toggleBtn, QWidget* container,
+std::function<bool()> setupCollapsibleSection(Expander* expander, std::vector<QWidget*> containers,
                                               const char* prefsPath, bool defaultExpanded) {
-    if (!toggleBtn || !container) {
+    if (!expander || containers.empty()) {
         return []() { return false; };
     }
-    auto controller = new CollapsibleSectionController(toggleBtn, container, prefsPath, defaultExpanded);
+    auto controller = new CollapsibleSectionController(expander, std::move(containers), prefsPath, defaultExpanded);
     QPointer<CollapsibleSectionController> guard(controller);
     return [guard]() { return guard ? guard->isExpanded() : false; };
 }
